@@ -1,4 +1,8 @@
 module.exports = {
+  env: {
+    node: true,
+    browser: true,
+  },
   extends: ["expo", "prettier"],
   plugins: ["prettier"],
   rules: {
