@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const WORKOUTS_KEY = '@gymtrack_workouts';
-const EXERCISES_KEY = '@gymtrack_exercises';
+const WORKOUTS_KEY = "@gymtrack_workouts";
+const EXERCISES_KEY = "@gymtrack_exercises";
 
 // Workouts Storage
 export const saveWorkout = async (workout) => {
@@ -16,7 +16,7 @@ export const saveWorkout = async (workout) => {
     await AsyncStorage.setItem(WORKOUTS_KEY, JSON.stringify(workouts));
     return newWorkout;
   } catch (error) {
-    console.error('Error saving workout:', error);
+    console.error("Error saving workout:", error);
     throw error;
   }
 };
@@ -26,7 +26,7 @@ export const getWorkouts = async () => {
     const workouts = await AsyncStorage.getItem(WORKOUTS_KEY);
     return workouts ? JSON.parse(workouts) : [];
   } catch (error) {
-    console.error('Error getting workouts:', error);
+    console.error("Error getting workouts:", error);
     return [];
   }
 };
@@ -34,10 +34,10 @@ export const getWorkouts = async () => {
 export const deleteWorkout = async (workoutId) => {
   try {
     const workouts = await getWorkouts();
-    const filtered = workouts.filter(w => w.id !== workoutId);
+    const filtered = workouts.filter((w) => w.id !== workoutId);
     await AsyncStorage.setItem(WORKOUTS_KEY, JSON.stringify(filtered));
   } catch (error) {
-    console.error('Error deleting workout:', error);
+    console.error("Error deleting workout:", error);
     throw error;
   }
 };
@@ -55,7 +55,7 @@ export const saveCustomExercise = async (exercise) => {
     await AsyncStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises));
     return newExercise;
   } catch (error) {
-    console.error('Error saving exercise:', error);
+    console.error("Error saving exercise:", error);
     throw error;
   }
 };
@@ -65,7 +65,7 @@ export const getCustomExercises = async () => {
     const exercises = await AsyncStorage.getItem(EXERCISES_KEY);
     return exercises ? JSON.parse(exercises) : [];
   } catch (error) {
-    console.error('Error getting exercises:', error);
+    console.error("Error getting exercises:", error);
     return [];
   }
 };
