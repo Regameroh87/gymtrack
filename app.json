@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "gymtrack",
+    "displayName": "GymTrack",
     "slug": "gymtrack",
     "version": "1.0.0",
     "orientation": "portrait",
