@@ -5,7 +5,7 @@ import { useUser } from "../../src/lib/authContext";
 export default function ProtectedLayout() {
   const { isLoggedIn } = useUser();
 
-  if (isLoggedIn) {
+  if (!isLoggedIn) {
     return <Redirect href="/login" />;
   }
 

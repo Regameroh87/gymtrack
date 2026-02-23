@@ -1,10 +1,12 @@
-import { Text, TextInput, View } from "react-native";
+import { Text, Button } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
+import { useUser } from "../src/lib/authContext";
+import { useRouter } from "expo-router";
 
 export default function Login() {
   // Dentro de tu AuthProvider
-  const logIn = async (email) => {
+  /*   const logIn = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
@@ -36,12 +38,20 @@ export default function Login() {
     } else {
       throw error;
     }
-  };
+  }; */
+  const { logIn } = useUser();
+  const router = useRouter();
 
   return (
-    <Screen safe>
+    <Screen safe className=" justify-center items-center">
       <Text className="text-2xl font-bold text-gray-900">LOGIN</Text>
-      <TextInput placeholder="Email" />
+      <Button
+        title="Log In"
+        onPress={async () => {
+          logIn();
+          router.replace("/");
+        }}
+      />
     </Screen>
   );
 }

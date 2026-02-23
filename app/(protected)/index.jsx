@@ -1,8 +1,12 @@
-import { Text, Pressable, View, Image } from "react-native";
+import { Text, Pressable, View, Image, Button } from "react-native";
 import Screen from "../../src/components/Screen";
+import { useUser } from "../../src/lib/authContext.js";
+import { useRouter } from "expo-router";
 
 export default function Index() {
   const image = require("../../assets/icon.png");
+  const { logOut } = useUser();
+  const router = useRouter();
   return (
     <Screen>
       <View className=" flex flex-row w-full justify-between my-6">
@@ -25,6 +29,16 @@ export default function Index() {
             Iniciar sesion 🏋️
           </Text>
         </Pressable>
+      </View>
+      <View className=" my-4 rounded">
+        <Button
+          style={{ borderRadius: "100%" }}
+          title="Log Out"
+          onPress={async () => {
+            logOut();
+            router.replace("/login");
+          }}
+        />
       </View>
     </Screen>
   );
