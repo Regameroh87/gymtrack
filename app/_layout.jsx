@@ -1,34 +1,11 @@
 import "../global.css";
-import { Tabs } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import { Barbell, Home } from "../assets/icons";
+import { Stack } from "expo-router";
 
-export default function Layout() {
+export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
-      <Tabs screenOptions={{ headerTitleAlign: "center" }}>
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "GYMTRACK",
-            tabBarLabel: "Inicio",
-            tabBarIcon: ({ color }) => (
-              <Home color={color} width={24} height={24} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="rutinas/index"
-          options={{
-            title: "Rutinas",
-            tabBarIcon: ({ color }) => (
-              <Barbell color={color} width={24} height={24} />
-            ),
-          }}
-        />
-      </Tabs>
-    </SafeAreaProvider>
+    <Stack>
+      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+    </Stack>
   );
 }

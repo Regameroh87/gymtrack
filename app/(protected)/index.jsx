@@ -1,7 +1,8 @@
 import { Text, Pressable, View, Image } from "react-native";
-import Screen from "../src/components/Screen";
+import Screen from "../../src/components/Screen";
 
 export default function Index() {
+  const image = require("../../assets/icon.png");
   return (
     <Screen>
       <View className=" flex flex-row w-full justify-between my-6">
@@ -12,10 +13,7 @@ export default function Index() {
           </Text>
         </View>
         <View>
-          <Image
-            source={require("../assets/icon.png")}
-            style={{ width: 50, height: 50 }}
-          />
+          <Image source={image} style={{ width: 50, height: 50 }} />
         </View>
       </View>
       <View className="flex w-[90%] mx-auto h-1/3 bg-gray-400 items-center justify-center rounded-full">
