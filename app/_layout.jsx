@@ -2,7 +2,7 @@ import "../global.css";
 import { Tabs } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Barbell } from "../icons/barbell";
+import { Barbell, Home } from "../assets/icons";
 
 export default function Layout() {
   return (
@@ -11,7 +11,13 @@ export default function Layout() {
       <Tabs screenOptions={{ headerTitleAlign: "center" }}>
         <Tabs.Screen
           name="index"
-          options={{ title: "GYMTRACK", tabBarLabel: "Inicio" }}
+          options={{
+            title: "GYMTRACK",
+            tabBarLabel: "Inicio",
+            tabBarIcon: ({ color }) => (
+              <Home color={color} width={24} height={24} />
+            ),
+          }}
         />
         <Tabs.Screen
           name="rutinas/index"

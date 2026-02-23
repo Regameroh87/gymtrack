@@ -19,12 +19,12 @@ export default function Index() {
         </View>
       </View>
       <View className="flex w-[90%] mx-auto h-1/3 bg-gray-400 items-center justify-center rounded-full">
-        <Text className="text-2xl font-bold text-gray-700">ESTADISTICAS</Text>
+        <Text className="text-2xl font-bold text-gray-700">SESIONES 1/3</Text>
       </View>
       <View>
         <Pressable className=" bg-blue-400 active:bg-blue-500 p-4 rounded-full mt-6">
-          <Text className="text-white text-sm font-bold">
-            Iniciar sesion de entrenamiento
+          <Text className="text-white text-lg font-bold">
+            Iniciar sesion 🏋️
           </Text>
         </Pressable>
       </View>
