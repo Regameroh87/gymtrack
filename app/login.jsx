@@ -1,8 +1,9 @@
-import { Text, Button } from "react-native";
+import { Text, Button, View, TextInput } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
 import { useUser } from "../src/lib/authContext";
 import { useRouter } from "expo-router";
+import { useForm } from "@tanstack/react-form";
 
 export default function Login() {
   const enviarCodigo = async (email) => {
@@ -28,17 +29,43 @@ export default function Login() {
   const { logIn } = useUser();
   const router = useRouter();
 
+  const form = useForm({
+    email: "",
+    onSubmit: () => console.log(""),
+  });
+
   return (
     <Screen safe className=" justify-center items-center">
       <Text className="text-2xl font-bold text-gray-900">LOGIN</Text>
-      <Button
-        title="Log In"
-        onPress={async () => {
-          /*  logIn();
-          router.replace("/"); */
-          enviarCodigo("gamero.rodrigo@gmail.com");
-        }}
-      />
+
+      <form.field name="email">
+        {(field) => (
+          <View>
+            <Text>Email:</Text>
+            <TextInput
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              // En RN usamos onChangeText en lugar de onChange
+              onChangeText={(text) => field.handleChange(text)}
+              style={{ borderBottomWidth: 1, marginBottom: 10 }}
+            />
+            {/* Mostrar errores */}
+            {field.state.meta.isTouched && (
+              <Text style={{ color: "red" }}>{field.state.meta.errors}</Text>
+            )}
+          </View>
+        )}
+      </form.field>
+      {/* {Boton} */}
+      <form.Subscribe selector={(state) => [state.canSubmit]}>
+        {([canSubmit]) => (
+          <Button
+            title="Enviar"
+            disabled={!canSubmit}
+            onPress={form.handleSubmit} // <--- Aquí disparas el envío
+          />
+        )}
+      </form.Subscribe>
     </Screen>
   );
 }
