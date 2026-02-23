@@ -31,7 +31,7 @@ export default function Login() {
 
   const form = useForm({
     email: "",
-    onSubmit: () => console.log(""),
+    onSubmit: () => console.log("Enviando en formulario"),
   });
   console.log(form);
 
@@ -57,10 +57,12 @@ export default function Login() {
         )}
       </form.Field>
       {/* {Boton} */}
-      <form.Subscribe selector={(state) => [state.canSubmit]}>
-        {([canSubmit]) => (
+      <form.Subscribe
+        selector={(state) => [state.canSubmit, state.isSubmitting]}
+      >
+        {([canSubmit, isSubmitting]) => (
           <Button
-            title="Ingresar"
+            title={isSubmitting ? "Cargando..." : "Ingresar"}
             disabled={!canSubmit}
             onPress={form.handleSubmit} // <--- Aquí disparas el envío
           />
