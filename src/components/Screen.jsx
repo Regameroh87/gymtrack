@@ -1,7 +1,7 @@
-import { View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Screen = ({ children }) => {
-  return <View className="flex-1 items-center px-4">{children}</View>;
+  return <SafeAreaView>{children}</SafeAreaView>;
 };
 
 export default Screen;
