@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 
 export default function Login() {
-  const enviarCodigo = async (email) => {
+  /*   const enviarCodigo = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
@@ -27,18 +27,18 @@ export default function Login() {
     alert("Revisa tu bandeja de entrada, te enviamos un código.");
   };
   const { logIn } = useUser();
-  const router = useRouter();
+  const router = useRouter(); */
 
   const form = useForm({
     email: "",
     onSubmit: () => console.log(""),
   });
+  console.log(form);
 
   return (
     <Screen safe className=" justify-center items-center">
       <Text className="text-2xl font-bold text-gray-900">LOGIN</Text>
-
-      <form.field name="email">
+      <form.Field name="email">
         {(field) => (
           <View>
             <Text>Email:</Text>
@@ -55,12 +55,12 @@ export default function Login() {
             )}
           </View>
         )}
-      </form.field>
+      </form.Field>
       {/* {Boton} */}
       <form.Subscribe selector={(state) => [state.canSubmit]}>
         {([canSubmit]) => (
           <Button
-            title="Enviar"
+            title="Ingresar"
             disabled={!canSubmit}
             onPress={form.handleSubmit} // <--- Aquí disparas el envío
           />
