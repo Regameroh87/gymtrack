@@ -40,9 +40,9 @@ const verifyCode = async (email: string, token: string) => {
 };
 
   return (
-    <Screen>
-        <Text>LOGIN</Text>
-      <TextInput placeholder="Email" />
+    <Screen safe>
+        <Text className="text-2xl font-bold text-gray-900">LOGIN</Text>
+       <TextInput placeholder="Email" />
     </Screen>
   );
 }

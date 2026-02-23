@@ -20,7 +20,7 @@ export default function Index() {
         <Text className="text-2xl font-bold text-gray-700">SESIONES 1/3</Text>
       </View>
       <View>
-        <Pressable className=" bg-blue-400 active:bg-blue-500 p-4 rounded-full mt-6">
+        <Pressable className=" flex flex-row justify-center items-center w-1/2 h-auto mx-auto bg-blue-400 active:bg-blue-500 p-4 rounded-full mt-6">
           <Text className="text-white text-lg font-bold">
             Iniciar sesion 🏋️
           </Text>
