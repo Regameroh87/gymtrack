@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 
 export default function Login() {
-  /*   const enviarCodigo = async (email) => {
+  const enviarCodigo = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
@@ -26,7 +26,7 @@ export default function Login() {
 
     alert("Revisa tu bandeja de entrada, te enviamos un código.");
   };
-  const { logIn } = useUser();
+  /* const { logIn } = useUser();
   const router = useRouter(); */
 
   const form = useForm({
@@ -34,7 +34,8 @@ export default function Login() {
       email: "",
     },
     onSubmit: ({ value }) => {
-      console.log("Enviando formulario con:", value);
+      console.log(value.email);
+      enviarCodigo(value.email);
     },
   });
 
