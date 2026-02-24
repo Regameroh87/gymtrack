@@ -58,8 +58,8 @@ export default function Login() {
 
       <LinearGradient
         colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.9)"]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         className="absolute inset-0"
         pointerEvents="none"
       />
