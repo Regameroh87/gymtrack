@@ -2,8 +2,26 @@ import "../global.css";
 import { Stack } from "expo-router";
 import { AuthProvider } from "../src/lib/authContext";
 import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
+import {
+  Lexend_400Regular,
+  Lexend_700Bold,
+  Lexend_300Light,
+  Lexend_800ExtraBold,
+} from "@expo-google-fonts/lexend";
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Lexend_400Regular,
+    Lexend_700Bold,
+    Lexend_300Light,
+    Lexend_800ExtraBold,
+  });
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <>
       <StatusBar style="dark" />

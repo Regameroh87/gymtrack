@@ -1,9 +1,10 @@
-import { Text, Button, View, TextInput } from "react-native";
+import { Text, Button, View, TextInput, Image } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
 import { useUser } from "../src/lib/authContext";
 import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function Login() {
   const enviarCodigo = async (email) => {
@@ -41,11 +42,45 @@ export default function Login() {
 
   return (
     <Screen safe className=" justify-center items-center">
-      <Text className="text-2xl font-bold text-gray-900">LOGIN</Text>
+      {/* FONDO */}
+      <Image
+        source={{
+          uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBPWXQqN8-va4pFiXFH26fGuWPUBCqiDnW5BUNTUV_i4xKIB2zCplkf3Eyah63k73zjEWmQIBMMXwZtmJcX-jSwA9LQ7cLrwAKjaa3eOPDqpu4pYU_WN7A3Ow_DJbwWHyoYio889Ab-DOnpNXDDsGsNbTbeR_Jh7Bqx2_DGEX7ht7uqJ4hPZf74Wp_0GVziW17LORf1NibrSISa6YEhzgcFGHbP06rhBxIOq_BOksEdvCi2fzyowFkX3iK2xyNExqhonj3GyrhQkDhT",
+        }}
+        style={{
+          display: "flex",
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          resizeMode: "cover",
+        }}
+      />
+
+      <LinearGradient
+        colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.9)"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        className="absolute inset-0"
+        pointerEvents="none"
+      />
+      {/* TITULO */}
+      <View>
+        <View>LOGO</View>
+        <View className="flex items-center">
+          <Text className=" text-white text-2xl">Back to the Grind</Text>
+          <Text className=" text-white">Ready to crush your goals today</Text>
+        </View>
+      </View>
+
       <form.Field
         name="email"
         validators={{
-          onBlur: ({ value }) => {
+          /*   onBlur: ({ value }) => {
+            if (!value) return "El email es obligatorio";
+            if (!value.includes("@")) return "Ingresá un email válido";
+            return undefined;
+          }, */
+          onChange: ({ value }) => {
             if (!value) return "El email es obligatorio";
             if (!value.includes("@")) return "Ingresá un email válido";
             return undefined;
@@ -56,6 +91,7 @@ export default function Login() {
           <View>
             <Text>Email:</Text>
             <TextInput
+              className=" text-white"
               value={field.state.value}
               onBlur={field.handleBlur}
               onChangeText={(text) => field.handleChange(text)}
