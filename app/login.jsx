@@ -30,29 +30,43 @@ export default function Login() {
   const router = useRouter(); */
 
   const form = useForm({
-    email: "",
-    onSubmit: () => console.log("Enviando en formulario"),
+    defaultValues: {
+      email: "",
+    },
+    onSubmit: ({ value }) => {
+      console.log("Enviando formulario con:", value);
+    },
   });
-  console.log(form);
 
   return (
     <Screen safe className=" justify-center items-center">
       <Text className="text-2xl font-bold text-gray-900">LOGIN</Text>
-      <form.Field name="email">
+      <form.Field
+        name="email"
+        validators={{
+          onBlur: ({ value }) => {
+            if (!value) return "El email es obligatorio";
+            if (!value.includes("@")) return "Ingresá un email válido";
+            return undefined;
+          },
+        }}
+      >
         {(field) => (
           <View>
             <Text>Email:</Text>
             <TextInput
               value={field.state.value}
               onBlur={field.handleBlur}
-              // En RN usamos onChangeText en lugar de onChange
               onChangeText={(text) => field.handleChange(text)}
               style={{ borderBottomWidth: 1, marginBottom: 10 }}
             />
             {/* Mostrar errores */}
-            {field.state.meta.isTouched && (
-              <Text style={{ color: "red" }}>{field.state.meta.errors}</Text>
-            )}
+            {field.state.meta.isTouched &&
+              field.state.meta.errors.length > 0 && (
+                <Text style={{ color: "red" }}>
+                  {field.state.meta.errors.join(", ")}
+                </Text>
+              )}
           </View>
         )}
       </form.Field>
