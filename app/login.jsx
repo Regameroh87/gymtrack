@@ -95,17 +95,26 @@ export default function Login() {
               <Text className=" font-lexend-bold text-md text-slate-600">
                 Direccion de correo electrónico
               </Text>
-              <TextInput
-                className="  border-gray-400 border-2 rounded-xl bg-slate-50 mt-2 "
-                placeholder=" mail@mail.com"
-                placeholderTextColor={"gray"}
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={field.state.value}
-                onChangeText={(text) => field.handleChange(text)}
-              />
+              <View className="flex-row items-center border-gray-400 border-2 rounded-xl bg-slate-50 mt-2 px-3">
+                {field.state.value === "" && (
+                  <Barbell
+                    color="#687076"
+                    size={18}
+                    style={{ marginRight: -5 }}
+                  />
+                )}
+                <TextInput
+                  className="flex-1 h-12 ml-2 text-black"
+                  placeholder="mail@mail.com"
+                  placeholderTextColor={"gray"}
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={field.state.value}
+                  onChangeText={(text) => field.handleChange(text)}
+                />
+              </View>
               {/* Mostrar errores */}
               {field.state.meta.isTouched &&
                 field.state.meta.errors.length > 0 && (
