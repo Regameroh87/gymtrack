@@ -1,5 +1,6 @@
 import "../global.css";
 import { Stack } from "expo-router";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../src/lib/authContext";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -24,18 +25,20 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <AuthProvider>
-        <Stack>
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(protected)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        </Stack>
-      </AuthProvider>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <AuthProvider>
+          <Stack>
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(protected)"
+              options={{
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </AuthProvider>
+      </SafeAreaProvider>
     </>
   );
 }

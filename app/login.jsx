@@ -1,10 +1,9 @@
 import { Text, Button, View, TextInput, Image } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
-import { useUser } from "../src/lib/authContext";
-import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
+import { Barbell } from "../assets/icons";
 
 export default function Login() {
   const enviarCodigo = async (email) => {
@@ -50,6 +49,7 @@ export default function Login() {
         style={{
           display: "flex",
           position: "absolute",
+          marginTop: 45,
           width: "100%",
           height: "100%",
           resizeMode: "cover",
@@ -60,12 +60,14 @@ export default function Login() {
         colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.9)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        className="absolute inset-0"
+        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         pointerEvents="none"
       />
       {/* TITULO */}
       <View>
-        <View>LOGO</View>
+        <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
+          <Barbell color="#E85A2A" />
+        </View>
         <View className="flex items-center">
           <Text className=" text-white text-2xl">Back to the Grind</Text>
           <Text className=" text-white">Ready to crush your goals today</Text>
