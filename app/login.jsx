@@ -4,8 +4,11 @@ import Screen from "../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
 import { Barbell } from "../assets/icons";
+import { useRouter } from "expo-router";
 
 export default function Login() {
+  const router = useRouter();
+
   const enviarCodigo = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
@@ -13,9 +16,6 @@ export default function Login() {
         // Importante: Al poner false, si el mail no existe en tu lista,
         // Supabase no enviará nada ni creará un usuario nuevo.
         shouldCreateUser: false,
-        // Puedes redirigir a una web después, pero para App móvil
-        // usualmente el usuario solo espera el código.
-        emailRedirectTo: "tuapp://login",
       },
     });
 
@@ -35,7 +35,8 @@ export default function Login() {
     },
     onSubmit: ({ value }) => {
       console.log(value.email);
-      enviarCodigo(value.email);
+      router.replace("/verify");
+      /* enviarCodigo(value.email); */
     },
   });
 
@@ -66,61 +67,58 @@ export default function Login() {
       {/* TITULO */}
       <View>
         <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
-          <Barbell color="#E85A2A" />
+          <Barbell color="#687076" />
         </View>
         <View className="flex items-center">
           <Text className=" text-white text-2xl">Back to the Grind</Text>
           <Text className=" text-white">Ready to crush your goals today</Text>
         </View>
       </View>
-
-      <form.Field
-        name="email"
-        validators={{
-          /*   onBlur: ({ value }) => {
-            if (!value) return "El email es obligatorio";
-            if (!value.includes("@")) return "Ingresá un email válido";
-            return undefined;
-          }, */
-          onChange: ({ value }) => {
-            if (!value) return "El email es obligatorio";
-            if (!value.includes("@")) return "Ingresá un email válido";
-            return undefined;
-          },
-        }}
-      >
-        {(field) => (
-          <View>
-            <Text>Email:</Text>
-            <TextInput
-              className=" text-white"
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChangeText={(text) => field.handleChange(text)}
-              style={{ borderBottomWidth: 1, marginBottom: 10 }}
+      {/* FORMULARIO */}
+      <View className="flex w-[90%] h-72 mt-24 rounded-2xl items-center justify-around bg-white/70">
+        <form.Field
+          name="email"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return "El email es obligatorio";
+              if (!value.includes("@")) return "Ingresá un email válido";
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <View className="flex w-full px-12">
+              <Text>Email:</Text>
+              <TextInput
+                className=" text-white"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChangeText={(text) => field.handleChange(text)}
+                style={{ borderBottomWidth: 1, marginBottom: 10 }}
+              />
+              {/* Mostrar errores */}
+              {field.state.meta.isTouched &&
+                field.state.meta.errors.length > 0 && (
+                  <Text style={{ color: "red" }}>
+                    {field.state.meta.errors.join(", ")}
+                  </Text>
+                )}
+            </View>
+          )}
+        </form.Field>
+        {/* {Boton} */}
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              title={isSubmitting ? "Cargando..." : "Ingresar"}
+              disabled={!canSubmit}
+              onPress={form.handleSubmit} // <--- Aquí disparas el envío
             />
-            {/* Mostrar errores */}
-            {field.state.meta.isTouched &&
-              field.state.meta.errors.length > 0 && (
-                <Text style={{ color: "red" }}>
-                  {field.state.meta.errors.join(", ")}
-                </Text>
-              )}
-          </View>
-        )}
-      </form.Field>
-      {/* {Boton} */}
-      <form.Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting]}
-      >
-        {([canSubmit, isSubmitting]) => (
-          <Button
-            title={isSubmitting ? "Cargando..." : "Ingresar"}
-            disabled={!canSubmit}
-            onPress={form.handleSubmit} // <--- Aquí disparas el envío
-          />
-        )}
-      </form.Subscribe>
+          )}
+        </form.Subscribe>
+      </View>
     </Screen>
   );
 }
