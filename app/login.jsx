@@ -1,4 +1,4 @@
-import { Text, Button, View, TextInput, Image, Pressable } from "react-native";
+import { Text, View, TextInput, Image, Pressable } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
