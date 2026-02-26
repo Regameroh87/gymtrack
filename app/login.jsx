@@ -111,7 +111,7 @@ export default function Login() {
               {/* Mostrar errores */}
               {field.state.meta.isTouched &&
                 field.state.meta.errors.length > 0 && (
-                  <Text className=" text-cyan-900 mt-2 text-md font-lexend-light">
+                  <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
                     {field.state.meta.errors.join(", ")}
                   </Text>
                 )}
@@ -125,7 +125,7 @@ export default function Login() {
           {([canSubmit, isSubmitting]) => (
             <Pressable
               className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-6 mb-10 ${
-                !canSubmit || isSubmitting ? "bg-gray-400" : "bg-lime-400"
+                isSubmitting ? "bg-gray-400" : "bg-lime-400"
               }`}
               disabled={isSubmitting}
               onPress={form.handleSubmit}
