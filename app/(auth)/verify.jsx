@@ -19,7 +19,7 @@ export default function Verify() {
   });
 
   return (
-    <View className="flex-1 items-center bg-black/80">
+    <View className=" flex-1 items-center bg-black">
       <View className=" flex flex-col items-center mt-12 p-6 rounded-full bg-lime-100/30">
         <CheckMail color="#65a30d" size={48} />
       </View>

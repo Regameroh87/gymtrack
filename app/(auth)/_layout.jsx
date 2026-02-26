@@ -7,7 +7,7 @@ export default function AuthLayout() {
         name="verify"
         options={{
           headerShown: false,
-          presentation: "formSheet",
+          presentation: "pageSheet",
           sheetAllowedDetents: [0.9, 1],
           sheetGrabberVisible: true,
           gestureEnabled: true,
