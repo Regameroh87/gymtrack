@@ -46,8 +46,9 @@ export default function RootLayout() {
               options={{
                 headerShown: false,
                 presentation: "formSheet",
-                sheetAllowedDetents: [0.5, 0.9], // Sube al 50% y permite expandir al 90%
+                sheetAllowedDetents: [0.7, 0.9],
                 sheetGrabberVisible: true,
+                gestureEnabled: true,
               }}
             />
             <Stack.Screen
@@ -56,7 +57,6 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             />
-            <Stack.Screen name="verify" options={{ headerShown: false }} />
           </Stack>
         </AuthProvider>
       </SafeAreaProvider>

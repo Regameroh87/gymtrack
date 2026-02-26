@@ -1,11 +1,11 @@
-import { Text, View } from "react-native";
-import { Link } from "expo-router";
+import { View, Button } from "react-native";
+import { useRouter } from "expo-router";
 
 export default function Verify() {
+  const router = useRouter();
   return (
-    <View className="flex w-[90%] h-72 mt-24 rounded-2xl items-center justify-around bg-white/70">
-      <Link href="/login">Volver</Link>
-      <Text>Verify</Text>
+    <View className="flex-1 mt-24 rounded-2xl items-center justify-around bg-gray-400">
+      <Button title="Volver" onPress={() => router.back()} />
     </View>
   );
 }

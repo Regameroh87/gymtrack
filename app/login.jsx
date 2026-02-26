@@ -3,7 +3,7 @@ import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
-import { Barbell } from "../assets/icons";
+import { Barbell, Mail, ArrowRight } from "../assets/icons";
 import { useRouter } from "expo-router";
 
 export default function Login() {
@@ -22,8 +22,6 @@ export default function Login() {
       console.error("Error al enviar:", error.message);
       throw error;
     }
-
-    alert("Revisa tu bandeja de entrada, te enviamos un código.");
   };
   /* const { logIn } = useUser();
   const router = useRouter(); */
@@ -32,10 +30,10 @@ export default function Login() {
     defaultValues: {
       email: "",
     },
-    onSubmit: ({ value }) => {
+    onSubmit: async ({ value }) => {
       console.log(value.email);
-      router.replace("/verify");
-      /* enviarCodigo(value.email); */
+      router.push("/verify");
+      await enviarCodigo(value.email);
     },
   });
 
@@ -66,7 +64,7 @@ export default function Login() {
       {/* TITULO */}
       <View>
         <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
-          <Barbell color="#687076" />
+          <Barbell color="#a3e635" />
         </View>
         <View className="flex items-center mt-10">
           <Text className=" text-white text-4xl font-lexend-ebold">
@@ -81,13 +79,13 @@ export default function Login() {
       <View className="flex w-[90%] h-72 mt-24 rounded-2xl items-center justify-center bg-white/70">
         <form.Field
           name="email"
-          /*    validators={{
+          validators={{
             onChange: ({ value }) => {
               if (!value) return "El email es obligatorio";
               if (!value.includes("@")) return "Ingresá un email válido";
               return undefined;
             },
-          }} */
+          }}
         >
           {(field) => (
             <View className="flex w-full px-12">
@@ -96,11 +94,7 @@ export default function Login() {
               </Text>
               <View className="flex-row items-center border-gray-400 border-2 rounded-xl bg-slate-50 mt-2 px-3">
                 {field.state.value === "" && (
-                  <Barbell
-                    color="#687076"
-                    size={18}
-                    style={{ marginRight: -5 }}
-                  />
+                  <Mail color="#9ca3af" size={18} style={{ marginRight: -5 }} />
                 )}
                 <TextInput
                   className="flex-1 h-12 ml-2 text-black"
@@ -117,7 +111,7 @@ export default function Login() {
               {/* Mostrar errores */}
               {field.state.meta.isTouched &&
                 field.state.meta.errors.length > 0 && (
-                  <Text style={{ color: "red" }}>
+                  <Text className=" text-cyan-900 mt-2 text-md font-lexend-light">
                     {field.state.meta.errors.join(", ")}
                   </Text>
                 )}
@@ -130,13 +124,16 @@ export default function Login() {
         >
           {([canSubmit, isSubmitting]) => (
             <Pressable
-              className=" flex w-[70%] justify-center items-center rounded-xl bg-blue-400 p-4 mt-6 mb-10"
-              disabled={!canSubmit}
+              className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-6 mb-10 ${
+                !canSubmit || isSubmitting ? "bg-gray-400" : "bg-lime-400"
+              }`}
+              disabled={isSubmitting}
               onPress={form.handleSubmit}
             >
-              <Text className=" font-lexend-light text-white">
-                {isSubmitting ? "Enviando código..." : "Ingresar"}
+              <Text className=" font-lexend-bold text-black">
+                {isSubmitting ? "Enviando código..." : "Enviar código "}
               </Text>
+              {!isSubmitting && <ArrowRight color="black" size={18} />}
             </Pressable>
           )}
         </form.Subscribe>
