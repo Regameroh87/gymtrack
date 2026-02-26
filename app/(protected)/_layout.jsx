@@ -1,6 +1,6 @@
 import { Tabs, Redirect } from "expo-router";
 import { Barbell, Home, Logs } from "../../assets/icons";
-import { useUser } from "../../src/lib/authContext";
+import { useUser } from "../../src/auth/lib/authContext.js";
 
 export default function ProtectedLayout() {
   const { isLoggedIn } = useUser();

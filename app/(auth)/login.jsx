@@ -1,9 +1,8 @@
 import { Text, View, TextInput, Image, Pressable } from "react-native";
-
-import Screen from "../src/components/Screen";
+import Screen from "../../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
-import { Barbell, Mail, ArrowRight } from "../assets/icons";
+import { Barbell, Mail, ArrowRight } from "../../assets/icons";
 import { useRouter } from "expo-router";
 
 export default function Login() {

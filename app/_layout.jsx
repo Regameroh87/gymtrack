@@ -40,17 +40,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <AuthProvider>
           <Stack>
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="verify"
-              options={{
-                headerShown: false,
-                presentation: "formSheet",
-                sheetAllowedDetents: [0.7, 0.9],
-                sheetGrabberVisible: true,
-                gestureEnabled: true,
-              }}
-            />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen
               name="(protected)"
               options={{
