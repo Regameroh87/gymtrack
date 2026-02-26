@@ -80,17 +80,15 @@ export default function Login() {
         <form.Field
           name="email"
           validators={{
-            onBlur: ({ value }) => {
+            onChange: ({ value, fieldApi }) => {
+              if (
+                !fieldApi.state.meta.isBlurred &&
+                fieldApi.form.state.submissionAttempts === 0
+              ) {
+                return undefined;
+              }
               if (!value) return "El email es obligatorio";
               const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (!emailRegex.test(value)) return "Ingresá un email válido";
-              return undefined;
-            },
-            onChange: ({ value }) => {
-              // Solo validamos al escribir si el usuario ya salió del campo una vez (isTouched)
-              // o si ya intentó enviar el formulario. Esto permite limpiar el error en tiempo real.
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (!value) return "El email es obligatorio";
               if (!emailRegex.test(value)) return "Ingresá un email válido";
               return undefined;
             },
@@ -115,25 +113,15 @@ export default function Login() {
                   autoCorrect={false}
                   value={field.state.value}
                   onChangeText={(text) => field.setValue(text)}
-                  onBlur={field.handleBlur}
                 />
               </View>
-              {/* Mostrar errores */}
+              {/* Mostrar errores de validación */}
               {field.state.meta.errors.length > 0 && (
                 <View>
-                  {/* Error de formato: solo si ya salió del campo y hay texto */}
-                  {field.state.meta.isTouched &&
-                    field.state.value.length > 0 && (
-                      <Text className=" text-red-600 mt-2 text-sm font-lexend">
-                        {field.state.meta.errors.find((e) =>
-                          e.includes("válido")
-                        )}
-                      </Text>
-                    )}
-                  {/* Error de obligatorio: solo si intentó enviar y está vacío */}
-                  {form.state.submissionAttempts > 0 && !field.state.value && (
-                    <Text className=" text-red-600 mt-2 text-sm font-lexend">
-                      El email es obligatorio
+                  {(field.state.meta.isBlurred ||
+                    form.state.submissionAttempts > 0) && (
+                    <Text className=" absolute text-cyan-800 mt-2 text-sm font-lexend">
+                      {field.state.meta.errors[0]}
                     </Text>
                   )}
                 </View>
@@ -147,7 +135,7 @@ export default function Login() {
         >
           {([canSubmit, isSubmitting]) => (
             <Pressable
-              className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-6 mb-10 ${
+              className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-10 mb-10 ${
                 isSubmitting ? "bg-gray-400" : "bg-lime-400"
               }`}
               disabled={isSubmitting}
