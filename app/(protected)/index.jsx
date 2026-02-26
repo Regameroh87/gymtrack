@@ -1,6 +1,6 @@
 import { Text, Pressable, View, Image, Button } from "react-native";
 import Screen from "../../src/components/Screen";
-import { useUser } from "../../src/lib/authContext.js";
+import { useUser } from "../../src/auth/lib/authContext.js";
 import { useRouter } from "expo-router";
 
 export default function Index() {
