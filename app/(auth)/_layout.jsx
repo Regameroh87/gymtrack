@@ -8,7 +8,7 @@ export default function AuthLayout() {
         options={{
           headerShown: false,
           presentation: "formSheet",
-          sheetAllowedDetents: [0.7, 0.9],
+          sheetAllowedDetents: [0.9, 1],
           sheetGrabberVisible: true,
           gestureEnabled: true,
           contentStyle: { backgroundColor: "transparent" },

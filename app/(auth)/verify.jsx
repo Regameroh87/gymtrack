@@ -25,7 +25,7 @@ export default function Verify() {
       </View>
       <View className=" flex items-center mt-6">
         <Text className=" font-extralight text-lg text-gray-400 ">
-          Se le envio un codigo de verificacion
+          Enviamos un codigo de 6 digitos a tu mail.
         </Text>
       </View>
       <View className=" mt-24 rounded-2xl items-center justify-around">
