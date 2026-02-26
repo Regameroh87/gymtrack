@@ -1,9 +1,10 @@
 import Svg, { Path } from "react-native-svg";
-export const Barbell = (props) => (
+export const Barbell = ({ size = 24, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
     fill="currentColor"
     className="icon icon-tabler icons-tabler-filled icon-tabler-barbell"
     {...props}
@@ -13,11 +14,12 @@ export const Barbell = (props) => (
   </Svg>
 );
 
-export const Home = (props) => (
+export const Home = ({ size = 24, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
     fill="currentColor"
     className="icon icon-tabler icons-tabler-filled icon-tabler-home"
     {...props}
@@ -27,11 +29,12 @@ export const Home = (props) => (
   </Svg>
 );
 
-export const Logs = (props) => (
+export const Logs = ({ size = 24, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeLinecap="round"
@@ -45,11 +48,12 @@ export const Logs = (props) => (
   </Svg>
 );
 
-export const Mail = (props) => (
+export const Mail = ({ size = 24, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
     fill="currentColor"
     className="icon icon-tabler icons-tabler-filled icon-tabler-mail"
     {...props}
@@ -60,11 +64,12 @@ export const Mail = (props) => (
   </Svg>
 );
 
-export const ArrowRight = (props) => (
+export const ArrowRight = ({ size = 24, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeLinecap="round"
@@ -75,5 +80,25 @@ export const ArrowRight = (props) => (
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
     <Path d="M5 12h14M15 16l4-4M15 8l4 4" />
+  </Svg>
+);
+
+export const CheckMail = ({ size = 24, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className="icon icon-tabler icons-tabler-outline icon-tabler-mail-check"
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M11 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6" />
+    <Path d="m3 7 9 6 9-6M15 19l2 2 4-4" />
   </Svg>
 );

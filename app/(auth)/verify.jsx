@@ -1,7 +1,8 @@
-import { View, Button, TextInput } from "react-native";
+import { View, TextInput, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
+import { CheckMail } from "../../assets/icons";
 
 export default function Verify() {
   const router = useRouter();
@@ -18,48 +19,57 @@ export default function Verify() {
   });
 
   return (
-    <View className="flex-1 mt-24 rounded-2xl items-center justify-around bg-black/80">
-      <form.Field name="code">
-        {(field) => (
-          <View className="flex flex-row justify-center gap-2">
-            {(field.state.value || ["", "", "", "", "", ""]).map(
-              (digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(el) => (inputRefs.current[index] = el)}
-                  className="w-12 h-14 bg-white/20 rounded-xl text-white text-center text-2xl font-lexend-bold"
-                  value={digit}
-                  maxLength={1}
-                  keyboardType="numeric"
-                  onChangeText={(text) => {
-                    const newCode = [
-                      ...(field.state.value || ["", "", "", "", "", ""]),
-                    ];
-                    newCode[index] = text;
-                    field.setValue(newCode);
+    <View className="flex-1 items-center bg-black/80">
+      <View className=" flex flex-col items-center mt-12 p-6 rounded-full bg-gray-600/80">
+        <CheckMail color="#a3e635" size={48} />
+      </View>
+      <View className=" flex items-center mt-6">
+        <Text className=" font-extralight text-lg text-gray-400 ">
+          Se le envio un codigo de verificacion
+        </Text>
+      </View>
+      <View className=" mt-24 rounded-2xl items-center justify-around">
+        <form.Field name="code">
+          {(field) => (
+            <View className="flex flex-row justify-center gap-2">
+              {(field.state.value || ["", "", "", "", "", ""]).map(
+                (digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    className="w-12 h-14 focus:border-2 focus:border-lime-400 bg-white/20 rounded-xl text-white text-center text-2xl font-lexend-bold"
+                    value={digit}
+                    maxLength={1}
+                    keyboardType="numeric"
+                    onChangeText={(text) => {
+                      const newCode = [
+                        ...(field.state.value || ["", "", "", "", "", ""]),
+                      ];
+                      newCode[index] = text;
+                      field.setValue(newCode);
 
-                    // Si escribió algo, saltar al siguiente
-                    if (text.length > 0 && index < 5) {
-                      inputRefs.current[index + 1]?.focus();
-                    }
-                  }}
-                  onKeyPress={({ nativeEvent }) => {
-                    // Si borra y está vacío, volver al anterior
-                    if (
-                      nativeEvent.key === "Backspace" &&
-                      digit === "" &&
-                      index > 0
-                    ) {
-                      inputRefs.current[index - 1]?.focus();
-                    }
-                  }}
-                />
-              )
-            )}
-          </View>
-        )}
-      </form.Field>
-      <Button title="Volver" onPress={() => router.back()} />
+                      // Si escribió algo, saltar al siguiente
+                      if (text.length > 0 && index < 5) {
+                        inputRefs.current[index + 1]?.focus();
+                      }
+                    }}
+                    onKeyPress={({ nativeEvent }) => {
+                      // Si borra y está vacío, volver al anterior
+                      if (
+                        nativeEvent.key === "Backspace" &&
+                        digit === "" &&
+                        index > 0
+                      ) {
+                        inputRefs.current[index - 1]?.focus();
+                      }
+                    }}
+                  />
+                )
+              )}
+            </View>
+          )}
+        </form.Field>
+      </View>
     </View>
   );
 }
