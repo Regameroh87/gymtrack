@@ -80,9 +80,18 @@ export default function Login() {
         <form.Field
           name="email"
           validators={{
-            onChange: ({ value }) => {
+            onBlur: ({ value }) => {
               if (!value) return "El email es obligatorio";
-              if (!value.includes("@")) return "Ingresá un email válido";
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(value)) return "Ingresá un email válido";
+              return undefined;
+            },
+            onChange: ({ value }) => {
+              // Solo validamos al escribir si el usuario ya salió del campo una vez (isTouched)
+              // o si ya intentó enviar el formulario. Esto permite limpiar el error en tiempo real.
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!value) return "El email es obligatorio";
+              if (!emailRegex.test(value)) return "Ingresá un email válido";
               return undefined;
             },
           }}
@@ -105,16 +114,30 @@ export default function Login() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   value={field.state.value}
-                  onChangeText={(text) => field.handleChange(text)}
+                  onChangeText={(text) => field.setValue(text)}
+                  onBlur={field.handleBlur}
                 />
               </View>
               {/* Mostrar errores */}
-              {field.state.meta.isTouched &&
-                field.state.meta.errors.length > 0 && (
-                  <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
-                    {field.state.meta.errors.join(", ")}
-                  </Text>
-                )}
+              {field.state.meta.errors.length > 0 && (
+                <View>
+                  {/* Error de formato: solo si ya salió del campo y hay texto */}
+                  {field.state.meta.isTouched &&
+                    field.state.value.length > 0 && (
+                      <Text className=" text-red-600 mt-2 text-sm font-lexend">
+                        {field.state.meta.errors.find((e) =>
+                          e.includes("válido")
+                        )}
+                      </Text>
+                    )}
+                  {/* Error de obligatorio: solo si intentó enviar y está vacío */}
+                  {form.state.submissionAttempts > 0 && !field.state.value && (
+                    <Text className=" text-red-600 mt-2 text-sm font-lexend">
+                      El email es obligatorio
+                    </Text>
+                  )}
+                </View>
+              )}
             </View>
           )}
         </form.Field>
