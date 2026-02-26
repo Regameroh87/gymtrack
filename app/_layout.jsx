@@ -1,7 +1,7 @@
 import "../global.css";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "../src/lib/authContext";
+import { AuthProvider } from "../src/auth/lib/authContext";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useFonts } from "expo-font";

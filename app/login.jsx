@@ -1,5 +1,5 @@
 import { Text, View, TextInput, Image, Pressable } from "react-native";
-import { supabase } from "../src/lib/supabase";
+
 import Screen from "../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,18 +8,6 @@ import { useRouter } from "expo-router";
 
 export default function Login() {
   const router = useRouter();
-  const sendCodeVerify = async (email) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        shouldCreateUser: false,
-      },
-    });
-    if (error) {
-      console.error("Error al enviar:", error.message);
-      throw error;
-    }
-  };
 
   const form = useForm({
     defaultValues: {
