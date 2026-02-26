@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
 import { Barbell, Mail, ArrowRight } from "../../assets/icons";
 import { useRouter } from "expo-router";
+import sendCodeVerify from "../../src/auth/lib/sendCode.js";
 
 export default function Login() {
   const router = useRouter();
@@ -14,13 +15,14 @@ export default function Login() {
     },
     onSubmit: async ({ value }) => {
       console.log(value.email);
-      /*  await sendCodeVerify(value.email); */
-      await new Promise((resolve) =>
-        setTimeout(() => {
-          resolve();
-          router.push("/verify");
-        }, 2000)
-      );
+      try {
+        const response = await sendCodeVerify(value.email);
+        console.log(response);
+        router.push("/verify");
+      } catch (error) {
+        //! habria que hacer algo para manejar ese error
+        console.error(error.message);
+      }
     },
   });
 
