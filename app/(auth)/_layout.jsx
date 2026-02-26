@@ -11,6 +11,7 @@ export default function AuthLayout() {
           sheetAllowedDetents: [0.7, 0.9],
           sheetGrabberVisible: true,
           gestureEnabled: true,
+          contentStyle: { backgroundColor: "transparent" },
         }}
       />
     </Stack>

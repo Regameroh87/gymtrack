@@ -15,7 +15,12 @@ export default function Login() {
     onSubmit: async ({ value }) => {
       console.log(value.email);
       /*  await sendCodeVerify(value.email); */
-      router.push("/verify");
+      await new Promise((resolve) =>
+        setTimeout(() => {
+          resolve();
+          router.push("/verify");
+        }, 2000)
+      );
     },
   });
 
@@ -118,15 +123,22 @@ export default function Login() {
           {([canSubmit, isSubmitting]) => (
             <Pressable
               className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-10 mb-10 ${
-                isSubmitting ? "bg-gray-400" : "bg-lime-400"
+                isSubmitting || !canSubmit ? "bg-lime-100" : "bg-lime-400"
               }`}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canSubmit}
               onPress={form.handleSubmit}
             >
-              <Text className=" font-lexend-bold text-black">
+              <Text
+                className={`font-lexend-ebold text-xl ${isSubmitting || !canSubmit ? "text-gray-600" : "text-black"} `}
+              >
                 {isSubmitting ? "Enviando código..." : "Enviar código "}
               </Text>
-              {!isSubmitting && <ArrowRight color="black" size={18} />}
+              {!isSubmitting && (
+                <ArrowRight
+                  color={`${isSubmitting || !canSubmit ? "#4b5563" : "black"}`}
+                  size={18}
+                />
+              )}
             </Pressable>
           )}
         </form.Subscribe>
