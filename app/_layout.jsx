@@ -56,6 +56,7 @@ export default function RootLayout() {
                 headerShown: false,
               }}
             />
+            <Stack.Screen name="verify" options={{ headerShown: false }} />
           </Stack>
         </AuthProvider>
       </SafeAreaProvider>

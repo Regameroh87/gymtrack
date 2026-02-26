@@ -1,4 +1,4 @@
-import { Text, Button, View, TextInput, Image } from "react-native";
+import { Text, View, TextInput, Image, Pressable } from "react-native";
 import { supabase } from "../src/lib/supabase";
 import Screen from "../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
@@ -15,9 +15,6 @@ export default function Login() {
         // Importante: Al poner false, si el mail no existe en tu lista,
         // Supabase no enviará nada ni creará un usuario nuevo.
         shouldCreateUser: false,
-        // Puedes redirigir a una web después, pero para App móvil
-        // usualmente el usuario solo espera el código.
-        emailRedirectTo: "tuapp://login",
       },
     });
 
@@ -37,8 +34,8 @@ export default function Login() {
     },
     onSubmit: ({ value }) => {
       console.log(value.email);
-      /* enviarCodigo(value.email); */
       router.replace("/verify");
+      /* enviarCodigo(value.email); */
     },
   });
 
@@ -68,66 +65,85 @@ export default function Login() {
       />
       {/* TITULO */}
       <View>
-        <View className="self-center flex flex-row justify-center p-4 rounded-full bg-white/10">
-          <Barbell color="lightblue" />
+        <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
+          <Barbell color="#687076" />
         </View>
-        <View className="flex items-center">
-          <Text className=" text-white text-4xl font-lexend-bold my-4">
+        <View className="flex items-center mt-10">
+          <Text className=" text-white text-4xl font-lexend-ebold">
             Back to the Grind
           </Text>
-          <Text className=" text-white text-lg font-lexend-light">
-            Ready to crush your goals today?
+          <Text className=" text-white font-lexend mt-2  text-xl">
+            Ready to crush your goals today
           </Text>
         </View>
       </View>
-
-      <form.Field
-        name="email"
-        validators={{
-          /*   onBlur: ({ value }) => {
-            if (!value) return "El email es obligatorio";
-            if (!value.includes("@")) return "Ingresá un email válido";
-            return undefined;
-          }, */
-          onChange: ({ value }) => {
-            if (!value) return "El email es obligatorio";
-            if (!value.includes("@")) return "Ingresá un email válido";
-            return undefined;
-          },
-        }}
-      >
-        {(field) => (
-          <View>
-            <Text>Email:</Text>
-            <TextInput
-              className=" text-white"
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChangeText={(text) => field.handleChange(text)}
-              style={{ borderBottomWidth: 1, marginBottom: 10 }}
-            />
-            {/* Mostrar errores */}
-            {field.state.meta.isTouched &&
-              field.state.meta.errors.length > 0 && (
-                <Text style={{ color: "red" }}>
-                  {field.state.meta.errors.join(", ")}
-                </Text>
-              )}
-          </View>
-        )}
-      </form.Field>
-      {/* {Boton} */}
-      <form.Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting]}
-      >
-        {([canSubmit, isSubmitting]) => (
-          <Button
-            title={isSubmitting ? "Cargando..." : "Ingresar"}
-            disabled={!canSubmit}
-            onPress={form.handleSubmit} // <--- Aquí disparas el envío
-          />
-        )}
-      </form.Subscribe>
+      {/* FORMULARIO */}
+      <View className="flex w-[90%] h-72 mt-24 rounded-2xl items-center justify-center bg-white/70">
+        <form.Field
+          name="email"
+          /*    validators={{
+            onChange: ({ value }) => {
+              if (!value) return "El email es obligatorio";
+              if (!value.includes("@")) return "Ingresá un email válido";
+              return undefined;
+            },
+          }} */
+        >
+          {(field) => (
+            <View className="flex w-full px-12">
+              <Text className=" font-lexend-bold text-md text-slate-600">
+                Direccion de correo electrónico
+              </Text>
+              <View className="flex-row items-center border-gray-400 border-2 rounded-xl bg-slate-50 mt-2 px-3">
+                {field.state.value === "" && (
+                  <Barbell
+                    color="#687076"
+                    size={18}
+                    style={{ marginRight: -5 }}
+                  />
+                )}
+                <TextInput
+                  className="flex-1 h-12 ml-2 text-black"
+                  placeholder="mail@mail.com"
+                  placeholderTextColor={"gray"}
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={field.state.value}
+                  onChangeText={(text) => field.handleChange(text)}
+                />
+              </View>
+              {/* Mostrar errores */}
+              {field.state.meta.isTouched &&
+                field.state.meta.errors.length > 0 && (
+                  <Text style={{ color: "red" }}>
+                    {field.state.meta.errors.join(", ")}
+                  </Text>
+                )}
+            </View>
+          )}
+        </form.Field>
+        {/* {Boton} */}
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
+            <Pressable
+              className=" flex w-[70%] justify-center items-center rounded-xl bg-blue-400 p-4 mt-6 mb-10"
+              disabled={!canSubmit}
+              onPress={form.handleSubmit}
+            >
+              <Text className=" font-lexend-light text-white">
+                {isSubmitting ? "Enviando código..." : "Ingresar"}
+              </Text>
+            </Pressable>
+          )}
+        </form.Subscribe>
+        <Text className=" font-lexend-light text-xs px-2 text-slate-600">
+          Enviaremos un código de verificación a tu correo electrónico.
+        </Text>
+      </View>
     </Screen>
   );
 }

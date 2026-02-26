@@ -9,11 +9,10 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Lexend-Regular"],
-        lexend: ["Lexend-Regular"],
-        "lexend-bold": ["Lexend-Bold"],
-        "lexend-light": ["Lexend-Light"],
-        "lexend-extrabold": ["Lexend-ExtraBold"],
+        lexend: ["Lexend_400Regular"],
+        "lexend-light": ["Lexend_300Light"],
+        "lexend-bold": ["Lexend_700Bold"],
+        "lexend-ebold": ["Lexend_800ExtraBold"],
       },
     },
   },
