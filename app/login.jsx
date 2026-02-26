@@ -4,8 +4,10 @@ import Screen from "../src/components/Screen";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
 import { Barbell } from "../assets/icons";
+import { useRouter } from "expo-router";
 
 export default function Login() {
+  const router = useRouter();
   const enviarCodigo = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
@@ -35,7 +37,8 @@ export default function Login() {
     },
     onSubmit: ({ value }) => {
       console.log(value.email);
-      enviarCodigo(value.email);
+      /* enviarCodigo(value.email); */
+      router.replace("/verify");
     },
   });
 
@@ -65,12 +68,16 @@ export default function Login() {
       />
       {/* TITULO */}
       <View>
-        <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
-          <Barbell color="#E85A2A" />
+        <View className="self-center flex flex-row justify-center p-4 rounded-full bg-white/10">
+          <Barbell color="lightblue" />
         </View>
         <View className="flex items-center">
-          <Text className=" text-white text-2xl">Back to the Grind</Text>
-          <Text className=" text-white">Ready to crush your goals today</Text>
+          <Text className=" text-white text-4xl font-lexend-bold my-4">
+            Back to the Grind
+          </Text>
+          <Text className=" text-white text-lg font-lexend-light">
+            Ready to crush your goals today?
+          </Text>
         </View>
       </View>
 
