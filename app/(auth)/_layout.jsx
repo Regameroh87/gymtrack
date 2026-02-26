@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { Platform } from "react-native";
 export default function AuthLayout() {
   return (
     <Stack>
@@ -7,8 +8,8 @@ export default function AuthLayout() {
         name="verify"
         options={{
           headerShown: false,
-          presentation: "pageSheet",
-          sheetAllowedDetents: [0.9, 1],
+          presentation: Platform.OS === "ios" ? "pageSheet" : "formSheet",
+          sheetAllowedDetents: [0.5, 0.7],
           sheetGrabberVisible: true,
           gestureEnabled: true,
           contentStyle: { backgroundColor: "transparent" },
