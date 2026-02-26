@@ -20,15 +20,15 @@ export default function Verify() {
 
   return (
     <View className="flex-1 items-center bg-black/80">
-      <View className=" flex flex-col items-center mt-12 p-6 rounded-full bg-gray-600/80">
-        <CheckMail color="#a3e635" size={48} />
+      <View className=" flex flex-col items-center mt-12 p-6 rounded-full bg-lime-100/30">
+        <CheckMail color="#65a30d" size={48} />
       </View>
       <View className=" flex items-center mt-6">
         <Text className=" font-extralight text-lg text-gray-400 ">
           Enviamos un codigo de 6 digitos a tu mail.
         </Text>
       </View>
-      <View className=" mt-24 rounded-2xl items-center justify-around">
+      <View className=" mt-10 rounded-2xl items-center justify-around">
         <form.Field name="code">
           {(field) => (
             <View className="flex flex-row justify-center gap-2">
@@ -37,7 +37,7 @@ export default function Verify() {
                   <TextInput
                     key={index}
                     ref={(el) => (inputRefs.current[index] = el)}
-                    className="w-12 h-14 focus:border-2 focus:border-lime-400 bg-white/20 rounded-xl text-white text-center text-2xl font-lexend-bold"
+                    className="w-12 h-14 focus:border-2 focus:border-lime-400 bg-lime-200/20 rounded-xl text-white text-center text-2xl font-lexend-bold"
                     value={digit}
                     maxLength={1}
                     keyboardType="numeric"
