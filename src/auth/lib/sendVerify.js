@@ -1,4 +1,4 @@
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../database/supabase";
 const sendCodeVerify = async (email) => {
   const { error } = await supabase.auth.signInWithOtp({
     email: email,
