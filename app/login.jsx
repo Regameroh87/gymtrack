@@ -8,23 +8,18 @@ import { useRouter } from "expo-router";
 
 export default function Login() {
   const router = useRouter();
-  const enviarCodigo = async (email) => {
+  const sendCodeVerify = async (email) => {
     const { error } = await supabase.auth.signInWithOtp({
       email: email,
       options: {
-        // Importante: Al poner false, si el mail no existe en tu lista,
-        // Supabase no enviará nada ni creará un usuario nuevo.
         shouldCreateUser: false,
       },
     });
-
     if (error) {
       console.error("Error al enviar:", error.message);
       throw error;
     }
   };
-  /* const { logIn } = useUser();
-  const router = useRouter(); */
 
   const form = useForm({
     defaultValues: {
@@ -32,8 +27,8 @@ export default function Login() {
     },
     onSubmit: async ({ value }) => {
       console.log(value.email);
+      /*  await sendCodeVerify(value.email); */
       router.push("/verify");
-      await enviarCodigo(value.email);
     },
   });
 
