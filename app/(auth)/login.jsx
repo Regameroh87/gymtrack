@@ -18,7 +18,7 @@ export default function Login() {
       try {
         const response = await sendCodeVerify(value.email);
         console.log(response);
-        router.push("/verify");
+        router.push({ pathname: "/verify", params: { email: value.email } });
       } catch (error) {
         //! habria que hacer algo para manejar ese error
         console.error(error.message);

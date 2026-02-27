@@ -3,10 +3,12 @@ import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
 import { CheckMail } from "../../assets/icons";
+import { useLocalSearchParams } from "expo-router";
 
 export default function Verify() {
-  const router = useRouter();
   const inputRefs = useRef([]);
+  const { email } = useLocalSearchParams();
+  console.log("VERIFY", email);
 
   const form = useForm({
     defaultValues: {
