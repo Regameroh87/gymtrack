@@ -17,7 +17,7 @@ export default function Verify() {
       router.replace("/(protected)/");
     },
     onError: (error) => {
-      console.error("Mutation Error:", error.message);
+      router.replace("/login");
     },
   });
   console.log("VERIFY", email);

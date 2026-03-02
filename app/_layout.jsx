@@ -11,9 +11,10 @@ import {
   Lexend_300Light,
   Lexend_800ExtraBold,
 } from "@expo-google-fonts/lexend";
+
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
+import { View, Text } from "react-native";
 const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
@@ -28,33 +29,40 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // Se oculta el Splash cuando las fuentes están listas (o fallaron) Y el auth terminó de cargar
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
 
+  // Si las fuentes no están listas (y no fallaron) O el auth sigue cargando, mostramos nuestra vista de carga
   if (!fontsLoaded && !fontError) {
-    return null;
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text>Cargando aplicación...</Text>
+      </View>
+    );
   }
 
+  // No redireccionamos aquí directamente con <Redirect /> porque romperíamos el árbol de componentes (Providers, Stack, etc.)
+  // La redirección se maneja dentro de los layouts de los grupos (auth) y (protected)
+
   return (
-    <>
-      <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <StatusBar style="dark" />
-          <AuthProvider>
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(protected)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-            </Stack>
-          </AuthProvider>
-        </QueryClientProvider>
-      </SafeAreaProvider>
-    </>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <StatusBar style="dark" />
+        <AuthProvider>
+          <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(protected)"
+              options={{
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </AuthProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

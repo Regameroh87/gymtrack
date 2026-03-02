@@ -1,7 +1,23 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { Barbell, Home, Logs } from "../../assets/icons";
+import { useAuth } from "../../src/auth/lib/getSession";
+import { View, Text } from "react-native";
 
 export default function ProtectedLayout() {
+  const { isLoggedIn, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Cargando sesión...</Text>
+      </View>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   return (
     <Tabs screenOptions={{ headerTitleAlign: "center" }}>
       <Tabs.Screen

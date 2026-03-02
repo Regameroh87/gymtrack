@@ -1,12 +1,10 @@
 import { Text, Pressable, View, Image, Button } from "react-native";
+import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
-import { useUser } from "../../src/auth/lib/authContext.js";
-import { useRouter } from "expo-router";
 
 export default function Index() {
   const image = require("../../assets/icon.png");
-  const { logOut } = useUser();
-  const router = useRouter();
+
   return (
     <Screen>
       <View className=" flex flex-row w-full justify-between my-6">
@@ -30,13 +28,12 @@ export default function Index() {
           </Text>
         </Pressable>
       </View>
-      <View className=" my-4 rounded">
+      <View className=" w-1/2 mx-auto my-4 rounded">
         <Button
           style={{ borderRadius: "100%" }}
           title="Log Out"
           onPress={async () => {
-            logOut();
-            router.replace("/login");
+            await supabase.auth.signOut();
           }}
         />
       </View>
