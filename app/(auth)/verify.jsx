@@ -10,7 +10,7 @@ export default function Verify() {
   const inputRefs = useRef([]);
   const router = useRouter();
   const { email } = useLocalSearchParams();
-  const { mutate, isPending } = useMutation({
+  const { mutate, isPending, error } = useMutation({
     mutationFn: (code) => verifyCode({ email, code }),
     onSuccess: (result) => {
       console.log("Success result:", result);
@@ -102,6 +102,9 @@ export default function Verify() {
             </Pressable>
           )}
         </form.Subscribe>
+        {error && (
+          <Text className="text-red-500 mt-2 text-center">{error.message}</Text>
+        )}
       </View>
     </View>
   );

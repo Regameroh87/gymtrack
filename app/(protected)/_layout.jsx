@@ -1,14 +1,7 @@
-import { Tabs, Redirect } from "expo-router";
+import { Tabs } from "expo-router";
 import { Barbell, Home, Logs } from "../../assets/icons";
-import { useUser } from "../../src/auth/lib/authContext.js";
 
 export default function ProtectedLayout() {
-  const { isLoggedIn } = useUser();
-
-  if (!isLoggedIn) {
-    return <Redirect href="/login" />;
-  }
-
   return (
     <Tabs screenOptions={{ headerTitleAlign: "center" }}>
       <Tabs.Screen
