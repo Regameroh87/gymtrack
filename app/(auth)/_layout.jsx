@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import { Platform } from "react-native";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 const queryClient = new QueryClient();
 
@@ -12,10 +11,6 @@ export default function AuthLayout() {
           name="verify"
           options={{
             headerShown: false,
-            presentation: Platform.OS === "ios" ? "pageSheet" : "formSheet",
-            sheetAllowedDetents: [0.5, 0.7],
-            sheetGrabberVisible: true,
-            gestureEnabled: true,
             contentStyle: { backgroundColor: "transparent" },
           }}
         />
