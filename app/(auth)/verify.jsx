@@ -1,13 +1,25 @@
-import { View, TextInput, Text } from "react-native";
-import { useRouter } from "expo-router";
+import { View, TextInput, Text, Pressable } from "react-native";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
 import { CheckMail } from "../../assets/icons";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMutation } from "@tanstack/react-query";
+import verifyCode from "../../src/auth/lib/verifyCode.js";
 
 export default function Verify() {
   const inputRefs = useRef([]);
+  const router = useRouter();
   const { email } = useLocalSearchParams();
+  const { mutate, isPending } = useMutation({
+    mutationFn: (code) => verifyCode({ email, code }),
+    onSuccess: (result) => {
+      console.log("Success result:", result);
+      router.replace("/");
+    },
+    onError: (error) => {
+      console.error("Mutation Error:", error.message);
+    },
+  });
   console.log("VERIFY", email);
 
   const form = useForm({
@@ -16,7 +28,7 @@ export default function Verify() {
     },
     onSubmit: async ({ value }) => {
       console.log("Código ingresado:", value.code.join(""));
-      // Aquí iría la lógica de verificación con Supabase
+      mutate(value.code.join(""));
     },
   });
 
@@ -71,6 +83,25 @@ export default function Verify() {
             </View>
           )}
         </form.Field>
+        <form.Subscribe selector={(state) => [state.canSubmit]}>
+          {([canSubmit]) => (
+            <Pressable
+              className={`flex w-[70%] mx-auto justify-center items-center rounded-xl mt-10 mb-10 ${
+                isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
+              }`}
+              disabled={isPending || !canSubmit}
+              onPress={form.handleSubmit}
+            >
+              <Text
+                className={`font-lexend-ebold text-xl text-center ${
+                  isPending || !canSubmit ? "text-gray-600" : "text-black"
+                } `}
+              >
+                {isPending ? "Verificando..." : "Verificar código "}
+              </Text>
+            </Pressable>
+          )}
+        </form.Subscribe>
       </View>
     </View>
   );

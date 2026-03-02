@@ -12,6 +12,9 @@ import {
   Lexend_800ExtraBold,
 } from "@expo-google-fonts/lexend";
 import * as SplashScreen from "expo-splash-screen";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
@@ -37,18 +40,20 @@ export default function RootLayout() {
   return (
     <>
       <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <AuthProvider>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(protected)"
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style="dark" />
+          <AuthProvider>
+            <Stack>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(protected)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+          </AuthProvider>
+        </QueryClientProvider>
       </SafeAreaProvider>
     </>
   );

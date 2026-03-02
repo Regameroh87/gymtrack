@@ -5,24 +5,26 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Barbell, Mail, ArrowRight } from "../../assets/icons";
 import { useRouter } from "expo-router";
 import sendCodeVerify from "../../src/auth/lib/sendCode.js";
+import { useMutation } from "@tanstack/react-query";
 
 export default function Login() {
   const router = useRouter();
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: (email) => sendCodeVerify(email),
+    onSuccess: (_data, email) => {
+      router.push({ pathname: "/verify", params: { email: email } });
+    },
+    onError: (error) => {
+      console.error(error.message);
+    },
+  });
 
   const form = useForm({
     defaultValues: {
       email: "",
     },
     onSubmit: async ({ value }) => {
-      console.log(value.email);
-      try {
-        const response = await sendCodeVerify(value.email);
-        console.log(response);
-        router.push({ pathname: "/verify", params: { email: value.email } });
-      } catch (error) {
-        //! habria que hacer algo para manejar ese error
-        console.error(error.message);
-      }
+      mutate(value.email);
     },
   });
 
@@ -115,29 +117,34 @@ export default function Login() {
                   )}
                 </View>
               )}
+              {error && (
+                <View>
+                  <Text className=" absolute text-cyan-800 mt-2 text-sm font-lexend">
+                    Ha ocurrido un error intente nuevamente.
+                  </Text>
+                </View>
+              )}
             </View>
           )}
         </form.Field>
         {/* {Boton} */}
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-        >
-          {([canSubmit, isSubmitting]) => (
+        <form.Subscribe selector={(state) => [state.canSubmit]}>
+          {([canSubmit]) => (
             <Pressable
               className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-10 mb-10 ${
-                isSubmitting || !canSubmit ? "bg-lime-100" : "bg-lime-400"
+                isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
               }`}
-              disabled={isSubmitting || !canSubmit}
+              disabled={isPending || !canSubmit}
               onPress={form.handleSubmit}
             >
               <Text
-                className={`font-lexend-ebold text-xl ${isSubmitting || !canSubmit ? "text-gray-600" : "text-black"} `}
+                className={`font-lexend-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}
               >
-                {isSubmitting ? "Enviando código..." : "Enviar código "}
+                {isPending ? "Enviando código..." : "Enviar código "}
               </Text>
-              {!isSubmitting && (
+              {!isPending && (
                 <ArrowRight
-                  color={`${isSubmitting || !canSubmit ? "#4b5563" : "black"}`}
+                  color={`${isPending || !canSubmit ? "#4b5563" : "black"}`}
                   size={18}
                 />
               )}
