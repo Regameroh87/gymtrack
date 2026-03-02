@@ -14,7 +14,7 @@ export default function Verify() {
     mutationFn: (code) => verifyCode({ email, code }),
     onSuccess: (result) => {
       console.log("Success result:", result);
-      router.replace("/");
+      router.replace("/(protected)/");
     },
     onError: (error) => {
       console.error("Mutation Error:", error.message);
