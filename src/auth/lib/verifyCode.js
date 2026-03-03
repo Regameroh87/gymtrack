@@ -7,7 +7,7 @@ const handleVerifyCode = async ({ email, code }) => {
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw error;
   }
 
   return data;

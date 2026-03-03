@@ -1,4 +1,4 @@
-import { View, TextInput, Text, Pressable, Vibration } from "react-native";
+import { View, TextInput, Text, Pressable, Button } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
@@ -20,10 +20,42 @@ export default function Verify() {
     },
     onError: (error) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      console.log("Error result:", error);
+      console.log("Error result:", error.message, error.status);
     },
   });
   console.log("VERIFY", email);
+
+  const errorVerify = (error) => {
+    if (error.status === 400) {
+      const message = error.message.toLowerCase();
+
+      if (message.includes("expired")) {
+        return (
+          <View>
+            <Text className="text-cyan-800 mt-2 text-center">
+              El código ha expirado, pedí uno nuevo
+            </Text>
+            <Button title="Reenviar código" />
+          </View>
+        );
+      }
+      if (message.includes("invalid")) {
+        return (
+          <Text className="text-cyan-800 mt-2 text-center">
+            Código incorrecto, verificalo e intentá de nuevo
+          </Text>
+        );
+      }
+    }
+    return (
+      <View>
+        <Text className="text-cyan-800 mt-2 text-center">
+          Ha ocurrido un error, intentalo de nuevo
+        </Text>
+        <Button title="Reenviar código" />
+      </View>
+    );
+  };
 
   const form = useForm({
     defaultValues: {
@@ -108,11 +140,7 @@ export default function Verify() {
             </Pressable>
           )}
         </form.Subscribe>
-        {error && (
-          <Text className="text-cyan-800 mt-2 text-center">
-            {error.message}
-          </Text>
-        )}
+        {error && errorVerify(error)}
       </View>
     </View>
   );
