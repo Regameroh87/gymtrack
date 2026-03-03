@@ -7,10 +7,12 @@ import { useRouter } from "expo-router";
 import sendCodeVerify from "../../src/auth/lib/sendCode.js";
 import { useMutation } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
+import { useState } from "react";
 
 export default function Login() {
   const router = useRouter();
-  const { mutate, isPending, error } = useMutation({
+  const [errorSupabase, setErrorSupabase] = useState("");
+  const { mutate, isPending } = useMutation({
     mutationFn: (email) => sendCodeVerify(email),
     onSuccess: (_data, email) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -18,6 +20,7 @@ export default function Login() {
     },
     onError: (error) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setErrorSupabase(getErrorMessage(error));
       console.error(error.message, error.status);
     },
   });
@@ -116,60 +119,67 @@ export default function Login() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   value={field.state.value}
-                  onChangeText={(text) => field.setValue(text)}
+                  onChangeText={(text) => {
+                    setErrorSupabase("");
+                    field.setValue(text);
+                  }}
                 />
               </View>
               {/* Mostrar errores de validación */}
-              {field.state.meta.errors.length > 0 && (
-                <View>
-                  {(field.state.meta.isBlurred ||
-                    form.state.submissionAttempts > 0) && (
+              <View className="flex min-h-16">
+                {field.state.meta.errors.length > 0 && (
+                  <View>
+                    {(field.state.meta.isBlurred ||
+                      form.state.submissionAttempts > 0) && (
+                      <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
+                        {field.state.meta.errors[0]}
+                      </Text>
+                    )}
+                  </View>
+                )}
+                {errorSupabase && (
+                  <View>
                     <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
-                      {field.state.meta.errors[0]}
+                      {errorSupabase}
                     </Text>
-                  )}
-                </View>
-              )}
-              {error && (
-                <View>
-                  <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
-                    {getErrorMessage(error)}
-                  </Text>
-                </View>
-              )}
+                  </View>
+                )}
+              </View>
             </View>
           )}
         </form.Field>
         {/* {Boton} */}
-        <form.Subscribe selector={(state) => [state.canSubmit]}>
-          {([canSubmit]) => (
-            <Pressable
-              className={`flex relative flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-4 mb-2 ${
-                isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
-              }`}
-              disabled={isPending || !canSubmit}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                form.handleSubmit();
-              }}
-            >
-              <Text
-                className={`font-lexend-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}
+        <View className="flex items-center justify-center">
+          <form.Subscribe selector={(state) => [state.canSubmit]}>
+            {([canSubmit]) => (
+              <Pressable
+                className={` flex flex-row w-[70%] p-4 items-center rounded-xl mb-4 ${
+                  isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
+                }`}
+                disabled={isPending || !canSubmit}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  form.handleSubmit();
+                }}
               >
-                {isPending ? "Enviando código..." : "Enviar código "}
-              </Text>
-              {!isPending && (
-                <ArrowRight
-                  color={`${isPending || !canSubmit ? "#4b5563" : "black"}`}
-                  size={18}
-                />
-              )}
-            </Pressable>
-          )}
-        </form.Subscribe>
-        <Text className=" font-lexend-light text-xs px-2 text-slate-600">
-          Enviaremos un código de verificación a tu correo electrónico.
-        </Text>
+                <Text
+                  className={`font-lexend-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}
+                >
+                  {isPending ? "Enviando código..." : "Enviar código "}
+                </Text>
+                {!isPending && (
+                  <ArrowRight
+                    color={`${isPending || !canSubmit ? "#4b5563" : "black"}`}
+                    size={18}
+                  />
+                )}
+              </Pressable>
+            )}
+          </form.Subscribe>
+          <Text className=" font-lexend-light text-xs px-2 text-slate-600">
+            Enviaremos un código de verificación a tu correo electrónico.
+          </Text>
+        </View>
       </View>
     </Screen>
   );

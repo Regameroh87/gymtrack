@@ -20,7 +20,7 @@ export default function Verify() {
     },
     onError: (error) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      router.replace("/login");
+      console.log("Error result:", error);
     },
   });
   console.log("VERIFY", email);
