@@ -13,13 +13,10 @@ export default function Login() {
   const { mutate, isPending, error } = useMutation({
     mutationFn: (email) => sendCodeVerify(email),
     onSuccess: (_data, email) => {
-      // Impacto medio para éxito
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.push({ pathname: "/verify", params: { email: email } });
+      router.replace({ pathname: "/verify", params: { email: email } });
     },
     onError: (error) => {
-      // Usamos el API de vibración nativo para errores, es mucho más difícil de ignorar por Android
-
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       console.error(error.message, error.status);
     },
@@ -33,6 +30,16 @@ export default function Login() {
       mutate(value.email);
     },
   });
+
+  // Función para traducir errores de Supabase
+  const getErrorMessage = (err) => {
+    if (!err) return null;
+    if (err.status === 422)
+      return "Este email no está autorizado para ingresar. Contactese con administración.";
+    if (err.status === 429)
+      return "Demasiados intentos. Por favor, reintentá más tarde.";
+    return "Ha ocurrido un error, intente nuevamente.";
+  };
 
   return (
     <Screen safe className=" justify-center items-center">
@@ -58,7 +65,6 @@ export default function Login() {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         pointerEvents="none"
       />
-
       {/* TITULO */}
       <View>
         <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
@@ -74,7 +80,7 @@ export default function Login() {
         </View>
       </View>
       {/* FORMULARIO */}
-      <View className="flex w-[90%] h-72 mt-24 rounded-2xl items-center justify-center bg-white/70">
+      <View className="flex w-[90%] h-72 mt-24 pt-4 rounded-2xl items-center bg-white/70">
         <form.Field
           name="email"
           validators={{
@@ -118,7 +124,7 @@ export default function Login() {
                 <View>
                   {(field.state.meta.isBlurred ||
                     form.state.submissionAttempts > 0) && (
-                    <Text className=" absolute text-cyan-800 mt-2 text-sm font-lexend">
+                    <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
                       {field.state.meta.errors[0]}
                     </Text>
                   )}
@@ -126,8 +132,8 @@ export default function Login() {
               )}
               {error && (
                 <View>
-                  <Text className=" absolute text-cyan-800 mt-2 text-sm font-lexend">
-                    {error.message}
+                  <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
+                    {getErrorMessage(error)}
                   </Text>
                 </View>
               )}
@@ -138,11 +144,12 @@ export default function Login() {
         <form.Subscribe selector={(state) => [state.canSubmit]}>
           {([canSubmit]) => (
             <Pressable
-              className={`flex flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-10 mb-10 ${
+              className={`flex relative flex-row w-[70%] justify-center items-center rounded-xl p-4 mt-4 mb-2 ${
                 isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
               }`}
               disabled={isPending || !canSubmit}
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 form.handleSubmit();
               }}
             >
