@@ -1,4 +1,5 @@
-import { View, TextInput, Text, Pressable } from "react-native";
+import { View, TextInput, Text, Pressable, Vibration } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useForm } from "@tanstack/react-form";
 import { useRef } from "react";
 import { CheckMail } from "../../assets/icons";
@@ -13,10 +14,12 @@ export default function Verify() {
   const { mutate, isPending, error } = useMutation({
     mutationFn: (code) => verifyCode({ email, code }),
     onSuccess: (result) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       console.log("Success result:", result);
       router.replace("/(protected)/");
     },
     onError: (error) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       router.replace("/login");
     },
   });
@@ -33,7 +36,7 @@ export default function Verify() {
   });
 
   return (
-    <View className=" flex-1 items-center bg-black">
+    <View className=" flex-1 items-center justify-center bg-black">
       <View className=" flex flex-col items-center mt-12 p-6 rounded-full bg-lime-100/30">
         <CheckMail color="#65a30d" size={48} />
       </View>
@@ -86,11 +89,14 @@ export default function Verify() {
         <form.Subscribe selector={(state) => [state.canSubmit]}>
           {([canSubmit]) => (
             <Pressable
-              className={`flex w-[70%] mx-auto justify-center items-center rounded-xl mt-10 mb-10 ${
+              className={`flex w-[70%] mx-auto justify-center p-4 focus:bg-lime-600 items-center rounded-xl mt-10 mb-10 ${
                 isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
               }`}
               disabled={isPending || !canSubmit}
-              onPress={form.handleSubmit}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                form.handleSubmit();
+              }}
             >
               <Text
                 className={`font-lexend-ebold text-xl text-center ${
@@ -103,7 +109,9 @@ export default function Verify() {
           )}
         </form.Subscribe>
         {error && (
-          <Text className="text-red-500 mt-2 text-center">{error.message}</Text>
+          <Text className="text-cyan-800 mt-2 text-center">
+            {error.message}
+          </Text>
         )}
       </View>
     </View>

@@ -6,16 +6,22 @@ import { Barbell, Mail, ArrowRight } from "../../assets/icons";
 import { useRouter } from "expo-router";
 import sendCodeVerify from "../../src/auth/lib/sendCode.js";
 import { useMutation } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 
 export default function Login() {
   const router = useRouter();
   const { mutate, isPending, error } = useMutation({
     mutationFn: (email) => sendCodeVerify(email),
     onSuccess: (_data, email) => {
+      // Impacto medio para éxito
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push({ pathname: "/verify", params: { email: email } });
     },
     onError: (error) => {
-      console.error(error.message);
+      // Usamos el API de vibración nativo para errores, es mucho más difícil de ignorar por Android
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      console.error(error.message, error.status);
     },
   });
 
@@ -52,6 +58,7 @@ export default function Login() {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         pointerEvents="none"
       />
+
       {/* TITULO */}
       <View>
         <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
@@ -120,7 +127,7 @@ export default function Login() {
               {error && (
                 <View>
                   <Text className=" absolute text-cyan-800 mt-2 text-sm font-lexend">
-                    Ha ocurrido un error intente nuevamente.
+                    {error.message}
                   </Text>
                 </View>
               )}
@@ -135,7 +142,9 @@ export default function Login() {
                 isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
               }`}
               disabled={isPending || !canSubmit}
-              onPress={form.handleSubmit}
+              onPress={() => {
+                form.handleSubmit();
+              }}
             >
               <Text
                 className={`font-lexend-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}

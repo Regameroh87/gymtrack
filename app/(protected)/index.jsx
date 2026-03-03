@@ -1,4 +1,5 @@
 import { Text, Pressable, View, Image, Button } from "react-native";
+import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
 
@@ -22,7 +23,13 @@ export default function Index() {
         <Text className="text-2xl font-bold text-gray-700">SESIONES 1/3</Text>
       </View>
       <View>
-        <Pressable className=" flex flex-row justify-center items-center w-1/2 h-auto mx-auto bg-blue-400 active:bg-blue-500 p-4 rounded-full mt-6">
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            // Lógica para iniciar entrenamiento aquí
+          }}
+          className=" flex flex-row justify-center items-center w-1/2 h-auto mx-auto bg-blue-400 active:bg-blue-500 p-4 rounded-full mt-6"
+        >
           <Text className="text-white text-lg font-bold">
             Iniciar sesion 🏋️
           </Text>
@@ -33,6 +40,7 @@ export default function Index() {
           style={{ borderRadius: "100%" }}
           title="Log Out"
           onPress={async () => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             await supabase.auth.signOut();
           }}
         />
