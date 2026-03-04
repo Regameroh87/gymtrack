@@ -1,7 +1,6 @@
 import "../global.css";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "../src/auth/lib/authContext";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useFonts } from "expo-font";
@@ -51,17 +50,15 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
-        <AuthProvider>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(protected)"
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack>
-        </AuthProvider>
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(protected)"
+            options={{
+              headerShown: false,
+            }}
+          />
+        </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
