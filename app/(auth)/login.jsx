@@ -30,7 +30,8 @@ export default function Login() {
       email: "",
     },
     onSubmit: async ({ value }) => {
-      mutate(value.email);
+      //mutate(value.email);
+      router.push("/verify");
     },
   });
 
