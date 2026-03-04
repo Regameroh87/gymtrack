@@ -7,12 +7,13 @@ import { CheckMail } from "../../assets/icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import verifyCode from "../../src/auth/lib/verifyCode.js";
+import sendCodeVerify from "../../src/auth/lib/sendCode.js";
 
 export default function Verify() {
   const inputRefs = useRef([]);
   const router = useRouter();
   const { email } = useLocalSearchParams();
-  const { mutate, isPending, error } = useMutation({
+  const { mutate, isPending, error, reset } = useMutation({
     mutationFn: (code) => verifyCode({ email, code }),
     onSuccess: (result) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -36,7 +37,20 @@ export default function Verify() {
             <Text className="text-cyan-800 mt-2 text-center">
               El código ha expirado, pedí uno nuevo
             </Text>
-            <Button title="Reenviar código" />
+            <Pressable
+              className=" p-2 rounded-xl"
+              onPress={() => {
+                //DEBO BORRAR EL ESTADO DEL INPUT, LOS ERRORES DE LA PETICION Y REENVIAR CODIGO
+                reset();
+                form.reset();
+                sendCodeVerify(email);
+                inputRefs.current[0]?.focus();
+              }}
+            >
+              <Text className="text-cyan-500 underline text-center">
+                Reenviar código
+              </Text>
+            </Pressable>
           </View>
         );
       }
@@ -53,7 +67,20 @@ export default function Verify() {
         <Text className="text-cyan-800 mt-2 text-center">
           Ha ocurrido un error, intentalo de nuevo
         </Text>
-        <Button title="Reenviar código" />
+        <Pressable
+          className=" p-2 rounded-xl"
+          onPress={() => {
+            //DEBO BORRAR EL ESTADO DEL INPUT, LOS ERRORES DE LA PETICION Y REENVIAR CODIGO
+            reset();
+            form.reset();
+            sendCodeVerify(email);
+            inputRefs.current[0]?.focus();
+          }}
+        >
+          <Text className="text-cyan-500 underline text-center">
+            Reenviar código
+          </Text>
+        </Pressable>
       </View>
     );
   };
@@ -122,7 +149,7 @@ export default function Verify() {
         <form.Subscribe selector={(state) => [state.canSubmit]}>
           {([canSubmit]) => (
             <Pressable
-              className={`flex w-[70%] mx-auto justify-center p-4 focus:bg-lime-600 items-center rounded-xl mt-10 mb-10 ${
+              className={`flex w-[70%] mx-auto justify-center p-4 focus:bg-lime-600 items-center rounded-xl mt-10 mb-2 ${
                 isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
               }`}
               disabled={isPending || !canSubmit}
@@ -141,7 +168,13 @@ export default function Verify() {
             </Pressable>
           )}
         </form.Subscribe>
-        {error && errorVerify(error)}
+        {error ? (
+          errorVerify(error)
+        ) : (
+          <Text className="text-cyan-800 font-lexend text-md">
+            Revisa tu correo
+          </Text>
+        )}
       </View>
     </View>
   );
