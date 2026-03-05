@@ -14,7 +14,12 @@ module.exports = {
         "lexend-bold": ["Lexend_700Bold"],
         "lexend-ebold": ["Lexend_800ExtraBold"],
       },
+      colors: {
+        "primary-dark": "#101622",
+        "primary-light": "#f6f6f8",
+      },
     },
   },
   plugins: [],
+  darkMode: "class",
 };

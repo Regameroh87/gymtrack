@@ -43,14 +43,12 @@ export default function RootLayout() {
     );
   }
 
-  // No redireccionamos aquí directamente con <Redirect /> porque romperíamos el árbol de componentes (Providers, Stack, etc.)
-  // La redirección se maneja dentro de los layouts de los grupos (auth) y (protected)
-
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
         <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen
             name="(protected)"
