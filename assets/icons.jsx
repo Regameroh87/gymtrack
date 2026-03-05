@@ -102,3 +102,24 @@ export const CheckMail = ({ size = 24, ...props }) => (
     <Path d="m3 7 9 6 9-6M15 19l2 2 4-4" />
   </Svg>
 );
+
+export const Polaroid = ({ size = 24, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className="icon icon-tabler icons-tabler-outline icon-tabler-polaroid"
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6M4 16h16" />
+    <Path d="m4 12 3-3c.928-.893 2.072-.893 3 0l4 4" />
+    <Path d="m13 12 2-2c.928-.893 2.072-.893 3 0l2 2M14 7h.01" />
+  </Svg>
+);
