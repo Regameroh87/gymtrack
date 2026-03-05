@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useForm } from "@tanstack/react-form";
 import * as ImagePicker from "expo-image-picker";
-import { Polaroid, Mail, Phone } from "../assets/icons";
+import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
 
 export default function Sandbox() {
@@ -195,19 +195,28 @@ export default function Sandbox() {
         </Text>
         <form.Field name="options.data.documentNumber">
           {(field) => (
-            <>
+            <View className="relative flex flex-col w-full ">
               <TextInput
                 placeholder="Ej: 123456789"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-10"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
+              {field.state.value === "" && (
+                <View className="absolute top-0 translate-y-1/2 mt-2 ml-2">
+                  <IdBadge
+                    color="#9ca3af"
+                    size={18}
+                    style={{ marginRight: -5 }}
+                  />
+                </View>
+              )}
               {field.state.meta.errors ? (
                 <Text className="text-red-500">
                   {field.state.meta.errors.join(", ")}
                 </Text>
               ) : null}
-            </>
+            </View>
           )}
         </form.Field>
       </View>
@@ -217,21 +226,45 @@ export default function Sandbox() {
         </Text>
         <form.Field name="options.data.address">
           {(field) => (
-            <>
+            <View className="relative flex flex-col w-full ">
               <TextInput
                 placeholder="Ej: Calle 123"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-10"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
+              {field.state.value === "" && (
+                <View className="absolute top-0 translate-y-1/2 mt-2 ml-2">
+                  <MapPin
+                    color="#9ca3af"
+                    size={18}
+                    style={{ marginRight: -5 }}
+                  />
+                </View>
+              )}
               {field.state.meta.errors ? (
                 <Text className="text-red-500">
                   {field.state.meta.errors.join(", ")}
                 </Text>
               ) : null}
-            </>
+            </View>
           )}
         </form.Field>
+        <form.Subscribe>
+          {({ canSubmit }) => (
+            <View className="flex flex-col w-full mb-32">
+              <Pressable
+                onPress={() => form.handleSubmit()}
+                disabled={!canSubmit}
+                className="bg-blue-500 p-4 rounded-md disabled:opacity-50"
+              >
+                <Text className="text-center text-primary-light dark:text-primary-dark font-lexend-ebold">
+                  Registrar
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </form.Subscribe>
       </View>
     </ScrollView>
   );
