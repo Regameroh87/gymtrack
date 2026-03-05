@@ -2,6 +2,7 @@ import { View, TextInput, Text, Image, Pressable } from "react-native";
 import { useForm } from "@tanstack/react-form";
 import * as ImagePicker from "expo-image-picker";
 import { Polaroid } from "../assets/icons";
+import { uploadToCloudinary } from "../src/utils/uploadImage.js";
 
 export default function Sandbox() {
   const form = useForm({
@@ -26,25 +27,13 @@ export default function Sandbox() {
         <form.Field name="options.data.imageProfile">
           {(field) => (
             <>
-              {field.state.value ? (
-                <Image
-                  source={{ uri: field.state.value ?? "" }}
-                  width={100}
-                  height={100}
-                />
-              ) : (
-                <View className="flex items-center justify-center bg-lime-500/20 p-6 rounded-full">
-                  <Polaroid className="text-slate-400" width={80} height={80} />
-                </View>
-              )}
-
               <Pressable
                 onPress={async () => {
                   const { status } =
                     await ImagePicker.requestMediaLibraryPermissionsAsync();
                   if (status !== "granted") {
                     alert(
-                      "Sorry, we need camera roll permissions to make this work!"
+                      "Disculpa, necesitamos permisos para acceder a la galeria"
                     );
                     return;
                   }
@@ -55,11 +44,32 @@ export default function Sandbox() {
                     quality: 1,
                   });
                   if (!result.canceled) {
-                    field.handleChange(result.assets[0].uri);
+                    const URL = await uploadToCloudinary(result.assets[0].uri);
+                    field.handleChange(URL);
+                    console.log(URL);
                   }
                 }}
+                className="flex items-center justify-center"
               >
-                <Text>Seleccionar Imagen</Text>
+                {field.state.value ? (
+                  <Image
+                    source={{ uri: field.state.value ?? "" }}
+                    className="rounded-full"
+                    width={100}
+                    height={100}
+                  />
+                ) : (
+                  <View className="flex items-center justify-center bg-lime-500/20 p-6 rounded-full">
+                    <Polaroid
+                      className="text-slate-400"
+                      width={80}
+                      height={80}
+                    />
+                  </View>
+                )}
+                <Text className="text-slate-700 dark:text-slate-300 mt-2">
+                  Seleccionar Imagen
+                </Text>
               </Pressable>
             </>
           )}

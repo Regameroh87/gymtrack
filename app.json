@@ -8,6 +8,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "jsEngine": "hermes",
     "schema": "gymtrack",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -15,9 +16,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "jsEngine": "hermes"
     },
     "android": {
+      "jsEngine": "hermes",
       "permissions": ["VIBRATE"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
