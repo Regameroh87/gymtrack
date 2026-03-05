@@ -10,6 +10,7 @@ import { useForm } from "@tanstack/react-form";
 import * as ImagePicker from "expo-image-picker";
 import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
+import { z } from "zod";
 
 export default function Sandbox() {
   const form = useForm({
@@ -26,6 +27,7 @@ export default function Sandbox() {
         },
       },
     },
+
     onSubmit: (values) => {
       console.log(values);
     },
@@ -91,7 +93,10 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Nombre(s)
         </Text>
-        <form.Field name="options.data.name">
+        <form.Field
+          name="options.data.name"
+          validators={{ onChange: z.string().min(3, "Nombre requerido") }}
+        >
           {(field) => (
             <>
               <TextInput
@@ -251,7 +256,7 @@ export default function Sandbox() {
           )}
         </form.Field>
         <form.Subscribe>
-          {({ canSubmit }) => (
+          {({ canSubmit, isSubmitting }) => (
             <View className="flex flex-col w-full mb-32">
               <Pressable
                 onPress={() => form.handleSubmit()}
@@ -259,7 +264,7 @@ export default function Sandbox() {
                 className="bg-blue-500 p-4 rounded-md disabled:opacity-50"
               >
                 <Text className="text-center text-primary-light dark:text-primary-dark font-lexend-ebold">
-                  Registrar
+                  {isSubmitting ? "Enviando..." : "Registrar"}
                 </Text>
               </Pressable>
             </View>
