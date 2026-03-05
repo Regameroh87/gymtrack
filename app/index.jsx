@@ -24,7 +24,7 @@ export default function Sandbox() {
             <>
               <TextInput
                 placeholder="Ej: Juan pablo"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-md p-4"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -46,7 +46,7 @@ export default function Sandbox() {
             <>
               <TextInput
                 placeholder="Ej: Perez Garcia"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-md p-4"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -68,7 +68,7 @@ export default function Sandbox() {
             <>
               <TextInput
                 placeholder="juan.perez@ejemplo.com"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-md p-4"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
