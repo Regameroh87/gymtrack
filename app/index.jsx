@@ -6,10 +6,15 @@ import { Polaroid } from "../assets/icons";
 export default function Sandbox() {
   const form = useForm({
     defaultValues: {
-      name: "",
-      lastName: "",
       email: "",
-      imageProfile: "",
+      options: {
+        data: {
+          name: "",
+          lastName: "",
+          imageProfile: "",
+          phone: "",
+        },
+      },
     },
     onSubmit: (values) => {
       console.log(values);
@@ -17,8 +22,8 @@ export default function Sandbox() {
   });
   return (
     <View className="flex-1 items-center justify-center bg-primary-light dark:bg-primary-dark px-6">
-      <View className=" flex flex-col w-full my-4">
-        <form.Field name="imageProfile">
+      <View className=" flex flex-col items-center w-full my-4">
+        <form.Field name="options.data.imageProfile">
           {(field) => (
             <>
               {field.state.value ? (
@@ -28,7 +33,9 @@ export default function Sandbox() {
                   height={100}
                 />
               ) : (
-                <Polaroid width={100} height={100} />
+                <View className="flex items-center justify-center bg-lime-500/20 p-6 rounded-full">
+                  <Polaroid className="text-slate-400" width={80} height={80} />
+                </View>
               )}
 
               <Pressable>
@@ -42,7 +49,7 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 mb-4">
           Nombre(s)
         </Text>
-        <form.Field name="name">
+        <form.Field name="options.data.name">
           {(field) => (
             <>
               <TextInput
@@ -64,7 +71,7 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 mb-4">
           Apellido(s)
         </Text>
-        <form.Field name="lastName">
+        <form.Field name="options.data.lastName">
           {(field) => (
             <>
               <TextInput
@@ -100,6 +107,23 @@ export default function Sandbox() {
                   {field.state.meta.errors.join(", ")}
                 </Text>
               ) : null}
+            </>
+          )}
+        </form.Field>
+      </View>
+      <View className=" flex flex-col w-full">
+        <Text className="text-slate-700 dark:text-slate-300 mb-4">
+          Telefono
+        </Text>
+        <form.Field name="options.data.phone">
+          {(field) => (
+            <>
+              <TextInput
+                placeholder="Ej: 123456789"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
+                value={field.state.value}
+                onChangeText={(value) => field.handleChange(value)}
+              />
             </>
           )}
         </form.Field>
