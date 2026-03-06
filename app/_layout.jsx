@@ -10,6 +10,7 @@ import {
   Lexend_300Light,
   Lexend_800ExtraBold,
 } from "@expo-google-fonts/lexend";
+import Toast from "react-native-toast-message";
 
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -48,6 +49,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
+
         <Screen safe>
           <Stack>
             <Stack.Screen
@@ -65,6 +67,7 @@ export default function RootLayout() {
               }}
             />
           </Stack>
+          <Toast />
         </Screen>
       </QueryClientProvider>
     </SafeAreaProvider>

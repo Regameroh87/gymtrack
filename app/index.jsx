@@ -11,6 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
 import registerUser from "../src/users/lib/register.js";
+import Toast from "react-native-toast-message";
 
 //import { z } from "zod";
 
@@ -27,8 +28,23 @@ export default function Sandbox() {
     },
     onSubmit: async (values) => {
       console.log(values.value);
-      const data = await registerUser(values.value);
-      console.log("DATA", data);
+      try {
+        await registerUser(values.value);
+        Toast.show({
+          type: "success",
+          text1: "Usuario registrado exitosamente",
+          position: "bottom",
+          visibilityTime: 2000,
+        });
+        form.reset();
+      } catch (error) {
+        Toast.show({
+          type: "error",
+          text1: error.message,
+          position: "bottom",
+          visibilityTime: 2000,
+        });
+      }
     },
   });
   return (
