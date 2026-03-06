@@ -10,26 +10,24 @@ import { useForm } from "@tanstack/react-form";
 import * as ImagePicker from "expo-image-picker";
 import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
+import registerUser from "../src/users/lib/register.js";
 import { z } from "zod";
 
 export default function Sandbox() {
   const form = useForm({
     defaultValues: {
       email: "",
-      options: {
-        data: {
-          name: "",
-          lastName: "",
-          imageProfile: "",
-          phone: "",
-          documentNumber: "",
-          address: "",
-        },
-      },
+      name: "",
+      last_name: "",
+      image_profile: "",
+      phone: "",
+      document_number: "",
+      address: "",
     },
-
-    onSubmit: (values) => {
-      console.log(values);
+    onSubmit: async (values) => {
+      console.log(values.value);
+      const data = await registerUser(values.value);
+      console.log("DATA", data);
     },
   });
   return (
@@ -38,7 +36,7 @@ export default function Sandbox() {
       contentContainerClassName="items-center justify-center px-6"
     >
       <View className=" flex flex-col items-center w-full my-4">
-        <form.Field name="options.data.imageProfile">
+        <form.Field name="options.data.image_profile">
           {(field) => (
             <>
               <Pressable
@@ -94,8 +92,8 @@ export default function Sandbox() {
           Nombre(s)
         </Text>
         <form.Field
-          name="options.data.name"
-          validators={{ onChange: z.string().min(3, "Nombre requerido") }}
+          name="name"
+          //validators={{ onChange: z.string().min(3, "Nombre requerido") }}
         >
           {(field) => (
             <>
@@ -118,7 +116,7 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Apellido(s)
         </Text>
-        <form.Field name="options.data.lastName">
+        <form.Field name="last_name">
           {(field) => (
             <>
               <TextInput
@@ -167,7 +165,7 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Telefono
         </Text>
-        <form.Field name="options.data.phone">
+        <form.Field name="phone">
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
@@ -198,7 +196,7 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           N° de Documento
         </Text>
-        <form.Field name="options.data.documentNumber">
+        <form.Field name="document_number">
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
@@ -229,7 +227,7 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Direccion
         </Text>
-        <form.Field name="options.data.address">
+        <form.Field name="address">
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
@@ -257,7 +255,7 @@ export default function Sandbox() {
         </form.Field>
         <form.Subscribe>
           {({ canSubmit, isSubmitting }) => (
-            <View className="flex flex-col w-full mb-32">
+            <View className="flex flex-col w-3/4 mx-auto mb-32 mt-4">
               <Pressable
                 onPress={() => form.handleSubmit()}
                 disabled={!canSubmit}
