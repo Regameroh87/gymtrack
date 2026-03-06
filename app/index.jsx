@@ -11,7 +11,8 @@ import * as ImagePicker from "expo-image-picker";
 import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
 import registerUser from "../src/users/lib/register.js";
-import { z } from "zod";
+
+//import { z } from "zod";
 
 export default function Sandbox() {
   const form = useForm({
@@ -32,8 +33,9 @@ export default function Sandbox() {
   });
   return (
     <ScrollView
-      className="flex-1 bg-primary-light dark:bg-primary-dark"
-      contentContainerClassName="items-center justify-center px-6"
+      className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
+      contentClassName="flex"
+      contentContainerClassName=" flex-grow items-center justify-center px-6"
     >
       <View className=" flex flex-col items-center w-full my-4">
         <form.Field name="options.data.image_profile">
@@ -67,11 +69,12 @@ export default function Sandbox() {
                   <Image
                     source={{ uri: field.state.value ?? "" }}
                     className="rounded-full"
-                    width={32}
-                    height={32}
+                    width={64}
+                    height={64}
+                    resizeMode="cover"
                   />
                 ) : (
-                  <View className="flex items-center justify-center bg-lime-500/20 p-6 rounded-full">
+                  <View className="flex items-center justify-center bg-lime-500/40 dark:bg-lime-500 p-6 rounded-full">
                     <Polaroid
                       className="text-slate-400"
                       width={32}
@@ -79,7 +82,10 @@ export default function Sandbox() {
                     />
                   </View>
                 )}
-                <Text className="text-slate-700 dark:text-slate-300 mt-2">
+                <Text className="text-slate-700 dark:text-slate-300 text-2xl font-lexend font-extrabold">
+                  Foto de perfil
+                </Text>
+                <Text className="text-slate-700 dark:text-slate-300 text-xs font-lexend-light">
                   Seleccionar Imagen
                 </Text>
               </Pressable>
@@ -99,7 +105,8 @@ export default function Sandbox() {
             <>
               <TextInput
                 placeholder="Ej: Juan pablo"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
+                placeholderTextColor={"#9ca3af"}
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -121,7 +128,8 @@ export default function Sandbox() {
             <>
               <TextInput
                 placeholder="Ej: Perez Garcia"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md p-4"
+                placeholderTextColor={"#9ca3af"}
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -142,8 +150,9 @@ export default function Sandbox() {
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
-                placeholder="juan.perez@ejemplo.com"
-                className="flex-1 w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-10"
+                placeholder="  juan.perez@ejemplo.com"
+                placeholderTextColor={"#9ca3af"}
+                className="flex-1 w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -169,8 +178,9 @@ export default function Sandbox() {
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
-                placeholder="Ej: 123456789"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-10"
+                placeholder="  Ej: 123456789"
+                placeholderTextColor={"#9ca3af"}
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -200,8 +210,9 @@ export default function Sandbox() {
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
-                placeholder="Ej: 123456789"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-10"
+                placeholder="  Ej: 123456789"
+                placeholderTextColor={"#9ca3af"}
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -231,8 +242,9 @@ export default function Sandbox() {
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
-                placeholder="Ej: Calle 123"
-                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-10"
+                placeholder="  Ej: Calle 123"
+                placeholderTextColor={"#9ca3af"}
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
@@ -259,9 +271,9 @@ export default function Sandbox() {
               <Pressable
                 onPress={() => form.handleSubmit()}
                 disabled={!canSubmit}
-                className="bg-blue-500 p-4 rounded-md disabled:opacity-50"
+                className="bg-ui-secondary-light dark:bg-ui-secondary-dark focus:bg-ui-secondary-pressed-light dark:focus:bg-ui-secondary-pressed-dark  flex items-center justify-center w-full p-4 rounded-md disabled:opacity-50"
               >
-                <Text className="text-center text-primary-light dark:text-primary-dark font-lexend-ebold">
+                <Text className="text-center text-ui-main-light dark:text-ui-main-dark font-lexend-ebold">
                   {isSubmitting ? "Enviando..." : "Registrar"}
                 </Text>
               </Pressable>

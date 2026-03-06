@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
     "schema": "gymtrack",
@@ -22,11 +22,12 @@
     "android": {
       "jsEngine": "hermes",
       "permissions": ["VIBRATE"],
+      "userInterfaceStyle": "light",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+      }
+     // "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png",

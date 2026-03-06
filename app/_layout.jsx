@@ -14,6 +14,7 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { View, Text } from "react-native";
+import Screen from "../src/components/Screen";
 const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
@@ -47,19 +48,24 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
-        <Stack>
-          <Stack.Screen
-            name="index"
-            options={{ title: "Registrar usuario", headerTitleAlign: "center" }}
-          />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(protected)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        </Stack>
+        <Screen safe>
+          <Stack>
+            <Stack.Screen
+              name="index"
+              options={{
+                title: "Registrar usuario",
+                headerTitleAlign: "center",
+              }}
+            />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(protected)"
+              options={{
+                headerShown: false,
+              }}
+            />
+          </Stack>
+        </Screen>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
