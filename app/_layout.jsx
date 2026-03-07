@@ -10,7 +10,7 @@ import {
   Lexend_300Light,
   Lexend_800ExtraBold,
 } from "@expo-google-fonts/lexend";
-import Toast from "react-native-toast-message";
+import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -44,6 +44,28 @@ export default function RootLayout() {
       </View>
     );
   }
+  const toastConfig = {
+    success: (props) => (
+      <BaseToast
+        {...props}
+        text1NumberOfLines={0} // <--- Esto es lo que activa el wrap
+        text2NumberOfLines={0}
+        style={{ borderLeftColor: "#84cc16" }} // Verde de tu marca
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{ fontSize: 14, fontWeight: "700" }}
+      />
+    ),
+    error: (props) => (
+      <ErrorToast
+        {...props}
+        text1NumberOfLines={0} // <--- Y aquí para los errores
+        text2NumberOfLines={0}
+        style={{ borderLeftColor: "#ef4444" }} // Rojo error
+        contentContainerStyle={{ paddingHorizontal: 15 }}
+        text1Style={{ fontSize: 14, fontWeight: "700" }}
+      />
+    ),
+  };
 
   return (
     <SafeAreaProvider>
@@ -67,7 +89,7 @@ export default function RootLayout() {
               }}
             />
           </Stack>
-          <Toast />
+          <Toast config={toastConfig} />
         </Screen>
       </QueryClientProvider>
     </SafeAreaProvider>

@@ -7,13 +7,13 @@ import {
   ScrollView,
 } from "react-native";
 import { useForm } from "@tanstack/react-form";
+import { z } from "zod";
+import Toast from "react-native-toast-message";
+//Instalamos @tanstack/zod-form-adapter para poder usar zod con react-form
 import * as ImagePicker from "expo-image-picker";
 import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
 import registerUser from "../src/users/lib/register.js";
-import Toast from "react-native-toast-message";
-
-//import { z } from "zod";
 
 export default function Sandbox() {
   const form = useForm({
@@ -54,7 +54,12 @@ export default function Sandbox() {
       contentContainerClassName=" flex-grow items-center justify-center px-6"
     >
       <View className=" flex flex-col items-center w-full my-4">
-        <form.Field name="options.data.image_profile">
+        <form.Field
+          name="image_profile"
+          validators={{
+            onChange: z.string().min(1, "La foto de perfil es requerida"),
+          }}
+        >
           {(field) => (
             <>
               <Pressable
@@ -115,7 +120,11 @@ export default function Sandbox() {
         </Text>
         <form.Field
           name="name"
-          //validators={{ onChange: z.string().min(3, "Nombre requerido") }}
+          validators={{
+            onChange: z
+              .string()
+              .min(3, "El nombre debe tener al menos 3 caracteres"),
+          }}
         >
           {(field) => (
             <>
@@ -139,7 +148,12 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Apellido(s)
         </Text>
-        <form.Field name="last_name">
+        <form.Field
+          name="last_name"
+          validators={{
+            onChange: z.string().min(2, "El apellido es requerido"),
+          }}
+        >
           {(field) => (
             <>
               <TextInput
@@ -162,7 +176,12 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Correo Electronico
         </Text>
-        <form.Field name="email">
+        <form.Field
+          name="email"
+          validators={{
+            onChange: z.string().email("Correo electrónico inválido"),
+          }}
+        >
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
@@ -190,7 +209,12 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Telefono
         </Text>
-        <form.Field name="phone">
+        <form.Field
+          name="phone"
+          validators={{
+            onChange: z.string().min(8, "Número de teléfono inválido"),
+          }}
+        >
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
@@ -222,7 +246,12 @@ export default function Sandbox() {
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           N° de Documento
         </Text>
-        <form.Field name="document_number">
+        <form.Field
+          name="document_number"
+          validators={{
+            onChange: z.string().min(5, "N° de documento inválido"),
+          }}
+        >
           {(field) => (
             <View className="relative flex flex-col w-full ">
               <TextInput
