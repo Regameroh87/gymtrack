@@ -5,11 +5,10 @@ import {
   Image,
   Pressable,
   ScrollView,
-  Keyboard,
   Animated,
-  Platform,
 } from "react-native";
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
+import { useKeyboardScroll } from "../src/hooks/useKeyboardScroll";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import Toast from "react-native-toast-message";
@@ -27,55 +26,14 @@ import { uploadToCloudinary } from "../src/utils/uploadImage.js";
 import registerUser from "../src/users/lib/register.js";
 
 export default function Sandbox() {
-  const scrollViewRef = useRef(null);
-  const keyboardHeight = useRef(new Animated.Value(0)).current;
+  const { scrollViewRef, keyboardHeight, scrollToField, scrollToEnd } =
+    useKeyboardScroll();
 
   // refs para cada campo
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
   const documentRef = useRef(null);
   const addressRef = useRef(null);
-
-  const scrollToField = (fieldRef) => {
-    if (!fieldRef?.current || !scrollViewRef?.current) return;
-    setTimeout(() => {
-      fieldRef.current.measureLayout(
-        scrollViewRef.current,
-        (x, y) => {
-          scrollViewRef.current.scrollTo({ y: y - 16, animated: true });
-        },
-        () => {}
-      );
-    }, 150);
-  };
-
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => {
-        Animated.timing(keyboardHeight, {
-          toValue: e.endCoordinates.height,
-          duration: Platform.OS === "ios" ? e.duration : 300,
-          useNativeDriver: false,
-        }).start();
-      }
-    );
-    const hideSubscription = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => {
-        Animated.timing(keyboardHeight, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: false,
-        }).start();
-      }
-    );
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
 
   const form = useForm({
     defaultValues: {
@@ -373,9 +331,7 @@ export default function Sandbox() {
                   onChangeText={(value) => field.handleChange(value)}
                   onFocus={() => {
                     scrollToField(addressRef);
-                    setTimeout(() => {
-                      scrollViewRef.current?.scrollToEnd({ animated: true });
-                    }, 400);
+                    scrollToEnd();
                   }}
                 />
                 {field.state.value === "" && (
