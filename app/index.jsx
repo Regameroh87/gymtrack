@@ -9,7 +9,6 @@ import {
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import Toast from "react-native-toast-message";
-//Instalamos @tanstack/zod-form-adapter para poder usar zod con react-form
 import * as ImagePicker from "expo-image-picker";
 import { Polaroid, Mail, Phone, IdBadge, MapPin } from "../assets/icons";
 import { uploadToCloudinary } from "../src/utils/uploadImage.js";
@@ -26,10 +25,10 @@ export default function Sandbox() {
       document_number: "",
       address: "",
     },
-    onSubmit: async (values) => {
-      console.log(values.value);
+    onSubmit: async ({ value }) => {
+      console.log(value);
       try {
-        await registerUser(values.value);
+        await registerUser(value);
         Toast.show({
           type: "success",
           text1: "Usuario registrado exitosamente",
@@ -47,6 +46,7 @@ export default function Sandbox() {
       }
     },
   });
+
   return (
     <ScrollView
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
@@ -54,12 +54,7 @@ export default function Sandbox() {
       contentContainerClassName=" flex-grow items-center justify-center px-6"
     >
       <View className=" flex flex-col items-center w-full my-4">
-        <form.Field
-          name="image_profile"
-          validators={{
-            onChange: z.string().min(1, "La foto de perfil es requerida"),
-          }}
-        >
+        <form.Field name="image_profile">
           {(field) => (
             <>
               <Pressable
@@ -114,7 +109,7 @@ export default function Sandbox() {
           )}
         </form.Field>
       </View>
-      <View className=" flex flex-col w-full mt-2">
+      <View className=" flex flex-col w-full my-2">
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Nombre(s)
         </Text>
@@ -123,7 +118,11 @@ export default function Sandbox() {
           validators={{
             onChange: z
               .string()
-              .min(3, "El nombre debe tener al menos 3 caracteres"),
+              .min(3, "El nombre debe tener al menos 3 caracteres")
+              .regex(
+                /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]*$/,
+                "El nombre solo puede contener letras"
+              ),
           }}
         >
           {(field) => (
@@ -135,16 +134,16 @@ export default function Sandbox() {
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
-              {field.state.meta.errors ? (
-                <Text className="text-red-500">
-                  {field.state.meta.errors.join(", ")}
+              {field.state.meta.errors.length > 0 ? (
+                <Text className="text-cyan-500 text-sm">
+                  {field.state.meta.errors[0]?.message}
                 </Text>
               ) : null}
             </>
           )}
         </form.Field>
       </View>
-      <View className=" flex flex-col w-full">
+      <View className=" flex flex-col w-full mt-2">
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Apellido(s)
         </Text>
@@ -163,16 +162,16 @@ export default function Sandbox() {
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
-              {field.state.meta.errors ? (
-                <Text className="text-red-500">
-                  {field.state.meta.errors.join(", ")}
+              {field.state.meta.errors.length > 0 ? (
+                <Text className="text-cyan-500 text-sm">
+                  {field.state.meta.errors[0]?.message}
                 </Text>
               ) : null}
             </>
           )}
         </form.Field>
       </View>
-      <View className=" flex flex-col w-full">
+      <View className=" flex flex-col w-full mt-2">
         <Text className="text-slate-700 dark:text-slate-300 text-sm mb-2">
           Correo Electronico
         </Text>
@@ -183,25 +182,25 @@ export default function Sandbox() {
           }}
         >
           {(field) => (
-            <View className="relative flex flex-col w-full ">
+            <>
               <TextInput
                 placeholder="  juan.perez@ejemplo.com"
                 placeholderTextColor={"#9ca3af"}
-                className="flex-1 w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
+                className="flex w-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 rounded-md py-4 px-6"
                 value={field.state.value}
                 onChangeText={(value) => field.handleChange(value)}
               />
               {field.state.value === "" && (
-                <View className="absolute top-0 translate-y-1/2 mt-2 ml-2">
+                <View className="absolute top-6 translate-y-1/2 mt-2 ml-2">
                   <Mail color="#9ca3af" size={18} style={{ marginRight: -5 }} />
                 </View>
               )}
-              {field.state.meta.errors ? (
-                <Text className="text-red-500">
-                  {field.state.meta.errors.join(", ")}
+              {field.state.meta.errors.length > 0 ? (
+                <Text className="text-cyan-500 text-sm">
+                  {field.state.meta.errors[0]?.message}
                 </Text>
               ) : null}
-            </View>
+            </>
           )}
         </form.Field>
       </View>
@@ -310,8 +309,10 @@ export default function Sandbox() {
             </View>
           )}
         </form.Field>
-        <form.Subscribe>
-          {({ canSubmit, isSubmitting }) => (
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+        >
+          {([canSubmit, isSubmitting]) => (
             <View className="flex flex-col w-3/4 mx-auto mb-32 mt-4">
               <Pressable
                 onPress={() => form.handleSubmit()}
