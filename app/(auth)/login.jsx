@@ -45,7 +45,7 @@ export default function Login() {
   };
 
   return (
-    <Screen safe className=" justify-center items-center">
+    <Screen safe className=" items-center">
       {/* FONDO */}
       <Image
         source={{
@@ -54,7 +54,6 @@ export default function Login() {
         style={{
           display: "flex",
           position: "absolute",
-          marginTop: 45,
           width: "100%",
           height: "100%",
           resizeMode: "cover",
@@ -69,7 +68,7 @@ export default function Login() {
         pointerEvents="none"
       />
       {/* TITULO */}
-      <View>
+      <View className=" mt-24">
         <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
           <Barbell color="#a3e635" />
         </View>
@@ -83,7 +82,7 @@ export default function Login() {
         </View>
       </View>
       {/* FORMULARIO */}
-      <View className="flex w-[90%] h-72 mt-24 pt-4 rounded-2xl items-center bg-white/70">
+      <View className="flex w-[90%] h-72 mt-40 pt-4 rounded-2xl items-center bg-white/70">
         <form.Field
           name="email"
           validators={{

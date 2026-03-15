@@ -8,7 +8,7 @@ import {
   Animated,
 } from "react-native";
 import { useRef } from "react";
-import { useKeyboardScroll } from "../src/hooks/useKeyboardScroll";
+import { useKeyboardScroll } from "../../../src/hooks/useKeyboardScroll.js";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import Toast from "react-native-toast-message";
@@ -21,9 +21,9 @@ import {
   IdBadge,
   MapPin,
   UserPlus,
-} from "../assets/icons";
-import { uploadToCloudinary } from "../src/utils/uploadImage.js";
-import registerUser from "../src/users/lib/register.js";
+} from "../../../assets/icons.jsx";
+import { uploadToCloudinary } from "../../../src/utils/uploadImage.js";
+import registerUser from "../../../src/users/lib/register.js";
 
 export default function Sandbox() {
   const { scrollViewRef, keyboardHeight, scrollToField, scrollToEnd } =

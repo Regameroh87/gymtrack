@@ -1,0 +1,1254 @@
+[
+  {
+    "nombre": "Abdominales 3/4",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acuéstate en el suelo y asegura tus pies. Las piernas deben estar dobladas a la altura de las rodillas.",
+      "Coloca las manos detrás o a los lados de la cabeza. Comenzarás con la espalda apoyada en el suelo. Esta será tu posición inicial.",
+      "Flexiona las caderas y la columna para elevar el torso hacia las rodillas.",
+      "En el punto máximo de la contracción, el torso debe estar perpendicular al suelo. Invierte el movimiento, bajando solo 3/4 del camino.",
+      "Repite según la cantidad de repeticiones recomendadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["3_4_Sit-Up/0.jpg", "3_4_Sit-Up/1.jpg"],
+    "id": "3_4_Sit-Up"
+  },
+  {
+    "nombre": "Isquiotibiales 90/90",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": null,
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["isquiotibiales"],
+    "musculosSecundarios": ["pantorrillas"],
+    "instrucciones": [
+      "Acuéstate boca arriba con una pierna extendida hacia adelante.",
+      "Con la otra pierna, dobla la cadera y la rodilla a 90 grados. Puedes sujetar la pierna con las manos si es necesario. Esta será tu posición inicial.",
+      "Extiende la pierna directamente hacia el aire, haciendo una breve pausa en la parte superior. Regresa la pierna a la posición inicial.",
+      "Repite de 10 a 20 veces y luego cambia a la otra pierna."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["90_90_Hamstring/0.jpg", "90_90_Hamstring/1.jpg"],
+    "id": "90_90_Hamstring"
+  },
+  {
+    "nombre": "Máquina de Abdominales",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "aislamiento",
+    "equipamiento": "máquina",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Selecciona una resistencia ligera y siéntate en la máquina de abdominales, colocando los pies debajo de las almohadillas y sujetando los mangos superiores. Tus brazos deben estar doblados a un ángulo de 90 grados mientras apoyas los tríceps en las almohadillas. Esta será tu posición inicial.",
+      "Al mismo tiempo, comienza a levantar las piernas mientras contraes el torso superior. Exhala al realizar este movimiento. Consejo: Asegúrate de usar un movimiento lento y controlado. Concéntrate en usar los abdominales para mover el peso mientras relajas las piernas y los pies.",
+      "Después de una pausa de un segundo, regresa lentamente a la posición inicial mientras inhalas.",
+      "Repite el movimiento según la cantidad de repeticiones prescritas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Ab_Crunch_Machine/0.jpg", "Ab_Crunch_Machine/1.jpg"],
+    "id": "Ab_Crunch_Machine"
+  },
+  {
+    "nombre": "Rueda Abdominal",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "otro",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": ["hombros"],
+    "instrucciones": [
+      "Sujeta la rueda abdominal con ambas manos y arrodíllate en el suelo.",
+      "Ahora coloca la rueda en el suelo frente a ti, de modo que estés apoyado sobre manos y rodillas (como en una posición de flexión de rodillas). Esta será tu posición inicial.",
+      "Haz rodar la rueda lentamente hacia adelante, estirando tu cuerpo hasta una posición recta. Consejo: Baja lo más que puedas sin tocar el suelo con el cuerpo. Inhala durante esta parte del movimiento.",
+      "Después de una pausa en la posición estirada, comienza a tirar de ti mismo hacia la posición inicial mientras exhalas. Consejo: Ve despacio y mantén los abdominales apretados en todo momento."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Ab_Roller/0.jpg", "Ab_Roller/1.jpg"],
+    "id": "Ab_Roller"
+  },
+  {
+    "nombre": "Aductores con Rodillo",
+    "fuerza": "estática",
+    "nivel": "intermedio",
+    "mecanica": "aislamiento",
+    "equipamiento": "rodillo de espuma",
+    "musculosPrincipales": ["aductores"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acuéstate boca abajo con una pierna sobre un rodillo de espuma.",
+      "Gira la pierna de modo que el rodillo haga contacto con la parte interna del muslo. Desplaza tanto peso sobre el rodillo como puedas tolerar.",
+      "Mientras intentas relajar los músculos de la parte interna del muslo, rueda sobre la espuma entre la cadera y la rodilla, manteniendo los puntos de tensión durante 10 a 30 segundos. Repite con la otra pierna."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Adductor/0.jpg", "Adductor/1.jpg"],
+    "id": "Adductor"
+  },
+  {
+    "nombre": "Estiramiento de Aductor/Ingle",
+    "fuerza": "estática",
+    "nivel": "intermedio",
+    "mecanica": null,
+    "equipamiento": null,
+    "musculosPrincipales": ["aductores"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acuéstate boca arriba con los pies elevados hacia el techo.",
+      "Pide a un compañero que sujete tus pies o tobillos. Abre las piernas lo más que puedas. Esta será tu posición inicial.",
+      "Intenta juntar las piernas durante 10 segundos o más, mientras tu compañero lo impide.",
+      "Ahora, relaja los músculos de las piernas mientras tu compañero separa tus pies, estirando hasta donde te resulte cómodo. Asegúrate de avisar a tu compañero cuando el estiramiento sea adecuado para evitar lesiones."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Adductor_Groin/0.jpg", "Adductor_Groin/1.jpg"],
+    "id": "Adductor_Groin"
+  },
+  {
+    "nombre": "Molinillo con Pesa Rusa Avanzado",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "aislamiento",
+    "equipamiento": "pesas rusas",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": ["glúteos", "isquiotibiales", "hombros"],
+    "instrucciones": [
+      "Lleva una pesa rusa sobre la cabeza con un brazo mediante un clean and press.",
+      "Manteniendo la pesa rusa bloqueada arriba en todo momento, empuja la cadera hacia afuera en la dirección de la pesa rusa elevada. Mantén el brazo que no trabaja detrás de la espalda y gira los pies a un ángulo de 45 grados respecto al brazo de la pesa.",
+      "Bájate lo más posible.",
+      "Pausa un segundo y revierte el movimiento hacia la posición inicial."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Advanced_Kettlebell_Windmill/0.jpg", "Advanced_Kettlebell_Windmill/1.jpg"],
+    "id": "Advanced_Kettlebell_Windmill"
+  },
+  {
+    "nombre": "Bicicleta Abdominal",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acuéstate en el suelo con la espalda baja presionada contra el piso. Coloca las manos a los lados de la cabeza, con cuidado de no forzar el cuello. Eleva los hombros a posición de crunch.",
+      "Lleva las rodillas hacia arriba hasta que queden perpendiculares al suelo, con las pantorrillas paralelas al piso. Esta será tu posición inicial.",
+      "Simultáneamente, realiza un movimiento de pedaleo estirando la pierna derecha hacia adelante y llevando la rodilla izquierda hacia ti. Acerca el codo derecho a la rodilla izquierda mediante un crunch lateral mientras exhalas.",
+      "Regresa a la posición inicial mientras inhalas.",
+      "Realiza el crunch hacia el lado opuesto mientras pedaleas, acercando el codo izquierdo a la rodilla derecha y exhala.",
+      "Continúa alternando hasta completar las repeticiones."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Air_Bike/0.jpg", "Air_Bike/1.jpg"],
+    "id": "Air_Bike"
+  },
+  {
+    "nombre": "Estiramiento de Cuádriceps en Cuatro Puntos",
+    "fuerza": "estática",
+    "nivel": "intermedio",
+    "mecanica": null,
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["cuádriceps"],
+    "instrucciones": [
+      "Comienza apoyado sobre manos y rodillas, luego levanta una pierna del suelo y sujeta el pie con la mano.",
+      "Usa la mano para sostener el pie o tobillo, manteniendo la rodilla totalmente flexionada para estirar cuádriceps y flexores de cadera.",
+      "Concéntrate en extender las caderas, empujándolas hacia el suelo. Mantén durante 10-20 segundos y cambia de lado."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["All_Fours_Quad_Stretch/0.jpg", "All_Fours_Quad_Stretch/1.jpg"],
+    "id": "All_Fours_Quad_Stretch"
+  },
+  {
+    "nombre": "Curl de Martillo Alterno",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["bíceps"],
+    "musculosSecundarios": ["antebrazos"],
+    "instrucciones": [
+      "Párate con el torso erguido y una mancuerna en cada mano con los brazos extendidos. Los codos deben estar cerca del torso.",
+      "Las palmas de las manos deben mirar hacia tu torso. Esta será tu posición inicial.",
+      "Manteniendo el brazo superior inmóvil, flexiona el peso derecho hacia adelante mientras contraes el bíceps y exhalas. Continúa hasta que el bíceps esté totalmente contraído y la mancuerna a la altura del hombro. Aprieta un segundo.",
+      "Baja lentamente la mancuerna a la posición inicial mientras inhalas.",
+      "Repite el movimiento con la mano izquierda para completar una repetición.",
+      "Continúa alternando."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternate_Hammer_Curl/0.jpg", "Alternate_Hammer_Curl/1.jpg"],
+    "id": "Alternate_Hammer_Curl"
+  },
+  {
+    "nombre": "Toque de Talones Alterno",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acuéstate en el suelo con las rodillas dobladas y los pies apoyados, a unos 45-60 cm de distancia. Brazos extendidos a los lados. Esta es la posición inicial.",
+      "Haz un crunch lateral hacia la derecha unos 8-10 cm y toca tu talón derecho, manteniendo la contracción un segundo. Exhala.",
+      "Regresa lentamente a la posición inicial mientras inhalas.",
+      "Ahora realiza el crunch hacia el lado izquierdo y toca el talón izquierdo. Exhala y regresa inhalando. Tocar ambos talones cuenta como 1 repetición.",
+      "Continúa alternando lados."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternate_Heel_Touchers/0.jpg", "Alternate_Heel_Touchers/1.jpg"],
+    "id": "Alternate_Heel_Touchers"
+  },
+  {
+    "nombre": "Curl de Bíceps Alterno en Banco Inclinado",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["bíceps"],
+    "musculosSecundarios": ["antebrazos"],
+    "instrucciones": [
+      "Siéntate en un banco inclinado con una mancuerna en cada mano, manteniendo los brazos extendidos. Consejo: Mantén los codos cerca del torso. Esta será tu posición inicial.",
+      "Mientras mantienes el brazo superior inmóvil, flexiona el peso derecho hacia adelante mientras contraes el bíceps y exhalas. Al hacerlo, rota la mano para que la palma mire hacia arriba. Continúa hasta que el bíceps esté totalmente contraído y la mancuerna a la altura del hombro.",
+      "Baja lentamente la mancuerna a la posición inicial mientras inhalas.",
+      "Repite el movimiento con la mano izquierda para completar una repetición.",
+      "Continúa alternando de esta manera según las repeticiones recomendadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternate_Incline_Dumbbell_Curl/0.jpg", "Alternate_Incline_Dumbbell_Curl/1.jpg"],
+    "id": "Alternate_Incline_Dumbbell_Curl"
+  },
+  {
+    "nombre": "Salto Diagonal Alterno",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": null,
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["abductores", "aductores", "pantorrillas", "glúteos", "isquiotibiales"],
+    "instrucciones": [
+      "Adopta una postura cómoda con un pie ligeramente delante del otro.",
+      "Comienza impulsándote con la pierna delantera, llevando la rodilla opuesta hacia adelante y lo más alto posible antes de aterrizar. Intenta cubrir la mayor distancia lateral posible en cada salto.",
+      "Puede ayudar el uso de una línea en el suelo para medir la distancia de lado a lado.",
+      "Repite la secuencia con la otra pierna."
+    ],
+    "categoria": "pliometría",
+    "imagenes": ["Alternate_Leg_Diagonal_Bound/0.jpg", "Alternate_Leg_Diagonal_Bound/1.jpg"],
+    "id": "Alternate_Leg_Diagonal_Bound"
+  },
+  {
+    "nombre": "Press de Hombros Alterno con Cable",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "cable",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["tríceps"],
+    "instrucciones": [
+      "Mueve los cables a la parte inferior de la torre y selecciona un peso adecuado.",
+      "Sujeta los cables y mantenlos a la altura de los hombros, con las palmas hacia adelante. Esta será tu posición inicial.",
+      "Manteniendo la cabeza y el pecho erguidos, extiende el codo para presionar un lado directamente sobre la cabeza.",
+      "Tras una pausa en la parte superior, regresa a la posición inicial y repite en el lado opuesto."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Cable_Shoulder_Press/0.jpg", "Alternating_Cable_Shoulder_Press/1.jpg"],
+    "id": "Alternating_Cable_Shoulder_Press"
+  },
+  {
+    "nombre": "Elevación de Deltoides Alterna",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "En posición de pie, sujeta un par de mancuernas a los costados.",
+      "Manteniendo los codos ligeramente flexionados, eleva los pesos directamente frente a ti hasta la altura de los hombros, evitando balanceos.",
+      "Regresa los pesos a los costados.",
+      "En la siguiente repetición, eleva los pesos lateralmente hacia afuera hasta la altura de los hombros.",
+      "Regresa a la posición inicial y continúa alternando entre elevación frontal y lateral."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Deltoid_Raise/0.jpg", "Alternating_Deltoid_Raise/1.jpg"],
+    "id": "Alternating_Deltoid_Raise"
+  },
+  {
+    "nombre": "Press de Suelo Alterno",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["abdominales", "hombros", "tríceps"],
+    "instrucciones": [
+      "Acuéstate en el suelo con dos pesas rusas junto a tus hombros.",
+      "Coloca una en posición sobre tu pecho y luego la otra, sujetándolas por el asa con las palmas hacia adelante.",
+      "Extiende ambos brazos de modo que las pesas queden sobre el pecho. Baja una pesa rusa hacia el pecho mientras giras la muñeca en dirección a la pesa que permanece arriba.",
+      "Eleva la pesa y repite con el lado opuesto."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Floor_Press/0.jpg", "Alternating_Floor_Press/1.jpg"],
+    "id": "Alternating_Floor_Press"
+  },
+  {
+    "nombre": "Cargada Colgante Alterna (Hang Clean)",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas",
+    "musculosPrincipales": ["isquiotibiales"],
+    "musculosSecundarios": ["bíceps", "pantorrillas", "antebrazos", "glúteos", "espalda baja", "trapecios"],
+    "instrucciones": [
+      "Coloca dos pesas rusas entre tus pies. Para la posición inicial, empuja la cadera hacia atrás y mira hacia adelante.",
+      "Lleva una pesa al hombro (clean) y mantén la otra en posición colgante. Realiza el clean extendiendo piernas y caderas mientras tiras de la pesa hacia el hombro, rotando la muñeca al hacerlo.",
+      "Baja la pesa al estado colgante y realiza el clean con la otra. Repite."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Hang_Clean/0.jpg", "Alternating_Hang_Clean/1.jpg"],
+    "id": "Alternating_Hang_Clean"
+  },
+  {
+    "nombre": "Remo Renegado Alterno",
+    "fuerza": "tirar",
+    "nivel": "experto",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas",
+    "musculosPrincipales": ["espalda media"],
+    "musculosSecundarios": ["abdominales", "bíceps", "pecho", "dorsales", "tríceps"],
+    "instrucciones": [
+      "Coloca dos pesas rusas en el suelo separadas al ancho de los hombros. Colócate en posición de flexión (pushup) sobre los dedos de los pies y manos, con el cuerpo recto. Usa las asas de las pesas para apoyar el torso superior. Puedes abrir los pies para mayor estabilidad.",
+      "Presiona una pesa contra el suelo y realiza el remo con la otra, retrayendo el omóplato y flexionando el codo para llevarla al costado.",
+      "Baja la pesa al suelo y repite con la mano opuesta."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Renegade_Row/0.jpg", "Alternating_Renegade_Row/1.jpg"],
+    "id": "Alternating_Renegade_Row"
+  },
+  {
+    "nombre": "Press de Hombros Alterno con Mancuernas",
+    "fuerza": "empujar",
+    "level": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["tríceps"],
+    "instrucciones": [
+      "En posición de pie, sujeta un par de mancuernas a la altura de los hombros con un agarre prono (palmas hacia adelante). Los codos deben estar flexionados y hacia los lados. Esta será tu posición inicial.",
+      "Manteniendo el torso erguido, extiende un brazo para presionar la mancuerna directamente sobre la cabeza.",
+      "Tras una breve pausa en la parte superior, baja la mancuerna de regreso a la posición inicial.",
+      "Repite el movimiento con el otro brazo.",
+      "Continúa alternando de esta manera hasta completar las repeticiones deseadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Shoulder_Press/0.jpg", "Alternating_Shoulder_Press/1.jpg"],
+    "id": "Alternating_Shoulder_Press"
+  },
+  {
+    "nombre": "Zancada Alterna",
+    "fuerza": "empujar",
+    "level": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["glúteos", "isquiotibiales", "pantorrillas"],
+    "instrucciones": [
+      "Párate con el torso erguido y las manos en las caderas. Esta será tu posición inicial.",
+      "Da un paso hacia adelante con una pierna, bajando las caderas hasta que ambas rodillas estén dobladas en un ángulo de aproximadamente 90 grados. La rodilla trasera debe estar justo por encima del suelo.",
+      "Empuja a través del talón del pie delantero para regresar a la posición inicial.",
+      "Repite el movimiento con la pierna opuesta.",
+      "Continúa alternando piernas en cada repetición."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Lunges/0.jpg", "Alternating_Lunges/1.jpg"],
+    "id": "Alternating_Lunges"
+  },
+  {
+    "nombre": "Remo con Mancuernas Alterno",
+    "fuerza": "tirar",
+    "level": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["espalda media"],
+    "musculosSecundarios": ["bíceps", "lumbares", "dorsales"],
+    "instrucciones": [
+      "Coloca una mancuerna a cada lado de un banco plano.",
+      "Coloca la rodilla derecha y la mano derecha sobre el banco. Mantén el torso paralelo al suelo. Sujeta la mancuerna izquierda con un agarre neutral.",
+      "Tira de la mancuerna hacia tu costado, manteniendo el codo cerca del cuerpo. Exhala durante este movimiento.",
+      "Baja la mancuerna de regreso a la posición inicial mientras inhalas.",
+      "Una vez completadas las repeticiones con un brazo, cambia de lado para trabajar el brazo derecho."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Dumbbell_Row/0.jpg", "Alternating_Dumbbell_Row/1.jpg"],
+    "id": "Alternating_Dumbbell_Row"
+  },
+  {
+    "nombre": "Estiramiento de Tobillo",
+    "fuerza": "estática",
+    "level": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["pantorrillas"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Párate frente a una pared con las manos apoyadas sobre ella a la altura de los ojos.",
+      "Lleva una pierna hacia atrás, manteniendo el talón apoyado en el suelo y la pierna estirada.",
+      "Inclina el cuerpo hacia adelante contra la pared hasta que sientas el estiramiento en la pantorrilla de la pierna trasera.",
+      "Mantén la posición durante 20-30 segundos y luego cambia de pierna."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Ankle_Circles/0.jpg", "Ankle_Circles/1.jpg"],
+    "id": "Ankle_Circles"
+  },
+  {
+    "nombre": "Caminata de Ánodo (Anode Walk)",
+    "fuerza": "empujar",
+    "level": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "banda de resistencia",
+    "musculosPrincipales": ["abductores"],
+    "musculosSecundarios": ["glúteos"],
+    "instrucciones": [
+      "Coloca una banda de resistencia pequeña alrededor de tus tobillos.",
+      "Mantén los pies al ancho de los hombros para crear tensión en la banda. Dobla ligeramente las rodillas.",
+      "Da pasos laterales cortos, manteniendo siempre la tensión en la banda.",
+      "Realiza 10 pasos en una dirección y luego 10 pasos de regreso."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Anode_Walk/0.jpg", "Anode_Walk/1.jpg"],
+    "id": "Anode_Walk"
+  },
+  {
+    "nombre": "Círculos de Tobillo",
+    "fuerza": "estática",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["pantorrillas"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Utiliza una pared o un objeto estable para mantener el equilibrio si es necesario. Levanta el pie derecho del suelo ligeramente.",
+      "Realiza círculos con el pie moviendo solo el tobillo. Imagina que estás dibujando un círculo con los dedos de los pies.",
+      "Completa las repeticiones en una dirección y luego cambia a la dirección opuesta.",
+      "Repite el proceso con el pie izquierdo."
+    ],
+    "categoria": "estiramiento",
+    "images": ["Ankle_Circles/0.jpg", "Ankle_Circles/1.jpg"],
+    "id": "Ankle_Circles"
+  },
+  {
+    "nombre": "Estiramiento de Tobillos contra la Pared",
+    "fuerza": "estática",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["pantorrillas"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Párate frente a una pared. Coloca los dedos del pie derecho contra la pared, manteniendo el talón en el suelo.",
+      "Inclina suavemente tu cuerpo hacia adelante, acercando la rodilla y el pecho hacia la pared hasta sentir el estiramiento en la pantorrilla y el tendón de Aquiles.",
+      "Mantén la posición durante 20-30 segundos.",
+      "Cambia de pierna y repite."
+    ],
+    "categoria": "estiramiento",
+    "images": ["Ankle_On_The_Wall/0.jpg", "Ankle_On_The_Wall/1.jpg"],
+    "id": "Ankle_On_The_Wall"
+  },
+  {
+    "nombre": "Estiramiento de Isquiotibiales con Compañero",
+    "fuerza": "estática",
+    "nivel": "principiante",
+    "mecanica": null,
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["isquiotibiales"],
+    "musculosSecundarios": ["pantorrillas"],
+    "instrucciones": [
+      "Acuéstate boca arriba en el suelo con ambas piernas extendidas.",
+      "Levanta una pierna hacia el techo. Pide a un compañero que sujete tu talón y la parte posterior de tu rodilla.",
+      "Tu compañero debe empujar suavemente la pierna hacia tu cabeza mientras mantienes la rodilla estirada.",
+      "Mantén el estiramiento durante el tiempo recomendado y luego cambia de pierna."
+    ],
+    "categoria": "estiramiento",
+    "images": ["Assisted_Hamstring_Stretch/0.jpg", "Assisted_Hamstring_Stretch/1.jpg"],
+    "id": "Assisted_Hamstring_Stretch"
+  },
+  {
+    "nombre": "Remo con Barra",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["espalda media"],
+    "musculosSecundarios": ["bíceps", "dorsales", "hombros"],
+    "instrucciones": [
+      "Sujeta una barra con un agarre prono (palmas hacia abajo). Dobla ligeramente las rodillas e inclina el torso hacia adelante desde la cintura.",
+      "Mantén la espalda recta, casi paralela al suelo. Los brazos deben colgar frente a ti. Esta es la posición inicial.",
+      "Mientras exhalas, tira de la barra hacia tu sección media, manteniendo los codos cerca del cuerpo.",
+      "En el punto de máxima contracción, aprieta los músculos de la espalda y mantén un segundo.",
+      "Inhala y baja lentamente la barra a la posición inicial."
+    ],
+    "categoria": "fuerza",
+    "images": ["Barbell_Bent_Over_Row/0.jpg", "Barbell_Bent_Over_Row/1.jpg"],
+    "id": "Barbell_Bent_Over_Row"
+  },
+  {
+    "nombre": "Press de Banca con Barra",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["hombros", "tríceps"],
+    "instrucciones": [
+      "Acuéstate en un banco plano. Sujeta la barra con un agarre un poco más ancho que el ancho de los hombros.",
+      "Saca la barra del soporte y mantenla directamente sobre el pecho con los brazos extendidos. Esta es la posición inicial.",
+      "Baja la barra lentamente hasta que toque la parte media del pecho mientras inhalas.",
+      "Tras una breve pausa, empuja la barra de regreso a la posición inicial mientras exhalas. Concéntrate en usar los músculos del pecho.",
+      "Bloquea los brazos en la parte superior y aprieta el pecho, luego comienza a bajar de nuevo."
+    ],
+    "categoria": "fuerza",
+    "images": ["Barbell_Bench_Press_-_Medium_Grip/0.jpg", "Barbell_Bench_Press_-_Medium_Grip/1.jpg"],
+    "id": "Barbell_Bench_Press_-_Medium_Grip"
+  },
+  {
+    "nombre": "Sentadilla con Barra",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["glúteos", "isquiotibiales", "lumbares"],
+    "instrucciones": [
+      "Este ejercicio se realiza mejor dentro de un rack de sentadillas. Primero, coloca la barra en el soporte justo debajo de la altura de los hombros. Una vez seleccionada la altura correcta y cargada la barra, coloca los brazos debajo de ella y apóyala sobre la parte posterior de los hombros (ligeramente debajo del cuello).",
+      "Sujeta la barra con ambos brazos a los lados y levántala del rack empujando con las piernas y enderezando el torso.",
+      "Aléjate del rack y coloca las piernas con una separación similar al ancho de los hombros, con los dedos de los pies ligeramente hacia afuera. Mantén la espalda recta y la cabeza levantada en todo momento. Esta será tu posición inicial.",
+      "Comienza a bajar la barra lentamente doblando las rodillas y las caderas mientras mantienes una postura recta. Continúa bajando hasta que el ángulo entre la parte superior de las piernas y las pantorrillas sea inferior a 90 grados. Inhala mientras realizas este movimiento.",
+      "Comienza a elevar la barra mientras exhalas, empujando el suelo con el talón del pie y extendiendo las piernas de nuevo hacia la posición inicial.",
+      "Repite según la cantidad de repeticiones recomendadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Squat/0.jpg", "Barbell_Squat/1.jpg"],
+    "id": "Barbell_Squat"
+  },
+  {
+    "nombre": "Peso Muerto con Barra",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["isquiotibiales"],
+    "musculosSecundarios": ["glúteos", "lumbares", "trapecios", "antebrazos"],
+    "instrucciones": [
+      "Colócate frente a una barra cargada.",
+      "Agáchate doblando las caderas y las rodillas, y sujeta la barra con un agarre a la anchura de los hombros. Puedes usar un agarre prono o mixto (una palma hacia adelante y otra hacia atrás).",
+      "Mantén la espalda recta, el pecho hacia afuera y los hombros hacia atrás. Mira hacia adelante. Esta es la posición inicial.",
+      "Empuja con las piernas y levanta la barra del suelo, extendiendo las caderas y las rodillas simultáneamente hasta quedar completamente erguido. Mantén la barra lo más cerca posible de tus piernas durante todo el trayecto.",
+      "Baja la barra al suelo controlando el movimiento, doblando las caderas primero y luego las rodillas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Deadlift/0.jpg", "Barbell_Deadlift/1.jpg"],
+    "id": "Barbell_Deadlift"
+  },
+  {
+    "nombre": "Press Militar con Barra (Sentado)",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["tríceps"],
+    "instrucciones": [
+      "Siéntate en un banco con soporte para la espalda y sujeta una barra con un agarre prono (palmas hacia adelante) un poco más ancho que la distancia de los hombros.",
+      "Levanta la barra sobre tu cabeza extendiendo los brazos. Bájala hasta el nivel de la parte superior del pecho, justo debajo de la barbilla. Esta es tu posición inicial.",
+      "Eleva la barra hacia arriba mientras exhalas hasta que los brazos estén completamente extendidos sobre la cabeza.",
+      "Tras una breve pausa en la parte superior, baja la barra lentamente a la posición inicial mientras inhalas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Shoulder_Press/0.jpg", "Barbell_Shoulder_Press/1.jpg"],
+    "id": "Barbell_Shoulder_Press"
+  },
+  {
+    "nombre": "Curl de Bíceps con Barra (De Pie)",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["bíceps"],
+    "musculosSecundarios": ["antebrazos"],
+    "instrucciones": [
+      "Párate con el torso erguido mientras sujetas una barra con un agarre supino (palmas hacia arriba) al ancho de los hombros.",
+      "Mantén los codos cerca del torso. Esta será tu posición inicial.",
+      "Mientras mantienes los brazos quietos, flexiona los pesos hacia adelante mientras contraes los bíceps y exhalas. Solo deben moverse los antebrazos.",
+      "Continúa el movimiento hasta que los bíceps estén completamente contraídos y la barra esté al nivel de los hombros.",
+      "Mantén la posición contraída por un segundo mientras aprietas los bíceps.",
+      "Lleva la barra lentamente de regreso a la posición inicial mientras inhalas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Curl/0.jpg", "Barbell_Curl/1.jpg"],
+    "id": "Barbell_Curl"
+  },
+  {
+    "nombre": "Extensión de Tríceps tras Nuca con Barra (Sentado)",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "aislamiento",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["tríceps"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Siéntate en un banco y sujeta una barra con un agarre prono (palmas hacia adelante) más estrecho que el ancho de los hombros.",
+      "Eleva la barra sobre tu cabeza con los brazos completamente extendidos. Esta será tu posición inicial.",
+      "Baja la barra lentamente detrás de tu cabeza doblando únicamente los codos. Inhala mientras realizas este movimiento y mantén los codos apuntando hacia arriba.",
+      "Usa los tríceps para elevar la barra de regreso a la posición inicial mientras exhalas.",
+      "Repite según las repeticiones indicadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Triceps_Extension/0.jpg", "Barbell_Triceps_Extension/1.jpg"],
+    "id": "Barbell_Triceps_Extension"
+  },
+  {
+    "nombre": "Press de Banca con Barra y Agarre Cerrado",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["tríceps"],
+    "musculosSecundarios": ["pecho", "hombros"],
+    "instrucciones": [
+      "Acuéstate en un banco plano. Sujeta la barra con un agarre estrecho (aproximadamente al ancho de los hombros).",
+      "Levanta la barra del soporte y mantenla directamente sobre el pecho con los brazos extendidos. Esta será tu posición inicial.",
+      "Baja la barra lentamente hasta que sientas que toca la parte media del pecho mientras inhalas. Consejo: A diferencia del press de banca normal, mantén los codos cerca del torso en todo momento para maximizar la participación de los tríceps.",
+      "Tras una breve pausa, empuja la barra de regreso a la posición inicial usando los tríceps mientras exhalas.",
+      "Repite el movimiento según la cantidad de repeticiones recomendada.",
+      "Al terminar, coloca la barra de nuevo en el rack."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Close-Grip_Bench_Press/0.jpg", "Barbell_Close-Grip_Bench_Press/1.jpg"],
+    "id": "Barbell_Close-Grip_Bench_Press"
+  },
+  {
+    "nombre": "Encogimientos de Hombros con Barra",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["trapecios"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Párate derecho con los pies a la anchura de los hombros mientras sujetas una barra con ambas manos usando un agarre prono (palmas hacia abajo).",
+      "Consejo: Tus manos deben estar un poco más separadas que el ancho de los hombros. Puedes usar correas de agarre para este ejercicio si el peso es muy elevado. Esta será tu posición inicial.",
+      "Eleva los hombros lo más alto posible mientras exhalas y mantén la contracción por un segundo. Consejo: Los brazos deben permanecer extendidos en todo momento. No uses los bíceps para ayudar a levantar la barra. Solo deben moverse los hombros hacia arriba y hacia abajo.",
+      "Baja la barra lentamente a la posición inicial mientras inhalas.",
+      "Repite según la cantidad de repeticiones recomendada."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Shrug/0.jpg", "Barbell_Shrug/1.jpg"],
+    "id": "Barbell_Shrug"
+  },
+  {
+    "nombre": "Zancada Frontal con Barra",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["glúteos", "isquiotibiales", "pantorrillas"],
+    "instrucciones": [
+      "Este ejercicio se realiza mejor dentro de un rack de sentadillas. Coloca la barra en el soporte a la altura de los hombros. Pasa los brazos por debajo de la barra manteniendo los codos altos y la barra apoyada sobre los deltoides frontales. Cruza los brazos para asegurar la barra.",
+      "Levanta la barra del soporte empujando con las piernas y enderezando el torso.",
+      "Aléjate del rack y da un paso hacia adelante con la pierna derecha mientras flexionas las rodillas para bajar la cadera. Mantén el torso erguido y el equilibrio. Inhala al bajar. Consejo: No permitas que la rodilla pase la línea de los dedos del pie.",
+      "Empuja hacia atrás con el talón para regresar a la posición inicial mientras exhalas.",
+      "Repite el movimiento con la pierna izquierda.",
+      "Continúa alternando piernas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Front_Lunge/0.jpg", "Barbell_Front_Lunge/1.jpg"],
+    "id": "Barbell_Front_Lunge"
+  },
+  {
+    "nombre": "Buenos Días con Barra",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["isquiotibiales"],
+    "musculosSecundarios": ["glúteos", "espalda baja"],
+    "instrucciones": [
+      "Este ejercicio se realiza mejor utilizando un rack de sentadillas. Coloca la barra a la altura de los hombros y apóyala sobre la parte posterior de los hombros (trapecios), no en el cuello.",
+      "Sujeta la barra con firmeza y dalo un paso atrás. Pies al ancho de los hombros. Esta es la posición inicial.",
+      "Manteniendo las piernas rectas o con una flexión mínima en las rodillas, inclina el torso hacia adelante desde las caderas mientras inhalas. Baja hasta que el torso esté paralelo al suelo.",
+      "Lleva el torso de regreso a la posición inicial mientras exhalas.",
+      "Es crucial mantener la espalda recta en todo momento."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Good_Morning/0.jpg", "Barbell_Good_Morning/1.jpg"],
+    "id": "Barbell_Good_Morning"
+  },
+  {
+    "nombre": "Remo vertical con barra",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["trapecios", "bíceps"],
+    "instrucciones": [
+      "Sujeta una barra con un agarre prono un poco más estrecho que el ancho de los hombros. La barra debe descansar sobre la parte superior de tus muslos.",
+      "Mantén la espalda recta y el pecho hacia afuera. Esta será tu posición inicial.",
+      "Usa los hombros para levantar la barra mientras exhalas, elevando los codos hacia los lados. Mantén la barra cerca del cuerpo mientras sube.",
+      "Continúa levantando hasta que la barra casi toque tu barbilla. Los codos deben estar siempre más altos que los antebrazos.",
+      "Baja la barra lentamente a la posición inicial mientras inhalas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Barbell_Upright_Row/0.jpg", "Barbell_Upright_Row/1.jpg"],
+    "id": "Barbell_Upright_Row"
+  },
+  {
+    "nombre": "Press de Banca con Mancuernas",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["hombros", "tríceps"],
+    "instrucciones": [
+      "Siéntate en el borde de un banco plano con una mancuerna en cada mano apoyada sobre tus muslos.",
+      "Acuéstate hacia atrás mientras llevas las mancuernas hacia los lados de tu pecho. Los antebrazos deben estar perpendiculares al suelo. Esta es tu posición inicial.",
+      "Empuja las mancuernas hacia arriba sobre tu pecho extendiendo los brazos por completo. Exhala mientras realizas el movimiento.",
+      "Baja las mancuernas lentamente de regreso a los lados de tu pecho mientras inhalas.",
+      "Repite según las repeticiones deseadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Dumbbell_Bench_Press/0.jpg", "Dumbbell_Bench_Press/1.jpg"],
+    "id": "Dumbbell_Bench_Press"
+  },
+  {
+    "nombre": "Aperturas con Mancuernas (Flyes)",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["hombros"],
+    "instrucciones": [
+      "Acuéstate en un banco plano con una mancuerna en cada mano sobre el pecho, las palmas enfrentadas.",
+      "Con una ligera flexión en los codos, baja los brazos hacia los lados en un arco amplio hasta que sientas un estiramiento en el pecho. Inhala durante el descenso.",
+      "Lleva las mancuernas de regreso a la posición inicial siguiendo el mismo arco amplio mientras exhalas.",
+      "Mantén la flexión de los codos constante durante todo el ejercicio."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Dumbbell_Flyes/0.jpg", "Dumbbell_Flyes/1.jpg"],
+    "id": "Dumbbell_Flyes"
+  },
+  {
+    "nombre": "Press de Banca Inclinado con Barra",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["hombros", "tríceps"],
+    "instrucciones": [
+      "Acuéstate en un banco inclinado (entre 30 y 45 grados). Sujeta la barra con un agarre algo más ancho que los hombros.",
+      "Baja la barra lentamente hasta la parte superior del pecho mientras inhalas.",
+      "Empuja la barra de regreso a la posición inicial extendiendo los brazos y exhalando.",
+      "Asegúrate de mantener el control de la barra en todo momento."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Incline_Barbell_Bench_Press/0.jpg", "Incline_Barbell_Bench_Press/1.jpg"],
+    "id": "Incline_Barbell_Bench_Press"
+  },
+  {
+    "nombre": "Extensiones de Tríceps en Polea Alta",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "cable",
+    "musculosPrincipales": ["tríceps"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Sujeta una barra recta o en V unida a una polea alta. Mantén los codos pegados al cuerpo y los pies al ancho de los hombros.",
+      "Empuja la barra hacia abajo extendiendo los brazos por completo hasta que toquen tus muslos. Exhala al realizar el movimiento.",
+      "Regresa la barra lentamente a la posición inicial hasta que los antebrazos estén paralelos al suelo, inhalando durante el proceso.",
+      "Mantén el torso inmóvil; solo deben moverse los antebrazos."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Triceps_Pushdown/0.jpg", "Triceps_Pushdown/1.jpg"],
+    "id": "Triceps_Pushdown"
+  },
+  {
+    "nombre": "Jalón al Pecho (Lat Pulldown)",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "cable",
+    "musculosPrincipales": ["dorsales"],
+    "musculosSecundarios": ["bíceps", "espalda media", "hombros"],
+    "instrucciones": [
+      "Siéntate en la máquina de jalón y sujeta la barra con un agarre ancho y prono (palmas hacia adelante).",
+      "Tira de la barra hacia abajo hasta que toque la parte superior del pecho, llevando los codos hacia atrás y hacia abajo. Exhala.",
+      "Regresa la barra lentamente a la posición inicial permitiendo que tus dorsales se estiren por completo. Inhala.",
+      "Evita balancear el cuerpo hacia atrás para ayudar al movimiento."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Lat_Pulldown/0.jpg", "Lat_Pulldown/1.jpg"],
+    "id": "Lat_Pulldown"
+  },
+  {
+    "nombre": "Elevación Lateral con Mancuernas",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Párate con el torso erguido y una mancuerna en cada mano con los brazos extendidos a los costados y las palmas de las manos mirando hacia ti.",
+      "Manteniendo el torso inmóvil (sin balanceos), levanta las mancuernas hacia los lados con una ligera flexión en el codo y las manos ligeramente inclinadas hacia adelante, como si estuvieras vertiendo agua en un vaso. Continúa subiendo hasta que tus brazos estén paralelos al suelo. Exhala mientras realizas este movimiento.",
+      "Pausa un segundo en la parte superior y baja lentamente las mancuernas a la posición inicial mientras inhalas.",
+      "Repite según las repeticiones recomendadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Dumbbell_Lateral_Raise/0.jpg", "Dumbbell_Lateral_Raise/1.jpg"],
+    "id": "Dumbbell_Lateral_Raise"
+  },
+  {
+    "nombre": "Elevación Frontal con Mancuernas",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Párate con el torso erguido y una mancuerna en cada mano frente a tus muslos con las palmas mirando hacia tus piernas.",
+      "Manteniendo el torso inmóvil, levanta la mancuerna derecha hacia adelante con una ligera flexión en el codo y la palma de la mano siempre mirando hacia abajo. Continúa subiendo hasta que el brazo esté un poco más arriba de la línea paralela al suelo. Exhala mientras realizas esta parte del movimiento.",
+      "Pausa un segundo en la parte superior y baja lentamente la mancuerna a la posición inicial mientras inhalas.",
+      "Ahora realiza el mismo movimiento con la mano izquierda.",
+      "Continúa alternando hasta completar las repeticiones."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Dumbbell_Front_Raise/0.jpg", "Dumbbell_Front_Raise/1.jpg"],
+    "id": "Dumbbell_Front_Raise"
+  },
+  {
+    "nombre": "Remo a una Mano con Mancuerna",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuerna",
+    "musculosPrincipales": ["espalda media"],
+    "musculosSecundarios": ["bíceps", "dorsales"],
+    "instrucciones": [
+      "Coloca una mancuerna a cada lado de un banco plano.",
+      "Coloca la rodilla derecha sobre el extremo del banco, inclínate hacia adelante desde la cintura hasta que el torso esté paralelo al suelo y coloca la mano derecha en el otro extremo del banco para apoyarte.",
+      "Usa la mano izquierda para recoger la mancuerna del suelo. Mantén la espalda baja recta. La palma de la mano debe mirar hacia el torso.",
+      "Tira del peso hacia arriba, hacia el costado de tu pecho, flexionando el codo y manteniendo el brazo cerca del cuerpo. Exhala durante este movimiento. Consejo: Concéntrate en apretar los músculos de la espalda una vez que alcances la posición máxima.",
+      "Baja el peso de nuevo a la posición inicial mientras inhalas.",
+      "Repite el movimiento para el número especificado de repeticiones y luego cambia de lado."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["One_Arm_Dumbbell_Row/0.jpg", "One_Arm_Dumbbell_Row/1.jpg"],
+    "id": "One_Arm_Dumbbell_Row"
+  },
+  {
+    "nombre": "Pájaro con Mancuernas (Vuelos Posteriores)",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["espalda media", "espalda alta"],
+    "instrucciones": [
+      "Siéntate en el borde de un banco plano con las piernas juntas y una mancuerna detrás de cada pantorrilla.",
+      "Inclínate hacia adelante desde la cintura manteniendo la espalda recta, de modo que el pecho esté cerca de los muslos. Sujeta las mancuernas con las palmas enfrentadas.",
+      "Manteniendo una ligera flexión en los codos, levanta las mancuernas hacia los lados hasta que los brazos estén paralelos al suelo. Exhala durante este movimiento.",
+      "Baja las mancuernas lentamente a la posición inicial mientras inhalas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Dumbbell_Rear_Lateral_Raise/0.jpg", "Dumbbell_Rear_Lateral_Raise/1.jpg"],
+    "id": "Dumbbell_Rear_Lateral_Raise"
+  },
+  {
+    "nombre": "Zancada Lateral con Mancuernas",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["glúteos", "isquiotibiales", "aductores"],
+    "instrucciones": [
+      "Párate derecho con una mancuerna en cada mano a los costados.",
+      "Manteniendo los pies apuntando hacia adelante, da un gran paso hacia el lado derecho y baja las caderas doblando la rodilla derecha. La pierna izquierda debe permanecer estirada.",
+      "Empuja con el pie derecho para regresar a la posición inicial erguida.",
+      "Repite el movimiento hacia el lado izquierdo o completa todas las repeticiones de un lado antes de cambiar."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Dumbbell_Side_Lunge/0.jpg", "Dumbbell_Side_Lunge/1.jpg"],
+    "id": "Dumbbell_Side_Lunge"
+  },
+  {
+    "nombre": "Curl de Martillo Alterno",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["bíceps"],
+    "musculosSecundarios": ["antebrazos"],
+    "instrucciones": [
+      "Párate con el torso erguido y una mancuerna en cada mano con los brazos extendidos. Los codos deben estar cerca del torso.",
+      "Las palmas de las manos deben mirar hacia tu torso. Esta será tu posición inicial.",
+      "Mientras mantienes el brazo quieto, flexiona el peso derecho hacia adelante contrayendo el bíceps mientras exhalas. Continúa el movimiento hasta que el bíceps esté completamente contraído y la mancuerna a la altura del hombro. Mantén la posición un segundo. Consejo: Solo deben moverse los antebrazos.",
+      "Comienza a bajar la mancuerna lentamente a la posición inicial mientras inhalas.",
+      "Repite el movimiento con la mano izquierda. Esto completa una repetición.",
+      "Continúa alternando de esta manera hasta completar las repeticiones recomendadas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternate_Hammer_Curl/0.jpg", "Alternate_Hammer_Curl/1.jpg"],
+    "id": "Alternate_Hammer_Curl"
+  },
+  {
+    "nombre": "Toques de Talón Alternos",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "solo cuerpo",
+    "musculosPrincipales": ["abdominales"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acuéstate en el suelo con las rodillas dobladas y los pies apoyados, separados unos 45-60 cm. Los brazos deben estar extendidos a los lados. Esta será tu posición inicial.",
+      "Contrae el torso hacia adelante y hacia arriba unos 8-10 cm hacia el lado derecho y toca tu talón derecho mientras mantienes la contracción por un segundo. Exhala durante este movimiento.",
+      "Regresa lentamente a la posición inicial mientras inhalas.",
+      "Ahora contrae el torso hacia el lado izquierdo y toca tu talón izquierdo. Exhala y regresa a la posición inicial mientras inhalas. Haber tocado ambos talones se considera 1 repetición.",
+      "Continúa alternando lados hasta terminar las repeticiones prescritas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternate_Heel_Touchers/0.jpg", "Alternate_Heel_Touchers/1.jpg"],
+    "id": "Alternate_Heel_Touchers"
+  },
+  {
+    "nombre": "Curl de Bíceps Alterno en Banco Inclinado",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["bíceps"],
+    "musculosSecundarios": ["antebrazos"],
+    "instrucciones": [
+      "Siéntate en un banco inclinado con una mancuerna en cada mano manteniendo los brazos extendidos. Consejo: Mantén los codos cerca del torso. Esta será tu posición inicial.",
+      "Mientras mantienes la parte superior del brazo quieta, flexiona el peso derecho hacia adelante mientras exhalas. Al hacerlo, gira la mano de modo que la palma mire hacia arriba. Continúa hasta que el bíceps esté contraído y la mancuerna al nivel del hombro.",
+      "Baja lentamente la mancuerna a la posición inicial mientras inhalas.",
+      "Repite el movimiento con la mano izquierda para completar una repetición.",
+      "Continúa alternando brazos."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternate_Incline_Dumbbell_Curl/0.jpg", "Alternate_Incline_Dumbbell_Curl/1.jpg"],
+    "id": "Alternate_Incline_Dumbbell_Curl"
+  },
+  {
+    "nombre": "Salto Diagonal Alterno",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": null,
+    "musculosPrincipales": ["cuádriceps"],
+    "musculosSecundarios": ["abductores", "aductores", "pantorrillas", "glúteos", "isquiotibiales"],
+    "instrucciones": [
+      "Adopta una postura cómoda con un pie ligeramente delante del otro.",
+      "Comienza impulsándote con la pierna delantera, llevando la rodilla opuesta hacia adelante y tan alto como sea posible antes de aterrizar. Intenta cubrir la mayor distancia lateral posible en cada salto.",
+      "Puede ayudar usar una línea en el suelo para medir la distancia de lado a lado.",
+      "Repite la secuencia con la otra pierna."
+    ],
+    "categoria": "pliometría",
+    "imagenes": ["Alternate_Leg_Diagonal_Bound/0.jpg", "Alternate_Leg_Diagonal_Bound/1.jpg"],
+    "id": "Alternate_Leg_Diagonal_Bound"
+  },
+  {
+    "nombre": "Press de Hombros Alterno con Polea",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "polea",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["tríceps"],
+    "instrucciones": [
+      "Mueve las poleas a la parte inferior de la torre y selecciona un peso adecuado.",
+      "Sujeta los agarres y mantenlos a la altura de los hombros, con las palmas hacia adelante. Esta será tu posición inicial.",
+      "Manteniendo la cabeza y el pecho erguidos, extiende el codo para presionar un lado directamente sobre la cabeza.",
+      "Tras una pausa en la parte superior, regresa a la posición inicial y repite en el lado opuesto."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Cable_Shoulder_Press/0.jpg", "Alternating_Cable_Shoulder_Press/1.jpg"],
+    "id": "Alternating_Cable_Shoulder_Press"
+  },
+  {
+    "nombre": "Elevación de Deltoides Alterna",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "En posición de pie, sostén un par de mancuernas a los costados.",
+      "Manteniendo los codos ligeramente flexionados, levanta los pesos directamente frente a ti hasta la altura de los hombros, evitando balanceos.",
+      "Regresa los pesos a los costados.",
+      "En la siguiente repetición, levanta los pesos lateralmente hacia afuera hasta la altura de los hombros.",
+      "Regresa a la posición inicial y continúa alternando entre elevación frontal y lateral."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Deltoid_Raise/0.jpg", "Alternating_Deltoid_Raise/1.jpg"],
+    "id": "Alternating_Deltoid_Raise"
+  },
+  {
+    "nombre": "Press de Suelo Alterno",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas (kettlebells)",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["abdominales", "hombros", "tríceps"],
+    "instrucciones": [
+      "Acuéstate en el suelo con dos pesas rusas junto a tus hombros.",
+      "Coloca una en su lugar sobre tu pecho y luego la otra, sujetándolas por el asa con las palmas hacia adelante.",
+      "Extiende ambos brazos de modo que las pesas queden sobre tu pecho. Baja una pesa rusa llevándola hacia el pecho y gira la muñeca en dirección a la pesa que queda extendida.",
+      "Eleva la pesa y repite en el lado opuesto."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Floor_Press/0.jpg", "Alternating_Floor_Press/1.jpg"],
+    "id": "Alternating_Floor_Press"
+  },
+  {
+    "nombre": "Cargada Colgante Alterna (Hang Clean)",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas (kettlebells)",
+    "musculosPrincipales": ["isquiotibiales"],
+    "musculosSecundarios": ["bíceps", "pantorrillas", "antebrazos", "glúteos", "espalda baja", "trapecios"],
+    "instrucciones": [
+      "Coloca dos pesas rusas entre tus pies. Para la posición inicial, empuja la cadera hacia atrás y mira al frente.",
+      "Lleva una pesa al hombro (clean) mientras mantienes la otra colgando. Realiza el movimiento extendiendo piernas y cadera mientras tiras de la pesa hacia el hombro, rotando la muñeca al hacerlo.",
+      "Baja la pesa a la posición colgante y realiza el movimiento con la otra pesa. Repite."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Hang_Clean/0.jpg", "Alternating_Hang_Clean/1.jpg"],
+    "id": "Alternating_Hang_Clean"
+  },
+  {
+    "nombre": "Press de Pesas Rusas Alterno",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas (kettlebells)",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["tríceps"],
+    "instrucciones": [
+      "Lleva dos pesas rusas a tus hombros extendiendo piernas y cadera. Rota las muñecas para que descansen correctamente.",
+      "Presiona una directamente sobre la cabeza extendiendo el codo, girándola para que la palma mire hacia adelante, mientras mantienes la otra pesa quieta.",
+      "Baja la pesa a la posición inicial e inmediatamente presiona con el otro brazo."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Kettlebell_Press/0.jpg", "Alternating_Kettlebell_Press/1.jpg"],
+    "id": "Alternating_Kettlebell_Press"
+  },
+  {
+    "nombre": "Remo con Pesas Rusas Alterno",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "aislamiento",
+    "equipamiento": "pesas rusas (kettlebells)",
+    "musculosPrincipales": ["espalda media"],
+    "musculosSecundarios": ["bíceps", "dorsales"],
+    "instrucciones": [
+      "Coloca dos pesas rusas frente a tus pies. Flexiona ligeramente las rodillas y empuja la cadera hacia atrás. Inclínate y sujeta ambas pesas por las asas.",
+      "Tira de una pesa hacia arriba mientras mantienes la otra en el suelo. Retrae el omóplato del lado que trabaja y flexiona el codo llevando la pesa hacia tu estómago o costillas.",
+      "Baja la pesa y repite con el otro brazo."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Kettlebell_Row/0.jpg", "Alternating_Kettlebell_Row/1.jpg"],
+    "id": "Alternating_Kettlebell_Row"
+  },
+  {
+    "nombre": "Remo Renegado Alterno",
+    "fuerza": "tirar",
+    "nivel": "experto",
+    "mecanica": "compuesto",
+    "equipamiento": "pesas rusas (kettlebells)",
+    "musculosPrincipales": ["espalda media"],
+    "musculosSecundarios": ["abdominales", "bíceps", "pecho", "dorsales", "tríceps"],
+    "instrucciones": [
+      "Coloca dos pesas rusas en el suelo a la anchura de los hombros. Colócate en posición de flexión (pushup) apoyando las manos en las asas de las pesas, con el cuerpo recto y extendido. Es recomendable separar los pies para mayor estabilidad.",
+      "Presiona una pesa rusa contra el suelo mientras realizas un remo con la otra, retrayendo el omóplato y flexionando el codo para llevar la pesa hacia tu costado.",
+      "Baja la pesa al suelo y repite el movimiento con el otro brazo. Continúa alternando durante varias repeticiones."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Alternating_Renegade_Row/0.jpg", "Alternating_Renegade_Row/1.jpg"],
+    "id": "Alternating_Renegade_Row"
+  },
+  {
+    "nombre": "Círculos de Tobillo",
+    "fuerza": "tirar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": null,
+    "musculosPrincipales": ["pantorrillas"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Sujétate de un objeto resistente como un rack de sentadillas para mantener el equilibrio.",
+      "Levanta la pierna derecha (unos 5 cm del suelo) y realiza un movimiento circular con el dedo gordo del pie, como si dibujaras un círculo grande. Respira normalmente durante el movimiento.",
+      "Una vez termines con el pie derecho, repite con la pierna izquierda."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Ankle_Circles/0.jpg", "Ankle_Circles/1.jpg"],
+    "id": "Ankle_Circles"
+  },
+  {
+    "nombre": "Tobillo sobre la Rodilla",
+    "fuerza": "estática",
+    "nivel": "principiante",
+    "mecanica": null,
+    "equipamiento": null,
+    "musculosPrincipales": ["glúteos"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Acostado boca arriba, dobla las rodillas y mantén los pies apoyados en el suelo.",
+      "Coloca el tobillo de un pie sobre la rodilla opuesta.",
+      "Sujeta el muslo o la rodilla de la pierna que está apoyada y tira de ambas piernas hacia el pecho. Relaja el cuello y los hombros. Mantén la posición de 10 a 20 segundos y cambia de lado."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Ankle_On_The_Knee/0.jpg", "Ankle_On_The_Knee/1.jpg"],
+    "id": "Ankle_On_The_Knee"
+  },
+  {
+    "nombre": "Tibial Anterior con Rodillo (SMR)",
+    "fuerza": "estática",
+    "nivel": "intermedio",
+    "mecanica": null,
+    "equipamiento": "otros",
+    "musculosPrincipales": ["pantorrillas"],
+    "musculosSecundarios": [],
+    "instrucciones": [
+      "Comienza sentado en el suelo con las piernas dobladas y los pies apoyados.",
+      "Usando un rodillo muscular o un rodillo de cocina, aplica presión en los músculos de la parte externa de las espinillas.",
+      "Trabaja desde justo debajo de la rodilla hasta encima del tobillo, deteniéndote en los puntos de tensión durante 10-30 segundos. Repite en la otra pierna."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Anterior_Tibialis-SMR/0.jpg", "Anterior_Tibialis-SMR/1.jpg"],
+    "id": "Anterior_Tibialis-SMR"
+  },
+  {
+    "nombre": "Press Anti-Gravedad",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "compuesto",
+    "equipamiento": "barra",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["espalda media", "trapecios", "tríceps"],
+    "instrucciones": [
+      "Coloca una barra en el suelo detrás de la cabecera de un banco inclinado.",
+      "Acuéstate boca abajo en el banco. Con un agarre prono, levanta la barra del suelo. Flexiona los codos realizando un curl invertido para llevar la barra cerca de tu pecho. Esta será tu posición inicial.",
+      "Para comenzar, presiona la barra hacia adelante de tu cabeza extendiendo los codos. Mantén los brazos paralelos al suelo durante todo el movimiento.",
+      "Regresa a la posición inicial y repite."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Anti-Gravity_Press/0.jpg", "Anti-Gravity_Press/1.jpg"],
+    "id": "Anti-Gravity_Press"
+  },
+  {
+    "nombre": "Círculos de Brazos",
+    "fuerza": "empujar",
+    "nivel": "principiante",
+    "mecanica": "aislamiento",
+    "equipamiento": null,
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["trapecios"],
+    "instrucciones": [
+      "Párate y extiende los brazos hacia los lados. Deben estar paralelos al suelo y perpendiculares a tu torso. Esta es la posición inicial.",
+      "Comienza a realizar círculos de unos 30 cm de diámetro con cada brazo extendido. Respira normalmente.",
+      "Continúa el movimiento durante unos diez segundos y luego invierte el sentido."
+    ],
+    "categoria": "estiramiento",
+    "imagenes": ["Arm_Circles/0.jpg", "Arm_Circles/1.jpg"],
+    "id": "Arm_Circles"
+  },
+  {
+    "nombre": "Press Arnold con Mancuernas",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["hombros"],
+    "musculosSecundarios": ["tríceps"],
+    "instrucciones": [
+      "Siéntate en un banco con respaldo y sujeta dos mancuernas frente a ti, al nivel del pecho superior, con las palmas mirando hacia tu cuerpo y los codos doblados.",
+      "Para realizar el movimiento, levanta las mancuernas mientras rotas las palmas hasta que miren hacia adelante.",
+      "Continúa subiendo hasta que los brazos estén extendidos sobre ti. Exhala durante esta fase.",
+      "Tras una pausa, baja las mancuernas a la posición inicial rotando las palmas de nuevo hacia ti. Inhala durante este descenso."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Arnold_Dumbbell_Press/0.jpg", "Arnold_Dumbbell_Press/1.jpg"],
+    "id": "Arnold_Dumbbell_Press"
+  },
+  {
+    "nombre": "Alrededor del Mundo",
+    "fuerza": "empujar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "mancuernas",
+    "musculosPrincipales": ["pecho"],
+    "musculosSecundarios": ["hombros"],
+    "instrucciones": [
+      "Acuéstate en un banco plano sujetando una mancuerna en cada mano con las palmas hacia el techo. Los brazos deben estar paralelos al suelo y junto a tus muslos, con los codos ligeramente flexionados.",
+      "Mueve las mancuernas creando un semicírculo desde los muslos hasta por encima de la cabeza, manteniendo siempre los brazos paralelos al suelo. Inhala durante el movimiento.",
+      "Invierte el movimiento para volver a la posición inicial mientras exhalas."
+    ],
+    "categoria": "fuerza",
+    "imagenes": ["Around_The_Worlds/0.jpg", "Around_The_Worlds/1.jpg"],
+    "id": "Around_The_Worlds"
+  },
+  {
+    "nombre": "Entrenamiento de Piedras Atlas",
+    "fuerza": "tirar",
+    "nivel": "intermedio",
+    "mecanica": "compuesto",
+    "equipamiento": "otros",
+    "musculosPrincipales": ["espalda baja"],
+    "musculosSecundarios": ["bíceps", "antebrazos", "glúteos", "isquiotibiales", "cuádriceps"],
+    "instrucciones": [
+      "Este ejercicio simula la fuerza de las Piedras Atlas usando implementos de barra pesada o tuberías.",
+      "Carga el peso deseado. Colócate sobre el implemento, rodeándolo con tus brazos e inclinándote desde la cadera.",
+      "Tira del peso hacia arriba pasando las rodillas. Una vez superadas, puedes apoyarlo en los muslos sentándote un poco y abrazándolo fuerte contra el pecho.",
+      "Finaliza extendiendo cadera y rodillas para levantar el peso lo más alto posible."
+    ],
+    "categoria": "strongman",
+    "images": ["Atlas_Stone_Trainer/0.jpg", "Atlas_Stone_Trainer/1.jpg"],
+    "id": "Atlas_Stone_Trainer"
+  },
+  {
+    "nombre": "Piedras Atlas",
+    "fuerza": "tirar",
+    "nivel": "experto",
+    "mecanica": "compuesto",
+    "equipamiento": "otros",
+    "musculosPrincipales": ["espalda baja"],
+    "musculosSecundarios": ["abdominales", "aductores", "bíceps", "pantorrillas", "antebrazos", "glúteos", "isquiotibiales", "espalda media", "cuádriceps", "trapecios"],
+    "instrucciones": [
+      "Comienza con la piedra entre los pies. Inclínate para rodearla verticalmente con los brazos, intentando meter los dedos por debajo.",
+      "Tira de la piedra hacia tu torso e impúlsate con los talones para levantarla del suelo.",
+      "Al pasar las rodillas, siéntate hacia atrás para apoyar la piedra sobre tus muslos.",
+      "Ubica la piedra alta en el pecho mientras cambias el agarre para abrazarla por encima. Levántate extendiendo la cadera y cárgala en la plataforma."
+    ],
+    "categoria": "strongman",
+    "imagenes": ["Atlas_Stones/0.jpg", "Atlas_Stones/1.jpg"],
+    "id": "Atlas_Stones"
+  }
+
+
+]
+
+
+
+  

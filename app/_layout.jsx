@@ -11,7 +11,6 @@ import {
   Lexend_800ExtraBold,
 } from "@expo-google-fonts/lexend";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
-
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { View, Text } from "react-native";
@@ -74,13 +73,6 @@ export default function RootLayout() {
 
         <Screen safe>
           <Stack>
-            <Stack.Screen
-              name="index"
-              options={{
-                title: "Registrar usuario",
-                headerTitleAlign: "center",
-              }}
-            />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen
               name="(protected)"
