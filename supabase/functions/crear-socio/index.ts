@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const ERROR_MESSAGES = {
+  23505: "Este correo o número de documento ya se encuentra registrado.",
+  23502: "Faltan datos obligatorios para el registro.",
+  42501: "Error de permisos. Verifica tu sesión.",
+  default: "Ocurrió un error inesperado. Inténtalo de nuevo.",
+};
+
 Deno.serve(async (req) => {
   // 1. Manejo de CORS (Para que tu app de React Native pueda llamar a la función)
   if (req.method === 'OPTIONS') {
@@ -7,7 +14,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, nombre } = await req.json()
+    const { email, name, last_name, image_profile, phone, document_number, address } = await req.json()
 
     // 2. Cliente con Service Role Key (Permisos de Admin)
     const supabaseAdmin = createClient(
@@ -19,7 +26,7 @@ Deno.serve(async (req) => {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
       password: 'tugimnasio123', // El socio la cambiará después
-      email_confirm: true
+      email_confirm: false
     })
 
     if (authError) throw authError
@@ -29,8 +36,13 @@ Deno.serve(async (req) => {
       .from('profiles')
       .insert({
         id: authData.user.id, // Sincronización total
-        email: email,
-        nombre: nombre
+        email,
+        name,
+        last_name,
+        image_profile,
+        phone,
+        document_number,
+        address,
       })
 
     if (profileError) throw profileError

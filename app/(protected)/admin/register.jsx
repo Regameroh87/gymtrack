@@ -12,6 +12,7 @@ import { useKeyboardScroll } from "../../../src/hooks/useKeyboardScroll.js";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import Toast from "react-native-toast-message";
+import { supabase } from "../../../src/database/supabase";
 
 import * as ImagePicker from "expo-image-picker";
 import {
@@ -23,7 +24,6 @@ import {
   UserPlus,
 } from "../../../assets/icons.jsx";
 import { uploadToCloudinary } from "../../../src/utils/uploadImage.js";
-import registerUser from "../../../src/users/lib/register.js";
 
 export default function Sandbox() {
   const { scrollViewRef, keyboardHeight, scrollToField, scrollToEnd } =
@@ -48,7 +48,9 @@ export default function Sandbox() {
     onSubmit: async ({ value }) => {
       console.log(value);
       try {
-        await registerUser(value);
+        await supabase.functions.invoke("crear-socio", {
+          body: value,
+        });
         Toast.show({
           type: "success",
           text1: "Usuario registrado exitosamente",
