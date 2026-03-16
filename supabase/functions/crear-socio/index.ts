@@ -14,35 +14,33 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, name, last_name, image_profile, phone, document_number, address } = await req.json()
+    const body = await req.json()
+    const { email, name, last_name, image_profile, phone, document_number, address } = body
 
-    // 2. Cliente con Service Role Key (Permisos de Admin)
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 3. Crear el usuario en AUTH
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: 'tugimnasio123', // El socio la cambiará después
-      email_confirm: false
+      email,
+      password: 'tugimnasio123',
+      email_confirm: true
     })
 
     if (authError) throw authError
 
-    // 4. Crear el perfil en PUBLIC.PROFILES con el MISMO ID
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
-        id: authData.user.id, // Sincronización total
+        id: authData.user.id,
         email,
         name,
         last_name,
         image_profile,
         phone,
         document_number,
-        address,
+        address
       })
 
     if (profileError) throw profileError
@@ -53,6 +51,7 @@ Deno.serve(async (req) => {
     })
 
   } catch (error) {
+    console.log("Error en la funcion crear-socio:",error.message)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       status: 400,
