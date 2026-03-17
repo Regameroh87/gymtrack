@@ -48,9 +48,10 @@ export default function Sandbox() {
     onSubmit: async ({ value }) => {
       console.log(value);
       try {
-        await supabase.functions.invoke("crear-socio", {
+        const response = await supabase.functions.invoke("crear-socio", {
           body: value,
         });
+        console.log(response);
         Toast.show({
           type: "success",
           text1: "Usuario registrado exitosamente",

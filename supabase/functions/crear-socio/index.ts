@@ -34,13 +34,13 @@ Deno.serve(async (req) => {
       .from('profiles')
       .insert({
         id: authData.user.id,
-        email,
-        name,
-        last_name,
-        image_profile,
-        phone,
-        document_number,
-        address
+        email: email.toLowerCase(),
+        name: name.toLowerCase(),
+        last_name: last_name.toLowerCase(),
+        image_profile: image_profile.toLowerCase(),
+        phone: phone.toLowerCase(),
+        document_number: document_number.toLowerCase(),
+        address: address.toLowerCase()
       })
 
     if (profileError) throw profileError
