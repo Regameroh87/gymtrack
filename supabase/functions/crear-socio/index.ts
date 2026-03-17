@@ -11,11 +11,8 @@ const AUTH_ERRORS: Record<string, string> = {
 
 
 function getErrorMessage(error: { message?: string; code?: string | number }): string {
-  // Buscar en errores de auth por message o code
-  const authMsg = AUTH_ERRORS[error.message ?? ''] ?? AUTH_ERRORS[error.code ?? '']
-  if (authMsg) return authMsg
-
-  return error.message ?? "Ocurrió un error inesperado. Inténtalo de nuevo."
+  const authMsg = AUTH_ERRORS[error.message ?? ''] ?? "Ocurrió un error inesperado. Inténtalo de nuevo."
+  return authMsg
 }
 
 
@@ -61,11 +58,38 @@ Deno.serve(async (req) => {
         address: address?.toLowerCase() ?? null
       })
 
-    if (profileError){
-      // DEBERIA BORRA DE AUTH EL USUARIO CREADO, SINO ME QUEDA EN AUTH Y AL IUNTENTAR INGRESARLO NUEVAMENTE ME DA ERROR
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+    if (profileError) {
+      // Rollback: intentar eliminar el usuario de Auth para no dejar un usuario huérfano.
+      // Usamos retry limitado (máx 3 intentos) con backoff — no loop infinito para no colgar al cliente.
+      const MAX_RETRIES = 3
+      let deleted = false
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+
+        if (!deleteError) {
+          deleted = true
+          break // ✅ Borrado exitoso
+        }
+
+        console.warn(
+          `[ROLLBACK] Intento ${attempt}/${MAX_RETRIES} fallido para borrar user ${authData.user.id}: ${deleteError.message}`
+        )
+
+        // Esperar antes del próximo intento: 500ms → 1000ms → 2000ms
+        if (attempt < MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, 500 * attempt))
+        }
+      }
+
+      if (!deleted) {
+        console.error(
+          `[ROLLBACK FALLIDO] No se pudo eliminar el usuario de Auth tras ${MAX_RETRIES} intentos. ID: ${authData.user.id} — Eliminarlo manualmente desde el dashboard.`
+        )
+      }
+
       throw profileError
-    } 
+    }
 
     return new Response(JSON.stringify({ done: true }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -74,7 +98,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.log("Error en la funcion crear-socio:", error.message, "| code:", error.code)
-    return new Response(JSON.stringify({ error: "Ha ocurrido un error al guardar al usuario. Inténtalo de nuevo." }), {
+    return new Response(JSON.stringify({ error: "Ha ocurrido un error al guardar al usuario. Comuniquese al soporte técnico." }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       status: 400,
     })

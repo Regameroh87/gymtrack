@@ -47,26 +47,28 @@ export default function Sandbox() {
     },
     onSubmit: async ({ value }) => {
       console.log(value);
-      try {
-        const response = await supabase.functions.invoke("crear-socio", {
-          body: value,
-        });
-        console.log(response);
-        Toast.show({
-          type: "success",
-          text1: "Usuario registrado exitosamente",
-          position: "bottom",
-          visibilityTime: 2000,
-        });
-        form.reset();
-      } catch (error) {
+      const response = await supabase.functions.invoke("crear-socio", {
+        body: value,
+      });
+
+      console.log("Respuesta de la función:", response.error);
+
+      if (response.error) {
         Toast.show({
           type: "error",
-          text1: error.message,
+          text1: response.error.message,
           position: "bottom",
           visibilityTime: 2000,
         });
+        return;
       }
+      Toast.show({
+        type: "success",
+        text1: "Usuario registrado exitosamente",
+        position: "bottom",
+        visibilityTime: 2000,
+      });
+      form.reset();
     },
   });
 
