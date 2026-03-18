@@ -47,18 +47,31 @@ export default function Sandbox() {
     },
     onSubmit: async ({ value }) => {
       console.log(value);
+
       const response = await supabase.functions.invoke("crear-socio", {
         body: value,
       });
 
-      console.log("Respuesta de la función:", response.error);
-
       if (response.error) {
+        let errorMsg =
+          "Ha ocurrido un error inesperado. Por favor intentá de nuevo.";
+        // Intentamos extraer el mensaje traducido del cuerpo de la respuesta
+        if (response.error.context) {
+          try {
+            const body = await response.error.context.json();
+            if (body && body.error) {
+              errorMsg = body.error;
+            }
+          } catch (error) {
+            console.log("No se pudo leer el cuerpo del error", error);
+          }
+        }
+
         Toast.show({
           type: "error",
-          text1: response.error.message,
+          text1: errorMsg,
           position: "bottom",
-          visibilityTime: 2000,
+          visibilityTime: 2500,
         });
         return;
       }
