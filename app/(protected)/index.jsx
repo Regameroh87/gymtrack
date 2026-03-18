@@ -2,9 +2,12 @@ import { Text, Pressable, View, Image, Button } from "react-native";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
+import { useAuth } from "../../src/auth/lib/getSession.jsx";
 
 export default function Index() {
   const image = require("../../assets/icon.png");
+  const { user } = useAuth();
+  console.log("user en home", user);
 
   return (
     <Screen>
@@ -12,7 +15,7 @@ export default function Index() {
         <View>
           <Text className="text-base font-bold text-gray-500">Bienvenido,</Text>
           <Text className="text-md font-bold text-gray-900">
-            Rodrigo Emmanuel Gamero Hubka
+            {user?.name} {user?.last_name}
           </Text>
         </View>
         <View>

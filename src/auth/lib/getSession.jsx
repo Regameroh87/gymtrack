@@ -20,7 +20,12 @@ export const useAuth = () => {
         );
         if (session) {
           setSession(session);
-          setUser(session.user);
+          const user = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id);
+          console.log("user", user.data[0]);
+          setUser(user.data[0]);
         }
       } catch (error) {
         console.error("useAuth: Error al obtener la sesión inicial:", error);
