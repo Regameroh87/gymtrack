@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
-import { CalendarTime } from "../../assets/icons.jsx";
+import { Calendar, Clock } from "../../assets/icons.jsx";
 
 export default function Index() {
   const imageProfile = require("../../assets/profile.png");
@@ -36,10 +36,13 @@ export default function Index() {
       </View>
       {/* CARD PROGRESS */}
       <View className="flex justify-center items-center mt-6">
-        <View className="  bg-slate-200 rounded-2xl p-10 shadow-md rotate-3">
-          <CalendarTime size={64} className="text-indigo-600" />
+        <View className=" relative bg-slate-200 rounded-3xl p-10 shadow-md rotate-3">
+          <Calendar size={72} className="text-indigo-600" />
+          <View className=" absolute -bottom-2 -right-2">
+            <Clock size={48} className="text-emerald-400" />
+          </View>
         </View>
-        <Text className="flex text-center text-slate-900 font-lexend text-xl my-3 w-3/4">
+        <Text className="flex text-center text-slate-900 font-lexend text-xl my-4 w-3/4">
           Aun no tienes una rutina para hoy.
         </Text>
         <Text className="text-slate-400 font-lexend text-sm leading-relaxed text-center w-[85%]">
