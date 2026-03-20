@@ -5,7 +5,10 @@ const Screen = ({ children, safe = false, className = "" }) => {
   const insets = useSafeAreaInsets();
   const paddingTop = safe ? insets.top : 0;
   return (
-    <View className={`${className || ""} flex-1`} style={{ paddingTop }}>
+    <View
+      className={`${className || ""} flex-1 bg-ui-background-light dark:bg-ui-background-dark`}
+      style={{ paddingTop }}
+    >
       {children}
     </View>
   );
