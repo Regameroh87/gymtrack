@@ -49,7 +49,7 @@ export default function Index() {
         </Text>
       </View>
 
-      <View className="flex my-6 px-4">
+      <View className="flex mt-6 px-4">
         <Pressable
           className="rounded-2xl overflow-hidden shadow-xl shadow-indigo-400/40 active:scale-95 transition-all"
           onPress={() => {
@@ -68,12 +68,13 @@ export default function Index() {
           </LinearGradient>
         </Pressable>
       </View>
-
-      <Pressable className="bg-white border border-slate-200 py-4 px-8 rounded-2xl active:bg-slate-50 active:scale-95 transition-all">
-        <Text className="text-slate-600 text-center font-lexend-bold text-lg">
-          Crear Nueva Rutina
-        </Text>
-      </Pressable>
+      <View className="flex mt-6 px-4">
+        <Pressable className=" border border-indigo-600 py-4 px-8 rounded-2xl active:bg-slate-50 active:scale-95 transition-all">
+          <Text className="text-indigo-600 text-center font-lexend-bold text-lg">
+            Crear Nueva Rutina
+          </Text>
+        </Pressable>
+      </View>
 
       {/* SESIONES DE ENTRENAMIENTO */}
       {/*      <View className="flex w-[85%] mx-auto py-8 bg-ui-card-light dark:bg-ui-card-dark items-center justify-center rounded-[32px] shadow-sm border border-ui-input-border dark:border-ui-input-borderDark">
