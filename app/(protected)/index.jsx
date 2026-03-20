@@ -1,38 +1,57 @@
-import { Text, Pressable, View, Image, Button } from "react-native";
+import { Text, View, Image, Button } from "react-native";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
+import { CalendarTime } from "../../assets/icons.jsx";
 
 export default function Index() {
-  const image = require("../../assets/icon.png");
+  const imageProfile = require("../../assets/profile.png");
   const { user } = useAuth();
   console.log("user en home", user);
 
   return (
     <Screen>
-      <View className="flex flex-row self-center w-[92%] items-center justify-between bg-ui-card-light dark:bg-ui-card-dark p-4 rounded-[32px] shadow-sm border border-ui-input-border dark:border-ui-input-borderDark my-6">
-        <View className="flex flex-row items-center gap-4">
-          <View className="shadow-sm">
+      {/* CARD PROFILE */}
+      <View className="flex w-full p-4">
+        <View className="flex flex-row gap-4">
+          <View className=" flex justify-center items-center w-14 h-14 p-2 rounded-full border-2 border-indigo-600 shadow-sm">
             <Image
-              source={user?.image_profile ? { uri: user.image_profile } : image}
-              className="w-14 h-14 rounded-full border-2 border-brand-lime"
+              source={
+                user?.image_profile ? { uri: user.image_profile } : imageProfile
+              }
+              className="w-full h-full object-contain"
             />
           </View>
           <View className="flex-col">
-            <Text className="text-sm font-semibold text-ui-text-muted dark:text-ui-text-mutedDark">
-              Hola 👋
+            <Text className="text-slate-900 font-lexend-bold text-3xl tracking-tight">
+              ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-lg font-bold text-ui-text-main dark:text-ui-text-mainDark leading-tight">
-              {user?.name} {user?.last_name}
-            </Text>
-            <Text className="text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
+            <Text className="text-xs text-indigo-600 font-lexend">
               Listo para entrenar 💪
             </Text>
           </View>
         </View>
       </View>
-      <View className="flex w-[85%] mx-auto py-8 bg-ui-card-light dark:bg-ui-card-dark items-center justify-center rounded-[32px] shadow-sm border border-ui-input-border dark:border-ui-input-borderDark">
+      {/* CARD PROGRESS */}
+      <View className="flex justify-center items-center mt-6">
+        <View
+          className="  bg-slate-200 rounded-2xl p-10 shadow-md"
+          style={{ transform: [{ rotate: "3deg" }] }}
+        >
+          <CalendarTime size={64} className="text-indigo-600" />
+        </View>
+        <Text className="flex text-center text-slate-900 font-lexend text-xl my-3 w-3/4">
+          Aun no tienes una rutina para hoy.
+        </Text>
+        <Text className="text-slate-400 font-lexend text-md leading-relaxed text-center w-[85%]">
+          {
+            "Parece que no hay ejercicios programados para hoy.\n¡Mantén el ritmo y comienza\nahora mismo!"
+          }
+        </Text>
+      </View>
+      {/* SESIONES DE ENTRENAMIENTO */}
+      {/*      <View className="flex w-[85%] mx-auto py-8 bg-ui-card-light dark:bg-ui-card-dark items-center justify-center rounded-[32px] shadow-sm border border-ui-input-border dark:border-ui-input-borderDark">
         <Text className="text-sm font-bold text-brand-primary uppercase tracking-widest">
           PROGRESO DE HOY
         </Text>
@@ -55,7 +74,7 @@ export default function Index() {
             Iniciar sesión 🏋️
           </Text>
         </Pressable>
-      </View>
+      </View> */}
       <View className=" w-1/2 mx-auto my-4 rounded">
         <Button
           style={{ borderRadius: "100%" }}

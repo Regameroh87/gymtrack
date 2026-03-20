@@ -1,12 +1,26 @@
 import Svg, { Path } from "react-native-svg";
-export const Barbell = ({ size = 24, ...props }) => (
+import { cssInterop } from "nativewind";
+
+// Esto permite que el componente Svg entienda la prop 'className' de Tailwind
+cssInterop(Svg, {
+  className: {
+    target: "style",
+    nativeStyleToProp: {
+      color: true,
+      fill: true,
+      stroke: true,
+    },
+  },
+});
+
+export const Barbell = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="icon icon-tabler icons-tabler-filled icon-tabler-barbell"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-barbell ${className}`}
     {...props}
   >
     <Path fill="none" d="M0 0h24v24H0z" />
@@ -14,14 +28,14 @@ export const Barbell = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const Home = ({ size = 24, ...props }) => (
+export const Home = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="icon icon-tabler icons-tabler-filled icon-tabler-home"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-home ${className}`}
     {...props}
   >
     <Path fill="none" d="M0 0h24v24H0z" />
@@ -29,7 +43,7 @@ export const Home = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const Logs = ({ size = 24, ...props }) => (
+export const Logs = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -40,7 +54,7 @@ export const Logs = ({ size = 24, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     strokeWidth={2}
-    className="icon icon-tabler icons-tabler-outline icon-tabler-logs"
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-logs ${className}`}
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
@@ -48,14 +62,14 @@ export const Logs = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const Mail = ({ size = 24, ...props }) => (
+export const Mail = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="icon icon-tabler icons-tabler-filled icon-tabler-mail"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-mail ${className}`}
     {...props}
   >
     <Path fill="none" d="M0 0h24v24H0z" />
@@ -64,7 +78,7 @@ export const Mail = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const ArrowRight = ({ size = 24, ...props }) => (
+export const ArrowRight = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -75,7 +89,7 @@ export const ArrowRight = ({ size = 24, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     strokeWidth={2}
-    className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right"
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right ${className}`}
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
@@ -83,7 +97,7 @@ export const ArrowRight = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const CheckMail = ({ size = 24, ...props }) => (
+export const CheckMail = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -94,7 +108,7 @@ export const CheckMail = ({ size = 24, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     strokeWidth={2}
-    className="icon icon-tabler icons-tabler-outline icon-tabler-mail-check"
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-mail-check ${className}`}
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
@@ -103,7 +117,7 @@ export const CheckMail = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const Polaroid = ({ size = 24, ...props }) => (
+export const Polaroid = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -114,7 +128,7 @@ export const Polaroid = ({ size = 24, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     strokeWidth={2}
-    className="icon icon-tabler icons-tabler-outline icon-tabler-polaroid"
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-polaroid ${className}`}
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
@@ -124,14 +138,14 @@ export const Polaroid = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const Phone = ({ size = 24, ...props }) => (
+export const Phone = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="icon icon-tabler icons-tabler-filled icon-tabler-phone"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-phone ${className}`}
     {...props}
   >
     <Path fill="none" d="M0 0h24v24H0z" />
@@ -139,7 +153,7 @@ export const Phone = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const IdBadge = ({ size = 24, ...props }) => (
+export const IdBadge = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -150,7 +164,7 @@ export const IdBadge = ({ size = 24, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     strokeWidth={2}
-    className="icon icon-tabler icons-tabler-outline icon-tabler- id-badge-2"
+    className={`icon icon-tabler icons-tabler-outline icon-tabler- id-badge-2 ${className}`}
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
@@ -160,14 +174,14 @@ export const IdBadge = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const MapPin = ({ size = 24, ...props }) => (
+export const MapPin = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
     height={size}
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="icon icon-tabler icons-tabler-filled icon-tabler-map-pin"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-map-pin ${className}`}
     {...props}
   >
     <Path fill="none" d="M0 0h24v24H0z" />
@@ -175,7 +189,7 @@ export const MapPin = ({ size = 24, ...props }) => (
   </Svg>
 );
 
-export const UserPlus = ({ size = 24, ...props }) => (
+export const UserPlus = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -186,10 +200,31 @@ export const UserPlus = ({ size = 24, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     strokeWidth={2}
-    className="icon icon-tabler icons-tabler-outline icon-tabler-user-plus"
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-user-plus ${className}`}
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
     <Path d="M8 7a4 4 0 1 0 8 0 4 4 0 0 0-8 0M16 19h6M19 16v6M6 21v-2a4 4 0 0 1 4-4h4" />
+  </Svg>
+);
+
+export const CalendarTime = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-calendar-time ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M11.795 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4" />
+    <Path d="M14 18a4 4 0 1 0 8 0 4 4 0 1 0-8 0M15 3v4M7 3v4M3 11h16" />
+    <Path d="M18 16.496V18l1 1" />
   </Svg>
 );
