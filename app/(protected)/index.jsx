@@ -1,4 +1,4 @@
-import { Text, View, Image, Button, Pressable } from "react-native";
+import { Text, View, Image, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
@@ -78,32 +78,6 @@ export default function Index() {
           </Text>
         </Pressable>
       </View>
-
-      {/* SESIONES DE ENTRENAMIENTO */}
-      {/*      <View className="flex w-[85%] mx-auto py-8 bg-ui-card-light dark:bg-ui-card-dark items-center justify-center rounded-[32px] shadow-sm border border-ui-input-border dark:border-ui-input-borderDark">
-        <Text className="text-sm font-bold text-brand-primary uppercase tracking-widest">
-          PROGRESO DE HOY
-        </Text>
-        <Text className="text-4xl font-lexend-ebold text-ui-text-main dark:text-ui-text-mainDark mt-2">
-          1/3{" "}
-          <Text className="text-xl font-lexend-bold text-ui-text-muted">
-            SESIONES
-          </Text>
-        </Text>
-      </View>
-      <View>
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            // Lógica para iniciar entrenamiento aquí
-          }}
-          className="flex flex-row justify-center items-center w-[80%] mx-auto bg-brand-primary active:bg-brand-dark py-4 rounded-2xl mt-6 shadow-sm"
-        >
-          <Text className="text-ui-background-dark text-lg font-bold">
-            Iniciar sesión 🏋️
-          </Text>
-        </Pressable>
-      </View> */}
       {/*  <View className=" w-1/2 mx-auto my-4 rounded">
         <Button
           style={{ borderRadius: "100%" }}
