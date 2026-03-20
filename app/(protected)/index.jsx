@@ -24,10 +24,10 @@ export default function Index() {
             />
           </View>
           <View className="flex-col">
-            <Text className="text-slate-900 font-lexend-bold text-3xl tracking-tight">
+            <Text className="text-slate-900 font-lexend-bold text-2xl tracking-tight">
               ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-xs text-indigo-600 font-lexend">
+            <Text className="text-xs w-fit text-center py-1 rounded-full text-indigo-600 font-lexend bg-indigo-100">
               Listo para entrenar 💪
             </Text>
           </View>
@@ -35,16 +35,13 @@ export default function Index() {
       </View>
       {/* CARD PROGRESS */}
       <View className="flex justify-center items-center mt-6">
-        <View
-          className="  bg-slate-200 rounded-2xl p-10 shadow-md"
-          style={{ transform: [{ rotate: "3deg" }] }}
-        >
+        <View className="  bg-slate-200 rounded-2xl p-10 shadow-md rotate-3">
           <CalendarTime size={64} className="text-indigo-600" />
         </View>
         <Text className="flex text-center text-slate-900 font-lexend text-xl my-3 w-3/4">
           Aun no tienes una rutina para hoy.
         </Text>
-        <Text className="text-slate-400 font-lexend text-md leading-relaxed text-center w-[85%]">
+        <Text className="text-slate-400 font-lexend text-sm leading-relaxed text-center w-[85%]">
           {
             "Parece que no hay ejercicios programados para hoy.\n¡Mantén el ritmo y comienza\nahora mismo!"
           }
