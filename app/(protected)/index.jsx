@@ -1,4 +1,5 @@
-import { Text, View, Image, Button } from "react-native";
+import { Text, View, Image, Button, Pressable } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
@@ -27,7 +28,7 @@ export default function Index() {
             <Text className="text-slate-900 font-lexend-bold text-2xl tracking-tight">
               ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-xs w-fit text-center py-1 rounded-full text-indigo-600 font-lexend bg-indigo-100">
+            <Text className="text-xs w-fit text-center py-1 rounded-full text-indigo-600 font-lexend-bold bg-indigo-100">
               Listo para entrenar 💪
             </Text>
           </View>
@@ -47,6 +48,33 @@ export default function Index() {
           }
         </Text>
       </View>
+
+      <View className="flex my-6 px-4">
+        <Pressable
+          className="rounded-2xl overflow-hidden shadow-xl shadow-indigo-400/40 active:scale-95 transition-all"
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }}
+        >
+          <LinearGradient
+            colors={["#4f46e5", "#6366f1"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="py-4 px-8"
+          >
+            <Text className="text-white text-center font-lexend-bold text-lg">
+              Explorar Rutinas
+            </Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+
+      <Pressable className="bg-white border border-slate-200 py-4 px-8 rounded-2xl active:bg-slate-50 active:scale-95 transition-all">
+        <Text className="text-slate-600 text-center font-lexend-bold text-lg">
+          Crear Nueva Rutina
+        </Text>
+      </Pressable>
+
       {/* SESIONES DE ENTRENAMIENTO */}
       {/*      <View className="flex w-[85%] mx-auto py-8 bg-ui-card-light dark:bg-ui-card-dark items-center justify-center rounded-[32px] shadow-sm border border-ui-input-border dark:border-ui-input-borderDark">
         <Text className="text-sm font-bold text-brand-primary uppercase tracking-widest">
@@ -72,7 +100,7 @@ export default function Index() {
           </Text>
         </Pressable>
       </View> */}
-      <View className=" w-1/2 mx-auto my-4 rounded">
+      {/*  <View className=" w-1/2 mx-auto my-4 rounded">
         <Button
           style={{ borderRadius: "100%" }}
           title="Log Out"
@@ -81,7 +109,7 @@ export default function Index() {
             await supabase.auth.signOut();
           }}
         />
-      </View>
+      </View> */}
     </Screen>
   );
 }
