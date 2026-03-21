@@ -2,7 +2,7 @@ import React, { useRef, useCallback, useMemo } from "react";
 import { View, Text, Pressable } from "react-native";
 import {
   BottomSheetModal,
-  BottomSheetScrollView,
+  BottomSheetFlatList,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
 import { ui } from "../theme/colors";
@@ -40,7 +40,7 @@ const CustomSelect = ({
   );
 
   return (
-    <View className=" flex w-1/2 mb-4">
+    <View className=" flex w-full mb-4">
       {label && (
         <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mb-2 uppercase tracking-wider">
           {label}
@@ -73,41 +73,45 @@ const CustomSelect = ({
             colorScheme === "dark" ? ui.secondary.dark : ui.secondary.light,
         }}
       >
-        <BottomSheetScrollView className="p-6">
-          <Text className="text-lg font-lexend-bold text-ui-text-main dark:text-ui-text-mainDark mb-6">
-            {label ? `Seleccionar ${label.toLowerCase()}` : "Seleccionar"}
-          </Text>
-
-          <View className="gap-2">
-            {options.map((option) => (
-              <Pressable
-                key={option.value}
-                onPress={() => {
-                  onChange(option.value);
-                  bottomSheetModalRef.current?.dismiss();
-                }}
-                className={`p-4 rounded-xl flex-row justify-between items-center bg-ui-secondary-light dark:bg-ui-secondary-dark ${
+        <BottomSheetFlatList
+          data={options}
+          keyExtractor={(item) => item.value.toString()}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingBottom: 100, // Espacio extra al final
+          }}
+          ListHeaderComponent={() => (
+            <Text className="text-lg font-lexend-bold text-ui-text-main dark:text-ui-text-mainDark mb-6 mt-6">
+              {label ? `Seleccionar ${label.toLowerCase()}` : "Seleccionar"}
+            </Text>
+          )}
+          renderItem={({ item: option }) => (
+            <Pressable
+              onPress={() => {
+                onChange(option.value);
+                bottomSheetModalRef.current?.dismiss();
+              }}
+              className={`p-4 mb-2 rounded-xl flex-row justify-between items-center bg-ui-secondary-light dark:bg-ui-secondary-dark ${
+                value === option.value
+                  ? "bg-brandPrimary-500/10 border border-brandPrimary-500/20"
+                  : "bg-transparent"
+              }`}
+            >
+              <Text
+                className={`text-base font-lexend ${
                   value === option.value
-                    ? "bg-brandPrimary-500/10 border border-brandPrimary-500/20"
-                    : "bg-transparent"
+                    ? "text-brandPrimary-500 font-lexend-bold"
+                    : "text-ui-text-main dark:text-ui-text-mainDark"
                 }`}
               >
-                <Text
-                  className={`text-base font-lexend ${
-                    value === option.value
-                      ? "text-brandPrimary-500 font-lexend-bold"
-                      : "text-ui-text-main dark:text-ui-text-mainDark"
-                  }`}
-                >
-                  {option.label}
-                </Text>
-                {value === option.value && (
-                  <Text className="text-brandPrimary-500">✓</Text>
-                )}
-              </Pressable>
-            ))}
-          </View>
-        </BottomSheetScrollView>
+                {option.label}
+              </Text>
+              {value === option.value && (
+                <Text className="text-brandPrimary-500">✓</Text>
+              )}
+            </Pressable>
+          )}
+        />
       </BottomSheetModal>
     </View>
   );
