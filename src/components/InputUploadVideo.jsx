@@ -1,8 +1,16 @@
 import * as ImagePicker from "expo-image-picker";
-import { Pressable, Text, Alert, Linking, TextInput, View } from "react-native";
+import {
+  Pressable,
+  Text,
+  Alert,
+  Linking,
+  TextInput,
+  View,
+  Image,
+} from "react-native";
 import { Upload, Youtube } from "../../assets/icons";
 import { ui } from "../theme/colors";
-export default function InputUploadVideo({ value, onChange }) {
+export default function InputUploadVideo({ value, onChange, youTube = true }) {
   const UPLOAD_PRESET = "gymtrack_videos";
 
   const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
@@ -89,28 +97,43 @@ export default function InputUploadVideo({ value, onChange }) {
   };
 
   return (
-    <View className=" gap-4">
-      <View className=" flex relative flex-row">
-        <View className=" absolute top-0 left-0 translate-y-1/2 z-10 ml-2">
-          <Youtube color={ui.text.mutedDark} />
+    <>
+      {!value ? (
+        <View className=" gap-4">
+          {youTube ? (
+            <View className=" flex relative flex-row">
+              <View className=" absolute top-0 left-0 translate-y-1/2 z-10 ml-2">
+                <Youtube color={ui.text.mutedDark} />
+              </View>
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                placeholder="Ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                placeholderTextColor="#64748b"
+                className="pl-10 dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
+              />
+            </View>
+          ) : null}
+          <Pressable
+            onPress={pickVideo}
+            className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
+          >
+            <Upload color={ui.text.mutedDark} />
+            <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
+              Subir Video
+            </Text>
+          </Pressable>
         </View>
-        <TextInput
-          value={value}
-          onChangeText={onChange}
-          placeholder="Ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-          placeholderTextColor="#64748b"
-          className="pl-10 dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
-        />
-      </View>
-      <Pressable
-        onPress={pickVideo}
-        className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
-      >
-        <Upload color={ui.text.mutedDark} />
-        <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
-          Subir Video
-        </Text>
-      </Pressable>
-    </View>
+      ) : (
+        <View>
+          <Image
+            source={{ uri: getVideoThumbnail(value) }}
+            width={100}
+            height={100}
+            className="w-full h-48 rounded-xl z-50"
+          />
+        </View>
+      )}
+    </>
   );
 }
