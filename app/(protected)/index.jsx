@@ -1,6 +1,7 @@
 import { Text, View, Image, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
+import { Link } from "expo-router";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
@@ -55,25 +56,27 @@ export default function Index() {
         </View>
 
         <View className="flex mt-6 px-4">
-          <Pressable
-            className="rounded-2xl overflow-hidden shadow-xl shadow-brandPrimary-400/40 active:scale-95 transition-all"
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            }}
-          >
-            <LinearGradient
-              colors={[brandPrimary[600], brandPrimary[500]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="rounded-2xl"
+          <Link href="/rutinas" asChild>
+            <Pressable
+              className="rounded-2xl overflow-hidden shadow-xl shadow-brandPrimary-400/40 active:scale-95 transition-all"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              }}
             >
-              <View className="py-4 px-8">
-                <Text className="text-white text-center font-lexend-bold text-lg">
-                  Explorar Rutinas
-                </Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+              <LinearGradient
+                colors={[brandPrimary[600], brandPrimary[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="rounded-2xl"
+              >
+                <View className="py-4 px-8">
+                  <Text className="text-white text-center font-lexend-bold text-lg">
+                    Explorar Rutinas
+                  </Text>
+                </View>
+              </LinearGradient>
+            </Pressable>
+          </Link>
         </View>
         <View className="flex mt-6 px-4">
           <Pressable className=" border border-brandPrimary-600 py-4 px-8 rounded-2xl active:bg-ui-background-light active:scale-95 transition-all">

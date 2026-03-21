@@ -1,6 +1,7 @@
 import "../global.css";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { useFonts } from "expo-font";
@@ -99,26 +100,28 @@ export default function RootLayout() {
   };
 
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          value={colorScheme === "dark" ? MyDarkTheme : MyLightTheme}
-        >
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-          <Screen>
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(protected)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-            </Stack>
-            <Toast config={toastConfig} />
-          </Screen>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider
+            value={colorScheme === "dark" ? MyDarkTheme : MyLightTheme}
+          >
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+            <Screen>
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(protected)"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+              </Stack>
+              <Toast config={toastConfig} />
+            </Screen>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
