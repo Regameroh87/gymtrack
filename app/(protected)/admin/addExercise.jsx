@@ -25,6 +25,7 @@ export default function AddExercise() {
       description: "",
       category: "",
       muscle_group: "",
+      equipment: "",
     },
     onSubmit: (data) => {
       console.log(data);
@@ -75,6 +76,22 @@ export default function AddExercise() {
             )}
           </form.Field>
         </View>
+      </View>
+      <View>
+        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mb-2 uppercase tracking-wider">
+          EQUIPAMIENTO
+        </Text>
+        <form.Field name="equipment">
+          {(field) => (
+            <TextInput
+              value={field.state.value}
+              onChangeText={field.handleChange}
+              placeholder="Ej: Mancuernas"
+              placeholderTextColor="#64748b"
+              className="dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
+            />
+          )}
+        </form.Field>
       </View>
     </ScrollView>
   );
