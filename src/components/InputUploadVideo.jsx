@@ -3,6 +3,9 @@ import { Pressable, Text, Alert, Linking } from "react-native";
 import { Upload } from "../../assets/icons";
 import { ui } from "../theme/colors";
 export default function InputUploadVideo({ value, onChange }) {
+  const UPLOAD_PRESET = "gymtrack_videos";
+
+  const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
 
   const pickVideo = async () => {
@@ -41,7 +44,34 @@ export default function InputUploadVideo({ value, onChange }) {
     });
 
     if (!result.canceled) {
-      onChange(result.assets[0].uri);
+      const videoFile = result.assets[0];
+      console.log("enviando video a cloudinary");
+      // 1. Preparar los datos para Cloudinary
+      const extension = videoFile.uri.split(".").pop();
+      const data = new FormData();
+      data.append("file", {
+        uri: videoFile.uri,
+        type: `video/${extension}`,
+        name: `video_${Date.now()}.${extension}`,
+      });
+      data.append("upload_preset", UPLOAD_PRESET);
+
+      try {
+        const response = await fetch(UPLOAD_URL, {
+          method: "POST",
+          body: data,
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        const result = await response.json();
+        if (result.secure_url) {
+          // Guardamos la URL final en el formulario
+          onChange(result.secure_url);
+          Alert.alert("¡Éxito!", "Video subido y optimizado.");
+        }
+      } catch (error) {
+        console.error(error);
+        Alert.alert("Error", "No se pudo subir el video.");
+      }
     }
   };
   return (
