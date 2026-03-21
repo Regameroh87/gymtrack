@@ -281,3 +281,18 @@ export const Upload = ({ size = 24, className, ...props }) => (
     <Path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 9l5-5 5 5M12 4v12" />
   </Svg>
 );
+
+export const Youtube = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-brand-youtube ${className}`}
+    {...props}
+  >
+    <Path fill="none" d="M0 0h24v24H0z" />
+    <Path d="M18 3a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5zM9 9v6a1 1 0 0 0 1.514.857l5-3a1 1 0 0 0 0-1.714l-5-3A1 1 0 0 0 9 9z" />
+  </Svg>
+);

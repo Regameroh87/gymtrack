@@ -117,14 +117,7 @@ export default function AddExercise() {
           <View>
             <form.Field name="video_url">
               {(field) => (
-                <View className=" gap-4">
-                  <TextInput
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="Ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                    placeholderTextColor="#64748b"
-                    className="dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
-                  />
+                <View>
                   <InputUploadVideo
                     value={field.state.value}
                     onChange={field.handleChange}

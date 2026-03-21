@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
-import { Pressable, Text, Alert, Linking } from "react-native";
-import { Upload } from "../../assets/icons";
+import { Pressable, Text, Alert, Linking, TextInput, View } from "react-native";
+import { Upload, Youtube } from "../../assets/icons";
 import { ui } from "../theme/colors";
 export default function InputUploadVideo({ value, onChange }) {
   const UPLOAD_PRESET = "gymtrack_videos";
@@ -9,20 +9,15 @@ export default function InputUploadVideo({ value, onChange }) {
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
 
   const pickVideo = async () => {
-    // 1. Si no tenemos permiso, lo pedimos
     if (!status?.granted) {
       const permission = await requestPermission();
-
-      // 2. Si lo acaba de denegar:
       if (!permission.granted) {
-        // ¿El sistema nos permite volver a preguntar en el futuro?
         if (permission.canAskAgain) {
           Alert.alert(
             "Permiso necesario",
             "Para subir un video de tus ejercicios, necesitamos acceso a tu galería."
           );
         } else {
-          // Si ya no podemos preguntar (Denegación definitiva), le enviamos a Ajustes
           Alert.alert(
             "Permiso denegado",
             "Has desactivado el acceso a la galería. Para subir videos, por favor actívalo en los ajustes de tu teléfono.",
@@ -45,6 +40,17 @@ export default function InputUploadVideo({ value, onChange }) {
 
     if (!result.canceled) {
       const videoFile = result.assets[0];
+
+      // Limitar a 50MB (50 * 1024 * 1024 bytes)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024;
+      if (videoFile.fileSize && videoFile.fileSize > MAX_FILE_SIZE) {
+        Alert.alert(
+          "Archivo muy pesado",
+          "Por favor elige un video que pese menos de 50MB."
+        );
+        return;
+      }
+
       console.log("enviando video a cloudinary");
       // 1. Preparar los datos para Cloudinary
       const extension = videoFile.uri.split(".").pop();
@@ -64,7 +70,6 @@ export default function InputUploadVideo({ value, onChange }) {
         });
         const result = await response.json();
         if (result.secure_url) {
-          // Guardamos la URL final en el formulario
           onChange(result.secure_url);
           Alert.alert("¡Éxito!", "Video subido y optimizado.");
         }
@@ -74,8 +79,29 @@ export default function InputUploadVideo({ value, onChange }) {
       }
     }
   };
+
+  const getVideoThumbnail = (cloudinaryVideoUrl) => {
+    if (!cloudinaryVideoUrl) return null;
+    const urlBase = cloudinaryVideoUrl
+      .replace("/video/upload/", "/image/upload/")
+      .split(".")[0];
+    return `${urlBase}.jpg`; // Y le pegamos .jpg
+  };
+
   return (
-    <>
+    <View className=" gap-4">
+      <View className=" flex relative flex-row">
+        <View className=" absolute top-0 left-0 translate-y-1/2 z-10 ml-2">
+          <Youtube color={ui.text.mutedDark} />
+        </View>
+        <TextInput
+          value={value}
+          onChangeText={onChange}
+          placeholder="Ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+          placeholderTextColor="#64748b"
+          className="pl-10 dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
+        />
+      </View>
       <Pressable
         onPress={pickVideo}
         className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
@@ -85,6 +111,6 @@ export default function InputUploadVideo({ value, onChange }) {
           Subir Video
         </Text>
       </Pressable>
-    </>
+    </View>
   );
 }
