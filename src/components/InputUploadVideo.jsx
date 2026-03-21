@@ -8,8 +8,9 @@ import {
   View,
   Image,
 } from "react-native";
-import { Upload, Youtube } from "../../assets/icons";
-import { ui } from "../theme/colors";
+import { Upload, Youtube, Movie, Pencil } from "../../assets/icons";
+import { brandPrimary, ui } from "../theme/colors";
+import { LinearGradient } from "expo-linear-gradient";
 export default function InputUploadVideo({ value, onChange, youTube = true }) {
   const UPLOAD_PRESET = "gymtrack_videos";
 
@@ -88,50 +89,106 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
     }
   };
 
-  const getVideoThumbnail = (cloudinaryVideoUrl) => {
-    if (!cloudinaryVideoUrl) return null;
-    const urlBase = cloudinaryVideoUrl
-      .replace("/video/upload/", "/image/upload/")
-      .split(".")[0];
-    return `${urlBase}.jpg`; // Y le pegamos .jpg
+  const getVideoThumbnail = (videoUrl) => {
+    if (!videoUrl) return null;
+
+    // Si es un enlace de YouTube, mostramos la miniatura oficial de YouTube
+    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+      const videoId = videoUrl.includes("v=")
+        ? videoUrl.split("v=")[1]?.substring(0, 11)
+        : videoUrl.split("youtu.be/")[1]?.substring(0, 11);
+      return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    }
+
+    // Si es Cloudinary: transformamos la extensión a .jpg pero MANTENEMOS /video/
+    let thumbnail = videoUrl;
+
+    // Buscamos el último punto para cambiar la extensión (.mp4 -> .jpg)
+    // Usamos lastIndexOf para NO romper el "res.cloudinary.com"
+    const lastDotIndex = thumbnail.lastIndexOf(".");
+    if (lastDotIndex !== -1 && lastDotIndex > thumbnail.lastIndexOf("/")) {
+      thumbnail = thumbnail.substring(0, lastDotIndex) + ".jpg";
+    } else {
+      thumbnail = thumbnail + ".jpg";
+    }
+    console.log(thumbnail);
+
+    return thumbnail;
   };
 
   return (
     <>
       {!value ? (
-        <View className=" gap-4">
-          {youTube ? (
-            <View className=" flex relative flex-row">
-              <View className=" absolute top-0 left-0 translate-y-1/2 z-10 ml-2">
-                <Youtube color={ui.text.mutedDark} />
-              </View>
-              <TextInput
-                value={value}
-                onChangeText={onChange}
-                placeholder="Ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                placeholderTextColor="#64748b"
-                className="pl-10 dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
-              />
-            </View>
-          ) : null}
-          <Pressable
-            onPress={pickVideo}
-            className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
-          >
-            <Upload color={ui.text.mutedDark} />
-            <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
-              Subir Video
+        <View className=" flex border border-l-4 border-brandPrimary-600 rounded-2xl p-4">
+          <View className="flex-row items-center mb-4">
+            <Movie color={brandPrimary[600]} className="ml-4" />
+            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend tracking-tighter ml-2">
+              VIDEO (URL O SUBIR)
             </Text>
-          </Pressable>
+          </View>
+
+          <View className=" gap-4">
+            {youTube ? (
+              <View className=" flex relative flex-row">
+                <View className=" absolute top-0 left-0 translate-y-1/2 z-10 ml-2">
+                  <Youtube color={ui.text.mutedDark} />
+                </View>
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="Ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                  placeholderTextColor="#64748b"
+                  className="pl-10 dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
+                />
+              </View>
+            ) : null}
+            <Pressable
+              onPress={pickVideo}
+              className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
+            >
+              <Upload color={ui.text.mutedDark} />
+              <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
+                Subir Video
+              </Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
-        <View>
+        <View className="relative w-full h-60 rounded-xl overflow-hidden mt-4">
           <Image
             source={{ uri: getVideoThumbnail(value) }}
-            width={100}
-            height={100}
-            className="w-full h-48 rounded-xl z-50"
+            className="absolute inset-0 w-full h-full"
           />
+          <LinearGradient
+            colors={["rgba(0,0,0,0.4)", "rgba(0,0,0,0.8)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+          />
+          <View className=" flex flex-row items-center gap-1 absolute top-4 left-4 bg-red-500 rounded-lg p-1">
+            <View className="">
+              <Youtube color={ui.text.mainDark} size={16} />
+            </View>
+            <View>
+              <Text className="text-ui-text-mainDark text-xs font-lexend tracking-tighter">
+                Video
+              </Text>
+            </View>
+          </View>
+          <View className="absolute top-4 right-4 z-10 rounded-full bg-ui-secondary-dark/20">
+            <Pressable onPress={() => onChange(null)} className=" p-4 ">
+              <Pencil color={ui.text.mutedDark} size={16} />
+            </Pressable>
+          </View>
+          <View className="absolute flex w-1/2 bottom-4 left-4 overflow-hidden">
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend tracking-tighter"
+            >
+              {value}
+            </Text>
+          </View>
         </View>
       )}
     </>

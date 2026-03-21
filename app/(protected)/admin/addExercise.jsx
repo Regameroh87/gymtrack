@@ -107,25 +107,18 @@ export default function AddExercise() {
         <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mt-10 mb-4 uppercase tracking-wider">
           MULTIMEDIA
         </Text>
-        <View className=" flex border border-l-4 border-brandPrimary-600 rounded-2xl p-4">
-          <View className="flex-row items-center mb-4">
-            <Movie color={brandPrimary[600]} className="ml-4" />
-            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend tracking-tighter ml-2">
-              VIDEO (URL O SUBIR)
-            </Text>
-          </View>
-          <View>
-            <form.Field name="video_url">
-              {(field) => (
-                <View>
-                  <InputUploadVideo
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                  />
-                </View>
-              )}
-            </form.Field>
-          </View>
+
+        <View>
+          <form.Field name="video_url">
+            {(field) => (
+              <View>
+                <InputUploadVideo
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              </View>
+            )}
+          </form.Field>
         </View>
       </View>
     </ScrollView>

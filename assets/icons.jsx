@@ -1,17 +1,4 @@
 import Svg, { Path } from "react-native-svg";
-import { cssInterop } from "nativewind";
-
-// Esto permite que el componente Svg entienda la prop 'className' de Tailwind
-cssInterop(Svg, {
-  className: {
-    target: "style",
-    nativeStyleToProp: {
-      color: true,
-      fill: true,
-      stroke: true,
-    },
-  },
-});
 
 export const Barbell = ({ size = 24, className, ...props }) => (
   <Svg
@@ -294,5 +281,39 @@ export const Youtube = ({ size = 24, className, ...props }) => (
   >
     <Path fill="none" d="M0 0h24v24H0z" />
     <Path d="M18 3a5 5 0 0 1 5 5v8a5 5 0 0 1-5 5H6a5 5 0 0 1-5-5V8a5 5 0 0 1 5-5zM9 9v6a1 1 0 0 0 1.514.857l5-3a1 1 0 0 0 0-1.714l-5-3A1 1 0 0 0 9 9z" />
+  </Svg>
+);
+
+export const Trash = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-trash ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+  </Svg>
+);
+
+export const Pencil = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-pencil ${className}`}
+    {...props}
+  >
+    <Path fill="none" d="M0 0h24v24H0z" />
+    <Path d="m12.085 6.5 5.415 5.415-8.793 8.792A1 1 0 0 1 8 21H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 .293-.707zm5.406-2.698a3.828 3.828 0 0 1 1.716 6.405l-.292.293L13.5 5.085l.293-.292a3.83 3.83 0 0 1 3.698-.991" />
   </Svg>
 );
