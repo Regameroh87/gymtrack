@@ -15,12 +15,14 @@ import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
+import { useColorScheme } from "nativewind";
 const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { colorScheme } = useColorScheme();
   const [fontsLoaded, fontError] = useFonts({
     Lexend_400Regular,
     Lexend_700Bold,
@@ -69,8 +71,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="light" />
-
+        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
         <Screen>
           <Stack>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />

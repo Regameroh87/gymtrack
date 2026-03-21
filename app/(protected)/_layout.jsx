@@ -1,10 +1,13 @@
 import { Tabs, Redirect } from "expo-router";
 import { Barbell, Home, Logs } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { useColorScheme } from "nativewind";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
+  const { colorScheme, toggleColorScheme } = useColorScheme();
+  console.log("colorScheme", colorScheme);
 
   if (loading) {
     return (
@@ -19,7 +22,19 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <Tabs screenOptions={{ headerTitleAlign: "center" }}>
+    <Tabs
+      screenOptions={{
+        headerTitleAlign: "center",
+        headerRight: () => (
+          <Pressable
+            onPress={() => toggleColorScheme()}
+            className="mr-4 bg-gray-200 p-2 rounded-lg active:bg-gray-300"
+          >
+            <Text className="text-xs font-bold text-gray-800">theme</Text>
+          </Pressable>
+        ),
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
