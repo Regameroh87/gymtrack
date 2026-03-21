@@ -129,7 +129,7 @@ export default function AddExercise() {
           <View className=" mt-4">
             <Pressable
               onPress={() => {}}
-              className=" flex flex-row items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
+              className=" flex flex-row bg-ui-secondary-light dark:bg-ui-secondary-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
             >
               <Upload color={ui.text.mutedDark} />
               <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
