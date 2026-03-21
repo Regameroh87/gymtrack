@@ -49,30 +49,31 @@ export default function AddExercise() {
           )}
         </form.Field>
       </View>
+      <View className="flex-row w-full justify-center gap-2">
+        <form.Field name="category">
+          {(field) => (
+            <CustomSelect
+              label="CATEGORIA"
+              options={categories}
+              value={field.state.value}
+              onChange={field.handleChange}
+              placeholder="Seleccionar categoría..."
+            />
+          )}
+        </form.Field>
 
-      <form.Field name="category">
-        {(field) => (
-          <CustomSelect
-            label="CATEGORIA"
-            options={categories}
-            value={field.state.value}
-            onChange={field.handleChange}
-            placeholder="Seleccionar categoría..."
-          />
-        )}
-      </form.Field>
-
-      <form.Field name="muscle_group">
-        {(field) => (
-          <CustomSelect
-            label="GRUPO MUSCULAR"
-            options={muscleGroups}
-            value={field.state.value}
-            onChange={field.handleChange}
-            placeholder="Seleccionar grupo..."
-          />
-        )}
-      </form.Field>
+        <form.Field name="muscle_group">
+          {(field) => (
+            <CustomSelect
+              label="GRUPO MUSCULAR"
+              options={muscleGroups}
+              value={field.state.value}
+              onChange={field.handleChange}
+              placeholder="Seleccionar grupo..."
+            />
+          )}
+        </form.Field>
+      </View>
     </ScrollView>
   );
 }

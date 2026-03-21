@@ -2,10 +2,11 @@ import React, { useRef, useCallback, useMemo } from "react";
 import { View, Text, Pressable } from "react-native";
 import {
   BottomSheetModal,
-  BottomSheetView,
+  BottomSheetScrollView,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
 import { ui } from "../theme/colors";
+import { useColorScheme } from "nativewind";
 
 const CustomSelect = ({
   label,
@@ -13,11 +14,11 @@ const CustomSelect = ({
   value,
   onChange,
   placeholder = "Seleccionar...",
-  snapPoints = ["40%"],
-  isDark = true, // Podríamos usar useColorScheme de NativeWind pero lo pasamos para simplificar o lo deducimos
+  snapPoints = ["50%"],
+  isDark = false, // Podríamos usar useColorScheme de NativeWind pero lo pasamos para simplificar o lo deducimos
 }) => {
   const bottomSheetModalRef = useRef(null);
-
+  const { colorScheme } = useColorScheme();
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -39,7 +40,7 @@ const CustomSelect = ({
   );
 
   return (
-    <View className="mb-4">
+    <View className=" flex w-1/2 mb-4">
       {label && (
         <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mb-2 uppercase tracking-wider">
           {label}
@@ -64,13 +65,15 @@ const CustomSelect = ({
         snapPoints={snapPoints}
         backdropComponent={renderBackdrop}
         backgroundStyle={{
-          backgroundColor: isDark ? ui.card.dark : ui.card.light,
+          backgroundColor:
+            colorScheme === "dark" ? ui.card.dark : ui.card.light,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark ? "#475569" : "#cbd5e1",
+          backgroundColor:
+            colorScheme === "dark" ? ui.secondary.dark : ui.secondary.light,
         }}
       >
-        <BottomSheetView className="p-6">
+        <BottomSheetScrollView className="p-6">
           <Text className="text-lg font-lexend-bold text-ui-text-main dark:text-ui-text-mainDark mb-6">
             {label ? `Seleccionar ${label.toLowerCase()}` : "Seleccionar"}
           </Text>
@@ -83,7 +86,7 @@ const CustomSelect = ({
                   onChange(option.value);
                   bottomSheetModalRef.current?.dismiss();
                 }}
-                className={`p-4 rounded-xl flex-row justify-between items-center ${
+                className={`p-4 rounded-xl flex-row justify-between items-center bg-ui-secondary-light dark:bg-ui-secondary-dark ${
                   value === option.value
                     ? "bg-brandPrimary-500/10 border border-brandPrimary-500/20"
                     : "bg-transparent"
@@ -104,7 +107,7 @@ const CustomSelect = ({
               </Pressable>
             ))}
           </View>
-        </BottomSheetView>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     </View>
   );
