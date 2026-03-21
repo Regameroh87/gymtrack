@@ -16,7 +16,6 @@ module.exports = {
       },
       colors: {
         brand: {
-          lime: "#bef264", // lime-300 (Acentos)
           primary: "#84cc16", // lime-500 (Botones principales)
           dark: "#4d7c0f", // lime-700 (Estados presionados)
         },

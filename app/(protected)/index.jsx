@@ -55,7 +55,7 @@ export default function Index() {
 
         <View className="flex mt-6 px-4">
           <Pressable
-            className="rounded-2xl shadow-xl shadow-indigo-400/40 active:scale-95 transition-all"
+            className="rounded-2xl overflow-hidden shadow-xl shadow-indigo-400/40 active:scale-95 transition-all"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             }}
