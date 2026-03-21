@@ -4,6 +4,7 @@ import * as Haptics from "expo-haptics";
 import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
+import { brandPrimary } from "../../src/theme/colors.js";
 import { Calendar, Clock } from "../../assets/icons.jsx";
 
 export default function Index() {
@@ -16,7 +17,7 @@ export default function Index() {
       {/* CARD PROFILE */}
       <View className="flex w-full p-4">
         <View className="flex flex-row gap-4">
-          <View className=" flex justify-center items-center w-14 h-14 p-2 rounded-full border-2 border-indigo-600 shadow-sm">
+          <View className=" flex justify-center items-center w-14 h-14 p-2 rounded-full border-2 border-brandPrimary-600 shadow-sm">
             <Image
               source={
                 user?.image_profile ? { uri: user.image_profile } : imageProfile
@@ -25,28 +26,28 @@ export default function Index() {
             />
           </View>
           <View className="flex-col">
-            <Text className="text-slate-900 font-lexend-bold text-2xl tracking-tight">
+            <Text className="text-ui-text-main font-lexend-bold text-2xl tracking-tight">
               ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-xs w-fit text-center py-1 rounded-full text-indigo-600 font-lexend-bold bg-indigo-100">
+            <Text className="text-xs w-fit text-center py-1 rounded-full text-brandPrimary-600 font-lexend-bold bg-brandPrimary-100">
               Listo para entrenar 💪
             </Text>
           </View>
         </View>
       </View>
       {/* CARD PROGRESS */}
-      <View className=" flex rounded-2xl mx-4 py-10 bg-slate-50 shadow-md">
+      <View className=" flex rounded-2xl mx-4 py-10 bg-ui-background-light shadow-md">
         <View className="flex justify-center items-center mt-6">
-          <View className=" relative bg-slate-200 rounded-3xl p-10 shadow-md rotate-3">
-            <Calendar size={72} className="text-indigo-600" />
+          <View className=" relative bg-ui-secondary-light rounded-3xl p-10 shadow-md rotate-3">
+            <Calendar size={72} className="text-brandPrimary-600" />
             <View className=" absolute -bottom-2 -right-2">
-              <Clock size={48} className="text-emerald-400" />
+              <Clock size={48} className="text-brandSecondary-400" />
             </View>
           </View>
-          <Text className="flex text-center text-slate-900 font-lexend text-xl my-4 w-3/4">
+          <Text className="flex text-center text-ui-text-main font-lexend text-xl my-4 w-3/4">
             {"Aun no tienes una rutina para\nhoy"}
           </Text>
-          <Text className="text-slate-400 font-lexend text-sm leading-relaxed text-center w-[85%]">
+          <Text className="text-ui-text-muted font-lexend text-sm leading-relaxed text-center w-[85%]">
             {
               "Parece que no hay ejercicios programados para hoy.\n¡Mantén el ritmo y comienza\nahora mismo!"
             }
@@ -55,13 +56,13 @@ export default function Index() {
 
         <View className="flex mt-6 px-4">
           <Pressable
-            className="rounded-2xl overflow-hidden shadow-xl shadow-indigo-400/40 active:scale-95 transition-all"
+            className="rounded-2xl overflow-hidden shadow-xl shadow-brandPrimary-400/40 active:scale-95 transition-all"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             }}
           >
             <LinearGradient
-              colors={["#4f46e5", "#6366f1"]}
+              colors={[brandPrimary[600], brandPrimary[500]]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               className="rounded-2xl"
@@ -75,8 +76,8 @@ export default function Index() {
           </Pressable>
         </View>
         <View className="flex mt-6 px-4">
-          <Pressable className=" border border-indigo-600 py-4 px-8 rounded-2xl active:bg-slate-50 active:scale-95 transition-all">
-            <Text className="text-indigo-600 text-center font-lexend-bold text-lg">
+          <Pressable className=" border border-brandPrimary-600 py-4 px-8 rounded-2xl active:bg-ui-background-light active:scale-95 transition-all">
+            <Text className="text-brandPrimary-600 text-center font-lexend-bold text-lg">
               Crear Nueva Rutina
             </Text>
           </Pressable>
