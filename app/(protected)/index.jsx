@@ -26,28 +26,28 @@ export default function Index() {
             />
           </View>
           <View className="flex-col">
-            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-2xl tracking-tight">
+            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-2xl tracking-tight mb-1">
               ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-xs w-fit text-center py-1 rounded-full text-brandPrimary-600 font-lexend-bold bg-brandPrimary-100">
+            <Text className="text-xs w-fit text-center py-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-lexend-bold">
               Listo para entrenar 💪
             </Text>
           </View>
         </View>
       </View>
       {/* CARD PROGRESS */}
-      <View className=" flex rounded-2xl mx-4 py-10 bg-ui-background-light shadow-md">
+      <View className=" flex rounded-2xl mx-4 py-10 bg-ui-background-light dark:bg-ui-card-dark shadow-md">
         <View className="flex justify-center items-center mt-6">
-          <View className=" relative bg-ui-secondary-light rounded-3xl p-10 shadow-md rotate-3">
+          <View className=" relative bg-ui-secondary-light dark:bg-ui-secondary-dark rounded-3xl p-10 shadow-md rotate-3">
             <Calendar size={72} className="text-brandPrimary-600" />
             <View className=" absolute -bottom-2 -right-2">
               <Clock size={48} className="text-brandSecondary-400" />
             </View>
           </View>
-          <Text className="flex text-center text-ui-text-main font-lexend text-xl my-4 w-3/4">
+          <Text className="flex text-center text-ui-text-main dark:text-ui-text-mainDark font-lexend text-xl my-4 w-3/4">
             {"Aun no tienes una rutina para\nhoy"}
           </Text>
-          <Text className="text-ui-text-muted font-lexend text-sm leading-relaxed text-center w-[85%]">
+          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-lexend text-sm leading-relaxed text-center w-[85%]">
             {
               "Parece que no hay ejercicios programados para hoy.\n¡Mantén el ritmo y comienza\nahora mismo!"
             }
