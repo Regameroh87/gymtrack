@@ -26,7 +26,7 @@ export default function Index() {
             />
           </View>
           <View className="flex-col">
-            <Text className="text-ui-text-main font-lexend-bold text-2xl tracking-tight">
+            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-2xl tracking-tight">
               ¡Hola, {user?.name}!
             </Text>
             <Text className="text-xs w-fit text-center py-1 rounded-full text-brandPrimary-600 font-lexend-bold bg-brandPrimary-100">

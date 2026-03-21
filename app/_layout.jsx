@@ -16,6 +16,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
+import {
+  ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+} from "@react-navigation/native";
+import { ui } from "../src/theme/colors";
 const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
@@ -68,22 +74,50 @@ export default function RootLayout() {
     ),
   };
 
+  const MyLightTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: ui.background.light,
+      card: ui.card.light,
+      text: ui.text.main,
+      border: ui.input.border,
+      primary: "#6366f1", // brandPrimary[500]
+    },
+  };
+
+  const MyDarkTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: ui.background.dark,
+      card: ui.card.dark,
+      text: ui.text.mainDark,
+      border: ui.input.borderDark,
+      primary: "#6366f1", // brandPrimary[500]
+    },
+  };
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-        <Screen>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(protected)"
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack>
-          <Toast config={toastConfig} />
-        </Screen>
+        <ThemeProvider
+          value={colorScheme === "dark" ? MyDarkTheme : MyLightTheme}
+        >
+          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+          <Screen>
+            <Stack>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(protected)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+            <Toast config={toastConfig} />
+          </Screen>
+        </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );

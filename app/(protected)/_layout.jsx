@@ -3,6 +3,7 @@ import { Barbell, Home, Logs } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
+import { ui } from "../../src/theme/colors";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
@@ -21,18 +22,38 @@ export default function ProtectedLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
+  const isDark = colorScheme === "dark";
+
   return (
     <Tabs
       screenOptions={{
         headerTitleAlign: "center",
+        headerStyle: {
+          backgroundColor: isDark ? ui.card.dark : ui.card.light,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTitleStyle: {
+          fontFamily: "Lexend_700Bold",
+          color: isDark ? ui.text.mainDark : ui.text.main,
+        },
         headerRight: () => (
           <Pressable
             onPress={() => toggleColorScheme()}
-            className="mr-4 bg-gray-200 p-2 rounded-lg active:bg-gray-300"
+            className="mr-4 bg-ui-secondary-light dark:bg-ui-secondary-dark p-2 rounded-lg active:opacity-70"
           >
-            <Text className="text-xs font-bold text-gray-800">theme</Text>
+            <Text className="text-xs font-bold text-ui-text-main dark:text-ui-text-mainDark uppercase">
+              {colorScheme}
+            </Text>
           </Pressable>
         ),
+        tabBarStyle: {
+          backgroundColor: isDark ? ui.card.dark : ui.card.light,
+          borderTopWidth: 0,
+          elevation: 0,
+        },
+        tabBarActiveTintColor: "#6366f1", // brandPrimary[500]
+        tabBarInactiveTintColor: isDark ? ui.text.mutedDark : ui.text.muted,
       }}
     >
       <Tabs.Screen
