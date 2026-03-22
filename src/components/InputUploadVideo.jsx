@@ -11,6 +11,7 @@ import {
 import { Upload, Youtube, Movie, Pencil } from "../../assets/icons";
 import { brandPrimary, ui } from "../theme/colors";
 import { LinearGradient } from "expo-linear-gradient";
+import { Link } from "expo-router";
 export default function InputUploadVideo({ value, onChange, youTube = true }) {
   const UPLOAD_PRESET = "gymtrack_videos";
 
@@ -181,13 +182,15 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
             </Pressable>
           </View>
           <View className="absolute flex w-1/2 bottom-4 left-4 overflow-hidden">
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend tracking-tighter"
-            >
-              {value}
-            </Text>
+            <Link href={value} asChild>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend tracking-tighter"
+              >
+                {value}
+              </Text>
+            </Link>
           </View>
         </View>
       )}
