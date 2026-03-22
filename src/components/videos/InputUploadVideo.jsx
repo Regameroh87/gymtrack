@@ -1,6 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
-//import { useState } from "react";
-import { Pressable, Text, Alert, View } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, Alert, View, Linking } from "react-native";
 import { Upload, Movie, Play } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import PreviewVideo from "../videos/PreviewVideo";
@@ -9,6 +9,7 @@ export default function InputUploadVideo({ value, onChange }) {
   const UPLOAD_PRESET = "gymtrack_videos";
   const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  const [videoInfo, setVideoInfo] = useState(null);
 
   const saveVideoToCloudinary = async () => {
     if (!status?.granted) {
@@ -73,7 +74,13 @@ export default function InputUploadVideo({ value, onChange }) {
         const result = await response.json();
         if (result.secure_url) {
           onChange(result.secure_url);
-          //Alert.alert("¡Éxito!", "Video subido y optimizado.");
+          setVideoInfo({
+            name: result.original_filename,
+            size: (result.bytes / 1024 / 1024).toFixed(2), // Convertir a MB
+            duration: Math.round(result.duration), // Segundos
+            format: result.format,
+          });
+          console.log("¡Éxito!", "Video subido y optimizado.");
         }
       } catch (error) {
         console.error(error);
@@ -98,9 +105,33 @@ export default function InputUploadVideo({ value, onChange }) {
             <Play color={ui.text.mutedDark} />
           </View>
         </PreviewVideo>
-        {value ? (
-          <View className=" flex w-full bg-white">
-            <Text>Datos del video</Text>
+        {value && videoInfo ? (
+          <View className="mt-4 p-4 bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border dark:border-ui-input-borderDark rounded-xl">
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-sm">
+                {videoInfo.name}.{videoInfo.format}
+              </Text>
+              <View className="bg-brandPrimary-600/20 px-2 py-1 rounded-md">
+                <Text className="text-brandPrimary-600 text-[10px] font-lexend-bold uppercase">
+                  {videoInfo.format}
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex-row gap-4">
+              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
+                Peso: {videoInfo.size} MB
+              </Text>
+              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
+                Duración: {videoInfo.duration} seg
+              </Text>
+            </View>
+          </View>
+        ) : value ? (
+          <View className="mt-4 p-4 bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border dark:border-ui-input-borderDark rounded-xl">
+            <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
+              Video cargado: {value.split("/").pop()}
+            </Text>
           </View>
         ) : (
           <View className=" mt-4 gap-4">
