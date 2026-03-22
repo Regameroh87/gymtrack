@@ -7,7 +7,8 @@ import {
   Linking,
   TextInput,
   View,
-  Image,
+  ImageBackground,
+  StyleSheet,
 } from "react-native";
 import { Upload, Youtube, Movie, Pencil } from "../../assets/icons";
 import { brandPrimary, ui } from "../theme/colors";
@@ -169,47 +170,51 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
           </View>
         </View>
       ) : (
-        <View className="relative w-full h-60 rounded-xl overflow-hidden mt-4">
-          <Image
-            source={{ uri: getVideoThumbnail(value) }}
-            className="absolute inset-0 w-full h-full"
-          />
+        <ImageBackground
+          source={{ uri: getVideoThumbnail(value) }}
+          style={{
+            width: "100%",
+            height: 240,
+            borderRadius: 12,
+            overflow: "hidden",
+            marginTop: 16,
+            backgroundColor: "#1e293b",
+          }}
+          resizeMode="cover"
+        >
           <LinearGradient
             colors={["rgba(0,0,0,0.4)", "rgba(0,0,0,0.8)"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
-            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{ ...StyleSheet.absoluteFillObject }}
+            pointerEvents="none"
           />
           <Pressable
             onPress={() => setModalVisible(true)}
-            className=" flex flex-row items-center gap-1 absolute top-4 left-4 bg-red-600 rounded-lg py-2 px-3 active:opacity-80 transition-opacity"
+            className=" absolute flex flex-row top-4 left-4 bg-red-500 rounded-lg p-2 gap-2 items-center "
           >
-            <View className="">
-              <Youtube color={ui.text.mainDark} size={16} />
-            </View>
-            <View>
-              <Text className="text-ui-text-mainDark text-xs font-lexend tracking-tighter">
-                Video
-              </Text>
-            </View>
+            <Youtube color={ui.text.mainDark} size={16} />
+            <Text className="text-ui-text-mainDark font-lexend tracking-tighter">
+              VIDEO
+            </Text>
           </Pressable>
-          <View className="absolute top-4 right-4 z-10 rounded-full bg-ui-secondary-dark/20">
-            <Pressable onPress={() => onChange(null)} className=" p-4 ">
-              <Pencil color={ui.text.mutedDark} size={16} />
+          <View className=" absolute top-4 right-4 bg-ui-secondary-dark/40 rounded-full">
+            <Pressable onPress={() => onChange(null)} style={{ padding: 12 }}>
+              <Pencil color={ui.text.mainDark} size={16} />
             </Pressable>
           </View>
-          <View className="absolute flex w-1/2 bottom-4 left-4 overflow-hidden">
+          <View className=" absolute bottom-4 left-4 w-1/2">
             <Link href={value} asChild>
               <Text
                 numberOfLines={1}
                 ellipsizeMode="tail"
-                className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend tracking-tighter"
+                className=" text-ui-text-mainDark font-lexend text-xs"
               >
                 {value}
               </Text>
             </Link>
           </View>
-        </View>
+        </ImageBackground>
       )}
 
       <VideoPlayerModal

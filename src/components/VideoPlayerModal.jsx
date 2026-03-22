@@ -2,6 +2,7 @@ import { Modal, View, Pressable, useWindowDimensions } from "react-native";
 import { X } from "../../assets/icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import YoutubePlayer from "react-native-youtube-iframe";
+import Screen from "./Screen";
 
 function CloudinaryPlayer({ url }) {
   const player = useVideoPlayer(url, (p) => {
@@ -12,7 +13,7 @@ function CloudinaryPlayer({ url }) {
       player={player}
       allowsFullscreen
       allowsPictureInPicture
-      style={{ flex: 1 }}
+      style={{ width: "100%", height: "100%", backgroundColor: "black" }}
     />
   );
 }
@@ -38,43 +39,43 @@ export default function VideoPlayerModal({ visible, onClose, videoUrl }) {
   if (!videoUrl) return null;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <View className="flex-1 bg-black">
-        <View className="p-4 items-end z-10 relative">
+    <Screen>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={onClose}
+      >
+        <View className=" absolute top-20 right-4 z-20">
           <Pressable
             onPress={onClose}
-            className="bg-white/20 p-2 rounded-full active:opacity-50"
+            className=" bg-ui-secondary-dark/40 p-2 rounded-full"
           >
             <X color="#fff" size={24} />
           </Pressable>
         </View>
-        <View className="flex-1 justify-center bg-black">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            backgroundColor: "black",
+          }}
+        >
           {isYouTube(videoUrl) ? (
             <View style={{ width: "100%", height: width * (9 / 16) }}>
               <YoutubePlayer
                 height={width * (9 / 16)}
                 play={true}
                 videoId={getYouTubeId(videoUrl)}
-                webViewProps={{
-                  injectedJavaScript: `
-                    var element = document.getElementsByClassName('ytp-chrome-top')[0];
-                    if (element) {
-                        element.style.display = 'none';
-                    }
-                  `,
-                }}
+                forceAndroidAutoplay={true}
+                webViewStyle={{ opacity: 0.99 }} // Hack crucial para Android WebView
               />
             </View>
           ) : (
             <CloudinaryPlayer url={videoUrl} />
           )}
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </Screen>
   );
 }
