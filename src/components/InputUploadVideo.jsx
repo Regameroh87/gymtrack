@@ -1,4 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
 import {
   Pressable,
   Text,
@@ -12,7 +13,10 @@ import { Upload, Youtube, Movie, Pencil } from "../../assets/icons";
 import { brandPrimary, ui } from "../theme/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
+import VideoPlayerModal from "./VideoPlayerModal";
+
 export default function InputUploadVideo({ value, onChange, youTube = true }) {
+  const [modalVisible, setModalVisible] = useState(false);
   const UPLOAD_PRESET = "gymtrack_videos";
 
   const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
@@ -90,14 +94,24 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
     }
   };
 
+  const isYouTube = (url) => {
+    if (!url) return false;
+    return url.includes("youtube.com") || url.includes("youtu.be");
+  };
+
+  const getYouTubeId = (url) => {
+    if (!url) return null;
+    if (url.includes("v=")) return url.split("v=")[1]?.substring(0, 11);
+    if (url.includes("youtu.be/"))
+      return url.split("youtu.be/")[1]?.substring(0, 11);
+    return null;
+  };
+
   const getVideoThumbnail = (videoUrl) => {
     if (!videoUrl) return null;
 
-    // Si es un enlace de YouTube, mostramos la miniatura oficial de YouTube
-    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
-      const videoId = videoUrl.includes("v=")
-        ? videoUrl.split("v=")[1]?.substring(0, 11)
-        : videoUrl.split("youtu.be/")[1]?.substring(0, 11);
+    if (isYouTube(videoUrl)) {
+      const videoId = getYouTubeId(videoUrl);
       return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
     }
 
@@ -166,7 +180,10 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
             end={{ x: 0, y: 1 }}
             className="absolute inset-0 w-full h-full pointer-events-none"
           />
-          <View className=" flex flex-row items-center gap-1 absolute top-4 left-4 bg-red-500 rounded-lg p-1">
+          <Pressable
+            onPress={() => setModalVisible(true)}
+            className=" flex flex-row items-center gap-1 absolute top-4 left-4 bg-red-600 rounded-lg py-2 px-3 active:opacity-80 transition-opacity"
+          >
             <View className="">
               <Youtube color={ui.text.mainDark} size={16} />
             </View>
@@ -175,7 +192,7 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
                 Video
               </Text>
             </View>
-          </View>
+          </Pressable>
           <View className="absolute top-4 right-4 z-10 rounded-full bg-ui-secondary-dark/20">
             <Pressable onPress={() => onChange(null)} className=" p-4 ">
               <Pencil color={ui.text.mutedDark} size={16} />
@@ -194,6 +211,12 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
           </View>
         </View>
       )}
+
+      <VideoPlayerModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        videoUrl={value}
+      />
     </>
   );
 }
