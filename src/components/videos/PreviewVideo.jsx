@@ -35,7 +35,7 @@ export default function PreviewVideo({ videoUrl, children, onChange }) {
   };
 
   return (
-    <View className=" flex flex-row mb-4 items-center justify-center border h-52 border-ui-input-border dark:border-ui-input-borderDark rounded-[12px] gap-2">
+    <View className=" flex flex-row items-center justify-center border h-52 border-ui-input-border dark:border-ui-input-borderDark rounded-[12px] gap-2">
       {!videoUrl ? (
         children
       ) : (

@@ -1,24 +1,12 @@
 import * as ImagePicker from "expo-image-picker";
 //import { useState } from "react";
-import {
-  Pressable,
-  Text,
-  Alert,
-  Linking,
-  View,
-  //ActivityIndicator,
-} from "react-native";
+import { Pressable, Text, Alert, View } from "react-native";
 import { Upload, Movie, Play } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
-//import VideoPlayerModal from "../videos/VideoPlayerModal";
-//import { isYouTube, getYouTubeId } from "../../utils/videoHelpers";
 import PreviewVideo from "../videos/PreviewVideo";
 
 export default function InputUploadVideo({ value, onChange }) {
-  //const [modalVisible, setModalVisible] = useState(false);
-  //const [loading, setLoading] = useState(false);
   const UPLOAD_PRESET = "gymtrack_videos";
-
   const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
 
@@ -105,31 +93,29 @@ export default function InputUploadVideo({ value, onChange }) {
             CARGAR VIDEO
           </Text>
         </View>
-        {/* Esqueleton de previsualizacion */}
         <PreviewVideo videoUrl={value} onChange={onChange}>
           <View className=" flex items-center justify-center border border-ui-input-border dark:border-ui-input-borderDark rounded-full p-4 gap-2">
             <Play color={ui.text.mutedDark} />
           </View>
         </PreviewVideo>
-
-        {/* input para subir video */}
-        <View className=" gap-4">
-          <Pressable
-            onPress={saveVideoToCloudinary}
-            className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
-          >
-            <Upload color={ui.text.mutedDark} />
-            <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
-              Subir Video
-            </Text>
-          </Pressable>
-        </View>
+        {value ? (
+          <View className=" flex w-full bg-white">
+            <Text>Datos del video</Text>
+          </View>
+        ) : (
+          <View className=" mt-4 gap-4">
+            <Pressable
+              onPress={saveVideoToCloudinary}
+              className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
+            >
+              <Upload color={ui.text.mutedDark} />
+              <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
+                Subir Video
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
-      {/*  <VideoPlayerModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        videoUrl={value}
-      /> */}
     </>
   );
 }
