@@ -15,6 +15,7 @@ import { brandPrimary, ui } from "../theme/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import VideoPlayerModal from "./VideoPlayerModal";
+import { isYouTube, getYouTubeId } from "../utils/videoHelpers";
 
 export default function InputUploadVideo({ value, onChange, youTube = true }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -93,19 +94,6 @@ export default function InputUploadVideo({ value, onChange, youTube = true }) {
         Alert.alert("Error", "No se pudo subir el video.");
       }
     }
-  };
-
-  const isYouTube = (url) => {
-    if (!url) return false;
-    return url.includes("youtube.com") || url.includes("youtu.be");
-  };
-
-  const getYouTubeId = (url) => {
-    if (!url) return null;
-    if (url.includes("v=")) return url.split("v=")[1]?.substring(0, 11);
-    if (url.includes("youtu.be/"))
-      return url.split("youtu.be/")[1]?.substring(0, 11);
-    return null;
   };
 
   const getVideoThumbnail = (videoUrl) => {

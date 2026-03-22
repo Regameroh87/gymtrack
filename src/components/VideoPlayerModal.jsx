@@ -2,8 +2,7 @@ import { Modal, View, Pressable, useWindowDimensions } from "react-native";
 import { X } from "../../assets/icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import YoutubePlayer from "react-native-youtube-iframe";
-import Screen from "./Screen";
-
+import { isYouTube, getYouTubeId } from "../utils/videoHelpers";
 function CloudinaryPlayer({ url }) {
   const player = useVideoPlayer(url, (p) => {
     p.play();
@@ -17,22 +16,6 @@ function CloudinaryPlayer({ url }) {
     />
   );
 }
-
-const isYouTube = (url) => {
-  if (!url) return false;
-  return url.includes("youtube.com") || url.includes("youtu.be");
-};
-
-const getYouTubeId = (url) => {
-  if (!url) return null;
-  const regExp =
-    /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-  const match = url.match(regExp);
-  if (match && match[2].length === 11) {
-    return match[2];
-  }
-  return null;
-};
 
 export default function VideoPlayerModal({ visible, onClose, videoUrl }) {
   const { width } = useWindowDimensions();
