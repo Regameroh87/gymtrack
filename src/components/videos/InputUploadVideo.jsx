@@ -1,15 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useState, useRef, useEffect } from "react";
-import {
-  Pressable,
-  Text,
-  Alert,
-  View,
-  Linking,
-  ActivityIndicator,
-  Animated,
-} from "react-native";
-import { Upload, Movie, Play } from "../../../assets/icons";
+import { Pressable, Text, Alert, View, Linking, Animated } from "react-native";
+import { Upload, Movie, Play, Trash } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import PreviewVideo from "../videos/PreviewVideo";
 
@@ -151,19 +143,26 @@ export default function InputUploadVideo({ value, onChange }) {
               </View>
             </View>
 
-            <View className="flex-row gap-4">
-              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
-                Peso: {videoInfo.size} MB
-              </Text>
-              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
-                Duración: {videoInfo.duration} seg
-              </Text>
+            <View className="flex-row justify-between items-center">
+              <View className=" flex-row gap-4">
+                <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
+                  Peso: {videoInfo.size} MB
+                </Text>
+                <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
+                  Duración: {videoInfo.duration} seg
+                </Text>
+              </View>
+              <View className=" mr-2">
+                <Pressable onPress={() => onChange(null)}>
+                  <Trash color={ui.text.mutedDark} size={16} />
+                </Pressable>
+              </View>
             </View>
           </View>
         ) : isUploading ? (
           <View className="mt-4 p-6 bg-brandPrimary-600/5 rounded-xl border border-dashed border-brandPrimary-600/30 flex-row items-center justify-center gap-4">
             <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
-              <Upload color={brandPrimary[600]} size={28} />
+              <Upload color={brandPrimary[600]} size={24} />
             </Animated.View>
             <View className="flex-row items-center gap-2">
               <Text className="text-brandPrimary-600 font-lexend-bold text-sm tracking-widest">
