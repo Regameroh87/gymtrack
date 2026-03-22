@@ -1,7 +1,7 @@
-import { Modal, View, Pressable } from "react-native";
+import { Modal, View, Pressable, useWindowDimensions } from "react-native";
 import { X } from "../../assets/icons";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { WebView } from "react-native-webview";
+import YoutubePlayer from "react-native-youtube-iframe";
 
 function CloudinaryPlayer({ url }) {
   const player = useVideoPlayer(url, (p) => {
@@ -24,13 +24,17 @@ const isYouTube = (url) => {
 
 const getYouTubeId = (url) => {
   if (!url) return null;
-  if (url.includes("v=")) return url.split("v=")[1]?.substring(0, 11);
-  if (url.includes("youtu.be/"))
-    return url.split("youtu.be/")[1]?.substring(0, 11);
+  const regExp =
+    /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+  const match = url.match(regExp);
+  if (match && match[2].length === 11) {
+    return match[2];
+  }
   return null;
 };
 
 export default function VideoPlayerModal({ visible, onClose, videoUrl }) {
+  const { width } = useWindowDimensions();
   if (!videoUrl) return null;
 
   return (
@@ -51,16 +55,21 @@ export default function VideoPlayerModal({ visible, onClose, videoUrl }) {
         </View>
         <View className="flex-1 justify-center bg-black">
           {isYouTube(videoUrl) ? (
-            <WebView
-              source={{
-                uri: `https://www.youtube.com/embed/${getYouTubeId(
-                  videoUrl
-                )}?autoplay=1&playsinline=1`,
-              }}
-              style={{ flex: 1, backgroundColor: "black" }}
-              allowsFullscreenVideo
-              mediaPlaybackRequiresUserAction={false}
-            />
+            <View style={{ width: "100%", height: width * (9 / 16) }}>
+              <YoutubePlayer
+                height={width * (9 / 16)}
+                play={true}
+                videoId={getYouTubeId(videoUrl)}
+                webViewProps={{
+                  injectedJavaScript: `
+                    var element = document.getElementsByClassName('ytp-chrome-top')[0];
+                    if (element) {
+                        element.style.display = 'none';
+                    }
+                  `,
+                }}
+              />
+            </View>
           ) : (
             <CloudinaryPlayer url={videoUrl} />
           )}
