@@ -30,6 +30,7 @@ export default function AddExercise() {
       muscle_group: "",
       equipment: "",
       custom_video_url: "",
+      cloudinary_public_id: "",
       youtube_video_url: "",
     },
     onSubmit: (data) => {
@@ -117,6 +118,10 @@ export default function AddExercise() {
                 <InputUploadVideo
                   value={field.state.value}
                   onChange={field.handleChange}
+                  publicId={form.getFieldValue("cloudinary_public_id")}
+                  onIdChange={(id) =>
+                    form.setFieldValue("cloudinary_public_id", id)
+                  }
                 />
               </View>
             )}

@@ -4,8 +4,14 @@ import { Pressable, Text, Alert, View, Linking, Animated } from "react-native";
 import { Upload, Movie, Play, Trash } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import PreviewVideo from "../videos/PreviewVideo";
+import { supabase } from "../../database/supabase";
 
-export default function InputUploadVideo({ value, onChange }) {
+export default function InputUploadVideo({
+  value,
+  onChange,
+  onIdChange,
+  publicId,
+}) {
   const UPLOAD_PRESET = "gymtrack_videos";
   const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
@@ -77,7 +83,7 @@ export default function InputUploadVideo({ value, onChange }) {
         );
         return;
       }
-      onChange(videoFile.uri); // Previsualización local inmediata
+      onChange(videoFile.uri);
       setVideoInfo(null);
       setIsUploading(true);
       console.log("enviando video a cloudinary...");
@@ -100,6 +106,7 @@ export default function InputUploadVideo({ value, onChange }) {
         const uploadResult = await response.json();
         if (uploadResult.secure_url) {
           onChange(uploadResult.secure_url);
+          onIdChange(uploadResult.public_id);
           setVideoInfo({
             name: uploadResult.original_filename,
             size: (uploadResult.bytes / 1024 / 1024).toFixed(2),
@@ -114,6 +121,16 @@ export default function InputUploadVideo({ value, onChange }) {
         setIsUploading(false);
       }
     }
+  };
+
+  const deleteVideoFromCloudinary = async ({ public_id, resource_type }) => {
+    const result = await supabase.functions.invoke("delete-cloudinary", {
+      body: {
+        public_id,
+        resource_type,
+      },
+    });
+    console.log("Respuesta de cloudinary", result);
   };
 
   return (
@@ -153,7 +170,16 @@ export default function InputUploadVideo({ value, onChange }) {
                 </Text>
               </View>
               <View className=" mr-2">
-                <Pressable onPress={() => onChange(null)}>
+                <Pressable
+                  onPress={() => {
+                    onChange(null);
+                    deleteVideoFromCloudinary({
+                      public_id: publicId,
+                      resource_type: "video",
+                    });
+                    onIdChange(null);
+                  }}
+                >
                   <Trash color={ui.text.mutedDark} size={16} />
                 </Pressable>
               </View>
