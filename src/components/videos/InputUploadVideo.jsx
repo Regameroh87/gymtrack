@@ -1,6 +1,14 @@
 import * as ImagePicker from "expo-image-picker";
-import { useState } from "react";
-import { Pressable, Text, Alert, View, Linking } from "react-native";
+import { useState, useRef, useEffect } from "react";
+import {
+  Pressable,
+  Text,
+  Alert,
+  View,
+  Linking,
+  ActivityIndicator,
+  Animated,
+} from "react-native";
 import { Upload, Movie, Play } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import PreviewVideo from "../videos/PreviewVideo";
@@ -10,6 +18,32 @@ export default function InputUploadVideo({ value, onChange }) {
   const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
   const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
   const [videoInfo, setVideoInfo] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const uploadAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let animation;
+    if (isUploading) {
+      animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(uploadAnim, {
+            toValue: -10,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(uploadAnim, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+    } else {
+      uploadAnim.setValue(0);
+    }
+    return () => animation?.stop();
+  }, [isUploading]);
 
   const saveVideoToCloudinary = async () => {
     if (!status?.granted) {
@@ -43,8 +77,6 @@ export default function InputUploadVideo({ value, onChange }) {
 
     if (!result.canceled) {
       const videoFile = result.assets[0];
-
-      // Limitar a 50MB (50 * 1024 * 1024 bytes)
       const MAX_FILE_SIZE = 50 * 1024 * 1024;
       if (videoFile.fileSize && videoFile.fileSize > MAX_FILE_SIZE) {
         Alert.alert(
@@ -53,9 +85,11 @@ export default function InputUploadVideo({ value, onChange }) {
         );
         return;
       }
-      //setLoading(true);
-      console.log("enviando video a cloudinary");
-      // 1. Preparar los datos para Cloudinary
+      onChange(videoFile.uri); // Previsualización local inmediata
+      setVideoInfo(null);
+      setIsUploading(true);
+      console.log("enviando video a cloudinary...");
+
       const extension = videoFile.uri.split(".").pop();
       const data = new FormData();
       data.append("file", {
@@ -71,22 +105,21 @@ export default function InputUploadVideo({ value, onChange }) {
           body: data,
           headers: { "Content-Type": "multipart/form-data" },
         });
-        const result = await response.json();
-        if (result.secure_url) {
-          onChange(result.secure_url);
+        const uploadResult = await response.json();
+        if (uploadResult.secure_url) {
+          onChange(uploadResult.secure_url);
           setVideoInfo({
-            name: result.original_filename,
-            size: (result.bytes / 1024 / 1024).toFixed(2), // Convertir a MB
-            duration: Math.round(result.duration), // Segundos
-            format: result.format,
+            name: uploadResult.original_filename,
+            size: (uploadResult.bytes / 1024 / 1024).toFixed(2),
+            duration: Math.round(uploadResult.duration),
+            format: uploadResult.format,
           });
-          console.log("¡Éxito!", "Video subido y optimizado.");
         }
       } catch (error) {
         console.error(error);
         Alert.alert("Error", "No se pudo subir el video.");
       } finally {
-        //setLoading(false);
+        setIsUploading(false);
       }
     }
   };
@@ -127,11 +160,16 @@ export default function InputUploadVideo({ value, onChange }) {
               </Text>
             </View>
           </View>
-        ) : value ? (
-          <View className="mt-4 p-4 bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border dark:border-ui-input-borderDark rounded-xl">
-            <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
-              Video cargado: {value.split("/").pop()}
-            </Text>
+        ) : isUploading ? (
+          <View className="mt-4 p-6 bg-brandPrimary-600/5 rounded-xl border border-dashed border-brandPrimary-600/30 flex-row items-center justify-center gap-4">
+            <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
+              <Upload color={brandPrimary[600]} size={28} />
+            </Animated.View>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-brandPrimary-600 font-lexend-bold text-sm tracking-widest">
+                SUBIENDO...
+              </Text>
+            </View>
           </View>
         ) : (
           <View className=" mt-4 gap-4">
@@ -141,7 +179,7 @@ export default function InputUploadVideo({ value, onChange }) {
             >
               <Upload color={ui.text.mutedDark} />
               <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
-                Subir Video
+                Subir archivo de video
               </Text>
             </Pressable>
           </View>
