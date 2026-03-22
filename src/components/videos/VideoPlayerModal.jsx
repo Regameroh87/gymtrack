@@ -1,8 +1,8 @@
 import { Modal, View, Pressable, useWindowDimensions } from "react-native";
-import { X } from "../../assets/icons";
+import { X } from "../../../assets/icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import YoutubePlayer from "react-native-youtube-iframe";
-import { isYouTube, getYouTubeId } from "../utils/videoHelpers";
+import { isYouTube, getYouTubeId } from "../../utils/videoHelpers";
 function CloudinaryPlayer({ url }) {
   const player = useVideoPlayer(url, (p) => {
     p.play();

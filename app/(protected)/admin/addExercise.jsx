@@ -3,7 +3,7 @@ import { useForm } from "@tanstack/react-form";
 import CustomSelect from "../../../src/components/CustomSelect";
 import { Barbell, Movie } from "../../../assets/icons";
 import { ui, brandPrimary } from "../../../src/theme/colors";
-import InputUploadVideo from "../../../src/components/InputUploadVideo";
+import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
 
 export default function AddExercise() {
   const categories = [
@@ -29,6 +29,8 @@ export default function AddExercise() {
       category: "",
       muscle_group: "",
       equipment: "",
+      custom_video_url: "",
+      youtube_video_url: "",
     },
     onSubmit: (data) => {
       console.log(data);
@@ -109,7 +111,7 @@ export default function AddExercise() {
         </Text>
 
         <View>
-          <form.Field name="video_url">
+          <form.Field name="custom_video_url">
             {(field) => (
               <View>
                 <InputUploadVideo
