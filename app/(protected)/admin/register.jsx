@@ -23,7 +23,7 @@ import {
   MapPin,
   UserPlus,
 } from "../../../assets/icons.jsx";
-import { uploadToCloudinary } from "../../../src/utils/uploadImage.js";
+import { uploadToCloudinary } from "../../../src/utils/uploadFileToCloudinary.js";
 
 export default function Sandbox() {
   const { scrollViewRef, keyboardHeight, scrollToField, scrollToEnd } =

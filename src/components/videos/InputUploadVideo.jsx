@@ -1,10 +1,11 @@
-import * as ImagePicker from "expo-image-picker";
 import { useState, useRef, useEffect } from "react";
-import { Pressable, Text, Alert, View, Linking, Animated } from "react-native";
+import { Pressable, Text, Alert, View, Animated } from "react-native";
 import { Upload, Movie, Play, Trash } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import PreviewVideo from "../videos/PreviewVideo";
 import { supabase } from "../../database/supabase";
+import { useMediaPicker } from "../../hooks/useMediaPicker";
+import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 
 export default function InputUploadVideo({
   value,
@@ -12,9 +13,7 @@ export default function InputUploadVideo({
   onIdChange,
   publicId,
 }) {
-  const UPLOAD_PRESET = "gymtrack_videos";
-  const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`;
-  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  const { pickMedia } = useMediaPicker();
   const [videoInfo, setVideoInfo] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAnim = useRef(new Animated.Value(0)).current;
@@ -44,69 +43,27 @@ export default function InputUploadVideo({
   }, [isUploading]);
 
   const saveVideoToCloudinary = async () => {
-    if (!status?.granted) {
-      const permission = await requestPermission();
-      if (!permission.granted) {
-        if (permission.canAskAgain) {
-          Alert.alert(
-            "Permiso necesario",
-            "Para subir un video de tus ejercicios, necesitamos acceso a tu galería."
-          );
-        } else {
-          Alert.alert(
-            "Permiso denegado",
-            "Has desactivado el acceso a la galería. Para subir videos, por favor actívalo en los ajustes de tu teléfono.",
-            [
-              { text: "Cancelar", style: "cancel" },
-              { text: "Ir a Ajustes", onPress: () => Linking.openSettings() },
-            ]
-          );
-        }
-        return;
-      }
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const videoFile = await pickMedia({
       mediaTypes: ["videos"],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
+      maxFileSizeMb: 50,
+      permissionDeniedText:
+        "Para subir un video de tus ejercicios, necesitamos acceso a tu galería.",
     });
 
-    if (!result.canceled) {
-      const videoFile = result.assets[0];
-      const MAX_FILE_SIZE = 50 * 1024 * 1024;
-      if (videoFile.fileSize && videoFile.fileSize > MAX_FILE_SIZE) {
-        Alert.alert(
-          "Archivo muy pesado",
-          "Por favor elige un video que pese menos de 50MB."
-        );
-        return;
-      }
+    if (videoFile) {
       onChange(videoFile.uri);
       setVideoInfo(null);
       setIsUploading(true);
       console.log("enviando video a cloudinary...");
-
-      const extension = videoFile.uri.split(".").pop();
-      const data = new FormData();
-      data.append("file", {
-        uri: videoFile.uri,
-        type: `video/${extension}`,
-        name: `video_${Date.now()}.${extension}`,
-      });
-      data.append("upload_preset", UPLOAD_PRESET);
-
       try {
-        const response = await fetch(UPLOAD_URL, {
-          method: "POST",
-          body: data,
-          headers: { "Content-Type": "multipart/form-data" },
+        const { url, public_id } = await uploadFileToCloudinary({
+          fileUri: videoFile.uri,
+          uploadPreset: "gymtrack_videos",
+          typeFile: "video",
         });
-        const uploadResult = await response.json();
-        if (uploadResult.secure_url) {
-          onChange(uploadResult.secure_url);
-          onIdChange(uploadResult.public_id);
+        if (url && public_id) {
+          onChange(url);
+          onIdChange(public_id);
           setVideoInfo({
             name: uploadResult.original_filename,
             size: (uploadResult.bytes / 1024 / 1024).toFixed(2),

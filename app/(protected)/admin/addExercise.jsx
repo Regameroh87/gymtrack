@@ -1,8 +1,8 @@
-import { View, TextInput, Text, ScrollView, Pressable } from "react-native";
+import { View, TextInput, Text, ScrollView } from "react-native";
 import { useForm } from "@tanstack/react-form";
 import CustomSelect from "../../../src/components/CustomSelect";
-import { Barbell, Movie } from "../../../assets/icons";
-import { ui, brandPrimary } from "../../../src/theme/colors";
+import { Barbell } from "../../../assets/icons";
+import { ui } from "../../../src/theme/colors";
 import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
 
 export default function AddExercise() {

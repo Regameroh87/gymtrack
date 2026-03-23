@@ -1,36 +1,37 @@
-export const uploadToCloudinary = async (fileUri) => {
-  const cloudName = "ddupuyeko"; // El que ves en tu Dashboard
-  const uploadPreset = "gymtrack_images"; // El que creaste como "Unsigned"
+export const uploadFileToCloudinary = async ({
+  fileUri,
+  uploadPreset,
+  typeFile,
+}) => {
+  const cloudName = "ddupuyeko";
 
-  // 1. Preparamos el FormData (formato que entiende el servidor)
   const data = new FormData();
   const fileName = fileUri.split("/").pop();
+  console.log("nombre del archivo", fileName);
   const extension = fileName.split(".").pop().toLowerCase();
+  console.log("extension del archivo", extension);
 
   data.append("file", {
     uri: fileUri,
-    type: `image/${extension === "jpg" ? "jpeg" : extension}`, // Opcional: puedes detectar el tipo, pero jpeg suele funcionar
+    type: `${typeFile}/${extension === "jpg" ? "jpeg" : extension}`,
     name: fileName,
   });
 
   data.append("upload_preset", uploadPreset);
+  const URL = `https://api.cloudinary.com/v1_1/${cloudName}/${typeFile}/upload`;
 
-  // 2. Hacemos la petición POST a Cloudinary
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-    {
-      method: "POST",
-      body: data,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await fetch(URL, {
+    method: "POST",
+    body: data,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   const result = await response.json();
 
   if (response.ok) {
-    return result.secure_url; // Esta es la URL de internet (https://...)
+    return { url: result.secure_url, public_id: result.public_id };
   } else {
     throw new Error(result.error?.message || "Error al subir a Cloudinary");
   }
