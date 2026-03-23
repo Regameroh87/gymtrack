@@ -19,6 +19,7 @@ export const uploadFileToCloudinary = async ({
   data.append("upload_preset", uploadPreset);
   data.append("tags", "pending_approval");
   const URL = `https://api.cloudinary.com/v1_1/${cloudName}/${typeFile}/upload`;
+  console.log("Enviando a cloudinary", URL);
 
   const response = await fetch(URL, {
     method: "POST",

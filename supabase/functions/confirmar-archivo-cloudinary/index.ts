@@ -1,5 +1,70 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import CryptoJS from "https://esm.sh/crypto-js@4.1.1";
 
-serve(async (req)=>{
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const { public_id, resource_type = "image" } = await req.json();
+    
+    const cloudName = Deno.env.get("CLOUDINARY_CLOUD_NAME");
+    const apiKey = Deno.env.get("CLOUDINARY_API_KEY");
+    const apiSecret = Deno.env.get("CLOUDINARY_API_SECRET");
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      throw new Error("Faltan variables de entorno de Cloudinary");
+    }
+
+    if (!public_id) {
+      throw new Error("El public_id es requerido");
+    }
+
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    // 1. FIRMA: En la API de Tags, el string a firmar usa public_ids, tag, command y timestamp
+    // Vamos a usar 'replace' para quitar 'pending' y dejar solo 'confirmed'
+    const command = "replace";
+    const tag = "confirmed";
+    
+    // Los parámetros deben estar en orden alfabético para la firma
+    const stringToSign = `command=${command}&public_ids=${public_id}&tag=${tag}&timestamp=${timestamp}${apiSecret}`;
+    const signature = CryptoJS.SHA1(stringToSign).toString(CryptoJS.enc.Hex);
+
+    const formData = new FormData();
+    formData.append("public_ids", public_id);
+    formData.append("tag", tag);
+    formData.append("command", command);
+    formData.append("api_key", apiKey);
+    formData.append("timestamp", timestamp.toString());
+    formData.append("signature", signature);
+
+    // La URL para manejar tags es diferente a la de destroy
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/tags`;
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    return new Response(JSON.stringify({ success: true, result }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
 });
+
