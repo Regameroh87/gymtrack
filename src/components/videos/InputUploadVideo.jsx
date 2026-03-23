@@ -49,7 +49,6 @@ export default function InputUploadVideo({
       permissionDeniedText:
         "Para subir un video de tus ejercicios, necesitamos acceso a tu galería.",
     });
-
     if (videoFile) {
       onChange(videoFile.uri);
       setVideoInfo(null);
@@ -72,7 +71,7 @@ export default function InputUploadVideo({
           });
         }
       } catch (error) {
-        console.error(error);
+        console.error("Error al subir el video a Cloudinary ❌:", error);
         Alert.alert("Error", "No se pudo subir el video.");
         onChange(null);
       } finally {
