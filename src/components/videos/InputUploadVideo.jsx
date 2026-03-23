@@ -62,8 +62,7 @@ export default function InputUploadVideo({
           typeFile: "video",
         });
         if (url && public_id) {
-          //console.log("Video subido correctamente", result);
-          onChange(url);
+          console.log("Video subido correctamente a Cloudinary ✅ ");
           onIdChange(public_id);
           setVideoInfo({
             name: result.original_filename,
@@ -75,20 +74,11 @@ export default function InputUploadVideo({
       } catch (error) {
         console.error(error);
         Alert.alert("Error", "No se pudo subir el video.");
+        onChange(null);
       } finally {
         setIsUploading(false);
       }
     }
-  };
-
-  const deleteVideoFromCloudinary = async ({ public_id, resource_type }) => {
-    const result = await supabase.functions.invoke("delete-cloudinary", {
-      body: {
-        public_id,
-        resource_type,
-      },
-    });
-    console.log("Respuesta de cloudinary", result);
   };
 
   return (
@@ -135,10 +125,6 @@ export default function InputUploadVideo({
                 <Pressable
                   onPress={() => {
                     onChange(null);
-                    deleteVideoFromCloudinary({
-                      public_id: publicId,
-                      resource_type: "video",
-                    });
                     onIdChange(null);
                   }}
                 >

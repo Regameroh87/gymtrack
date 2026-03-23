@@ -1,3 +1,5 @@
+import { supabase } from "../database/supabase";
+
 export const uploadFileToCloudinary = async ({
   fileUri,
   uploadPreset,
@@ -14,8 +16,8 @@ export const uploadFileToCloudinary = async ({
     type: `${typeFile}/${extension === "jpg" ? "jpeg" : extension}`,
     name: fileName,
   });
-
   data.append("upload_preset", uploadPreset);
+  data.append("tags", "pending_approval");
   const URL = `https://api.cloudinary.com/v1_1/${cloudName}/${typeFile}/upload`;
 
   const response = await fetch(URL, {
@@ -33,4 +35,17 @@ export const uploadFileToCloudinary = async ({
   } else {
     throw new Error(result.error?.message || "Error al subir a Cloudinary"); // Deberia hacer un rollback de la transaccion
   }
+};
+
+export const deleteVideoFromCloudinary = async ({
+  public_id,
+  resource_type,
+}) => {
+  const result = await supabase.functions.invoke("delete-cloudinary", {
+    body: {
+      public_id,
+      resource_type,
+    },
+  });
+  console.log("Respuesta de cloudinary", result);
 };
