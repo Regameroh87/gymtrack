@@ -56,19 +56,20 @@ export default function InputUploadVideo({
       setIsUploading(true);
       console.log("enviando video a cloudinary...");
       try {
-        const { url, public_id } = await uploadFileToCloudinary({
+        const { url, public_id, result } = await uploadFileToCloudinary({
           fileUri: videoFile.uri,
           uploadPreset: "gymtrack_videos",
           typeFile: "video",
         });
         if (url && public_id) {
+          //console.log("Video subido correctamente", result);
           onChange(url);
           onIdChange(public_id);
           setVideoInfo({
-            name: uploadResult.original_filename,
-            size: (uploadResult.bytes / 1024 / 1024).toFixed(2),
-            duration: Math.round(uploadResult.duration),
-            format: uploadResult.format,
+            name: result.original_filename,
+            size: (result.bytes / 1024 / 1024).toFixed(2),
+            duration: Math.round(result.duration),
+            format: result.format,
           });
         }
       } catch (error) {
@@ -107,7 +108,11 @@ export default function InputUploadVideo({
         {value && videoInfo ? (
           <View className="mt-4 p-4 bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border dark:border-ui-input-borderDark rounded-xl">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-sm">
+              <Text
+                className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-sm w-56"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {videoInfo.name}.{videoInfo.format}
               </Text>
               <View className="bg-brandPrimary-600/20 px-2 py-1 rounded-md">
