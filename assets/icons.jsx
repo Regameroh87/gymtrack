@@ -355,3 +355,86 @@ export const Play = ({ size = 24, className, ...props }) => (
     <Path d="M7 4v16l13-8L7 4" />
   </Svg>
 );
+
+export const Photo = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-photo ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M15 8h.01" />
+    <Path d="M3 6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6z" />
+    <Path d="m3 16 5-5c.928-.893 2.072-.893 3 0l5 5" />
+    <Path d="m14 14 1-1c.928-.893 2.072-.893 3 0l3 3" />
+  </Svg>
+);
+
+export const ListDetails = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-list-details ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M13 5h8M13 9h5M13 15h8M13 19h5" />
+    <Path d="M3 4m0 1a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+    <Path d="M3 14m0 1a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+  </Svg>
+);
+
+export const SwitchHorizontal = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-switch-horizontal ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M16 3l4 4-4 4M10 7h10M8 13l-4 4 4 4M4 17h10" />
+  </Svg>
+);
+
+export const Link = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-link ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M9 15l6-6" />
+    <Path d="M11 6l.463-.536a5 5 0 0 1 7.071 7.072L18 13" />
+    <Path d="M13 18l-.397.534a5.068 5.068 0 0 1-7.127 0 4.972 4.972 0 0 1 0-7.071L6 11" />
+  </Svg>
+);

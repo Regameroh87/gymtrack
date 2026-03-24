@@ -12,6 +12,15 @@ import {
   Lexend_300Light,
   Lexend_800ExtraBold,
 } from "@expo-google-fonts/lexend";
+import {
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from "@expo-google-fonts/plus-jakarta-sans";
+import {
+  Manrope_400Regular,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from "@expo-google-fonts/manrope";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -36,6 +45,12 @@ export default function RootLayout() {
     Lexend_700Bold,
     Lexend_300Light,
     Lexend_800ExtraBold,
+    // Design System: Editorial Typography
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    Manrope_400Regular,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
   });
 
   useEffect(() => {
@@ -84,7 +99,7 @@ export default function RootLayout() {
       card: ui.card.light,
       text: ui.text.main,
       border: ui.input.border,
-      primary: "#6366f1", // brandPrimary[500]
+      primary: "#3023cd", // Power Indigo (Design System)
     },
   };
 

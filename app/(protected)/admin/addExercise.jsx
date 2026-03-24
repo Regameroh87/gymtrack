@@ -1,11 +1,32 @@
-import { View, TextInput, Text, ScrollView } from "react-native";
+import {
+  View,
+  TextInput,
+  Text,
+  ScrollView,
+  Pressable,
+  Switch,
+} from "react-native";
 import { useForm } from "@tanstack/react-form";
+import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import CustomSelect from "../../../src/components/CustomSelect";
-import { Barbell } from "../../../assets/icons";
-import { ui } from "../../../src/theme/colors";
+import {
+  Barbell,
+  Photo,
+  Upload,
+  Link,
+  SwitchHorizontal,
+  Play,
+} from "../../../assets/icons";
+import { ui, brandPrimary, brandSecondary } from "../../../src/theme/colors";
 import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
+import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
+import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
+import PreviewVideo from "../../../src/components/videos/PreviewVideo";
 
 export default function AddExercise() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const categories = [
     { label: "Fuerza", value: "fuerza" },
     { label: "Cardio", value: "cardio" },
@@ -32,6 +53,9 @@ export default function AddExercise() {
       custom_video_url: "",
       cloudinary_public_id: "",
       youtube_video_url: "",
+      image_url: "",
+      instructions: "",
+      is_unilateral: false,
     },
     onSubmit: (data) => {
       console.log(data);
@@ -39,82 +63,208 @@ export default function AddExercise() {
   });
 
   return (
-    <ScrollView className="flex-1 p-4 bg-ui-background dark:bg-ui-backgroundDark">
-      <View className="mb-6">
-        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mb-2 uppercase tracking-wider">
-          NOMBRE DEL EJERCICIO
+    <ScrollView className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
+      {/* ── Header Section ── */}
+      <View className="px-5 pt-6 pb-2">
+        <Text className="text-2xl font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark">
+          Nuevo Ejercicio
         </Text>
-        <form.Field name="name">
-          {(field) => (
-            <TextInput
-              value={field.state.value}
-              onChangeText={field.handleChange}
-              placeholder="Ej: Press de Banca"
-              placeholderTextColor="#64748b"
-              className="dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
-            />
-          )}
-        </form.Field>
+        <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
+          Completá los datos para agregar un ejercicio al catálogo.
+        </Text>
       </View>
-      <View className="flex-row w-full justify-center gap-2">
-        <View className="w-1/2">
-          <form.Field name="category">
+
+      {/* ── Form Content ── */}
+      <View className="px-5 pt-4 pb-8">
+        {/* Name Field */}
+        <View className="mb-5">
+          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
+            NOMBRE DEL EJERCICIO
+          </Text>
+          <form.Field name="name">
             {(field) => (
-              <CustomSelect
-                label="CATEGORIA"
-                options={categories}
+              <TextInput
                 value={field.state.value}
-                onChange={field.handleChange}
+                onChangeText={field.handleChange}
+                placeholder="Ej: Press de Banca con Mancuernas"
+                placeholderTextColor={ui.text.muted}
+                className="bg-ui-surface-highLight dark:bg-ui-surface-highDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope"
+                style={{
+                  borderWidth: 1,
+                  borderColor: ui.input.border,
+                }}
               />
             )}
           </form.Field>
         </View>
 
-        <View className="w-1/2">
-          <form.Field name="muscle_group">
+        {/* Category & Muscle Group — side by side */}
+        <View className="flex-row w-full justify-center gap-3">
+          <View className="w-1/2">
+            <form.Field name="category">
+              {(field) => (
+                <CustomSelect
+                  label="CATEGORÍA"
+                  options={categories}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          </View>
+
+          <View className="w-1/2">
+            <form.Field name="muscle_group">
+              {(field) => (
+                <CustomSelect
+                  label="GRUPO MUSCULAR"
+                  options={muscleGroups}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                />
+              )}
+            </form.Field>
+          </View>
+        </View>
+
+        {/* Equipment Field */}
+        <View className="mb-5">
+          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
+            EQUIPO
+          </Text>
+          <form.Field name="equipment">
             {(field) => (
-              <CustomSelect
-                label="GRUPO MUSCULAR"
-                options={muscleGroups}
-                value={field.state.value}
-                onChange={field.handleChange}
-              />
+              <View className="flex relative">
+                <View className="absolute top-0 left-1 translate-y-1/2 z-10 rotate-45">
+                  <Barbell color={ui.text.mutedDark} />
+                </View>
+                <View>
+                  <TextInput
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    placeholder="Ej: Barbell, Dumbbell"
+                    placeholderTextColor={ui.text.muted}
+                    className="bg-ui-surface-highLight dark:bg-ui-surface-highDark pl-10 rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope"
+                    style={{
+                      borderWidth: 1,
+                      borderColor: ui.input.border,
+                    }}
+                  />
+                </View>
+              </View>
             )}
           </form.Field>
         </View>
-      </View>
-      <View>
-        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mb-2 uppercase tracking-wider">
-          EQUIPAMIENTO
-        </Text>
-        <form.Field name="equipment">
-          {(field) => (
-            <View className=" flex relative">
-              <View className=" absolute top-0 left-1 translate-y-1/2 z-10 rotate-45">
-                <Barbell color={ui.text.mutedDark} />
-              </View>
-              <View>
-                <TextInput
-                  value={field.state.value}
-                  onChangeText={field.handleChange}
-                  placeholder="Ej: Mancuernas"
-                  placeholderTextColor="#64748b"
-                  className="dark:bg-ui-input-dark pl-10 bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-lexend"
+
+        {/* ── Multimedia Section ── */}
+        <View className="mt-4">
+          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-4 uppercase tracking-label">
+            MULTIMEDIA
+          </Text>
+
+          {/* YouTube Video Card */}
+          <View
+            className="rounded-2xl p-5 mb-4"
+            style={{
+              backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
+            }}
+          >
+            {/* Header */}
+            <View className="flex-row items-center mb-5">
+              <Play color={brandPrimary[400]} size={20} />
+              <Text
+                className="font-jakarta-bold ml-3"
+                style={{
+                  color: isDark ? "#cbd5e1" : ui.text.main,
+                  fontSize: 12,
+                }}
+              >
+                YouTube Video
+              </Text>
+            </View>
+
+            {/* Preview — gradient placeholder */}
+            <View
+              className="items-center justify-center overflow-hidden mb-4"
+              style={{
+                backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
+                borderRadius: 8,
+                height: 172,
+              }}
+            >
+              <LinearGradient
+                colors={
+                  isDark
+                    ? ["#312e81", "#0f172a"]
+                    : [brandPrimary[200], brandPrimary[50]]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  position: "absolute",
+                  top: 1,
+                  left: 1,
+                  right: 1,
+                  bottom: 1,
+                  borderRadius: 7,
+                }}
+              />
+              {/* Play button overlay */}
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 9999,
+                  backgroundColor: isDark
+                    ? "rgba(255,255,255,1)"
+                    : brandPrimary[600],
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Play
+                  color={isDark ? brandPrimary[600] : "#ffffff"}
+                  size={18}
                 />
               </View>
             </View>
-          )}
-        </form.Field>
-      </View>
-      <View>
-        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mt-10 mb-4 uppercase tracking-wider">
-          MULTIMEDIA
-        </Text>
 
-        <View>
-          <form.Field name="custom_video_url">
-            {(field) => (
-              <View>
+            {/* URL Input */}
+            <form.Field name="youtube_video_url">
+              {(field) => (
+                <View
+                  className="flex-row items-center overflow-hidden"
+                  style={{
+                    backgroundColor: isDark
+                      ? ui.surface.highDark
+                      : ui.surface.highLight,
+                    borderRadius: 12,
+                    height: 41,
+                  }}
+                >
+                  <View className="pl-4">
+                    <Link color={ui.text.muted} size={15} />
+                  </View>
+                  <TextInput
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    placeholder="Pegar URL de YouTube..."
+                    placeholderTextColor={ui.text.muted}
+                    className="flex-1 px-3 font-manrope"
+                    style={{
+                      color: isDark ? ui.text.mainDark : ui.text.main,
+                      fontSize: 12,
+                    }}
+                  />
+                </View>
+              )}
+            </form.Field>
+          </View>
+
+          {/* Local/Custom Video Card */}
+          <View className="mb-4">
+            <form.Field name="custom_video_url">
+              {(field) => (
                 <InputUploadVideo
                   value={field.state.value}
                   onChange={field.handleChange}
@@ -123,10 +273,235 @@ export default function AddExercise() {
                     form.setFieldValue("cloudinary_public_id", id)
                   }
                 />
+              )}
+            </form.Field>
+          </View>
+
+          {/* ── Imagen de Referencia Card ── */}
+          <View
+            className="rounded-2xl p-5"
+            style={{
+              backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
+            }}
+          >
+            {/* Header */}
+            <View className="flex-row items-center mb-5">
+              <Photo
+                color={isDark ? brandSecondary[300] : brandSecondary[500]}
+                size={18}
+              />
+              <Text
+                className="font-jakarta-bold ml-3"
+                style={{
+                  color: isDark ? "#cbd5e1" : ui.text.main,
+                  fontSize: 12,
+                }}
+              >
+                Imagen de Referencia
+              </Text>
+            </View>
+
+            {/* Preview placeholder */}
+            <View
+              className="items-center justify-center mb-4"
+              style={{
+                backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
+                borderRadius: 8,
+                height: 162,
+              }}
+            >
+              <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
+              <Text
+                className="font-manrope-bold mt-2"
+                style={{
+                  color: isDark ? "#334155" : ui.text.muted,
+                  fontSize: 10,
+                }}
+              >
+                Sin Previsualización
+              </Text>
+            </View>
+
+            {/* URL Input */}
+            <form.Field name="image_url">
+              {(field) => (
+                <View
+                  className="flex-row items-center overflow-hidden mb-3"
+                  style={{
+                    backgroundColor: isDark
+                      ? ui.surface.highDark
+                      : ui.surface.highLight,
+                    borderRadius: 12,
+                    height: 41,
+                  }}
+                >
+                  <View className="pl-4">
+                    <Link color={ui.text.muted} size={15} />
+                  </View>
+                  <TextInput
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    placeholder="Pegar URL de la imagen..."
+                    placeholderTextColor={ui.text.muted}
+                    className="flex-1 px-3 font-manrope"
+                    style={{
+                      color: isDark ? ui.text.mainDark : ui.text.main,
+                      fontSize: 12,
+                    }}
+                  />
+                </View>
+              )}
+            </form.Field>
+
+            {/* Upload button — teal/mint */}
+            <Pressable
+              className="active:scale-[0.97]"
+              style={{
+                backgroundColor: isDark
+                  ? brandSecondary[700]
+                  : brandSecondary[500],
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 24,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <Upload
+                color={isDark ? brandSecondary[300] : "#ffffff"}
+                size={15}
+              />
+              <Text
+                className="font-manrope-semi"
+                style={{
+                  color: isDark ? brandSecondary[300] : "#ffffff",
+                  fontSize: 12,
+                }}
+              >
+                Subir imagen desde galería
+              </Text>
+            </Pressable>
+
+            {/* Helper text */}
+            <Text
+              className="font-manrope mt-3 text-center"
+              style={{ color: ui.text.muted, fontSize: 10 }}
+            >
+              Referencia visual clara para asegurar la técnica correcta.
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Section - Instructions ── */}
+        <View className="mt-6">
+          <Text
+            className="font-manrope-bold mb-2 uppercase"
+            style={{ color: ui.text.muted, fontSize: 10 }}
+          >
+            Instrucciones
+          </Text>
+          <form.Field name="instructions">
+            {(field) => (
+              <TextInput
+                value={field.state.value}
+                onChangeText={field.handleChange}
+                placeholder="Describe los pasos detalladamente..."
+                placeholderTextColor={ui.text.muted}
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
+                className="font-manrope p-4"
+                style={{
+                  backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
+                  borderRadius: 12,
+                  color: isDark ? ui.text.mainDark : ui.text.main,
+                  fontSize: 14,
+                  minHeight: 104,
+                }}
+              />
+            )}
+          </form.Field>
+        </View>
+
+        {/* ── Section - Toggle Switch (Unilateral) ── */}
+        <View className="mt-6">
+          <form.Field name="is_unilateral">
+            {(field) => (
+              <View
+                className="flex-row items-center justify-between rounded-2xl"
+                style={{
+                  backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
+                  paddingVertical: 16,
+                  paddingHorizontal: 20,
+                }}
+              >
+                <View className="flex-row items-center flex-1 mr-3">
+                  <SwitchHorizontal
+                    color={isDark ? brandSecondary[300] : brandSecondary[500]}
+                    size={20}
+                  />
+                  <Text
+                    className="font-manrope-semi ml-3"
+                    style={{
+                      color: isDark ? ui.text.mainDark : ui.text.main,
+                      fontSize: 14,
+                    }}
+                  >
+                    ¿Es un ejercicio unilateral?
+                  </Text>
+                </View>
+                <Switch
+                  value={field.state.value}
+                  onValueChange={field.handleChange}
+                  trackColor={{
+                    false: isDark ? ui.surface.highDark : ui.surface.dimLight,
+                    true: brandPrimary[600],
+                  }}
+                  thumbColor="#ffffff"
+                  ios_backgroundColor={
+                    isDark ? ui.surface.highDark : ui.surface.dimLight
+                  }
+                />
               </View>
             )}
           </form.Field>
         </View>
+
+        {/* ── Submit Button — Kinetic Gradient ── */}
+        <Pressable
+          onPress={() => form.handleSubmit()}
+          className="mt-8 active:scale-[0.97]"
+          style={{ borderRadius: 16, overflow: "hidden" }}
+        >
+          <LinearGradient
+            colors={["#3023cd", "#4a44e4"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              paddingVertical: 20,
+              paddingHorizontal: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 8,
+              shadowColor: "#312e81",
+              shadowOffset: { width: 0, height: 20 },
+              shadowOpacity: 0.4,
+              shadowRadius: 25,
+              elevation: 8,
+            }}
+          >
+            <Text
+              className="font-jakarta-bold"
+              style={{ color: "#ffffff", fontSize: 18 }}
+            >
+              Guardar Ejercicio
+            </Text>
+          </LinearGradient>
+        </Pressable>
       </View>
     </ScrollView>
   );

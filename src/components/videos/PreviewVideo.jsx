@@ -9,19 +9,20 @@ export default function PreviewVideo({ videoUrl, children, onChange }) {
   });
 
   return (
-    <View className=" flex flex-row items-center justify-center h-52">
+    <View className="flex flex-row items-center justify-center h-52">
       {videoUrl ? (
         <View
-          className=" relative w-full h-full"
-          style={{ borderRadius: 12, position: "relative", overflow: "hidden" }}
+          className="relative w-full h-full"
+          style={{ borderRadius: 16, overflow: "hidden" }}
         >
           <VideoView
             contentFit="cover"
             player={player}
             style={{ width: "100%", height: "100%" }}
           />
+          {/* Gradient overlay — indigo-tinted instead of pure black */}
           <LinearGradient
-            colors={["rgba(0,0,0,.2)", "rgba(0,0,0,0.7)"]}
+            colors={["rgba(12, 10, 29, 0.15)", "rgba(12, 10, 29, 0.65)"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={{
@@ -36,7 +37,7 @@ export default function PreviewVideo({ videoUrl, children, onChange }) {
           />
         </View>
       ) : (
-        <View className=" flex flex-row items-center justify-center h-52">
+        <View className="flex flex-row items-center justify-center w-full h-52 bg-ui-surface-highLight dark:bg-ui-surface-highDark rounded-2xl">
           {children}
         </View>
       )}

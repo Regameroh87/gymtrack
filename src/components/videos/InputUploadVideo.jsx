@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Pressable, Text, Alert, View, Animated } from "react-native";
-import { Upload, Movie, Play, Trash } from "../../../assets/icons";
-import { brandPrimary, ui } from "../../theme/colors";
-import PreviewVideo from "../videos/PreviewVideo";
-import { supabase } from "../../database/supabase";
+import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
+import { brandPrimary, ui } from "../../theme/colors";
+import { Upload, Movie, Trash } from "../../../assets/icons";
+import PreviewVideo from "../videos/PreviewVideo";
 
 export default function InputUploadVideo({
   value,
@@ -13,13 +14,17 @@ export default function InputUploadVideo({
   onIdChange,
   publicId,
 }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { pickMedia } = useMediaPicker();
   const [videoInfo, setVideoInfo] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     let animation;
+    let pulse;
     if (isUploading) {
       animation = Animated.loop(
         Animated.sequence([
@@ -35,14 +40,33 @@ export default function InputUploadVideo({
           }),
         ])
       );
+      pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0.6,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      );
       animation.start();
+      pulse.start();
     } else {
       uploadAnim.setValue(0);
+      pulseAnim.setValue(0.6);
     }
-    return () => animation?.stop();
+    return () => {
+      animation?.stop();
+      pulse?.stop();
+    };
   }, [isUploading]);
 
-  const saveVideoToCloudinary = async () => {
+  const sendVideoToCloudinary = async () => {
     const videoFile = await pickMedia({
       mediaTypes: ["videos"],
       maxFileSizeMb: 50,
@@ -82,79 +106,186 @@ export default function InputUploadVideo({
 
   return (
     <>
-      <View className=" flex border border-l-4 border-brandPrimary-600 rounded-2xl p-4">
-        <View className="flex-row items-center pt-4 pb-8">
-          <Movie color={brandPrimary[600]} className="ml-4" />
-          <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend tracking-tighter ml-2">
-            CARGAR VIDEO
+      {/* Card container — padding:20, gap:16 vertical */}
+      <View
+        className="rounded-2xl"
+        style={{
+          backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
+          padding: 20,
+          gap: 16,
+        }}
+      >
+        {/* Section header — icon + label, gap:8 */}
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Movie color={isDark ? "#c2c1ff" : brandPrimary[600]} size={16} />
+          <Text
+            className="font-jakarta-bold"
+            style={{
+              color: isDark ? "#cbd5e1" : ui.text.main,
+              fontSize: 12,
+            }}
+          >
+            Archivo Local
           </Text>
         </View>
-        <PreviewVideo videoUrl={value} onChange={onChange}>
-          <View className=" flex items-center justify-center border border-ui-input-border dark:border-ui-input-borderDark rounded-full p-4 gap-2">
-            <Play color={ui.text.mutedDark} />
+
+        {/* Video preview area — gradient placeholder */}
+        {value ? (
+          <PreviewVideo videoUrl={value} onChange={onChange}>
+            <View
+              className="items-center justify-center"
+              style={{
+                backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
+                borderRadius: 8,
+                height: 172,
+              }}
+            >
+              <Movie color={isDark ? "#334155" : ui.text.muted} size={25} />
+            </View>
+          </PreviewVideo>
+        ) : (
+          <View
+            className="items-center justify-center overflow-hidden"
+            style={{
+              backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
+              borderRadius: 8,
+              height: 172,
+            }}
+          >
+            <LinearGradient
+              colors={
+                isDark
+                  ? ["#3023cd", "#0f172a"]
+                  : [brandPrimary[200], brandPrimary[50]]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                position: "absolute",
+                top: 1,
+                left: 1,
+                right: 1,
+                bottom: 1,
+                borderRadius: 7,
+              }}
+            />
+            {/* Play button overlay */}
+            <View
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 9999,
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,1)"
+                  : brandPrimary[600],
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
+            </View>
           </View>
-        </PreviewVideo>
+        )}
+
+        {/* ── Video info card (uploaded) ── */}
         {value && videoInfo ? (
-          <View className="mt-4 p-4 bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border dark:border-ui-input-borderDark rounded-xl">
+          <View
+            className="p-4 rounded-xl"
+            style={{
+              backgroundColor: isDark
+                ? ui.surface.highDark
+                : ui.surface.highLight,
+            }}
+          >
             <View className="flex-row justify-between items-center mb-2">
               <Text
-                className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-sm w-56"
+                className="font-manrope-bold text-sm w-56"
                 numberOfLines={1}
                 ellipsizeMode="tail"
+                style={{
+                  color: isDark ? ui.text.mainDark : ui.text.main,
+                }}
               >
                 {videoInfo.name}.{videoInfo.format}
               </Text>
-              <View className="bg-brandPrimary-600/20 px-2 py-1 rounded-md">
-                <Text className="text-brandPrimary-600 text-[10px] font-lexend-bold uppercase">
+              <View
+                className="px-2.5 py-1 rounded-lg"
+                style={{ backgroundColor: "rgba(48, 35, 205, 0.1)" }}
+              >
+                <Text className="text-brandPrimary-600 text-[10px] font-manrope-bold uppercase tracking-label">
                   {videoInfo.format}
                 </Text>
               </View>
             </View>
 
             <View className="flex-row justify-between items-center">
-              <View className=" flex-row gap-4">
-                <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
-                  Peso: {videoInfo.size} MB
-                </Text>
-                <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend">
-                  Duración: {videoInfo.duration} seg
-                </Text>
-              </View>
-              <View className=" mr-2">
-                <Pressable
-                  onPress={() => {
-                    onChange(null);
-                    onIdChange(null);
-                  }}
+              <View className="flex-row gap-4">
+                <Text
+                  className="text-xs font-manrope"
+                  style={{ color: ui.text.muted }}
                 >
-                  <Trash color={ui.text.mutedDark} size={16} />
-                </Pressable>
+                  {videoInfo.size} MB
+                </Text>
+                <Text
+                  className="text-xs font-manrope"
+                  style={{ color: ui.text.muted }}
+                >
+                  {videoInfo.duration}s
+                </Text>
               </View>
+              <Pressable
+                onPress={() => {
+                  onChange(null);
+                  onIdChange(null);
+                }}
+                className="active:scale-[0.97] p-2"
+              >
+                <Trash color={ui.text.muted} size={16} />
+              </Pressable>
             </View>
           </View>
         ) : isUploading ? (
-          <View className="mt-4 p-6 bg-brandPrimary-600/5 rounded-xl border border-dashed border-brandPrimary-600/30 flex-row items-center justify-center gap-4">
+          /* ── Uploading state ── */
+          <Animated.View
+            className="p-6 rounded-xl flex-row items-center justify-center gap-4"
+            style={{
+              backgroundColor: "rgba(48, 35, 205, 0.06)",
+              opacity: pulseAnim,
+            }}
+          >
             <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
               <Upload color={brandPrimary[600]} size={24} />
             </Animated.View>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-brandPrimary-600 font-lexend-bold text-sm tracking-widest">
-                SUBIENDO...
-              </Text>
-            </View>
-          </View>
+            <Text className="text-brandPrimary-600 font-jakarta text-sm tracking-label">
+              SUBIENDO...
+            </Text>
+          </Animated.View>
         ) : (
-          <View className=" mt-4 gap-4">
-            <Pressable
-              onPress={saveVideoToCloudinary}
-              className=" flex flex-row active:opacity-80 bg-ui-input-light dark:bg-ui-input-dark items-center justify-center border border-dashed border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-6 gap-2"
+          /* ── Upload trigger — solid indigo button, 305x42 ── */
+          <Pressable
+            onPress={sendVideoToCloudinary}
+            className="active:scale-[0.97]"
+            style={{
+              backgroundColor: "#6366f1",
+              borderRadius: 12,
+              height: 42,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <Upload color={isDark ? "#a5b4fc" : "#ffffff"} size={11} />
+            <Text
+              className="font-manrope-semi"
+              style={{
+                color: isDark ? "#a5b4fc" : "#ffffff",
+                fontSize: 12,
+              }}
             >
-              <Upload color={ui.text.mutedDark} />
-              <Text className=" text-center text-ui-text-muted dark:text-ui-text-mutedDark font-lexend tracking-tighter">
-                Subir archivo de video
-              </Text>
-            </Pressable>
-          </View>
+              Subir archivo de video
+            </Text>
+          </Pressable>
         )}
       </View>
     </>

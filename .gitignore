@@ -3,7 +3,7 @@
 # dependencies
 node_modules/
 .env
-
+.gemini
 # Expo
 .expo/
 dist/

@@ -15,10 +15,10 @@ const CustomSelect = ({
   onChange,
   placeholder = "Seleccionar...",
   snapPoints = ["50%"],
-  isDark = false, // Podríamos usar useColorScheme de NativeWind pero lo pasamos para simplificar o lo deducimos
 }) => {
   const bottomSheetModalRef = useRef(null);
   const { colorScheme } = useColorScheme();
+
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -40,25 +40,37 @@ const CustomSelect = ({
   );
 
   return (
-    <View className=" flex w-full mb-4">
+    <View className="flex w-full mb-4">
       {label && (
-        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-lexend-light mb-2 uppercase tracking-wider">
+        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
           {label}
         </Text>
       )}
 
+      {/* Trigger — surface_container_high bg, Ghost Border */}
       <Pressable
         onPress={handlePresentModalPress}
-        className="dark:bg-ui-input-dark bg-ui-input-light border border-ui-input-border dark:border-ui-input-borderDark rounded-xl p-4 flex-row justify-between items-center active:opacity-70"
+        className="bg-ui-surface-highLight dark:bg-ui-surface-highDark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97]"
+        style={{
+          borderWidth: 1,
+          borderColor: ui.input.border,
+        }}
       >
         <Text
-          className={`font-lexend ${value ? "text-ui-text-main dark:text-ui-text-mainDark" : "text-ui-text-muted dark:text-ui-text-mutedDark"}`}
+          className={`font-manrope ${
+            value
+              ? "text-ui-text-main dark:text-ui-text-mainDark"
+              : "text-ui-text-muted dark:text-ui-text-mutedDark"
+          }`}
         >
           {selectedOption ? selectedOption.label : placeholder}
         </Text>
-        <Text className="text-ui-text-muted">▼</Text>
+        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs">
+          ▼
+        </Text>
       </Pressable>
 
+      {/* Bottom Sheet — tonal layered surface */}
       <BottomSheetModal
         ref={bottomSheetModalRef}
         index={0}
@@ -66,11 +78,16 @@ const CustomSelect = ({
         backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor:
-            colorScheme === "dark" ? ui.card.dark : ui.card.light,
+            colorScheme === "dark" ? ui.surface.dark : ui.card.light,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
           backgroundColor:
-            colorScheme === "dark" ? ui.secondary.dark : ui.secondary.light,
+            colorScheme === "dark" ? ui.surface.highDark : ui.surface.dimLight,
+          width: 40,
+          height: 4,
+          borderRadius: 2,
         }}
       >
         <BottomSheetFlatList
@@ -78,39 +95,49 @@ const CustomSelect = ({
           keyExtractor={(item) => item.value.toString()}
           contentContainerStyle={{
             paddingHorizontal: 24,
-            paddingBottom: 100, // Espacio extra al final
+            paddingBottom: 100,
           }}
           ListHeaderComponent={() => (
-            <Text className="text-lg font-lexend-bold text-ui-text-main dark:text-ui-text-mainDark mb-6 mt-6">
-              {label ? `Seleccionar ${label.toLowerCase()}` : "Seleccionar"}
+            <Text className="text-lg font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark mb-6 mt-6">
+              {label
+                ? `Seleccionar ${label.charAt(0) + label.slice(1).toLowerCase()}`
+                : "Seleccionar"}
             </Text>
           )}
-          renderItem={({ item: option }) => (
-            <Pressable
-              onPress={() => {
-                onChange(option.value);
-                bottomSheetModalRef.current?.dismiss();
-              }}
-              className={`p-4 mb-2 rounded-xl flex-row justify-between items-center bg-ui-secondary-light dark:bg-ui-secondary-dark ${
-                value === option.value
-                  ? "bg-brandPrimary-500/10 border border-brandPrimary-500/20"
-                  : "bg-transparent"
-              }`}
-            >
-              <Text
-                className={`text-base font-lexend ${
-                  value === option.value
-                    ? "text-brandPrimary-500 font-lexend-bold"
-                    : "text-ui-text-main dark:text-ui-text-mainDark"
-                }`}
+          renderItem={({ item: option }) => {
+            const isSelected = value === option.value;
+            return (
+              <Pressable
+                onPress={() => {
+                  onChange(option.value);
+                  bottomSheetModalRef.current?.dismiss();
+                }}
+                className="p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97]"
+                style={{
+                  backgroundColor: isSelected
+                    ? "rgba(48, 35, 205, 0.08)"
+                    : colorScheme === "dark"
+                      ? ui.surface.highDark
+                      : ui.surface.light,
+                }}
               >
-                {option.label}
-              </Text>
-              {value === option.value && (
-                <Text className="text-brandPrimary-500">✓</Text>
-              )}
-            </Pressable>
-          )}
+                <Text
+                  className={`text-base font-manrope ${
+                    isSelected
+                      ? "text-brandPrimary-600 font-manrope-bold"
+                      : "text-ui-text-main dark:text-ui-text-mainDark"
+                  }`}
+                >
+                  {option.label}
+                </Text>
+                {isSelected && (
+                  <Text className="text-brandPrimary-600 font-manrope-bold">
+                    ✓
+                  </Text>
+                )}
+              </Pressable>
+            );
+          }}
         />
       </BottomSheetModal>
     </View>

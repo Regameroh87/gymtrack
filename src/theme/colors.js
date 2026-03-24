@@ -1,56 +1,122 @@
+// ─── Design System: "Kinetic Precision" ───
+// Based on DESIGN.md — High-Performance Editorial
+
+// ── Brand: Power Indigo ──
 export const brandPrimary = {
-  50: "#eef2ff",
-  100: "#e0e7ff",
-  200: "#c7d2fe",
-  300: "#a5b4fc",
-  400: "#818cf8",
-  500: "#6366f1",
-  600: "#4f46e5",
-  700: "#4338ca",
+  50: "#eef0ff",
+  100: "#dfe3ff",
+  200: "#c5caff",
+  300: "#a2a5ff",
+  400: "#7e79fc",
+  500: "#6366f1", // ← Indigo-500 (buttons, accents)
+  600: "#3023cd", // ← Primary (Power Indigo)
+  700: "#4a44e4", // ← Primary Container (gradient end)
   800: "#3730a3",
   900: "#312e81",
   950: "#1e1b4b",
 };
 
+// ── Tertiary: Pulse Mint ──
 export const brandSecondary = {
-  50: "#ecfdf5",
-  100: "#d1fae5",
-  200: "#a7f3d0",
-  300: "#6ee7b7",
-  400: "#34d399",
+  50: "#effef9",
+  100: "#c9feef",
+  200: "#93fce0",
+  300: "#62fae3", // ← Pulse Mint (light)
+  400: "#2ae8cc",
   500: "#10b981",
   600: "#059669",
-  700: "#047857",
+  700: "#005047", // ← Pulse Mint (dark)
   800: "#065f46",
   900: "#064e3b",
   950: "#022c22",
 };
 
+// ── Surface & UI Token Architecture ──
+// "No-Line" rule: NO 1px borders for sectioning.
+// Use tonal layering (background shifts) instead.
 export const ui = {
   background: {
-    light: "#f8fafc",
-    dark: "#020617",
+    light: "#f8f9fc",
+    dark: "#0c0a1d",
   },
   card: {
     light: "#ffffff",
-    dark: "#0f172a",
+    dark: "#13112a",
+  },
+  surface: {
+    light: "#f2f1f8",
+    dark: "#1a1833",
+    highLight: "#eae8f4",
+    highDark: "#231f42",
+    brightLight: "#ffffff",
+    brightDark: "#2a2650",
+    dimLight: "#e8e6f0",
+    dimDark: "#0f0d20",
+  },
+  // ── Preview surfaces (media placeholders) ──
+  preview: {
+    light: "#e8e6f0", // same as dimLight
+    dark: "#020617", // deep navy for dark mode previews
+  },
+  // ── Multimedia section header text ──
+  sectionHeader: {
+    light: "#0f0d20", // same as text.main
+    dark: "#cbd5e1", // slate-300
+  },
+  // ── Preview placeholder (empty state) ──
+  placeholder: {
+    light: "#6e6b8a", // same as text.muted
+    dark: "#334155", // slate-700
+  },
+  // ── Multimedia icon accent: light indigo for labels ──
+  iconAccent: {
+    light: "#3023cd", // brandPrimary.600
+    dark: "#c2c1ff", // light indigo for dark mode
   },
   input: {
-    light: "#f1f5f9",
-    dark: "#1e293b",
-    border: "#e2e8f0",
-    borderDark: "#334155",
+    light: "#eae8f4",
+    dark: "#231f42",
+    border: "rgba(196, 190, 230, 0.15)",
+    borderDark: "rgba(196, 190, 230, 0.15)",
   },
   secondary: {
-    light: "#e2e8f0",
-    dark: "#1e293b",
-    pressedLight: "#cbd5e1",
-    pressedDark: "#334155",
+    light: "#f2f1f8",
+    dark: "#1a1833",
+    pressedLight: "#e4e2f0",
+    pressedDark: "#2a2650",
   },
   text: {
-    main: "#0f172a",
-    mainDark: "#f1f5f9",
-    muted: "#64748b",
-    mutedDark: "#94a3b8",
+    main: "#0f0d20",
+    mainDark: "#f0eef8",
+    muted: "#6e6b8a",
+    mutedDark: "#9d99b8",
   },
+  outline: {
+    variant: "rgba(158, 152, 200, 0.15)",
+  },
+  // ── Switch/Toggle track ──
+  toggle: {
+    offLight: "#e8e6f0",
+    offDark: "#231f42",
+  },
+};
+
+// ── Glass & Gradient Tokens ──
+export const glass = {
+  light: "rgba(255, 255, 255, 0.70)",
+  dark: "rgba(19, 17, 42, 0.70)",
+  blur: 16,
+};
+
+export const gradient = {
+  primary: ["#3023cd", "#4a44e4"],
+  previewYoutube: {
+    light: ["#c5caff", "#eef0ff"], // brandPrimary 200 → 50
+    dark: ["#312e81", "#0f172a"], // indigo-900 → slate-900
+  },
+  previewVideo: {
+    light: ["#c5caff", "#eef0ff"],
+    dark: ["#3023cd", "#0f172a"],
+  },
+  angle: 135,
 };
