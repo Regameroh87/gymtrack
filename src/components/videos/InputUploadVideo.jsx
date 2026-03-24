@@ -83,7 +83,7 @@ export default function InputUploadVideo({
   return (
     <>
       <View className=" flex border border-l-4 border-brandPrimary-600 rounded-2xl p-4">
-        <View className="flex-row items-center mb-4">
+        <View className="flex-row items-center pt-4 pb-8">
           <Movie color={brandPrimary[600]} className="ml-4" />
           <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend tracking-tighter ml-2">
             CARGAR VIDEO
