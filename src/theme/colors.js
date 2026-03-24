@@ -6,7 +6,7 @@ export const brandPrimary = {
   50: "#eef0ff",
   100: "#dfe3ff",
   200: "#c5caff",
-  300: "#a2a5ff",
+  300: "#a5b4fc", // ← Indigo-300 (Figma)
   400: "#7e79fc",
   500: "#6366f1", // ← Indigo-500 (buttons, accents)
   600: "#3023cd", // ← Primary (Power Indigo)
@@ -57,6 +57,15 @@ export const ui = {
   preview: {
     light: "#e8e6f0", // same as dimLight
     dark: "#020617", // deep navy for dark mode previews
+  },
+  // ── Upload backgrounds ──
+  uploadBg: {
+    light: "rgba(48, 35, 205, 0.06)",
+    dark: "rgba(165, 180, 252, 0.1)",
+  },
+  uploadBtn: {
+    light: "#6366f1", // brandPrimary[500]
+    dark: "rgba(165, 180, 252, 0.15)", // 15% brandPrimary[300] for dark mode button
   },
   // ── Multimedia section header text ──
   sectionHeader: {

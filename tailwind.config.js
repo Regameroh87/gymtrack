@@ -26,6 +26,15 @@ module.exports = {
         editorial: "-0.02em", // -2% tracking for display
         label: "0.05em", // +5% tracking for labels
       },
+      fontSize: {
+        tiny: "10px", // Sin Previsualización, Referencia text, etc.
+        xs: "12px", // Labels, inputs
+        sm: "14px", // General body text
+        base: "16px", // General body
+        lg: "18px", // Buttons
+        xl: "20px", // Section headers
+        "2xl": "24px", // Main headers (Nuevo Ejercicio)
+      },
     },
   },
   plugins: [],

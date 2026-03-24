@@ -18,11 +18,16 @@ import {
   SwitchHorizontal,
   Play,
 } from "../../../assets/icons";
-import { ui, brandPrimary, brandSecondary } from "../../../src/theme/colors";
+import {
+  ui,
+  brandPrimary,
+  brandSecondary,
+  gradient,
+} from "../../../src/theme/colors";
 import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
-import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
+/* import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
-import PreviewVideo from "../../../src/components/videos/PreviewVideo";
+import PreviewVideo from "../../../src/components/videos/PreviewVideo"; */
 
 export default function AddExercise() {
   const { colorScheme } = useColorScheme();
@@ -172,22 +177,15 @@ export default function AddExercise() {
             {/* Header */}
             <View className="flex-row items-center mb-5">
               <Play color={brandPrimary[400]} size={20} />
-              <Text
-                className="font-jakarta-bold ml-3"
-                style={{
-                  color: isDark ? "#cbd5e1" : ui.text.main,
-                  fontSize: 12,
-                }}
-              >
+              <Text className="font-jakarta-bold ml-3 text-ui-text-main dark:text-slate-300 text-xs">
                 YouTube Video
               </Text>
             </View>
 
             {/* Preview — gradient placeholder */}
             <View
-              className="items-center justify-center overflow-hidden mb-4"
+              className="items-center justify-center overflow-hidden mb-4 bg-ui-surface-dimLight dark:bg-slate-950"
               style={{
-                backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
                 borderRadius: 8,
                 height: 172,
               }}
@@ -195,8 +193,8 @@ export default function AddExercise() {
               <LinearGradient
                 colors={
                   isDark
-                    ? ["#312e81", "#0f172a"]
-                    : [brandPrimary[200], brandPrimary[50]]
+                    ? gradient.previewYoutube.dark
+                    : gradient.previewYoutube.light
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -233,11 +231,8 @@ export default function AddExercise() {
             <form.Field name="youtube_video_url">
               {(field) => (
                 <View
-                  className="flex-row items-center overflow-hidden"
+                  className="flex-row items-center overflow-hidden bg-ui-surface-highLight dark:bg-ui-surface-highDark"
                   style={{
-                    backgroundColor: isDark
-                      ? ui.surface.highDark
-                      : ui.surface.highLight,
                     borderRadius: 12,
                     height: 41,
                   }}
@@ -250,11 +245,7 @@ export default function AddExercise() {
                     onChangeText={field.handleChange}
                     placeholder="Pegar URL de YouTube..."
                     placeholderTextColor={ui.text.muted}
-                    className="flex-1 px-3 font-manrope"
-                    style={{
-                      color: isDark ? ui.text.mainDark : ui.text.main,
-                      fontSize: 12,
-                    }}
+                    className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
                   />
                 </View>
               )}
@@ -290,34 +281,21 @@ export default function AddExercise() {
                 color={isDark ? brandSecondary[300] : brandSecondary[500]}
                 size={18}
               />
-              <Text
-                className="font-jakarta-bold ml-3"
-                style={{
-                  color: isDark ? "#cbd5e1" : ui.text.main,
-                  fontSize: 12,
-                }}
-              >
+              <Text className="font-jakarta-bold ml-3 text-ui-text-main dark:text-slate-300 text-xs">
                 Imagen de Referencia
               </Text>
             </View>
 
             {/* Preview placeholder */}
             <View
-              className="items-center justify-center mb-4"
+              className="items-center justify-center mb-4 bg-ui-surface-dimLight dark:bg-slate-950"
               style={{
-                backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
                 borderRadius: 8,
                 height: 162,
               }}
             >
               <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
-              <Text
-                className="font-manrope-bold mt-2"
-                style={{
-                  color: isDark ? "#334155" : ui.text.muted,
-                  fontSize: 10,
-                }}
-              >
+              <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
                 Sin Previsualización
               </Text>
             </View>
@@ -326,11 +304,8 @@ export default function AddExercise() {
             <form.Field name="image_url">
               {(field) => (
                 <View
-                  className="flex-row items-center overflow-hidden mb-3"
+                  className="flex-row items-center overflow-hidden mb-3 bg-ui-surface-highLight dark:bg-ui-surface-highDark"
                   style={{
-                    backgroundColor: isDark
-                      ? ui.surface.highDark
-                      : ui.surface.highLight,
                     borderRadius: 12,
                     height: 41,
                   }}
@@ -343,11 +318,7 @@ export default function AddExercise() {
                     onChangeText={field.handleChange}
                     placeholder="Pegar URL de la imagen..."
                     placeholderTextColor={ui.text.muted}
-                    className="flex-1 px-3 font-manrope"
-                    style={{
-                      color: isDark ? ui.text.mainDark : ui.text.main,
-                      fontSize: 12,
-                    }}
+                    className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
                   />
                 </View>
               )}
@@ -355,11 +326,8 @@ export default function AddExercise() {
 
             {/* Upload button — teal/mint */}
             <Pressable
-              className="active:scale-[0.97]"
+              className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700"
               style={{
-                backgroundColor: isDark
-                  ? brandSecondary[700]
-                  : brandSecondary[500],
                 borderRadius: 12,
                 paddingVertical: 12,
                 paddingHorizontal: 24,
@@ -373,22 +341,13 @@ export default function AddExercise() {
                 color={isDark ? brandSecondary[300] : "#ffffff"}
                 size={15}
               />
-              <Text
-                className="font-manrope-semi"
-                style={{
-                  color: isDark ? brandSecondary[300] : "#ffffff",
-                  fontSize: 12,
-                }}
-              >
+              <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">
                 Subir imagen desde galería
               </Text>
             </Pressable>
 
             {/* Helper text */}
-            <Text
-              className="font-manrope mt-3 text-center"
-              style={{ color: ui.text.muted, fontSize: 10 }}
-            >
+            <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
               Referencia visual clara para asegurar la técnica correcta.
             </Text>
           </View>
@@ -396,10 +355,7 @@ export default function AddExercise() {
 
         {/* ── Section - Instructions ── */}
         <View className="mt-6">
-          <Text
-            className="font-manrope-bold mb-2 uppercase"
-            style={{ color: ui.text.muted, fontSize: 10 }}
-          >
+          <Text className="font-manrope-bold mb-2 uppercase text-ui-text-muted text-tiny">
             Instrucciones
           </Text>
           <form.Field name="instructions">
@@ -412,12 +368,9 @@ export default function AddExercise() {
                 multiline
                 numberOfLines={6}
                 textAlignVertical="top"
-                className="font-manrope p-4"
+                className="font-manrope p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
                 style={{
-                  backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
                   borderRadius: 12,
-                  color: isDark ? ui.text.mainDark : ui.text.main,
-                  fontSize: 14,
                   minHeight: 104,
                 }}
               />
@@ -430,9 +383,8 @@ export default function AddExercise() {
           <form.Field name="is_unilateral">
             {(field) => (
               <View
-                className="flex-row items-center justify-between rounded-2xl"
+                className="flex-row items-center justify-between rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
                 style={{
-                  backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
                   paddingVertical: 16,
                   paddingHorizontal: 20,
                 }}
@@ -442,13 +394,7 @@ export default function AddExercise() {
                     color={isDark ? brandSecondary[300] : brandSecondary[500]}
                     size={20}
                   />
-                  <Text
-                    className="font-manrope-semi ml-3"
-                    style={{
-                      color: isDark ? ui.text.mainDark : ui.text.main,
-                      fontSize: 14,
-                    }}
-                  >
+                  <Text className="font-manrope-semi ml-3 text-ui-text-main dark:text-ui-text-mainDark text-sm">
                     ¿Es un ejercicio unilateral?
                   </Text>
                 </View>
@@ -494,10 +440,7 @@ export default function AddExercise() {
               elevation: 8,
             }}
           >
-            <Text
-              className="font-jakarta-bold"
-              style={{ color: "#ffffff", fontSize: 18 }}
-            >
+            <Text className="font-jakarta-bold text-white text-lg">
               Guardar Ejercicio
             </Text>
           </LinearGradient>

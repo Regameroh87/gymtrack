@@ -108,23 +108,19 @@ export default function InputUploadVideo({
     <>
       {/* Card container — padding:20, gap:16 vertical */}
       <View
-        className="rounded-2xl"
+        className="rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
         style={{
-          backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
           padding: 20,
           gap: 16,
         }}
       >
         {/* Section header — icon + label, gap:8 */}
         <View className="flex-row items-center" style={{ gap: 8 }}>
-          <Movie color={isDark ? "#c2c1ff" : brandPrimary[600]} size={16} />
-          <Text
-            className="font-jakarta-bold"
-            style={{
-              color: isDark ? "#cbd5e1" : ui.text.main,
-              fontSize: 12,
-            }}
-          >
+          <Movie
+            color={isDark ? brandPrimary[200] : brandPrimary[600]}
+            size={16}
+          />
+          <Text className="font-jakarta-bold text-ui-text-main dark:text-slate-300 text-xs">
             Archivo Local
           </Text>
         </View>
@@ -133,9 +129,8 @@ export default function InputUploadVideo({
         {value ? (
           <PreviewVideo videoUrl={value} onChange={onChange}>
             <View
-              className="items-center justify-center"
+              className="items-center justify-center bg-ui-surface-dimLight dark:bg-slate-950"
               style={{
-                backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
                 borderRadius: 8,
                 height: 172,
               }}
@@ -145,9 +140,8 @@ export default function InputUploadVideo({
           </PreviewVideo>
         ) : (
           <View
-            className="items-center justify-center overflow-hidden"
+            className="items-center justify-center overflow-hidden bg-ui-surface-dimLight dark:bg-slate-950"
             style={{
-              backgroundColor: isDark ? "#020617" : ui.surface.dimLight,
               borderRadius: 8,
               height: 172,
             }}
@@ -189,22 +183,12 @@ export default function InputUploadVideo({
 
         {/* ── Video info card (uploaded) ── */}
         {value && videoInfo ? (
-          <View
-            className="p-4 rounded-xl"
-            style={{
-              backgroundColor: isDark
-                ? ui.surface.highDark
-                : ui.surface.highLight,
-            }}
-          >
+          <View className="p-4 rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">
             <View className="flex-row justify-between items-center mb-2">
               <Text
-                className="font-manrope-bold text-sm w-56"
+                className="font-manrope-bold text-sm w-56 text-ui-text-main dark:text-ui-text-mainDark"
                 numberOfLines={1}
                 ellipsizeMode="tail"
-                style={{
-                  color: isDark ? ui.text.mainDark : ui.text.main,
-                }}
               >
                 {videoInfo.name}.{videoInfo.format}
               </Text>
@@ -247,16 +231,18 @@ export default function InputUploadVideo({
         ) : isUploading ? (
           /* ── Uploading state ── */
           <Animated.View
-            className="p-6 rounded-xl flex-row items-center justify-center gap-4"
+            className="p-6 rounded-xl flex-row items-center justify-center gap-4 bg-ui-uploadBg-light dark:bg-ui-uploadBg-dark"
             style={{
-              backgroundColor: "rgba(48, 35, 205, 0.06)",
               opacity: pulseAnim,
             }}
           >
             <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
-              <Upload color={brandPrimary[600]} size={24} />
+              <Upload
+                color={isDark ? brandPrimary[300] : brandPrimary[600]}
+                size={24}
+              />
             </Animated.View>
-            <Text className="text-brandPrimary-600 font-jakarta text-sm tracking-label">
+            <Text className="text-brandPrimary-600 dark:text-brandPrimary-300 font-jakarta tracking-label text-sm">
               SUBIENDO...
             </Text>
           </Animated.View>
@@ -264,9 +250,8 @@ export default function InputUploadVideo({
           /* ── Upload trigger — solid indigo button, 305x42 ── */
           <Pressable
             onPress={sendVideoToCloudinary}
-            className="active:scale-[0.97]"
+            className="active:scale-[0.97] bg-ui-uploadBtn-light dark:bg-ui-uploadBtn-dark"
             style={{
-              backgroundColor: "#6366f1",
               borderRadius: 12,
               height: 42,
               flexDirection: "row",
@@ -276,13 +261,7 @@ export default function InputUploadVideo({
             }}
           >
             <Upload color={isDark ? "#a5b4fc" : "#ffffff"} size={11} />
-            <Text
-              className="font-manrope-semi"
-              style={{
-                color: isDark ? "#a5b4fc" : "#ffffff",
-                fontSize: 12,
-              }}
-            >
+            <Text className="font-manrope-semi text-white dark:text-brandPrimary-300 text-xs">
               Subir archivo de video
             </Text>
           </Pressable>
