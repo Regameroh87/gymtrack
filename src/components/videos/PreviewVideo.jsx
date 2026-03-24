@@ -7,7 +7,7 @@ import YoutubePlayer from "react-native-youtube-iframe";
 
 export default function PreviewVideo({ videoUrl, children }) {
   const { colorScheme } = useColorScheme();
-  const isYoutube = videoUrl.includes("youtube.com");
+  const isYoutube = videoUrl?.includes("youtube.com");
   console.log(videoUrl);
 
   const isDark = colorScheme === "dark";
