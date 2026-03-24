@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Pressable, Text, Alert, View, Animated } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Upload, Movie, Trash } from "../../../assets/icons";
-import PreviewVideo from "../videos/PreviewVideo";
 
 export default function InputUploadVideo({
   value,
@@ -106,7 +105,6 @@ export default function InputUploadVideo({
 
   return (
     <>
-      {/* Card container — padding:20, gap:16 vertical */}
       <View
         className="rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
         style={{
@@ -124,63 +122,11 @@ export default function InputUploadVideo({
             Archivo Local
           </Text>
         </View>
-
-        {/* Video preview area — gradient placeholder */}
-        {value ? (
-          <PreviewVideo videoUrl={value} onChange={onChange}>
-            <View
-              className="items-center justify-center bg-ui-surface-dimLight dark:bg-slate-950"
-              style={{
-                borderRadius: 8,
-                height: 172,
-              }}
-            >
-              <Movie color={isDark ? "#334155" : ui.text.muted} size={25} />
-            </View>
-          </PreviewVideo>
-        ) : (
-          <View
-            className="items-center justify-center overflow-hidden bg-ui-surface-dimLight dark:bg-slate-950"
-            style={{
-              borderRadius: 8,
-              height: 172,
-            }}
-          >
-            <LinearGradient
-              colors={
-                isDark
-                  ? ["#3023cd", "#0f172a"]
-                  : [brandPrimary[200], brandPrimary[50]]
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                position: "absolute",
-                top: 1,
-                left: 1,
-                right: 1,
-                bottom: 1,
-                borderRadius: 7,
-              }}
-            />
-            {/* Play button overlay */}
-            <View
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 9999,
-                backgroundColor: isDark
-                  ? "rgba(255,255,255,1)"
-                  : brandPrimary[600],
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
-            </View>
+        <PreviewVideo videoUrl={value}>
+          <View className=" w-12 h-12 rounded-full dark:bg-slate-50 bg-brandPrimary-600 items-center justify-center">
+            <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
           </View>
-        )}
-
+        </PreviewVideo>
         {/* ── Video info card (uploaded) ── */}
         {value && videoInfo ? (
           <View className="p-4 rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">

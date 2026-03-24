@@ -1,8 +1,13 @@
 import { View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { LinearGradient } from "expo-linear-gradient";
+import { useColorScheme } from "nativewind";
+import { gradient } from "../../theme/colors";
 
-export default function PreviewVideo({ videoUrl, children, onChange }) {
+export default function PreviewVideo({ videoUrl, children }) {
+  const { colorScheme } = useColorScheme();
+  console.log(videoUrl);
+  const isDark = colorScheme === "dark";
   const player = useVideoPlayer(videoUrl, (p) => {
     p.loop = true;
     p.play();
@@ -37,7 +42,30 @@ export default function PreviewVideo({ videoUrl, children, onChange }) {
           />
         </View>
       ) : (
-        <View className="flex flex-row items-center justify-center w-full h-52 bg-ui-surface-highLight dark:bg-ui-surface-highDark rounded-2xl">
+        <View
+          className="flex-1 items-center justify-center overflow-hidden bg-ui-surface-dimLight dark:bg-slate-950"
+          style={{
+            borderRadius: 8,
+            height: 172,
+          }}
+        >
+          <LinearGradient
+            colors={
+              isDark
+                ? gradient.previewYoutube.dark
+                : gradient.previewYoutube.light
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              position: "absolute",
+              top: 1,
+              left: 1,
+              right: 1,
+              bottom: 1,
+              borderRadius: 7,
+            }}
+          />
           {children}
         </View>
       )}

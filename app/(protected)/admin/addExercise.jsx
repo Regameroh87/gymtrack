@@ -18,13 +18,9 @@ import {
   SwitchHorizontal,
   Play,
 } from "../../../assets/icons";
-import {
-  ui,
-  brandPrimary,
-  brandSecondary,
-  gradient,
-} from "../../../src/theme/colors";
+import { ui, brandPrimary, brandSecondary } from "../../../src/theme/colors";
 import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
+import PreviewVideo from "../../../src/components/videos/PreviewVideo";
 /* import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
 import PreviewVideo from "../../../src/components/videos/PreviewVideo"; */
@@ -182,72 +178,47 @@ export default function AddExercise() {
               </Text>
             </View>
 
-            {/* Preview — gradient placeholder */}
-            <View
-              className="items-center justify-center overflow-hidden mb-4 bg-ui-surface-dimLight dark:bg-slate-950"
-              style={{
-                borderRadius: 8,
-                height: 172,
-              }}
-            >
-              <LinearGradient
-                colors={
-                  isDark
-                    ? gradient.previewYoutube.dark
-                    : gradient.previewYoutube.light
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  position: "absolute",
-                  top: 1,
-                  left: 1,
-                  right: 1,
-                  bottom: 1,
-                  borderRadius: 7,
-                }}
-              />
-              {/* Play button overlay */}
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 9999,
-                  backgroundColor: isDark
-                    ? "rgba(255,255,255,1)"
-                    : brandPrimary[600],
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Play
-                  color={isDark ? brandPrimary[600] : "#ffffff"}
-                  size={18}
-                />
-              </View>
-            </View>
-
-            {/* URL Input */}
             <form.Field name="youtube_video_url">
               {(field) => (
-                <View
-                  className="flex-row items-center overflow-hidden bg-ui-surface-highLight dark:bg-ui-surface-highDark"
-                  style={{
-                    borderRadius: 12,
-                    height: 41,
-                  }}
-                >
-                  <View className="pl-4">
-                    <Link color={ui.text.muted} size={15} />
+                <>
+                  {/* Preview — gradient placeholder */}
+                  <View
+                    className="items-center justify-center overflow-hidden mb-4 bg-ui-surface-dimLight dark:bg-slate-950"
+                    style={{
+                      borderRadius: 8,
+                      height: 172,
+                    }}
+                  >
+                    <PreviewVideo videoUrl={field.state.value}>
+                      <View className=" w-12 h-12 rounded-full dark:bg-slate-50 bg-brandPrimary-600 items-center justify-center">
+                        <Play
+                          color={isDark ? brandPrimary[600] : "#ffffff"}
+                          size={25}
+                        />
+                      </View>
+                    </PreviewVideo>
                   </View>
-                  <TextInput
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="Pegar URL de YouTube..."
-                    placeholderTextColor={ui.text.muted}
-                    className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
-                  />
-                </View>
+
+                  {/* URL Input */}
+                  <View
+                    className="flex-row items-center overflow-hidden bg-ui-surface-highLight dark:bg-ui-surface-highDark"
+                    style={{
+                      borderRadius: 12,
+                      height: 41,
+                    }}
+                  >
+                    <View className="pl-4">
+                      <Link color={ui.text.muted} size={15} />
+                    </View>
+                    <TextInput
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      placeholder="Pegar URL de YouTube..."
+                      placeholderTextColor={ui.text.muted}
+                      className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
+                    />
+                  </View>
+                </>
               )}
             </form.Field>
           </View>
