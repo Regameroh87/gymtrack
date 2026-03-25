@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   Switch,
+  Image,
 } from "react-native";
 import { useForm } from "@tanstack/react-form";
 import { LinearGradient } from "expo-linear-gradient";
@@ -258,64 +259,69 @@ export default function AddExercise() {
             </View>
 
             {/* Preview placeholder */}
-            <View
-              className="items-center justify-center mb-4 bg-ui-surface-dimLight dark:bg-slate-950"
-              style={{
-                borderRadius: 8,
-                height: 162,
-              }}
-            >
-              <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
-              <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
-                Sin Previsualización
-              </Text>
+            <View className="items-center justify-center mb-4 bg-ui-surface-dimLight dark:bg-slate-950 min-h-44 rounded-xl">
+              {form.state.image_url ? (
+                <Image
+                  source={{ uri: form.state.image_url }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: 8,
+                  }}
+                />
+              ) : (
+                <>
+                  <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
+                  <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
+                    Sin Previsualización
+                  </Text>
+                </>
+              )}
             </View>
 
             {/* URL Input */}
             <form.Field name="image_url">
               {(field) => (
-                <View
-                  className="flex-row items-center overflow-hidden mb-3 bg-ui-surface-highLight dark:bg-ui-surface-highDark"
-                  style={{
-                    borderRadius: 12,
-                    height: 41,
-                  }}
-                >
-                  <View className="pl-4">
-                    <Link color={ui.text.muted} size={15} />
+                <View className="flex-col gap-4 mb-3 ">
+                  <View className="flex-row items-center rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">
+                    <View className="pl-4">
+                      <Link color={ui.text.muted} size={15} />
+                    </View>
+                    <TextInput
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      placeholder="Pegar URL de la imagen..."
+                      placeholderTextColor={ui.text.muted}
+                      className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
+                    />
                   </View>
-                  <TextInput
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="Pegar URL de la imagen..."
-                    placeholderTextColor={ui.text.muted}
-                    className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
-                  />
+                  <View>
+                    <Pressable
+                      className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700"
+                      style={{
+                        borderRadius: 12,
+                        paddingVertical: 12,
+                        paddingHorizontal: 24,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <Upload
+                        color={isDark ? brandSecondary[300] : "#ffffff"}
+                        size={15}
+                      />
+                      <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">
+                        Subir imagen desde galería
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               )}
             </form.Field>
 
             {/* Upload button — teal/mint */}
-            <Pressable
-              className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700"
-              style={{
-                borderRadius: 12,
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-            >
-              <Upload
-                color={isDark ? brandSecondary[300] : "#ffffff"}
-                size={15}
-              />
-              <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">
-                Subir imagen desde galería
-              </Text>
-            </Pressable>
 
             {/* Helper text */}
             <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
