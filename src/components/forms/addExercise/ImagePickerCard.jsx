@@ -4,10 +4,6 @@ import { Photo, Link, Upload } from "../../../../assets/icons";
 import { ui, brandSecondary } from "../../../theme/colors";
 import { useColorScheme } from "nativewind";
 
-/**
- * Card for the reference image section.
- * Receives form field value, onChange handler, and a handlePickImage function.
- */
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onPickImage, onFocus },
   ref

@@ -5,10 +5,6 @@ import { ui, brandPrimary } from "../../../theme/colors";
 import PreviewVideo from "../../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 
-/**
- * Card for the YouTube video section.
- * Receives form field value and handleChange via `value` and `onChange` props.
- */
 const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
   { value, onChange, onFocus },
   ref
@@ -39,10 +35,7 @@ const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
       >
         <PreviewVideo videoUrl={value}>
           <View className="w-12 h-12 rounded-full dark:bg-slate-50 bg-brandPrimary-600 items-center justify-center">
-            <Play
-              color={isDark ? brandPrimary[600] : "#ffffff"}
-              size={25}
-            />
+            <Play color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
           </View>
         </PreviewVideo>
       </View>
