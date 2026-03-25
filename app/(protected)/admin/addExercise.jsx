@@ -165,7 +165,7 @@ export default function AddExercise() {
 
           {/* YouTube Video Card */}
           <View
-            className="rounded-2xl p-5 mb-4"
+            className="rounded-2xl p-5 mb-4 border border-brandPrimary-400 border-l-4"
             style={{
               backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
             }}
@@ -224,7 +224,7 @@ export default function AddExercise() {
           </View>
 
           {/* Local/Custom Video Card */}
-          <View className="mb-4">
+          <View className="rounded-2xl p-5 mb-4 border border-brandPrimary-600 border-l-4">
             <form.Field name="custom_video_url">
               {(field) => (
                 <InputUploadVideo
@@ -241,7 +241,7 @@ export default function AddExercise() {
 
           {/* ── Imagen de Referencia Card ── */}
           <View
-            className="rounded-2xl p-5"
+            className="rounded-2xl p-5 mb-4 border border-brandSecondary-600 border-l-4"
             style={{
               backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
             }}
