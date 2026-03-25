@@ -43,10 +43,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           />
         ) : (
           <>
-            <Photo
-              color={isDark ? "#334155" : ui.text.muted}
-              size={33}
-            />
+            <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
             <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
               Sin Previsualización
             </Text>
@@ -83,10 +80,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
             gap: 8,
           }}
         >
-          <Upload
-            color={isDark ? brandSecondary[300] : "#ffffff"}
-            size={15}
-          />
+          <Upload color={isDark ? brandSecondary[300] : "#ffffff"} size={15} />
           <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">
             Subir imagen desde galería
           </Text>

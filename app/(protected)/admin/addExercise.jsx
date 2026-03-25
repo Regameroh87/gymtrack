@@ -61,19 +61,21 @@ export default function AddExercise() {
   };
 
   const scrollRef = useRef(null);
+  const scrollOffset = useRef(0);
   const youtubeCardRef = useRef(null);
   const uploadVideoCardRef = useRef(null);
   const imageCardRef = useRef(null);
+  const instructionsRef = useRef(null);
 
   const scrollToCard = (cardRef) => {
     if (!cardRef.current || !scrollRef.current) return;
     cardRef.current.measure((_x, _y, _w, _h, _pageX, pageY) => {
-      // pageY is the card's absolute Y on screen.
-      // We want the card top to land ~16pt below the status bar.
-      // scrollTo works on scroll-content coordinates so we need the
-      // current scroll offset plus the delta the card needs to move up.
+      // pageY = posición de la card en la PANTALLA (screen-space)
+      // scrollTo necesita coordenadas del CONTENIDO del scroll.
+      // Fórmula: contentY = pageY + scrollOffset_actual - margen_top
+      const contentY = pageY + scrollOffset.current - 100;
       scrollRef.current.scrollTo({
-        y: Math.max(0, pageY - 80),
+        y: Math.max(0, contentY),
         animated: true,
       });
     });
@@ -82,6 +84,10 @@ export default function AddExercise() {
   return (
     <KeyboardAwareScrollView
       ref={scrollRef}
+      scrollEventThrottle={16}
+      onScroll={(e) => {
+        scrollOffset.current = e.nativeEvent.contentOffset.y;
+      }}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
       {/* ── Header ── */}
@@ -203,23 +209,26 @@ export default function AddExercise() {
         </View>
 
         {/* ── Instrucciones ── */}
-        <FormField label="INSTRUCCIONES" className="mt-6">
-          <form.Field name="instructions">
-            {(field) => (
-              <TextInput
-                value={field.state.value}
-                onChangeText={field.handleChange}
-                placeholder="Describe los pasos detalladamente..."
-                placeholderTextColor={ui.text.muted}
-                multiline
-                numberOfLines={6}
-                textAlignVertical="top"
-                className="font-manrope p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
-                style={{ borderRadius: 12, minHeight: 104 }}
-              />
-            )}
-          </form.Field>
-        </FormField>
+        <View ref={instructionsRef}>
+          <FormField label="INSTRUCCIONES" className="mt-6">
+            <form.Field name="instructions">
+              {(field) => (
+                <TextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  onFocus={() => scrollToCard(instructionsRef)}
+                  placeholder="Describe los pasos detalladamente..."
+                  placeholderTextColor={ui.text.muted}
+                  multiline
+                  numberOfLines={6}
+                  textAlignVertical="top"
+                  className="font-manrope p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
+                  style={{ borderRadius: 12, minHeight: 104 }}
+                />
+              )}
+            </form.Field>
+          </FormField>
+        </View>
 
         {/* ── Toggle Unilateral ── */}
         <View className="mt-6">
