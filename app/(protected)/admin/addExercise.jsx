@@ -1,6 +1,6 @@
 import { View, Text, TextInput } from "react-native";
+import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
-import { useColorScheme } from "nativewind";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
 // Constants
@@ -29,8 +29,8 @@ import { ui } from "../../../src/theme/colors";
 import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
 
 export default function AddExercise() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  //const { colorScheme } = useColorScheme();
+  //const isDark = colorScheme === "dark";
 
   const form = useForm({
     defaultValues: {
@@ -60,8 +60,30 @@ export default function AddExercise() {
     }
   };
 
+  const scrollRef = useRef(null);
+  const youtubeCardRef = useRef(null);
+  const uploadVideoCardRef = useRef(null);
+  const imageCardRef = useRef(null);
+
+  const scrollToCard = (cardRef) => {
+    if (!cardRef.current || !scrollRef.current) return;
+    cardRef.current.measure((_x, _y, _w, _h, _pageX, pageY) => {
+      // pageY is the card's absolute Y on screen.
+      // We want the card top to land ~16pt below the status bar.
+      // scrollTo works on scroll-content coordinates so we need the
+      // current scroll offset plus the delta the card needs to move up.
+      scrollRef.current.scrollTo({
+        y: Math.max(0, pageY - 80),
+        animated: true,
+      });
+    });
+  };
+
   return (
-    <KeyboardAwareScrollView className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
+    <KeyboardAwareScrollView
+      ref={scrollRef}
+      className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
+    >
       {/* ── Header ── */}
       <View className="px-5 pt-6 pb-2">
         <Text className="text-2xl font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark">
@@ -139,14 +161,19 @@ export default function AddExercise() {
           <form.Field name="youtube_video_url">
             {(field) => (
               <YouTubeVideoCard
+                ref={youtubeCardRef}
                 value={field.state.value}
                 onChange={field.handleChange}
+                onFocus={() => scrollToCard(youtubeCardRef)}
               />
             )}
           </form.Field>
 
           {/* Video local */}
-          <View className="rounded-2xl p-5 mb-4 border border-brandPrimary-600 border-l-4">
+          <View
+            ref={uploadVideoCardRef}
+            className="rounded-2xl p-5 mb-4 border border-brandPrimary-600 border-l-4"
+          >
             <form.Field name="custom_video_url">
               {(field) => (
                 <InputUploadVideo
@@ -165,9 +192,11 @@ export default function AddExercise() {
           <form.Field name="image_url">
             {(field) => (
               <ImagePickerCard
+                ref={imageCardRef}
                 value={field.state.value}
                 onChange={field.handleChange}
                 onPickImage={handlePickImage}
+                onFocus={() => scrollToCard(imageCardRef)}
               />
             )}
           </form.Field>

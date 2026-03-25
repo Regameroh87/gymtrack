@@ -1,4 +1,5 @@
 import { View, Text, TextInput, Image, Pressable } from "react-native";
+import { forwardRef } from "react";
 import { Photo, Link, Upload } from "../../../../assets/icons";
 import { ui, brandSecondary } from "../../../theme/colors";
 import { useColorScheme } from "nativewind";
@@ -7,12 +8,16 @@ import { useColorScheme } from "nativewind";
  * Card for the reference image section.
  * Receives form field value, onChange handler, and a handlePickImage function.
  */
-export default function ImagePickerCard({ value, onChange, onPickImage }) {
+const ImagePickerCard = forwardRef(function ImagePickerCard(
+  { value, onChange, onPickImage, onFocus },
+  ref
+) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
   return (
     <View
+      ref={ref}
       className="rounded-2xl p-5 mb-4 border border-brandSecondary-600 border-l-4"
       style={{
         backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
@@ -58,6 +63,7 @@ export default function ImagePickerCard({ value, onChange, onPickImage }) {
           <TextInput
             value={value}
             onChangeText={onChange}
+            onFocus={onFocus}
             placeholder="Pegar URL de la imagen..."
             placeholderTextColor={ui.text.muted}
             className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
@@ -92,4 +98,6 @@ export default function ImagePickerCard({ value, onChange, onPickImage }) {
       </Text>
     </View>
   );
-}
+});
+
+export default ImagePickerCard;

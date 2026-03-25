@@ -1,4 +1,5 @@
 import { View, Text, TextInput } from "react-native";
+import { forwardRef } from "react";
 import { Play, Link } from "../../../../assets/icons";
 import { ui, brandPrimary } from "../../../theme/colors";
 import PreviewVideo from "../../videos/PreviewVideo";
@@ -8,12 +9,16 @@ import { useColorScheme } from "nativewind";
  * Card for the YouTube video section.
  * Receives form field value and handleChange via `value` and `onChange` props.
  */
-export default function YouTubeVideoCard({ value, onChange }) {
+const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
+  { value, onChange, onFocus },
+  ref
+) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
   return (
     <View
+      ref={ref}
       className="rounded-2xl p-5 mb-4 border border-brandPrimary-400 border-l-4"
       style={{
         backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
@@ -53,6 +58,7 @@ export default function YouTubeVideoCard({ value, onChange }) {
         <TextInput
           value={value}
           onChangeText={onChange}
+          onFocus={onFocus}
           placeholder="Pegar URL de YouTube..."
           placeholderTextColor={ui.text.muted}
           className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
@@ -60,4 +66,6 @@ export default function YouTubeVideoCard({ value, onChange }) {
       </View>
     </View>
   );
-}
+});
+
+export default YouTubeVideoCard;
