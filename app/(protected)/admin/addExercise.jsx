@@ -22,9 +22,7 @@ import {
 import { ui, brandPrimary, brandSecondary } from "../../../src/theme/colors";
 import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
 import PreviewVideo from "../../../src/components/videos/PreviewVideo";
-/* import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
-import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
-import PreviewVideo from "../../../src/components/videos/PreviewVideo"; */
+import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
 
 export default function AddExercise() {
   const { colorScheme } = useColorScheme();
@@ -63,6 +61,15 @@ export default function AddExercise() {
       console.log(data);
     },
   });
+
+  const { pickVideo } = useMediaPicker();
+
+  const handlePickImage = async () => {
+    const result = await pickVideo();
+    if (result) {
+      form.setFieldValue("image_url", result.uri);
+    }
+  };
 
   return (
     <ScrollView className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
@@ -298,6 +305,7 @@ export default function AddExercise() {
                   <View>
                     <Pressable
                       className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700"
+                      onPress={handlePickImage}
                       style={{
                         borderRadius: 12,
                         paddingVertical: 12,
