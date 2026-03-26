@@ -162,7 +162,7 @@ export default function AddExercise() {
           {/* Video local */}
           <View
             ref={uploadVideoCardRef}
-            className="rounded-2xl p-5 mb-4 border border-brandPrimary-600 border-l-4"
+            className="rounded-2xl mb-4 border border-brandPrimary-600 border-l-4"
           >
             <form.Field name="video_public_id">
               {(field) => (

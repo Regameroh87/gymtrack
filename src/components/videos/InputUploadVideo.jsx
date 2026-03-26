@@ -12,6 +12,7 @@ export default function InputUploadVideo({ value, onChange }) {
   const isDark = colorScheme === "dark";
   const { pickMedia } = useMediaPicker();
   const [cardInfo, setCardInfo] = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
@@ -69,6 +70,7 @@ export default function InputUploadVideo({ value, onChange }) {
     });
     if (videoFile) {
       onChange(videoFile.uri);
+      setVideoUrl(videoFile.uri);
       setCardInfo(null);
       setIsUploading(true);
       console.log("enviando video a cloudinary...");
@@ -101,7 +103,7 @@ export default function InputUploadVideo({ value, onChange }) {
   return (
     <>
       <View
-        className="rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
+        className=" flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
         style={{
           padding: 20,
           gap: 16,
@@ -117,7 +119,7 @@ export default function InputUploadVideo({ value, onChange }) {
             Archivo Local
           </Text>
         </View>
-        <PreviewVideo videoUrl={value}>
+        <PreviewVideo videoUrl={videoUrl}>
           <View className=" w-12 h-12 rounded-full dark:bg-slate-50 bg-brandPrimary-600 items-center justify-center">
             <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
           </View>
@@ -161,6 +163,7 @@ export default function InputUploadVideo({ value, onChange }) {
               <Pressable
                 onPress={() => {
                   onChange(null);
+                  setVideoUrl(null);
                 }}
                 className="active:scale-[0.97] p-2"
               >
