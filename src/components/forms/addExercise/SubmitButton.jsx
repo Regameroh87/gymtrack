@@ -8,21 +8,14 @@ export default function SubmitButton({ onPress, label = "Guardar Ejercicio" }) {
   return (
     <Pressable
       onPress={onPress}
-      className="mt-8 active:scale-[0.97]"
-      style={{ borderRadius: 16, overflow: "hidden" }}
+      className="mt-8 active:scale-[0.97] rounded-2xl overflow-hidden"
     >
       <LinearGradient
         colors={["#3023cd", "#4a44e4"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
+        className="py-5 px-8 rounded-2xl items-center flex-row justify-center gap-2"
         style={{
-          paddingVertical: 20,
-          paddingHorizontal: 32,
-          borderRadius: 16,
-          alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "center",
-          gap: 8,
           shadowColor: "#312e81",
           shadowOffset: { width: 0, height: 20 },
           shadowOpacity: 0.4,

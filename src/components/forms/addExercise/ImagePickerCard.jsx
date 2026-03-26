@@ -64,17 +64,8 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
         </View>
 
         <Pressable
-          className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700"
+          className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700 rounded-xl py-3 px-6 flex-row items-center justify-center gap-2"
           onPress={onPickImage}
-          style={{
-            borderRadius: 12,
-            paddingVertical: 12,
-            paddingHorizontal: 24,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
         >
           <Upload color={isDark ? brandSecondary[300] : "#ffffff"} size={15} />
           <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">
