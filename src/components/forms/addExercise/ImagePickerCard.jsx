@@ -1,11 +1,13 @@
-import { View, Text, TextInput, Pressable } from "react-native";
+import { View, Text } from "react-native";
+import { useState } from "react";
 import { Image } from "expo-image";
 import { forwardRef } from "react";
-import { Photo, Link, Upload } from "../../../../assets/icons";
+import { Photo, Upload } from "../../../../assets/icons";
 import { ui, brandSecondary } from "../../../theme/colors";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../../utils/uploadFileToCloudinary.js";
+import ButtonUploadAnimated from "../../buttons/ButtonUploadAnimated";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
@@ -13,11 +15,13 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
 ) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const [isUploading, setIsUploading] = useState(false);
   const { pickMedia } = useMediaPicker();
   const handlePickImage = async () => {
     const result = await pickMedia();
     if (result) {
       onChange(result.uri);
+      setIsUploading(true);
       try {
         const uploadedImage = await uploadFileToCloudinary({
           fileUri: result.uri,
@@ -25,10 +29,11 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           typeFile: "image",
         });
         console.log("uploadedImage", uploadedImage);
-        //onChange(uploadedImage.url);
         setImagePublicId(uploadedImage.public_id);
       } catch (error) {
-        console.log(error);
+        console.error(error.message);
+      } finally {
+        setIsUploading(false);
       }
     }
   };
@@ -70,31 +75,14 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
       </View>
 
       {/* URL Input + Pick from gallery */}
-      <View className="flex-col gap-4 mb-3">
-        <View className="flex-row items-center rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">
-          <View className="pl-4">
-            <Link color={ui.text.muted} size={15} />
-          </View>
-          <TextInput
-            value={value}
-            onChangeText={onChange}
-            onFocus={onFocus}
-            placeholder="Pegar URL de la imagen..."
-            placeholderTextColor={ui.text.muted}
-            className="flex-1 px-3 font-manrope text-ui-text-main dark:text-ui-text-mainDark text-xs"
-          />
-        </View>
-
-        <Pressable
-          className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700 rounded-xl py-3 px-6 flex-row items-center justify-center gap-2"
-          onPress={handlePickImage}
-        >
-          <Upload color={isDark ? brandSecondary[300] : "#ffffff"} size={15} />
-          <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">
-            Subir imagen desde galería
-          </Text>
-        </Pressable>
-      </View>
+      <ButtonUploadAnimated
+        isUploading={isUploading}
+        labelLoading="Subiendo..."
+        label="Subir imagen desde galería"
+        onPress={handlePickImage}
+      >
+        <Upload color={isDark ? brandSecondary[300] : "#ffffff"} size={15} />
+      </ButtonUploadAnimated>
 
       <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
         Referencia visual clara para asegurar la técnica correcta.
