@@ -8,7 +8,7 @@ import { useMediaPicker } from "../../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../../utils/uploadFileToCloudinary.js";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
-  { value, onChange, onFocus },
+  { value, onChange, onFocus, setImagePublicId, imagePublicId },
   ref
 ) {
   const { colorScheme } = useColorScheme();
@@ -18,13 +18,18 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
     const result = await pickMedia();
     if (result) {
       onChange(result.uri);
-      const uploadedImage = await uploadFileToCloudinary({
-        fileUri: result.uri,
-        uploadPreset: "gymtrack_images",
-        typeFile: "image",
-      });
-      console.log("uploadedImage", uploadedImage);
-      onChange(uploadedImage.url);
+      try {
+        const uploadedImage = await uploadFileToCloudinary({
+          fileUri: result.uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        console.log("uploadedImage", uploadedImage);
+        //onChange(uploadedImage.url);
+        setImagePublicId(uploadedImage.public_id);
+      } catch (error) {
+        console.log(error);
+      }
     }
   };
 

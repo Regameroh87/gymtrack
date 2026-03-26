@@ -69,13 +69,7 @@ export default function PreviewVideo({ videoUrl, children }) {
           />
         </View>
       ) : (
-        <View
-          className="flex-1 items-center justify-center overflow-hidden bg-ui-surface-dimLight dark:bg-slate-950"
-          style={{
-            borderRadius: 8,
-            height: 172,
-          }}
-        >
+        <View className="flex-1 items-center justify-center overflow-hidden bg-ui-surface-dimLight dark:bg-slate-950 rounded-xl h-52">
           <LinearGradient
             colors={
               isDark

@@ -181,12 +181,16 @@ export default function AddExercise() {
           </View>
 
           {/* Imagen */}
-          <form.Field name="image_public_id">
+          <form.Field name="image_url">
             {(field) => (
               <ImagePickerCard
                 ref={imageCardRef}
                 value={field.state.value}
                 onChange={field.handleChange}
+                setImagePublicId={(image_public_id) =>
+                  form.setFieldValue("image_public_id", image_public_id)
+                }
+                imagePublicId={form.state.values.image_public_id}
                 onFocus={() => scrollToCard(imageCardRef)}
               />
             )}

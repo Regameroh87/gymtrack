@@ -6,6 +6,7 @@ import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Upload, Movie, Trash } from "../../../assets/icons";
+import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 
 export default function InputUploadVideo({
   value,
@@ -20,7 +21,6 @@ export default function InputUploadVideo({
   const [isUploading, setIsUploading] = useState(false);
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
-  console.log(videoPublicId);
 
   useEffect(() => {
     let animation;
@@ -177,43 +177,15 @@ export default function InputUploadVideo({
               </Pressable>
             </View>
           </View>
-        ) : isUploading ? (
-          /* ── Uploading state ── */
-          <Animated.View
-            className="p-6 rounded-xl flex-row items-center justify-center gap-4 bg-ui-uploadBg-light dark:bg-ui-uploadBg-dark"
-            style={{
-              opacity: pulseAnim,
-            }}
-          >
-            <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
-              <Upload
-                color={isDark ? brandPrimary[300] : brandPrimary[600]}
-                size={24}
-              />
-            </Animated.View>
-            <Text className="text-brandPrimary-600 dark:text-brandPrimary-300 font-jakarta tracking-label text-sm">
-              Subiendo video...
-            </Text>
-          </Animated.View>
         ) : (
-          /* ── Upload trigger — solid indigo button, 305x42 ── */
-          <Pressable
+          <ButtonUploadAnimated
+            isUploading={isUploading}
+            labelLoading="Subiendo video..."
+            label="Subir archivo de video"
             onPress={sendVideoToCloudinary}
-            className="active:scale-[0.97] bg-ui-uploadBtn-light dark:bg-ui-uploadBtn-dark"
-            style={{
-              borderRadius: 12,
-              height: 42,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
           >
-            <Upload color={isDark ? "#a5b4fc" : "#ffffff"} size={11} />
-            <Text className="font-manrope-semi text-white dark:text-brandPrimary-300 text-xs">
-              Subir archivo de video
-            </Text>
-          </Pressable>
+            <Upload color={isDark ? brandPrimary[300] : "#ffffff"} size={11} />
+          </ButtonUploadAnimated>
         )}
       </View>
     </>
