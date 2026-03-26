@@ -7,15 +7,20 @@ import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 
-export default function InputUploadVideo({ value, onChange }) {
+export default function InputUploadVideo({
+  value,
+  onChange,
+  setVideoPublicId,
+  videoPublicId,
+}) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { pickMedia } = useMediaPicker();
   const [cardInfo, setCardInfo] = useState(null);
-  const [videoUrl, setVideoUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
+  console.log(videoPublicId);
 
   useEffect(() => {
     let animation;
@@ -70,7 +75,6 @@ export default function InputUploadVideo({ value, onChange }) {
     });
     if (videoFile) {
       onChange(videoFile.uri);
-      setVideoUrl(videoFile.uri);
       setCardInfo(null);
       setIsUploading(true);
       console.log("enviando video a cloudinary...");
@@ -82,7 +86,7 @@ export default function InputUploadVideo({ value, onChange }) {
         });
         if (public_id) {
           console.log("Video subido correctamente a Cloudinary ✅ ");
-          onChange(public_id);
+          setVideoPublicId(public_id);
           setCardInfo({
             name: result.original_filename,
             size: (result.bytes / 1024 / 1024).toFixed(2),
@@ -102,15 +106,9 @@ export default function InputUploadVideo({ value, onChange }) {
 
   return (
     <>
-      <View
-        className=" flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
-        style={{
-          padding: 20,
-          gap: 16,
-        }}
-      >
+      <View className=" flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark gap-4 p-5">
         {/* Section header — icon + label, gap:8 */}
-        <View className="flex-row items-center" style={{ gap: 8 }}>
+        <View className="flex-row items-center gap-2">
           <Movie
             color={isDark ? brandPrimary[200] : brandPrimary[600]}
             size={16}
@@ -119,13 +117,13 @@ export default function InputUploadVideo({ value, onChange }) {
             Archivo Local
           </Text>
         </View>
-        <PreviewVideo videoUrl={videoUrl}>
+        <PreviewVideo videoUrl={value}>
           <View className=" w-12 h-12 rounded-full dark:bg-slate-50 bg-brandPrimary-600 items-center justify-center">
             <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
           </View>
         </PreviewVideo>
         {/* ── Video info card (uploaded) ── */}
-        {value && cardInfo ? (
+        {(value || videoPublicId) && !isUploading ? (
           <View className="p-4 rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">
             <View className="flex-row justify-between items-center mb-2">
               <Text
@@ -133,37 +131,45 @@ export default function InputUploadVideo({ value, onChange }) {
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {cardInfo.name}.{cardInfo.format}
+                {cardInfo
+                  ? `${cardInfo.name}.${cardInfo.format}`
+                  : "Video cargado en base de datos"}
               </Text>
-              <View
-                className="px-2.5 py-1 rounded-lg"
-                style={{ backgroundColor: "rgba(48, 35, 205, 0.1)" }}
-              >
-                <Text className="text-brandPrimary-600 text-[10px] font-manrope-bold uppercase tracking-label">
-                  {cardInfo.format}
-                </Text>
-              </View>
+              {cardInfo?.format && (
+                <View
+                  className="px-2.5 py-1 rounded-lg"
+                  style={{ backgroundColor: "rgba(48, 35, 205, 0.1)" }}
+                >
+                  <Text className="text-brandPrimary-600 text-[10px] font-manrope-bold uppercase tracking-label">
+                    {cardInfo.format}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View className="flex-row justify-between items-center">
               <View className="flex-row gap-4">
-                <Text
-                  className="text-xs font-manrope"
-                  style={{ color: ui.text.muted }}
-                >
-                  {cardInfo.size} MB
-                </Text>
-                <Text
-                  className="text-xs font-manrope"
-                  style={{ color: ui.text.muted }}
-                >
-                  {cardInfo.duration ? cardInfo.duration + "s" : null}
-                </Text>
+                {cardInfo?.size && (
+                  <Text
+                    className="text-xs font-manrope"
+                    style={{ color: ui.text.muted }}
+                  >
+                    {cardInfo.size} MB
+                  </Text>
+                )}
+                {cardInfo?.duration ? (
+                  <Text
+                    className="text-xs font-manrope"
+                    style={{ color: ui.text.muted }}
+                  >
+                    {cardInfo.duration}s
+                  </Text>
+                ) : null}
               </View>
               <Pressable
                 onPress={() => {
                   onChange(null);
-                  setVideoUrl(null);
+                  setVideoPublicId(null);
                 }}
                 className="active:scale-[0.97] p-2"
               >
@@ -186,7 +192,7 @@ export default function InputUploadVideo({ value, onChange }) {
               />
             </Animated.View>
             <Text className="text-brandPrimary-600 dark:text-brandPrimary-300 font-jakarta tracking-label text-sm">
-              SUBIENDO...
+              Subiendo video...
             </Text>
           </Animated.View>
         ) : (

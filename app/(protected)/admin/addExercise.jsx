@@ -36,8 +36,10 @@ export default function AddExercise() {
       category: "",
       muscle_group: "",
       equipment: "",
+      video_url: "",
       video_public_id: "",
       youtube_video_url: "",
+      image_url: "",
       image_public_id: "",
       instructions: "",
       is_unilateral: false,
@@ -164,18 +166,22 @@ export default function AddExercise() {
             ref={uploadVideoCardRef}
             className="rounded-2xl mb-4 border border-brandPrimary-600 border-l-4"
           >
-            <form.Field name="video_public_id">
+            <form.Field name="video_url">
               {(field) => (
                 <InputUploadVideo
                   value={field.state.value}
                   onChange={field.handleChange}
+                  setVideoPublicId={(video_public_id) =>
+                    form.setFieldValue("video_public_id", video_public_id)
+                  }
+                  videoPublicId={form.state.values.video_public_id}
                 />
               )}
             </form.Field>
           </View>
 
           {/* Imagen */}
-          <form.Field name="image_url">
+          <form.Field name="image_public_id">
             {(field) => (
               <ImagePickerCard
                 ref={imageCardRef}
