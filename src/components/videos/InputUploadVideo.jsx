@@ -7,16 +7,11 @@ import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 
-export default function InputUploadVideo({
-  value,
-  onChange,
-  onIdChange,
-  publicId,
-}) {
+export default function InputUploadVideo({ value, onChange }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { pickMedia } = useMediaPicker();
-  const [videoInfo, setVideoInfo] = useState(null);
+  const [cardInfo, setCardInfo] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
@@ -74,19 +69,19 @@ export default function InputUploadVideo({
     });
     if (videoFile) {
       onChange(videoFile.uri);
-      setVideoInfo(null);
+      setCardInfo(null);
       setIsUploading(true);
       console.log("enviando video a cloudinary...");
       try {
-        const { url, public_id, result } = await uploadFileToCloudinary({
+        const { public_id, result } = await uploadFileToCloudinary({
           fileUri: videoFile.uri,
           uploadPreset: "gymtrack_videos",
           typeFile: "video",
         });
-        if (url && public_id) {
+        if (public_id) {
           console.log("Video subido correctamente a Cloudinary ✅ ");
-          onIdChange(public_id);
-          setVideoInfo({
+          onChange(public_id);
+          setCardInfo({
             name: result.original_filename,
             size: (result.bytes / 1024 / 1024).toFixed(2),
             duration: Math.round(result.duration),
@@ -128,7 +123,7 @@ export default function InputUploadVideo({
           </View>
         </PreviewVideo>
         {/* ── Video info card (uploaded) ── */}
-        {value && videoInfo ? (
+        {value && cardInfo ? (
           <View className="p-4 rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">
             <View className="flex-row justify-between items-center mb-2">
               <Text
@@ -136,14 +131,14 @@ export default function InputUploadVideo({
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {videoInfo.name}.{videoInfo.format}
+                {cardInfo.name}.{cardInfo.format}
               </Text>
               <View
                 className="px-2.5 py-1 rounded-lg"
                 style={{ backgroundColor: "rgba(48, 35, 205, 0.1)" }}
               >
                 <Text className="text-brandPrimary-600 text-[10px] font-manrope-bold uppercase tracking-label">
-                  {videoInfo.format}
+                  {cardInfo.format}
                 </Text>
               </View>
             </View>
@@ -154,19 +149,18 @@ export default function InputUploadVideo({
                   className="text-xs font-manrope"
                   style={{ color: ui.text.muted }}
                 >
-                  {videoInfo.size} MB
+                  {cardInfo.size} MB
                 </Text>
                 <Text
                   className="text-xs font-manrope"
                   style={{ color: ui.text.muted }}
                 >
-                  {videoInfo.duration}s
+                  {cardInfo.duration ? cardInfo.duration + "s" : null}
                 </Text>
               </View>
               <Pressable
                 onPress={() => {
                   onChange(null);
-                  onIdChange(null);
                 }}
                 className="active:scale-[0.97] p-2"
               >

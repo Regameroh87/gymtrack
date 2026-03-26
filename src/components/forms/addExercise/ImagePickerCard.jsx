@@ -5,6 +5,7 @@ import { Photo, Link, Upload } from "../../../../assets/icons";
 import { ui, brandSecondary } from "../../../theme/colors";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../../hooks/useMediaPicker";
+import { uploadFileToCloudinary } from "../../../utils/uploadFileToCloudinary.js";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus },
@@ -17,6 +18,13 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
     const result = await pickMedia();
     if (result) {
       onChange(result.uri);
+      const uploadedImage = await uploadFileToCloudinary({
+        fileUri: result.uri,
+        uploadPreset: "gymtrack_images",
+        typeFile: "image",
+      });
+      console.log("uploadedImage", uploadedImage);
+      onChange(uploadedImage.url);
     }
   };
 

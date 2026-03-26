@@ -36,10 +36,9 @@ export default function AddExercise() {
       category: "",
       muscle_group: "",
       equipment: "",
-      custom_video_url: "",
-      cloudinary_public_id: "",
+      video_public_id: "",
       youtube_video_url: "",
-      image_url: "",
+      image_public_id: "",
       instructions: "",
       is_unilateral: false,
     },
@@ -165,15 +164,11 @@ export default function AddExercise() {
             ref={uploadVideoCardRef}
             className="rounded-2xl p-5 mb-4 border border-brandPrimary-600 border-l-4"
           >
-            <form.Field name="custom_video_url">
+            <form.Field name="video_public_id">
               {(field) => (
                 <InputUploadVideo
                   value={field.state.value}
                   onChange={field.handleChange}
-                  publicId={form.getFieldValue("cloudinary_public_id")}
-                  onIdChange={(id) =>
-                    form.setFieldValue("cloudinary_public_id", id)
-                  }
                 />
               )}
             </form.Field>
