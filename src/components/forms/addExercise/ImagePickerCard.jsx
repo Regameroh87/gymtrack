@@ -8,7 +8,7 @@ import { useMediaPicker } from "../../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../../utils/uploadFileToCloudinary.js";
 import ButtonUploadAnimated from "../../buttons/ButtonUploadAnimated";
 import { useTheme } from "../../../utils/theme";
-import { HeaderCard } from "../../../../components/";
+import HeaderCard from "../../../components/cards/HeaderCard";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
