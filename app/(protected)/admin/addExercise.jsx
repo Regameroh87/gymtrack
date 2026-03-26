@@ -70,7 +70,7 @@ export default function AddExercise() {
   const scrollToCard = (cardRef) => {
     if (!cardRef.current || !scrollRef.current) return;
     cardRef.current.measure((_x, _y, _w, _h, _pageX, pageY) => {
-      const contentY = pageY + scrollOffset.current - 100;
+      const contentY = pageY + scrollOffset.current - 150;
       scrollRef.current.scrollTo({
         y: Math.max(0, contentY),
         animated: true,
@@ -219,7 +219,7 @@ export default function AddExercise() {
                   multiline
                   numberOfLines={6}
                   textAlignVertical="top"
-                  className="font-manrope rounded-xl max-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
+                  className="font-manrope rounded-xl min-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
                 />
               )}
             </form.Field>
