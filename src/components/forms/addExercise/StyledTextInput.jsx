@@ -15,11 +15,7 @@ export default function StyledTextInput({ icon, ...props }) {
       )}
       <TextInput
         placeholderTextColor={ui.text.muted}
-        className={`bg-ui-surface-highLight dark:bg-ui-surface-highDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope ${icon ? "pl-10" : ""}`}
-        style={{
-          borderWidth: 1,
-          borderColor: ui.input.border,
-        }}
+        className={`bg-ui-surface-highLight border border-ui-input-border dark:bg-ui-surface-highDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope ${icon ? "pl-10" : ""}`}
         {...props}
       />
     </View>

@@ -70,9 +70,6 @@ export default function AddExercise() {
   const scrollToCard = (cardRef) => {
     if (!cardRef.current || !scrollRef.current) return;
     cardRef.current.measure((_x, _y, _w, _h, _pageX, pageY) => {
-      // pageY = posición de la card en la PANTALLA (screen-space)
-      // scrollTo necesita coordenadas del CONTENIDO del scroll.
-      // Fórmula: contentY = pageY + scrollOffset_actual - margen_top
       const contentY = pageY + scrollOffset.current - 100;
       scrollRef.current.scrollTo({
         y: Math.max(0, contentY),
@@ -222,8 +219,7 @@ export default function AddExercise() {
                   multiline
                   numberOfLines={6}
                   textAlignVertical="top"
-                  className="font-manrope p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
-                  style={{ borderRadius: 12, minHeight: 104 }}
+                  className="font-manrope rounded-xl max-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
                 />
               )}
             </form.Field>
