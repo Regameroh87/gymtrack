@@ -1,15 +1,24 @@
-import { View, Text, TextInput, Image, Pressable } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { forwardRef } from "react";
 import { Photo, Link, Upload } from "../../../../assets/icons";
 import { ui, brandSecondary } from "../../../theme/colors";
 import { useColorScheme } from "nativewind";
+import { useMediaPicker } from "../../../hooks/useMediaPicker";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
-  { value, onChange, onPickImage, onFocus },
+  { value, onChange, onFocus },
   ref
 ) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { pickMedia } = useMediaPicker();
+  const handlePickImage = async () => {
+    const result = await pickMedia();
+    if (result) {
+      onChange(result.uri);
+    }
+  };
 
   return (
     <View
@@ -65,7 +74,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
 
         <Pressable
           className="active:scale-[0.97] bg-brandSecondary-500 dark:bg-brandSecondary-700 rounded-xl py-3 px-6 flex-row items-center justify-center gap-2"
-          onPress={onPickImage}
+          onPress={handlePickImage}
         >
           <Upload color={isDark ? brandSecondary[300] : "#ffffff"} size={15} />
           <Text className="font-manrope-semi text-white dark:text-brandSecondary-300 text-xs">

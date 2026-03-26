@@ -25,9 +25,6 @@ import SubmitButton from "../../../src/components/forms/addExercise/SubmitButton
 import { Barbell } from "../../../assets/icons";
 import { ui } from "../../../src/theme/colors";
 
-// Hooks
-import { useMediaPicker } from "../../../src/hooks/useMediaPicker";
-
 export default function AddExercise() {
   //const { colorScheme } = useColorScheme();
   //const isDark = colorScheme === "dark";
@@ -50,15 +47,6 @@ export default function AddExercise() {
       console.log(data);
     },
   });
-
-  const { pickMedia } = useMediaPicker();
-
-  const handlePickImage = async () => {
-    const result = await pickMedia();
-    if (result) {
-      form.setFieldValue("image_url", result.uri);
-    }
-  };
 
   const scrollRef = useRef(null);
   const scrollOffset = useRef(0);
@@ -198,7 +186,6 @@ export default function AddExercise() {
                 ref={imageCardRef}
                 value={field.state.value}
                 onChange={field.handleChange}
-                onPickImage={handlePickImage}
                 onFocus={() => scrollToCard(imageCardRef)}
               />
             )}
