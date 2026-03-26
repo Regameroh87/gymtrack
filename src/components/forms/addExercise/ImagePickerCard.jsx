@@ -4,17 +4,17 @@ import { Image } from "expo-image";
 import { forwardRef } from "react";
 import { Photo, Upload } from "../../../../assets/icons";
 import { ui, brandSecondary } from "../../../theme/colors";
-import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../../utils/uploadFileToCloudinary.js";
 import ButtonUploadAnimated from "../../buttons/ButtonUploadAnimated";
+import { useTheme } from "../../../utils/theme";
+import { HeaderCard } from "../../../../components/";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
   ref
 ) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
   const [isUploading, setIsUploading] = useState(false);
   const { pickMedia } = useMediaPicker();
   const handlePickImage = async () => {
@@ -47,15 +47,15 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
       }}
     >
       {/* Header */}
-      <View className="flex-row items-center mb-5">
-        <Photo
-          color={isDark ? brandSecondary[300] : brandSecondary[500]}
-          size={18}
-        />
-        <Text className="font-jakarta-bold ml-3 text-ui-text-main dark:text-slate-300 text-xs">
-          Imagen de Referencia
-        </Text>
-      </View>
+      <HeaderCard
+        icon={
+          <Photo
+            color={isDark ? brandSecondary[300] : brandSecondary[500]}
+            size={18}
+          />
+        }
+        title="Imagen de Referencia"
+      />
 
       {/* Preview */}
       <View className="items-center justify-center mb-4 bg-ui-surface-dimLight dark:bg-slate-950 h-44 rounded-xl overflow-hidden">

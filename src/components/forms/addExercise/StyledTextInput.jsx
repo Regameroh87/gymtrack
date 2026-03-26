@@ -15,6 +15,9 @@ export default function StyledTextInput({ icon, ...props }) {
       )}
       <TextInput
         placeholderTextColor={ui.text.muted}
+        value={props.value}
+        onChangeText={props.onChangeText}
+        onFocus={props.onFocus}
         className={`bg-ui-surface-highLight border border-ui-input-border dark:bg-ui-surface-highDark rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope ${icon ? "pl-10" : ""}`}
         {...props}
       />
