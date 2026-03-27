@@ -35,6 +35,7 @@ export const brandSecondary = {
 // "No-Line" rule: NO 1px borders for sectioning.
 // Use tonal layering (background shifts) instead.
 export const ui = {
+  // ── 1. Core Backgrounds & Surfaces ──
   background: {
     light: "#f8f9fc",
     dark: "#0c0a1d",
@@ -53,68 +54,30 @@ export const ui = {
     dimLight: "#e8e6f0",
     dimDark: "#0f0d20",
   },
-  // ── Preview surfaces (media placeholders) ──
-  preview: {
-    light: "#e8e6f0", // same as dimLight
-    dark: "#020617", // deep navy for dark mode previews
-  },
-  // ── Upload backgrounds ──
-  uploadBg: {
-    light: "rgba(48, 35, 205, 0.06)",
-    dark: "rgba(165, 180, 252, 0.1)",
-  },
-  uploadBtn: {
-    light: "#6366f1", // brandPrimary[500]
-    dark: "rgba(165, 180, 252, 0.15)", // 15% brandPrimary[300] for dark mode button
-  },
-  // ── Multimedia section header text ──
-  sectionHeader: {
-    light: "#0f0d20", // same as text.main
-    dark: "#cbd5e1", // slate-300
-  },
-  // ── Preview placeholder (empty state) ──
-  placeholder: {
-    light: "#6e6b8a", // same as text.muted
-    dark: "#334155", // slate-700
-  },
-  // ── Multimedia icon accent: light indigo for labels ──
-  iconAccent: {
-    light: "#3023cd", // brandPrimary.600
-    dark: "#c2c1ff", // light indigo for dark mode
-  },
-  input: {
-    light: "#eae8f4",
-    dark: "#231f42",
-    border: "rgba(196, 190, 230, 0.15)",
-    borderDark: "rgba(196, 190, 230, 0.15)",
-  },
-  secondary: {
-    light: "#f2f1f8",
-    dark: "#1a1833",
-    pressedLight: "#e4e2f0",
-    pressedDark: "#2a2650",
-  },
+
+  // ── 2. Typography & Text ──
   text: {
     main: "#0f0d20",
     mainDark: "#f0eef8",
     muted: "#6e6b8a",
     mutedDark: "#9d99b8",
   },
-  outline: {
-    variant: "rgba(158, 152, 200, 0.15)",
+
+  // ── 3. Inputs & Interactive Elements ──
+  input: {
+    light: "#eae8f4",
+    dark: "#231f42",
+    border: "rgba(196, 190, 230, 0.15)",
   },
-  // ── Switch/Toggle track ──
   toggle: {
     offLight: "#e8e6f0",
     offDark: "#231f42",
   },
-};
 
-// ── Glass & Gradient Tokens ──
-export const glass = {
-  light: "rgba(255, 255, 255, 0.70)",
-  dark: "rgba(19, 17, 42, 0.70)",
-  blur: 16,
+  placeholder: {
+    light: "#6e6b8a", // same as text.muted
+    dark: "#334155", // slate-700
+  },
 };
 
 export const gradient = {

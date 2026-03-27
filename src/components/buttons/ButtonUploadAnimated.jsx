@@ -7,6 +7,7 @@ export default function ButtonUploadAnimated({
   labelLoading,
   label,
   onPress,
+  themeColor = "brandPrimary",
 }) {
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
@@ -74,7 +75,7 @@ export default function ButtonUploadAnimated({
       ) : (
         <Pressable
           onPress={onPress}
-          className="active:scale-[0.97] rounded-xl h-11 flex-row items-center justify-center gap-2 bg-ui-uploadBtn-light dark:bg-ui-uploadBtn-dark"
+          className={` active:scale-[0.97] rounded-xl h-11 flex-row items-center justify-center gap-2 bg-${themeColor}-500 dark:bg-ui-uploadBtn-dark`}
         >
           {children}
           <Text className="font-manrope-semi text-white dark:text-brandPrimary-300 text-xs">
