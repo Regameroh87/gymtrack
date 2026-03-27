@@ -1,5 +1,5 @@
 import { Tabs, Redirect } from "expo-router";
-import { Barbell, Home, Logs } from "../../assets/icons";
+import { Barbell, Home, Logs, ListDetails } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
@@ -84,6 +84,13 @@ export default function ProtectedLayout() {
             tabBarIcon: ({ color }) => (
               <Barbell color={color} width={24} height={24} />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="ejercicios"
+          options={{
+            title: "Ejercicios",
+            tabBarIcon: ({ color }) => <ListDetails size={24} color={color} />,
           }}
         />
         <Tabs.Screen

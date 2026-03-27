@@ -5,7 +5,7 @@ import { ui, brandPrimary } from "../../theme/colors";
 import PreviewVideo from "../videos/PreviewVideo";
 import HeaderCard from "../cards/HeaderCard";
 import StyledInputCard from "../cards/StyledInputCard";
-import { useTheme } from "../../utils/theme";
+import { useTheme } from "../../theme/theme";
 
 const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
   { value, onChange, onFocus },

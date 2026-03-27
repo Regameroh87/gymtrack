@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { View, Text } from "react-native";
 import { ui } from "../../theme/colors";
 import { Photo } from "../../../assets/icons";
-import { useTheme } from "../../utils/theme";
+import { useTheme } from "../../theme/theme";
 
 export default function PreviewImage({ value }) {
   const { isDark } = useTheme();

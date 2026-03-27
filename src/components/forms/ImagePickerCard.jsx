@@ -6,7 +6,7 @@ import { brandSecondary } from "../../theme/colors";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
-import { useTheme } from "../../utils/theme";
+import { useTheme } from "../../theme/theme";
 import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
