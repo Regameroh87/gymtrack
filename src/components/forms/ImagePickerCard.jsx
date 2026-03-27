@@ -1,14 +1,14 @@
 import { View, Text } from "react-native";
 import { useState } from "react";
-import { Image } from "expo-image";
 import { forwardRef } from "react";
 import { Photo, Upload } from "../../../assets/icons";
-import { ui, brandSecondary } from "../../theme/colors";
+import { brandSecondary } from "../../theme/colors";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import { useTheme } from "../../utils/theme";
 import HeaderCard from "../cards/HeaderCard";
+import PreviewImage from "../images/PreviewImage";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
@@ -55,21 +55,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
       />
 
       {/* Preview */}
-      <View className="items-center justify-center mb-4 bg-ui-surface-dimLight dark:bg-slate-950 h-44 rounded-xl overflow-hidden">
-        {value ? (
-          <Image
-            source={{ uri: value }}
-            style={{ width: "100%", height: "100%", borderRadius: 12 }}
-          />
-        ) : (
-          <>
-            <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
-            <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
-              Sin Previsualización
-            </Text>
-          </>
-        )}
-      </View>
+      <PreviewImage value={value} />
 
       {/* URL Input + Pick from gallery */}
       <ButtonUploadAnimated
