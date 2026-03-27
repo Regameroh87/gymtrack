@@ -1,5 +1,5 @@
 import { View, Text, Pressable, Image, FlatList } from "react-native";
-import { Plus } from "../../assets/icons";
+import { Pencil, Trash } from "../../assets/icons";
 
 // Datos exactos de tu pantalla "Biblioteca de Ejercicios (Lista)" original en Stitch
 const EJERCICIOS = [
@@ -81,9 +81,22 @@ export default function EjerciciosScreen() {
                 </Text>
               </View>
             </View>
-            <Pressable className="w-11 h-11 bg-[#f2effc] dark:bg-[#3023cd] rounded-full items-center justify-center active:bg-[#e2dfff] transition-colors ml-2">
-              <Plus size={20} className="text-[#4A44E4] dark:text-white" />
-            </Pressable>
+            <View className="flex-row gap-2 ml-2">
+              <Pressable className="w-10 h-10 bg-[#eae6f4] dark:bg-[#282833] rounded-xl items-center justify-center active:scale-95 transition-colors">
+                <Pencil
+                  size={20}
+                  color="currentColor"
+                  className="text-[#777587] dark:text-indigo-300"
+                />
+              </Pressable>
+              <Pressable className="w-10 h-10 bg-[#eae6f4] dark:bg-[#282833] rounded-xl items-center justify-center active:scale-95 transition-colors">
+                <Trash
+                  size={20}
+                  color="currentColor"
+                  className="text-[#777587] dark:text-red-400"
+                />
+              </Pressable>
+            </View>
           </View>
         )}
       />
