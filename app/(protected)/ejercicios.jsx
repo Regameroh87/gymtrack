@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
-import { Image as ExpoImage } from "expo-image";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pencil, Trash, Plus } from "../../assets/icons";
@@ -76,7 +76,7 @@ export default function EjerciciosScreen() {
         }
         renderItem={({ item }) => (
           <Pressable className="flex-row items-center bg-white dark:bg-[#231f42] p-4 rounded-3xl mb-4 shadow-sm active:scale-[0.98] transition-all">
-            <ExpoImage
+            <Image
               source={item.image}
               className="w-[72px] h-[72px] rounded-[18px] bg-[#eae8f4] dark:bg-[#1e1b4b]"
               contentFit="cover"

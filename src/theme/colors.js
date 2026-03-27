@@ -31,27 +31,22 @@ export const brandSecondary = {
   950: "#022c22",
 };
 
-// ── Surface & UI Token Architecture ──
-// "No-Line" rule: NO 1px borders for sectioning.
-// Use tonal layering (background shifts) instead.
 export const ui = {
   // ── 1. Core Backgrounds & Surfaces ──
   background: {
     light: "#f8f9fc",
-    dark: "#1e1b4b",
+    dark: "#0C0B14", // chequeado
   },
   // ── 2. Typography & Text ──
   text: {
     main: "#0f0d20",
     mainDark: "#f0eef8",
     muted: "#6e6b8a",
-    mutedDark: "#9d99b8",
+    mutedDark: "#64748B", //chequeado
   },
-
-  // ── 3. Inputs & Interactive Elements ──
   input: {
     light: "#eae8f4",
-    dark: "#231f42",
+    dark: "#1e1b2e", //chequeado
     border: "rgba(196, 190, 230, 0.15)",
   },
   toggle: {
