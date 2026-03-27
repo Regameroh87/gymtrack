@@ -9,7 +9,7 @@ export default function StyledInputCard({
   placeholder = "Pegar URL de YouTube...",
 }) {
   return (
-    <View className="flex-row rounded-xl h-10 items-center overflow-hidden bg-ui-surface-highLight dark:bg-ui-surface-highDark">
+    <View className="flex-row rounded-xl h-10 items-center overflow-hidden bg-slate-100 dark:bg-ui-input-dark">
       <View className="pl-4">{icon}</View>
       <TextInput
         value={value}

@@ -47,6 +47,7 @@ export const ui = {
   input: {
     light: "#eae8f4",
     dark: "#1e1b2e", //chequeado
+    darkAlter: "#020617",
     border: "rgba(196, 190, 230, 0.15)",
   },
   preview: {

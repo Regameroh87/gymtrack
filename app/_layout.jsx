@@ -27,11 +27,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
-import {
-  ThemeProvider,
-  DarkTheme,
-  DefaultTheme,
-} from "@react-navigation/native";
+import { ThemeProvider } from "@react-navigation/native";
 import { ui } from "../src/theme/colors";
 const queryClient = new QueryClient();
 
@@ -95,19 +91,23 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-          <Screen>
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(protected)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-            </Stack>
-            <Toast config={toastConfig} />
-          </Screen>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+            <Screen>
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(protected)"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+              </Stack>
+              <Toast config={toastConfig} />
+            </Screen>
+          </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

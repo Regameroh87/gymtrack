@@ -16,7 +16,7 @@ const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
   return (
     <View
       ref={ref}
-      className="rounded-2xl p-5 mb-4 border border-brandPrimary-400 border-l-4 bg-ui-surface-light dark:bg-brandPrimary-950/60"
+      className="rounded-2xl p-5 mb-4 border border-brandPrimary-400 border-l-4 bg-ui-background-light dark:bg-brandPrimary-950/60"
     >
       <HeaderCard
         icon={<Play color={brandPrimary[400]} size={20} />}
