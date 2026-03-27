@@ -50,7 +50,7 @@ const CustomSelect = ({
       {/* Trigger — surface_container_high bg, Ghost Border */}
       <Pressable
         onPress={handlePresentModalPress}
-        className="bg-ui-surface-highLight dark:bg-ui-surface-highDark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97]"
+        className="bg-ui-background-light dark:bg-ui-background-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97]"
         style={{
           borderWidth: 1,
           borderColor: ui.input.border,
@@ -78,13 +78,13 @@ const CustomSelect = ({
         backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor:
-            colorScheme === "dark" ? ui.surface.dark : ui.card.light,
+            colorScheme === "dark" ? ui.background.dark : ui.background.light,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
           backgroundColor:
-            colorScheme === "dark" ? ui.surface.highDark : ui.surface.dimLight,
+            colorScheme === "dark" ? ui.background.dark : ui.background.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -117,8 +117,8 @@ const CustomSelect = ({
                   backgroundColor: isSelected
                     ? "rgba(48, 35, 205, 0.08)"
                     : colorScheme === "dark"
-                      ? ui.surface.highDark
-                      : ui.surface.light,
+                      ? ui.background.dark
+                      : ui.background.light,
                 }}
               >
                 <Text

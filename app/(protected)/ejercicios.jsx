@@ -1,7 +1,11 @@
-import { View, Text, Pressable, Image, FlatList } from "react-native";
-import { Pencil, Trash } from "../../assets/icons";
+import React from "react";
+import { View, Text, Pressable, FlatList } from "react-native";
+import { Image as ExpoImage } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Pencil, Trash, Plus } from "../../assets/icons";
 
-// Datos exactos de tu pantalla "Biblioteca de Ejercicios (Lista)" original en Stitch
+// Datos de la Biblioteca de Ejercicios
 const EJERCICIOS = [
   {
     id: "1",
@@ -46,60 +50,94 @@ const EJERCICIOS = [
 ];
 
 export default function EjerciciosScreen() {
-  return (
-    <View className="flex-1 bg-[#fcf8ff] dark:bg-[#0f172a]">
-      {/* Encabezado idéntico al del diseño original de Stitch */}
-      <View className="px-5 pt-8 pb-4">
-        <Text className="text-gray-500 dark:text-gray-400 text-[13px] font-bold uppercase tracking-widest mb-1">
-          Exercise Lab
-        </Text>
-        <Text className="text-[32px] leading-10 font-black text-[#1b1b24] dark:text-white tracking-tight">
-          Biblioteca de Ejercicios
-        </Text>
-      </View>
+  const insets = useSafeAreaInsets();
 
-      {/* Lista de Ejercicios */}
+  return (
+    <View className="flex-1 bg-[#f8f9fc] dark:bg-[#1e1b4b]">
+      {/* List content handles top and bottom insets smoothly */}
       <FlatList
         data={EJERCICIOS}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingTop: insets.top + 20,
+          paddingBottom: insets.bottom + 100, // Space for FAB
+          paddingHorizontal: 20,
+        }}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View className="mb-6">
+            <Text className="text-[#6e6b8a] dark:text-[#9d99b8] text-[13px] font-bold uppercase tracking-widest mb-1">
+              Exercise Lab
+            </Text>
+            <Text className="text-[32px] leading-10 font-black text-[#0f0d20] dark:text-[#f0eef8] tracking-tight">
+              Biblioteca de Ejercicios
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => (
-          <View className="flex-row items-center bg-white dark:bg-[#1e293b] p-4 rounded-3xl mb-4 shadow-sm border border-[#eae6f4] dark:border-slate-700">
-            <Image
-              source={{ uri: item.image }}
-              className="w-[72px] h-[72px] rounded-[18px] bg-gray-200"
+          <Pressable className="flex-row items-center bg-white dark:bg-[#231f42] p-4 rounded-3xl mb-4 shadow-sm active:scale-[0.98] transition-all">
+            <ExpoImage
+              source={item.image}
+              className="w-[72px] h-[72px] rounded-[18px] bg-[#eae8f4] dark:bg-[#1e1b4b]"
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
             />
             <View className="flex-1 ml-4 justify-center">
-              <Text className="text-[18px] font-bold text-[#1b1b24] dark:text-white mb-1">
+              <Text className="text-[18px] font-bold text-[#0f0d20] dark:text-[#f0eef8] mb-1.5">
                 {item.name}
               </Text>
-              <View className="flex-row items-center">
-                <Text className="text-[14px] text-[#777587] dark:text-gray-400 font-medium tracking-wide">
-                  {item.type} <Text className="px-1 opacity-50">•</Text>{" "}
-                  {item.muscle}
-                </Text>
+
+              <View className="flex-row flex-wrap items-center gap-2">
+                <View className="bg-[#eef0ff] dark:bg-[#312e81]/30 px-3 py-1 rounded-full">
+                  <Text className="text-[12px] text-[#3023cd] dark:text-[#a5b4fc] font-bold tracking-wide">
+                    {item.type}
+                  </Text>
+                </View>
+                <View className="bg-[#eae8f4] dark:bg-[#1e1b4b] px-3 py-1 rounded-full">
+                  <Text className="text-[12px] text-[#6e6b8a] dark:text-[#9d99b8] font-bold tracking-wide">
+                    {item.muscle}
+                  </Text>
+                </View>
               </View>
             </View>
+
             <View className="flex-row gap-2 ml-2">
-              <Pressable className="w-10 h-10 bg-[#eae6f4] dark:bg-[#282833] rounded-xl items-center justify-center active:scale-95 transition-colors">
+              <Pressable className="w-10 h-10 bg-[#f8f9fc] dark:bg-[#1e1b4b] rounded-2xl items-center justify-center active:scale-90 transition-all">
                 <Pencil
                   size={20}
                   color="currentColor"
-                  className="text-[#777587] dark:text-indigo-300"
+                  className="text-[#6e6b8a] dark:text-[#9d99b8]"
                 />
               </Pressable>
-              <Pressable className="w-10 h-10 bg-[#eae6f4] dark:bg-[#282833] rounded-xl items-center justify-center active:scale-95 transition-colors">
+              <Pressable className="w-10 h-10 bg-[#fff5f5] dark:bg-rose-950/30 rounded-2xl items-center justify-center active:scale-90 transition-all">
                 <Trash
                   size={20}
                   color="currentColor"
-                  className="text-[#777587] dark:text-red-400"
+                  className="text-rose-500 dark:text-rose-400"
                 />
               </Pressable>
             </View>
-          </View>
+          </Pressable>
         )}
       />
+
+      {/* Floating Action Button */}
+      <View
+        className="absolute bottom-0 w-full px-5 items-end pointer-events-none"
+        style={{ paddingBottom: insets.bottom + 24 }}
+      >
+        <Pressable className="pointer-events-auto active:scale-95 transition-all shadow-lg shadow-indigo-500/30">
+          <LinearGradient
+            colors={["#4a44e4", "#3023cd"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="w-16 h-16 rounded-[22px] items-center justify-center"
+          >
+            <Plus size={32} color="#ffffff" strokeWidth={2.5} />
+          </LinearGradient>
+        </Pressable>
+      </View>
     </View>
   );
 }

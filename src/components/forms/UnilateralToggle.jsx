@@ -3,17 +3,13 @@ import { SwitchHorizontal } from "../../../assets/icons";
 import { ui, brandPrimary, brandSecondary } from "../../theme/colors";
 import { useColorScheme } from "nativewind";
 
-/**
- * Toggle row for the "is_unilateral" field.
- * Self-contained — reads color scheme internally.
- */
 export default function UnilateralToggle({ value, onChange }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
   return (
     <View
-      className="flex-row items-center justify-between rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
+      className="flex-row items-center justify-between rounded-2xl bg-ui-background-light dark:bg-ui-background-dark"
       style={{ paddingVertical: 16, paddingHorizontal: 20 }}
     >
       <View className="flex-row items-center flex-1 mr-3">
@@ -29,11 +25,11 @@ export default function UnilateralToggle({ value, onChange }) {
         value={value}
         onValueChange={onChange}
         trackColor={{
-          false: isDark ? ui.surface.highDark : ui.surface.dimLight,
+          false: isDark ? ui.background.dark : ui.background.light,
           true: brandPrimary[600],
         }}
         thumbColor="#ffffff"
-        ios_backgroundColor={isDark ? ui.surface.highDark : ui.surface.dimLight}
+        ios_backgroundColor={isDark ? ui.background.dark : ui.background.light}
       />
     </View>
   );
