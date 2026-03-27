@@ -14,12 +14,12 @@ import CustomSelect from "../../../src/components/CustomSelect";
 import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
 
 // Form-specific sub-components
-import FormField from "../../../src/components/forms/addExercise/FormField";
-import StyledTextInput from "../../../src/components/forms/addExercise/StyledTextInput";
-import YouTubeVideoCard from "../../../src/components/forms/addExercise/YouTubeVideoCard";
-import ImagePickerCard from "../../../src/components/forms/addExercise/ImagePickerCard";
-import UnilateralToggle from "../../../src/components/forms/addExercise/UnilateralToggle";
-import SubmitButton from "../../../src/components/forms/addExercise/SubmitButton";
+import FormField from "../../../src/components/forms/FormField";
+import StyledTextInput from "../../../src/components/forms/StyledTextInput";
+import YouTubeVideoCard from "../../../src/components/forms/YouTubeVideoCard";
+import ImagePickerCard from "../../../src/components/forms/ImagePickerCard";
+import UnilateralToggle from "../../../src/components/forms/UnilateralToggle";
+import SubmitButton from "../../../src/components/forms/SubmitButton";
 
 // Icons & theme
 import { Barbell } from "../../../assets/icons";

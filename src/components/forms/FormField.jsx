@@ -7,9 +7,11 @@ import { View, Text } from "react-native";
 export default function FormField({ label, children, className = "" }) {
   return (
     <View className={`mb-5 ${className}`}>
-      <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
-        {label}
-      </Text>
+      {label ? (
+        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
+          {label}
+        </Text>
+      ) : null}
       {children}
     </View>
   );

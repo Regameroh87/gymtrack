@@ -1,11 +1,11 @@
 import { View } from "react-native";
 import { forwardRef } from "react";
-import { Play, Link } from "../../../../assets/icons";
-import { ui, brandPrimary } from "../../../theme/colors";
-import PreviewVideo from "../../videos/PreviewVideo";
-import HeaderCard from "../../cards/HeaderCard";
-import StyledInputCard from "../../cards/StyledInputCard";
-import { useTheme } from "../../../utils/theme";
+import { Play, Link } from "../../../assets/icons";
+import { ui, brandPrimary } from "../../theme/colors";
+import PreviewVideo from "../videos/PreviewVideo";
+import HeaderCard from "../cards/HeaderCard";
+import StyledInputCard from "../cards/StyledInputCard";
+import { useTheme } from "../../utils/theme";
 
 const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
   { value, onChange, onFocus },

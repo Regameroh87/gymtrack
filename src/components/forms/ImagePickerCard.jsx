@@ -2,13 +2,13 @@ import { View, Text } from "react-native";
 import { useState } from "react";
 import { Image } from "expo-image";
 import { forwardRef } from "react";
-import { Photo, Upload } from "../../../../assets/icons";
-import { ui, brandSecondary } from "../../../theme/colors";
-import { useMediaPicker } from "../../../hooks/useMediaPicker";
-import { uploadFileToCloudinary } from "../../../utils/uploadFileToCloudinary.js";
-import ButtonUploadAnimated from "../../buttons/ButtonUploadAnimated";
-import { useTheme } from "../../../utils/theme";
-import HeaderCard from "../../../components/cards/HeaderCard";
+import { Photo, Upload } from "../../../assets/icons";
+import { ui, brandSecondary } from "../../theme/colors";
+import { useMediaPicker } from "../../hooks/useMediaPicker";
+import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
+import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
+import { useTheme } from "../../utils/theme";
+import HeaderCard from "../cards/HeaderCard";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
@@ -41,10 +41,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
   return (
     <View
       ref={ref}
-      className="rounded-2xl p-5 mb-4 border border-brandSecondary-600 border-l-4"
-      style={{
-        backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
-      }}
+      className="rounded-2xl p-5 mb-4 border bg-ui-surface-light dark:bg-ui-surface-dark border-brandSecondary-600 border-l-4"
     >
       {/* Header */}
       <HeaderCard

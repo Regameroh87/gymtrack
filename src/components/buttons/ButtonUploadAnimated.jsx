@@ -10,6 +10,7 @@ export default function ButtonUploadAnimated({
 }) {
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
+
   useEffect(() => {
     let animation;
     let pulse;
@@ -53,6 +54,7 @@ export default function ButtonUploadAnimated({
       pulse?.stop();
     };
   }, [isUploading]);
+
   return (
     <View>
       {isUploading ? (

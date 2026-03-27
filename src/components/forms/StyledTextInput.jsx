@@ -1,5 +1,5 @@
 import { View, TextInput } from "react-native";
-import { ui } from "../../../theme/colors";
+import { ui } from "../../theme/colors";
 
 /**
  * Base styled TextInput for the form.

@@ -1,6 +1,6 @@
 import { View, Text, Switch } from "react-native";
-import { SwitchHorizontal } from "../../../../assets/icons";
-import { ui, brandPrimary, brandSecondary } from "../../../theme/colors";
+import { SwitchHorizontal } from "../../../assets/icons";
+import { ui, brandPrimary, brandSecondary } from "../../theme/colors";
 import { useColorScheme } from "nativewind";
 
 /**
