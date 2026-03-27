@@ -49,6 +49,9 @@ export const ui = {
     dark: "#1e1b2e", //chequeado
     border: "rgba(196, 190, 230, 0.15)",
   },
+  preview: {
+    dark: "#020617",
+  },
   toggle: {
     offLight: "#e8e6f0",
     offDark: "#231f42",

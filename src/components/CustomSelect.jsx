@@ -50,7 +50,7 @@ const CustomSelect = ({
       {/* Trigger — surface_container_high bg, Ghost Border */}
       <Pressable
         onPress={handlePresentModalPress}
-        className="bg-ui-background-light dark:bg-ui-background-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97]"
+        className="bg-ui-input-light dark:bg-ui-input-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97]"
         style={{
           borderWidth: 1,
           borderColor: ui.input.border,
