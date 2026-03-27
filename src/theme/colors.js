@@ -38,23 +38,8 @@ export const ui = {
   // ── 1. Core Backgrounds & Surfaces ──
   background: {
     light: "#f8f9fc",
-    dark: "#0c0a1d",
+    dark: "#1e1b4b",
   },
-  card: {
-    light: "#ffffff",
-    dark: "#13112a",
-  },
-  surface: {
-    light: "#f2f1f8",
-    dark: "#1a1833",
-    highLight: "#eae8f4",
-    highDark: "#231f42",
-    brightLight: "#ffffff",
-    brightDark: "#2a2650",
-    dimLight: "#e8e6f0",
-    dimDark: "#0f0d20",
-  },
-
   // ── 2. Typography & Text ──
   text: {
     main: "#0f0d20",

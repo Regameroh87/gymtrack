@@ -3,7 +3,7 @@ import { Barbell, Home, Logs, ListDetails } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
-import { ui } from "../../src/theme/colors";
+import { ui, brandPrimary } from "../../src/theme/colors";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function ProtectedLayout() {
@@ -31,7 +31,7 @@ export default function ProtectedLayout() {
         screenOptions={{
           headerTitleAlign: "center",
           headerStyle: {
-            backgroundColor: isDark ? ui.card.dark : ui.card.light,
+            backgroundColor: isDark ? ui.background.dark : ui.background.light,
             elevation: 0,
             shadowOpacity: 0,
           },
@@ -50,11 +50,11 @@ export default function ProtectedLayout() {
             </Pressable>
           ),
           tabBarStyle: {
-            backgroundColor: isDark ? ui.card.dark : ui.card.light,
+            backgroundColor: isDark ? ui.background.dark : ui.background.light,
             borderTopWidth: 0,
             elevation: 0,
           },
-          tabBarActiveTintColor: "#6366f1", // brandPrimary[500]
+          tabBarActiveTintColor: brandPrimary[500],
           tabBarInactiveTintColor: isDark ? ui.text.mutedDark : ui.text.muted,
         }}
       >

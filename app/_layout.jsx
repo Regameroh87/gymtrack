@@ -91,51 +91,23 @@ export default function RootLayout() {
     ),
   };
 
-  const MyLightTheme = {
-    ...DefaultTheme,
-    colors: {
-      ...DefaultTheme.colors,
-      background: ui.background.light,
-      card: ui.card.light,
-      text: ui.text.main,
-      border: ui.input.border,
-      primary: "#3023cd", // Power Indigo (Design System)
-    },
-  };
-
-  const MyDarkTheme = {
-    ...DarkTheme,
-    colors: {
-      ...DarkTheme.colors,
-      background: ui.background.dark,
-      card: ui.card.dark,
-      text: ui.text.mainDark,
-      border: ui.input.borderDark,
-      primary: "#6366f1", // brandPrimary[500]
-    },
-  };
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            value={colorScheme === "dark" ? MyDarkTheme : MyLightTheme}
-          >
-            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-            <Screen>
-              <Stack>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(protected)"
-                  options={{
-                    headerShown: false,
-                  }}
-                />
-              </Stack>
-              <Toast config={toastConfig} />
-            </Screen>
-          </ThemeProvider>
+          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+          <Screen>
+            <Stack>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(protected)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+            <Toast config={toastConfig} />
+          </Screen>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
