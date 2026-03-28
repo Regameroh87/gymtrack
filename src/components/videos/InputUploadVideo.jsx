@@ -185,8 +185,10 @@ export default function InputUploadVideo({
             textColorAnimated="text-brandPrimary-600"
           >
             <Upload
-              color={isDark ? brandPrimary[300] : brandPrimary[600]}
-              size={11}
+              color={
+                isDark && !isUploading ? brandPrimary[300] : brandPrimary[600]
+              }
+              size={16}
             />
           </ButtonUploadAnimated>
         )}
