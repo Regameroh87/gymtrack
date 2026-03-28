@@ -7,7 +7,10 @@ export default function ButtonUploadAnimated({
   labelLoading,
   label,
   onPress,
-  themeColor = "brandPrimary",
+  backgroundColor,
+  textColor,
+  backgroundColorAnimated,
+  textColorAnimated,
 }) {
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
@@ -57,10 +60,10 @@ export default function ButtonUploadAnimated({
   }, [isUploading]);
 
   return (
-    <View className={` bg-${themeColor}-500/20 rounded-xl overflow-hidden`}>
+    <View>
       {isUploading ? (
         <Animated.View
-          className="rounded-xl h-11 flex-row items-center justify-center gap-2 bg-brandPrimary-300 dark:bg-ui-uploadBg-dark"
+          className={`rounded-xl h-11 flex-row items-center justify-center gap-2 ${backgroundColorAnimated}`}
           style={{
             opacity: pulseAnim,
           }}
@@ -68,17 +71,17 @@ export default function ButtonUploadAnimated({
           <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
             {children}
           </Animated.View>
-          <Text className="font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark text-xs">
+          <Text className={`font-manrope-semi ${textColorAnimated} text-xs`}>
             {labelLoading}
           </Text>
         </Animated.View>
       ) : (
         <Pressable
           onPress={onPress}
-          className={` active:scale-[0.97] rounded-xl h-11 flex-row items-center justify-center gap-2`}
+          className={` active:scale-[0.97] rounded-xl h-11 flex-row items-center justify-center gap-2 ${backgroundColor}`}
         >
           {children}
-          <Text className={`font-manrope-semi text-${themeColor}-300 text-xs`}>
+          <Text className={`font-manrope-semi ${textColor} text-xs`}>
             {label}
           </Text>
         </Pressable>

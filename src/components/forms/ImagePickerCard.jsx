@@ -74,8 +74,15 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           labelLoading="Subiendo..."
           label="Subir imagen desde galería"
           onPress={handlePickImage}
+          backgroundColor="bg-brandSecondary-700/20"
+          textColor="text-brandSecondary-600 dark:text-brandSecondary-300"
+          backgroundColorAnimated="bg-brandSecondary-300/20"
+          textColorAnimated="text-brandSecondary-600 dark:text-brandSecondary-300"
         >
-          <Upload color={isDark ? brandSecondary[300] : "#ffffff"} size={15} />
+          <Upload
+            color={isDark ? brandSecondary[300] : brandSecondary[600]}
+            size={15}
+          />
         </ButtonUploadAnimated>
       </View>
       <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">

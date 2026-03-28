@@ -179,8 +179,15 @@ export default function InputUploadVideo({
             labelLoading="Subiendo video..."
             label="Subir archivo de video"
             onPress={sendVideoToCloudinary}
+            backgroundColor="bg-brandPrimary-600/20"
+            textColor="text-brandPrimary-600 dark:text-brandPrimary-300"
+            backgroundColorAnimated="bg-brandPrimary-300"
+            textColorAnimated="text-brandPrimary-600"
           >
-            <Upload color={isDark ? brandPrimary[300] : "#ffffff"} size={11} />
+            <Upload
+              color={isDark ? brandPrimary[300] : brandPrimary[600]}
+              size={11}
+            />
           </ButtonUploadAnimated>
         )}
       </View>
