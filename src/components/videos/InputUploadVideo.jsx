@@ -120,7 +120,7 @@ export default function InputUploadVideo({
         </PreviewVideo>
         {/* ── Video info card (uploaded) ── */}
         {(value || videoPublicId) && !isUploading ? (
-          <View className="p-4 rounded-xl bg-ui-surface-highLight dark:bg-ui-surface-highDark">
+          <View className="p-4 rounded-xl bg-ui-surface-secondary-light dark:bg-ui-surface-secondary-dark">
             <View className="flex-row justify-between items-center mb-2">
               <Text
                 className="font-manrope-bold text-sm w-56 text-ui-text-main dark:text-ui-text-mainDark"
