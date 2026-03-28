@@ -11,6 +11,7 @@ export default function ButtonUploadAnimated({
   textColor,
   backgroundColorAnimated,
   textColorAnimated,
+  height = "h-12",
 }) {
   const uploadAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
@@ -63,7 +64,7 @@ export default function ButtonUploadAnimated({
     <View>
       {isUploading ? (
         <Animated.View
-          className={`rounded-xl h-12 flex-row items-center justify-center gap-2 ${backgroundColorAnimated}`}
+          className={`rounded-xl ${height} flex-row items-center justify-center gap-2 ${backgroundColorAnimated}`}
           style={{
             opacity: pulseAnim,
           }}
@@ -78,7 +79,7 @@ export default function ButtonUploadAnimated({
       ) : (
         <Pressable
           onPress={onPress}
-          className={` active:scale-[0.97] rounded-xl h-12 flex-row items-center justify-center gap-2 ${backgroundColor}`}
+          className={` active:scale-[0.97] rounded-xl ${height} flex-row items-center justify-center gap-2 ${backgroundColor}`}
         >
           {children}
           <Text className={`font-manrope-semi ${textColor} text-xs`}>

@@ -9,7 +9,7 @@ export default function UnilateralToggle({ value, onChange }) {
 
   return (
     <View
-      className="flex-row items-center justify-between rounded-2xl bg-ui-background-light dark:bg-ui-background-dark"
+      className="flex-row items-center justify-between rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark"
       style={{ paddingVertical: 16, paddingHorizontal: 20 }}
     >
       <View className="flex-row items-center flex-1 mr-3">
