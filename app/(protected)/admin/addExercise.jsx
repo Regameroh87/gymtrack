@@ -77,8 +77,8 @@ export default function AddExercise() {
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
       {/* ── Header ── */}
-      <View className="px-5 pt-6 pb-2">
-        <Text className="text-2xl font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark">
+      <View className="px-4 pt-6 pb-2">
+        <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
           Nuevo Ejercicio
         </Text>
         <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
@@ -87,7 +87,7 @@ export default function AddExercise() {
       </View>
 
       {/* ── Form ── */}
-      <View className="px-5 pt-4 pb-8">
+      <View className="px-4 pt-4 pb-8">
         {/* Nombre */}
         <FormField label="NOMBRE DEL EJERCICIO">
           <form.Field name="name">

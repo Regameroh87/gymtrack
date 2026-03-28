@@ -34,8 +34,19 @@ export const brandSecondary = {
 export const ui = {
   // ── 1. Core Backgrounds & Surfaces ──
   background: {
-    light: "#f8f9fc",
+    light: "#f8f9fc", //chequeado
     dark: "#0C0B14", // chequeado
+    primary: "#3023cd", //chequeado
+    secondary: "#005047", //chequeado
+    tertiary: "#62fae3", //chequeado
+  },
+  surface: {
+    light: "#ffffff", //chequeado
+    dark: "#1e1b2e", //chequeado
+  },
+  surfaceSecondary: {
+    light: "#f4f5fa", // ← Alternativa sutil (gris-azulado) para tarjetas secundarias
+    dark: "#282542", // ← Elevación extra sobre el surface principal en dark mode
   },
   // ── 2. Typography & Text ──
   text: {
@@ -46,12 +57,8 @@ export const ui = {
   },
   input: {
     light: "#eae8f4",
-    dark: "#1e1b2e", //chequeado
-    darkAlter: "#020617",
+    dark: "#2c2847", // ← Elevado y visible (mucho contraste sobre el #1e1b2e)
     border: "rgba(196, 190, 230, 0.15)",
-  },
-  preview: {
-    dark: "#020617",
   },
   toggle: {
     offLight: "#e8e6f0",

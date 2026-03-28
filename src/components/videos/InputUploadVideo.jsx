@@ -7,6 +7,7 @@ import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
+import HeaderCard from "../cards/HeaderCard";
 
 export default function InputUploadVideo({
   value,
@@ -106,17 +107,12 @@ export default function InputUploadVideo({
 
   return (
     <>
-      <View className=" flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark gap-4 p-5">
-        {/* Section header — icon + label, gap:8 */}
-        <View className="flex-row items-center gap-2">
-          <Movie
-            color={isDark ? brandPrimary[200] : brandPrimary[600]}
-            size={16}
-          />
-          <Text className="font-jakarta-bold text-ui-text-main dark:text-slate-300 text-xs">
-            Archivo Local
-          </Text>
-        </View>
+      <View className=" flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark gap-4 p-4">
+        <HeaderCard
+          icon={<Movie color={brandPrimary[400]} size={20} />}
+          title="Archivo Local"
+          description="Subí un video desde tu dispositivo."
+        />
         <PreviewVideo videoUrl={value}>
           <View className=" w-12 h-12 rounded-full dark:bg-slate-50 bg-brandPrimary-600 items-center justify-center">
             <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />

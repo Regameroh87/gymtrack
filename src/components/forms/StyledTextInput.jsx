@@ -1,10 +1,6 @@
 import { View, TextInput } from "react-native";
 import { ui } from "../../theme/colors";
 
-/**
- * Base styled TextInput for the form.
- * Accepts an optional `icon` prop to render a leading icon on the left.
- */
 export default function StyledTextInput({ icon, ...props }) {
   return (
     <View className="flex relative">
@@ -14,7 +10,7 @@ export default function StyledTextInput({ icon, ...props }) {
         </View>
       )}
       <TextInput
-        placeholderTextColor={ui.text.muted}
+        placeholderTextColor={ui.placeholder.light}
         value={props.value}
         onChangeText={props.onChangeText}
         onFocus={props.onFocus}

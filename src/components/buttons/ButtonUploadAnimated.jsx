@@ -57,7 +57,7 @@ export default function ButtonUploadAnimated({
   }, [isUploading]);
 
   return (
-    <View>
+    <View className={` bg-${themeColor}-500/20 rounded-xl overflow-hidden`}>
       {isUploading ? (
         <Animated.View
           className="rounded-xl h-11 flex-row items-center justify-center gap-2 bg-brandPrimary-300 dark:bg-ui-uploadBg-dark"
@@ -68,17 +68,17 @@ export default function ButtonUploadAnimated({
           <Animated.View style={{ transform: [{ translateY: uploadAnim }] }}>
             {children}
           </Animated.View>
-          <Text className="font-manrope-semi text-brandPrimary-600 dark:text-brandPrimary-300 text-xs">
+          <Text className="font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark text-xs">
             {labelLoading}
           </Text>
         </Animated.View>
       ) : (
         <Pressable
           onPress={onPress}
-          className={` active:scale-[0.97] rounded-xl h-11 flex-row items-center justify-center gap-2 bg-${themeColor}-500 dark:bg-ui-uploadBtn-dark`}
+          className={` active:scale-[0.97] rounded-xl h-11 flex-row items-center justify-center gap-2`}
         >
           {children}
-          <Text className="font-manrope-semi text-white dark:text-brandPrimary-300 text-xs">
+          <Text className={`font-manrope-semi text-${themeColor}-300 text-xs`}>
             {label}
           </Text>
         </Pressable>
