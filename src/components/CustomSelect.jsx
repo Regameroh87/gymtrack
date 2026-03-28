@@ -78,13 +78,15 @@ const CustomSelect = ({
         backdropComponent={renderBackdrop}
         backgroundStyle={{
           backgroundColor:
-            colorScheme === "dark" ? ui.background.dark : ui.background.light,
+            colorScheme === "dark" ? ui.surface.dark : ui.surface.light,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
           backgroundColor:
-            colorScheme === "dark" ? ui.background.dark : ui.background.light,
+            colorScheme === "dark"
+              ? ui.surfaceSecondary.dark
+              : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -117,8 +119,8 @@ const CustomSelect = ({
                   backgroundColor: isSelected
                     ? "rgba(48, 35, 205, 0.08)"
                     : colorScheme === "dark"
-                      ? ui.background.dark
-                      : ui.background.light,
+                      ? ui.surfaceSecondary.dark
+                      : ui.surfaceSecondary.light,
                 }}
               >
                 <Text
