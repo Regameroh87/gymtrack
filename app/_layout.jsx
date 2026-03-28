@@ -27,8 +27,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
-import { ThemeProvider } from "@react-navigation/native";
-import { ui } from "../src/theme/colors";
+import {
+  ThemeProvider,
+  DefaultTheme,
+  DarkTheme,
+} from "@react-navigation/native";
+
 const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
@@ -64,6 +68,7 @@ export default function RootLayout() {
       </View>
     );
   }
+
   const toastConfig = {
     success: (props) => (
       <BaseToast
