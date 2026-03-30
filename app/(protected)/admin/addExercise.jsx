@@ -177,7 +177,7 @@ export default function AddExercise() {
                     "El equipo debe tener menos de 150 caracteres"
                   )
                   .required("El equipo es requerido")
-                  .parse(value);
+                  .safeParse(value);
               },
             }}
           >
