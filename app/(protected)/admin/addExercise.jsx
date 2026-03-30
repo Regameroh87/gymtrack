@@ -2,6 +2,7 @@ import { View, Text, TextInput } from "react-native";
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { z } from "zod";
 
 // Constants
 import {
@@ -90,7 +91,18 @@ export default function AddExercise() {
       <View className="px-4 pt-4 pb-8">
         {/* Nombre */}
         <FormField label="NOMBRE DEL EJERCICIO">
-          <form.Field name="name">
+          <form.Field
+            name="name"
+            validators={{
+              onChange: ({ value }) => {
+                return z
+                  .string()
+                  .min(3, "El nombre debe tener al menos 3 caracteres")
+                  .required("El nombre es requerido")
+                  .parse(value);
+              },
+            }}
+          >
             {(field) => (
               <StyledTextInput
                 value={field.state.value}
@@ -104,7 +116,17 @@ export default function AddExercise() {
         {/* Categoría + Grupo Muscular */}
         <View className="flex-row w-full justify-center gap-3 mb-5">
           <View className="w-1/2">
-            <form.Field name="category">
+            <form.Field
+              name="category"
+              validators={{
+                onChange: ({ value }) => {
+                  return z
+                    .string()
+                    .required("La categoría es requerida")
+                    .parse(value);
+                },
+              }}
+            >
               {(field) => (
                 <CustomSelect
                   label="CATEGORÍA"
@@ -131,7 +153,21 @@ export default function AddExercise() {
 
         {/* Equipo */}
         <FormField label="EQUIPO">
-          <form.Field name="equipment">
+          <form.Field
+            name="equipment"
+            validators={{
+              onChange: ({ value }) => {
+                return z
+                  .string()
+                  .maxLength(
+                    150,
+                    "El equipo debe tener menos de 150 caracteres"
+                  )
+                  .required("El equipo es requerido")
+                  .parse(value);
+              },
+            }}
+          >
             {(field) => (
               <StyledTextInput
                 value={field.state.value}
