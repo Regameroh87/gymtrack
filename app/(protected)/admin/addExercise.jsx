@@ -172,11 +172,8 @@ export default function AddExercise() {
               onChange: ({ value }) => {
                 return z
                   .string()
-                  .maxLength(
-                    150,
-                    "El equipo debe tener menos de 150 caracteres"
-                  )
-                  .required("El equipo es requerido")
+                  .max(150, "El equipo debe tener menos de 150 caracteres")
+                  .min(5, "El equipo debe tener al menos 5 caracteres")
                   .safeParse(value);
               },
             }}
