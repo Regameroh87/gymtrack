@@ -45,8 +45,8 @@ export default function AddExercise() {
       instructions: "",
       is_unilateral: false,
     },
-    onSubmit: (data) => {
-      console.log(data);
+    onSubmit: ({ value }) => {
+      console.log("Valores enviados: ", value);
     },
   });
 
@@ -175,11 +175,15 @@ export default function AddExercise() {
             name="equipment"
             validators={{
               onChange: ({ value }) => {
-                return z
+                if (!value) return undefined; // Si permites que el equipo quede vacío
+                const result = z
                   .string()
                   .max(150, "El equipo debe tener menos de 150 caracteres")
                   .min(5, "El equipo debe tener al menos 5 caracteres")
                   .safeParse(value);
+                return result.success
+                  ? undefined
+                  : result.error.errors[0].message;
               },
             }}
           >
