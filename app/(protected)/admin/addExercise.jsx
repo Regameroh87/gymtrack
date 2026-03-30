@@ -95,20 +95,30 @@ export default function AddExercise() {
             name="name"
             validators={{
               onChange: ({ value }) => {
-                return z
+                const result = z
                   .string()
-                  .min(3, "El nombre debe tener al menos 3 caracteres")
-                  .required("El nombre es requerido")
-                  .parse(value);
+                  .min(1, "El nombre es requerido")
+                  .min(3, "Mínimo 3 caracteres")
+                  .safeParse(value);
+                return result.success
+                  ? undefined
+                  : result.error.errors[0].message;
               },
             }}
           >
             {(field) => (
-              <StyledTextInput
-                value={field.state.value}
-                onChangeText={field.handleChange}
-                placeholder="Ej: Press de Banca con Mancuernas"
-              />
+              <View>
+                <StyledTextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  placeholder="Ej: Press de Banca con Mancuernas"
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
+                    {field.state.meta.errors.join(", ")}
+                  </Text>
+                )}
+              </View>
             )}
           </form.Field>
         </FormField>
@@ -120,10 +130,13 @@ export default function AddExercise() {
               name="category"
               validators={{
                 onChange: ({ value }) => {
-                  return z
+                  const result = z
                     .string()
-                    .required("La categoría es requerida")
-                    .parse(value);
+                    .min(1, "La categoría es requerida")
+                    .safeParse(value);
+                  return result.success
+                    ? undefined
+                    : result.error.errors[0].message;
                 },
               }}
             >
