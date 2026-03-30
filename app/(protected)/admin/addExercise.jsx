@@ -97,12 +97,17 @@ export default function AddExercise() {
               onChange: ({ value }) => {
                 const result = z
                   .string()
-                  .min(1, "El nombre es requerido")
                   .min(3, "Mínimo 3 caracteres")
                   .safeParse(value);
                 return result.success
                   ? undefined
                   : result.error.errors[0].message;
+              },
+              onSubmit: ({ value }) => {
+                if (!value) {
+                  return "El nombre es requerido";
+                }
+                return undefined;
               },
             }}
           >
