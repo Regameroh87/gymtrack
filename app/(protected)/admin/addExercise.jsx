@@ -3,6 +3,8 @@ import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
+import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
 import { supabase } from "../../../src/database/supabase";
 
 // Constants
@@ -56,8 +58,30 @@ export default function AddExercise() {
 
       if (error) {
         console.error("Error al insertar un ejercicio", error.message);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Toast.show({
+          type: "error",
+          text1: "Error al guardar",
+          text2: error.message,
+          position: "bottom",
+        });
       } else {
         console.log("Ejercicio insertado exitosamente", data);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+          type: "success",
+          text1: "¡Éxito!",
+          text2: "El ejercicio fue agregado exitosamente al catálogo.",
+          position: "bottom",
+        });
+
+        // Limpiamos todo el formulario
+        form.reset();
+
+        // Si tenemos un scroll ref, subimos arriba de la pantalla suavemente
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({ y: 0, animated: true });
+        }
       }
     },
   });
@@ -298,7 +322,10 @@ export default function AddExercise() {
         </View>
 
         {/* ── Submit ── */}
-        <SubmitButton onPress={() => form.handleSubmit()} />
+        <SubmitButton
+          onPress={() => form.handleSubmit()}
+          isLoading={form.state.isSubmitting}
+        />
       </View>
     </KeyboardAwareScrollView>
   );
