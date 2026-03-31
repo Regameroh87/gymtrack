@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
+import { supabase } from "../../../src/database/supabase";
 
 // Constants
 import {
@@ -33,7 +34,6 @@ export default function AddExercise() {
   const form = useForm({
     defaultValues: {
       name: "",
-      description: "",
       category: "",
       muscle_group: "",
       equipment: "",
@@ -45,8 +45,20 @@ export default function AddExercise() {
       instructions: "",
       is_unilateral: false,
     },
-    onSubmit: ({ value }) => {
-      console.log("Valores enviados: ", value);
+    onSubmit: async ({ value }) => {
+      // Destructuring para sacar 'video_url' e 'image_url'
+      // 'dataToSend' tendrá todos los demás campos
+      const { video_url, image_url, ...dataToSend } = value;
+      console.log("Valores a guardar en DB: ", dataToSend);
+      const { data, error } = await supabase
+        .from("exercises_base")
+        .insert(dataToSend);
+
+      if (error) {
+        console.error("Error al insertar un ejercicio", error.message);
+      } else {
+        console.log("Ejercicio insertado exitosamente", data);
+      }
     },
   });
 

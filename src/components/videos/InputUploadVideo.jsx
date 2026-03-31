@@ -65,7 +65,7 @@ export default function InputUploadVideo({
       animation?.stop();
       pulse?.stop();
     };
-  }, [isUploading]);
+  }, [isUploading, pulseAnim, uploadAnim]);
 
   const sendVideoToCloudinary = async () => {
     const videoFile = await pickMedia({
@@ -107,7 +107,7 @@ export default function InputUploadVideo({
 
   return (
     <>
-      <View className=" flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark gap-4 p-4">
+      <View className="rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark gap-4 p-4">
         <HeaderCard
           icon={<Movie color={brandPrimary[400]} size={20} />}
           title="Archivo Local"
