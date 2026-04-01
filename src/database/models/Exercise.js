@@ -17,15 +17,13 @@ export default class Exercise extends Model {
 
   @text("name") name;
   @text("category") category;
-  @text("muscle_group") muscleGroup;
+  @text("muscle_group") muscle_group;
   @text("equipment") equipment;
-  @text("video_public_id") videoPublicId;
-  @text("youtube_video_url") youtubeVideoUrl;
-  @text("image_public_id") imagePublicId;
+  @text("video_public_id") video_public_id;
+  @text("youtube_video_url") youtube_video_url;
+  @text("image_public_id") image_public_id;
   @text("instructions") instructions;
-
-  @field("is_unilateral") isUnilateral;
-
-  @readonly @date("created_at") createdAt;
-  @readonly @date("updated_at") updatedAt;
+  @field("is_unilateral") is_unilateral;
+  @readonly @date("created_at") created_at;
+  @readonly @date("updated_at") updated_at;
 }
