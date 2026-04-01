@@ -51,36 +51,22 @@ export default function AddExercise() {
       // 'dataToSend' tendrá todos los demás campos
       const { video_url, image_url, ...dataToSend } = value;
       console.log("Valores a guardar en DB: ", dataToSend);
-      //const { data, error } = await supabase
-      //  .from("exercises_base")
-      //  .insert(dataToSend);
-      const { data, error } = await database
-        .getCollection("exercises_base")
-        .create((record) => {
-          record.name = dataToSend.name;
-          record.category = dataToSend.category;
-          record.muscle_group = dataToSend.muscle_group;
-          record.equipment = dataToSend.equipment;
-          record.video_url = dataToSend.video_url;
-          record.video_public_id = dataToSend.video_public_id;
-          record.youtube_video_url = dataToSend.youtube_video_url;
-          record.image_url = dataToSend.image_url;
-          record.image_public_id = dataToSend.image_public_id;
-          record.instructions = dataToSend.instructions;
-          record.is_unilateral = dataToSend.is_unilateral;
+      try {
+        const newExercise = await database.write(async () => {
+          return await database.get("exercises_base").create((record) => {
+            record.name = dataToSend.name;
+            record.category = dataToSend.category;
+            record.muscle_group = dataToSend.muscle_group;
+            record.equipment = dataToSend.equipment;
+            record.video_public_id = dataToSend.video_public_id;
+            record.youtube_video_url = dataToSend.youtube_video_url;
+            record.image_public_id = dataToSend.image_public_id;
+            record.instructions = dataToSend.instructions;
+            record.is_unilateral = dataToSend.is_unilateral;
+          });
         });
 
-      if (error) {
-        console.error("Error al insertar un ejercicio", error.message);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Toast.show({
-          type: "error",
-          text1: "Error al guardar",
-          text2: error.message,
-          position: "bottom",
-        });
-      } else {
-        console.log("Ejercicio insertado exitosamente", data);
+        console.log("Ejercicio insertado exitosamente", newExercise.id);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
@@ -89,13 +75,20 @@ export default function AddExercise() {
           position: "bottom",
         });
 
-        // Limpiamos todo el formulario
         form.reset();
 
-        // Si tenemos un scroll ref, subimos arriba de la pantalla suavemente
         if (scrollRef.current) {
           scrollRef.current.scrollTo({ y: 0, animated: true });
         }
+      } catch (error) {
+        console.error("Error al insertar un ejercicio", error.message);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Toast.show({
+          type: "error",
+          text1: "Error al guardar",
+          text2: error.message,
+          position: "bottom",
+        });
       }
     },
   });
