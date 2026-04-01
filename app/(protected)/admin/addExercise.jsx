@@ -130,6 +130,8 @@ export default function AddExercise() {
             name="name"
             validators={{
               onChange: ({ value }) => {
+                // Only validate when there is a value; allow empty initially
+                if (!value) return undefined;
                 const result = z
                   .string()
                   .min(3, "Mínimo 3 caracteres")
