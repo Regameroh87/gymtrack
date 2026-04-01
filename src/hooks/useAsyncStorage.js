@@ -21,16 +21,17 @@ export default function useAsyncStorage({ form, storageKey }) {
   }, []);
 
   useEffect(() => {
-    const saveDraft = async () => {
+    if (!form) return;
+
+    const unsubscribe = form.store.subscribe(() => {
       try {
-        await AsyncStorage.setItem(
-          storageKey,
-          JSON.stringify(form.state.values)
-        );
+        const values = form.state.values;
+        AsyncStorage.setItem(storageKey, JSON.stringify(values));
       } catch (error) {
         console.error("Error al guardar el borrador:", error);
       }
-    };
-    saveDraft();
-  }, [form.state.values]);
+    });
+
+    return () => unsubscribe();
+  }, [form]);
 }
