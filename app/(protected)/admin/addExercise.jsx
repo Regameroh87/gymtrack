@@ -5,7 +5,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
-import { supabase } from "../../../src/database/supabase";
+//import { supabase } from "../../../src/database/supabase";
+import { database } from "../../../src/database/index.js";
 import useAsyncStorage from "../../../src/hooks/useAsyncStorage";
 
 // Constants
@@ -50,9 +51,24 @@ export default function AddExercise() {
       // 'dataToSend' tendrá todos los demás campos
       const { video_url, image_url, ...dataToSend } = value;
       console.log("Valores a guardar en DB: ", dataToSend);
-      const { data, error } = await supabase
-        .from("exercises_base")
-        .insert(dataToSend);
+      //const { data, error } = await supabase
+      //  .from("exercises_base")
+      //  .insert(dataToSend);
+      const { data, error } = await database
+        .getCollection("exercises_base")
+        .create((record) => {
+          record.name = dataToSend.name;
+          record.category = dataToSend.category;
+          record.muscle_group = dataToSend.muscle_group;
+          record.equipment = dataToSend.equipment;
+          record.video_url = dataToSend.video_url;
+          record.video_public_id = dataToSend.video_public_id;
+          record.youtube_video_url = dataToSend.youtube_video_url;
+          record.image_url = dataToSend.image_url;
+          record.image_public_id = dataToSend.image_public_id;
+          record.instructions = dataToSend.instructions;
+          record.is_unilateral = dataToSend.is_unilateral;
+        });
 
       if (error) {
         console.error("Error al insertar un ejercicio", error.message);

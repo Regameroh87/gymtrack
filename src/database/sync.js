@@ -22,13 +22,8 @@ export async function syncWithSupabase({ tablesToSync }) {
   try {
     await synchronize({
       database,
-
-      // ═══════════════════════════════════════════
-      // PULL: Traer cambios del servidor → Local
-      // ═══════════════════════════════════════════
       pullChanges: async ({ lastPulledAt }) => {
         const changes = {};
-
         for (const table of tablesToSync) {
           const { created, updated, deleted } = await pullTable(
             table,
@@ -36,20 +31,13 @@ export async function syncWithSupabase({ tablesToSync }) {
           );
           changes[table] = { created, updated, deleted };
         }
-
-        // Timestamp del servidor para marcar esta sync
         const { data: serverTime } = await supabase.rpc("get_server_time");
         const timestamp = serverTime
           ? new Date(serverTime).getTime()
           : Date.now();
-
         console.log("⬇️ Pull completado");
         return { changes, timestamp };
       },
-
-      // ═══════════════════════════════════════════
-      // PUSH: Enviar cambios locales → Servidor
-      // ═══════════════════════════════════════════
       pushChanges: async ({ changes }) => {
         for (const table of tablesToSync) {
           if (!changes[table]) continue;
@@ -58,7 +46,6 @@ export async function syncWithSupabase({ tablesToSync }) {
         console.log("⬆️ Push completado");
       },
 
-      // Tratar 'created' como 'updated' (upsert en el server)
       sendCreatedAsUpdated: true,
       migrationsEnabledAtVersion: 1,
     });
@@ -101,13 +88,9 @@ async function pullTable(tableName, lastPulledAt) {
     console.error(`Error pulling deleted ${tableName}:`, deleteError);
     throw deleteError;
   }
-
-  // Separar en created vs updated
   let created = [];
   let updated = [];
-
   if (!lastPulledAt) {
-    // Primera sync: todo es "created"
     created = (upsertedRecords || []).map(sanitizeRecord);
   } else {
     for (const record of upsertedRecords || []) {
@@ -119,7 +102,6 @@ async function pullTable(tableName, lastPulledAt) {
       }
     }
   }
-
   const deleted = (deletedRecords || []).map((r) => String(r.id));
 
   return { created, updated, deleted };
