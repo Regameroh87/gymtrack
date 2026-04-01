@@ -23,7 +23,7 @@ const adapter = new SQLiteAdapter({
   schema,
   migrations,
   // JSI = JavaScript Interface, acceso directo a C++ (más rápido)
-  // Requiere Hermes (que ya tenés habilitado en app.json)
+  // Requiere dev build (npx expo run:android)
   jsi: true,
   onSetUpError: (error) => {
     console.error("❌ Error inicializando WatermelonDB:", error);

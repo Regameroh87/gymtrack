@@ -22,13 +22,15 @@
     "android": {
       "jsEngine": "hermes",
       "permissions": [
+        "VIBRATE",
         "VIBRATE"
       ],
       "userInterfaceStyle": "light",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.gymtrack"
     },
     "web": {
       "favicon": "./assets/favicon.png",
