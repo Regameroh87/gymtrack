@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { supabase } from "../../../src/database/supabase";
+import useAsyncStorage from "../../../src/hooks/useAsyncStorage";
 
 // Constants
 import {
@@ -30,9 +31,6 @@ import { Barbell } from "../../../assets/icons";
 import { ui } from "../../../src/theme/colors";
 
 export default function AddExercise() {
-  //const { colorScheme } = useColorScheme();
-  //const isDark = colorScheme === "dark";
-
   const form = useForm({
     defaultValues: {
       name: "",
@@ -86,6 +84,7 @@ export default function AddExercise() {
     },
   });
 
+  useAsyncStorage({ form, storageKey: "addExerciseDraft" });
   const scrollRef = useRef(null);
   const scrollOffset = useRef(0);
   const youtubeCardRef = useRef(null);
