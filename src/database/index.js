@@ -33,8 +33,5 @@ const adapter = new SQLiteAdapter({
 // Instancia de la Database
 export const database = new Database({
   adapter,
-  modelClasses: [
-    Exercise,
-    // Agregar más models acá cuando los crees
-  ],
+  modelClasses: [Exercise],
 });
