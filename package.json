@@ -14,7 +14,10 @@
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
+    "@morrowdigital/watermelondb-expo-plugin": "^2.3.3",
+    "@nozbe/watermelondb": "^0.28.0",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "^12.0.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/native": "^7.1.8",
     "@react-navigation/native-stack": "^7.3.16",
@@ -61,6 +64,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.29.0",
     "@types/react": "~19.1.10",
     "eslint": "^8.57.1",
     "eslint-config-expo": "^7.1.2",

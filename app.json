@@ -36,7 +36,8 @@
     },
     "plugins": [
       "expo-font",
-      "expo-video"
+      "expo-video",
+      "@morrowdigital/watermelondb-expo-plugin"
     ]
   }
 }
