@@ -19,4 +19,5 @@ export const exercisesBase = sqliteTable("exercises_base", {
   updated_at: text("updated_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
+  sync_status: text("sync_status").notNull().default("pending"),
 });
