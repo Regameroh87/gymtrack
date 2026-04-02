@@ -1,4 +1,4 @@
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { v4 as uuidv4 } from "uuid";
 export const exercisesBase = sqliteTable("exercises_base", {
   id: text("id")
@@ -12,7 +12,7 @@ export const exercisesBase = sqliteTable("exercises_base", {
   youtube_video_url: text("youtube_video_url").notNull(),
   image_public_id: text("image_public_id").notNull(),
   instructions: text("instructions").notNull(),
-  is_unilateral: text("is_unilateral").notNull(),
-  created_at: text("created_at").$defaultFn(() => new Date().toISOString()),
+  is_unilateral: integer("is_unilateral").notNull().default(0),
+  created_at: text("created_at").$defaultFn(() => new Date().toISOString()).de,
   updated_at: text("updated_at").$defaultFn(() => new Date().toISOString()),
 });
