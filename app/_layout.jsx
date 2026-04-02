@@ -24,8 +24,7 @@ import {
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DatabaseProvider } from "@nozbe/watermelondb/react";
-import { database } from "../src/database";
+
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
@@ -98,28 +97,23 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <DatabaseProvider database={database}>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-              <Screen>
-                <Stack>
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(protected)"
-                    options={{
-                      headerShown: false,
-                    }}
-                  />
-                </Stack>
-                <Toast config={toastConfig} />
-              </Screen>
-            </ThemeProvider>
-          </DatabaseProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+            <Screen>
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(protected)"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+              </Stack>
+              <Toast config={toastConfig} />
+            </Screen>
+          </ThemeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

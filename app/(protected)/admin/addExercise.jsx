@@ -52,21 +52,7 @@ export default function AddExercise() {
       const { video_url, image_url, ...dataToSend } = value;
       console.log("Valores a guardar en DB: ", dataToSend);
       try {
-        const newExercise = await database.write(async () => {
-          return await database.get("exercises_base").create((record) => {
-            record.name = dataToSend.name;
-            record.category = dataToSend.category;
-            record.muscle_group = dataToSend.muscle_group;
-            record.equipment = dataToSend.equipment;
-            record.video_public_id = dataToSend.video_public_id;
-            record.youtube_video_url = dataToSend.youtube_video_url;
-            record.image_public_id = dataToSend.image_public_id;
-            record.instructions = dataToSend.instructions;
-            record.is_unilateral = dataToSend.is_unilateral;
-          });
-        });
-
-        console.log("Ejercicio insertado exitosamente", newExercise.id);
+        console.log("Ejercicio insertado exitosamente");
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
