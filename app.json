@@ -38,8 +38,7 @@
     },
     "plugins": [
       "expo-font",
-      "expo-video",
-      "@morrowdigital/watermelondb-expo-plugin"
+      "expo-video"
     ],
     "extra": {
       "eas": {
