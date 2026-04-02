@@ -1,6 +1,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { v4 as uuidv4 } from "uuid";
-export const exercisesBase = sqliteTable("exercises_base", {
+export const exercises_base = sqliteTable("exercises_base", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
