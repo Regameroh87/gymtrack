@@ -6,7 +6,6 @@ import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 //import { supabase } from "../../../src/database/supabase";
-import { database } from "../../../src/database/index.js";
 import useAsyncStorage from "../../../src/hooks/useAsyncStorage";
 
 // Constants
