@@ -13,6 +13,10 @@ export const exercisesBase = sqliteTable("exercises_base", {
   image_public_id: text("image_public_id").notNull(),
   instructions: text("instructions").notNull(),
   is_unilateral: integer("is_unilateral").notNull().default(0),
-  created_at: text("created_at").$defaultFn(() => new Date().toISOString()).de,
-  updated_at: text("updated_at").$defaultFn(() => new Date().toISOString()),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
 });

@@ -4,4 +4,4 @@ import * as schema from "./schemas";
 
 const sqlite = openDatabaseSync("gymtrack.db");
 
-export const db = drizzle(sqlite, { schema });
+export const database = drizzle(sqlite, { schema });
