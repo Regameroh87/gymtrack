@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "jsEngine": "hermes",
     "schema": "gymtrack",
     "splash": {
@@ -40,6 +40,12 @@
       "expo-font",
       "expo-video",
       "@morrowdigital/watermelondb-expo-plugin"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c5abcb20-7e97-4ed1-95b4-51dede8977c4"
+      }
+    },
+    "owner": "regamero87"
   }
 }
