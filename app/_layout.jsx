@@ -24,7 +24,7 @@ import {
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
+import { useInitDatabase } from "../src/database";
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
@@ -41,6 +41,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+
   const [fontsLoaded, fontError] = useFonts({
     Lexend_400Regular,
     Lexend_700Bold,
@@ -53,6 +54,8 @@ export default function RootLayout() {
     Manrope_600SemiBold,
     Manrope_700Bold,
   });
+
+  const { successDb, errorDb } = useInitDatabase();
 
   useEffect(() => {
     // Se oculta el Splash cuando las fuentes están listas (o fallaron) Y el auth terminó de cargar
@@ -69,6 +72,9 @@ export default function RootLayout() {
       </View>
     );
   }
+
+  if (errorDb) return <Text>Error al inicializar la base de datos</Text>;
+  if (!successDb) return <Text>Cargando...</Text>;
 
   const toastConfig = {
     success: (props) => (
