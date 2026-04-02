@@ -25,6 +25,7 @@ import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useInitDatabase } from "../src/database";
+import { syncWithSupabase, startSyncListener } from "../src/database/sync";
 import { View, Text } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
@@ -63,6 +64,14 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  // Sincronización con Supabase una vez que la DB local está lista
+  useEffect(() => {
+    if (successDb) {
+      syncWithSupabase();
+      startSyncListener();
+    }
+  }, [successDb]);
 
   // Si las fuentes no están listas (y no fallaron) O el auth sigue cargando, mostramos nuestra vista de carga
   if (!fontsLoaded && !fontError) {
