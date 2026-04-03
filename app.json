@@ -18,7 +18,8 @@
     
     "ios": {
       "supportsTablet": true,
-      "jsEngine": "hermes"
+      "jsEngine": "hermes",
+      "bundleIdentifier": "com.anonymous.gymtrack"
     },
     "android": {
       "jsEngine": "hermes",
