@@ -1,5 +1,5 @@
 import { Tabs, Redirect } from "expo-router";
-import { Barbell, Home, Logs, ListDetails } from "../../assets/icons";
+import { Barbell, Home, Logs, ListDetails, ShieldHalf } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
@@ -100,9 +100,12 @@ export default function ProtectedLayout() {
           }}
         />
         <Tabs.Screen
-          name="admin/index"
+          name="admin/addExercise"
           options={{
-            title: "Admin",
+            title: "Agregar Ejercicio",
+            tabBarIcon: ({ color }) => (
+              <ShieldHalf color={color} width={24} height={24} />
+            ),
           }}
         />
       </Tabs>
