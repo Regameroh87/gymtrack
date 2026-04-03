@@ -5,30 +5,30 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
-//import { supabase } from "../../../src/database/supabase";
-import useAsyncStorage from "../../../src/hooks/useAsyncStorage";
+import { supabase } from "../../../../src/database/supabase";
+import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
 
 // Constants
 import {
   EXERCISE_CATEGORIES,
   MUSCLE_GROUPS,
-} from "../../../src/constants/exerciseOptions";
+} from "../../../../src/constants/exerciseOptions";
 
 // Shared components
-import CustomSelect from "../../../src/components/CustomSelect";
-import InputUploadVideo from "../../../src/components/videos/InputUploadVideo";
+import CustomSelect from "../../../../src/components/CustomSelect";
+import InputUploadVideo from "../../../../src/components/videos/InputUploadVideo";
 
 // Form-specific sub-components
-import FormField from "../../../src/components/forms/FormField";
-import StyledTextInput from "../../../src/components/forms/StyledTextInput";
-import YouTubeVideoCard from "../../../src/components/forms/YouTubeVideoCard";
-import ImagePickerCard from "../../../src/components/forms/ImagePickerCard";
-import UnilateralToggle from "../../../src/components/forms/UnilateralToggle";
-import SubmitButton from "../../../src/components/forms/SubmitButton";
+import FormField from "../../../../src/components/forms/FormField";
+import StyledTextInput from "../../../../src/components/forms/StyledTextInput";
+import YouTubeVideoCard from "../../../../src/components/forms/YouTubeVideoCard";
+import ImagePickerCard from "../../../../src/components/forms/ImagePickerCard";
+import UnilateralToggle from "../../../../src/components/forms/UnilateralToggle";
+import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
-import { Barbell } from "../../../assets/icons";
-import { ui } from "../../../src/theme/colors";
+import { Barbell } from "../../../../assets/icons";
+import { ui } from "../../../../src/theme/colors";
 
 export default function AddExercise() {
   const form = useForm({
@@ -46,12 +46,15 @@ export default function AddExercise() {
       is_unilateral: false,
     },
     onSubmit: async ({ value }) => {
-      // Destructuring para sacar 'video_url' e 'image_url'
-      // 'dataToSend' tendrá todos los demás campos
       const { video_url, image_url, ...dataToSend } = value;
-      console.log("Valores a guardar en DB: ", dataToSend);
+      
       try {
-        console.log("Ejercicio insertado exitosamente");
+        const { error } = await supabase
+          .from("exercises_base")
+          .insert([dataToSend]);
+
+        if (error) throw error;
+
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
@@ -61,7 +64,6 @@ export default function AddExercise() {
         });
 
         form.reset();
-
         if (scrollRef.current) {
           scrollRef.current.scrollTo({ y: 0, animated: true });
         }
@@ -124,7 +126,6 @@ export default function AddExercise() {
             name="name"
             validators={{
               onChange: ({ value }) => {
-                // Only validate when there is a value; allow empty initially
                 if (!value) return undefined;
                 const result = z
                   .string()
@@ -135,9 +136,7 @@ export default function AddExercise() {
                   : result.error.errors[0].message;
               },
               onSubmit: ({ value }) => {
-                if (!value) {
-                  return "El nombre es requerido";
-                }
+                if (!value) return "El nombre es requerido";
                 return undefined;
               },
             }}
@@ -147,7 +146,7 @@ export default function AddExercise() {
                 <StyledTextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
-                  placeholder="Ej: Press de Banca con Mancuernas"
+                  placeholder="Ej: Press de Banca"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
@@ -206,11 +205,11 @@ export default function AddExercise() {
             name="equipment"
             validators={{
               onChange: ({ value }) => {
-                if (!value) return undefined; // Si permites que el equipo quede vacío
+                if (!value) return undefined;
                 const result = z
                   .string()
-                  .max(150, "El equipo debe tener menos de 150 caracteres")
-                  .min(5, "El equipo debe tener al menos 5 caracteres")
+                  .max(150, "Máximo 150 caracteres")
+                  .min(2, "Mínimo 2 caracteres")
                   .safeParse(value);
                 return result.success
                   ? undefined
@@ -222,20 +221,19 @@ export default function AddExercise() {
               <StyledTextInput
                 value={field.state.value}
                 onChangeText={field.handleChange}
-                placeholder="Ej: Barbell, Dumbbell"
+                placeholder="Ej: Mancuernas, Barra"
                 icon={<Barbell color={ui.text.mutedDark} />}
               />
             )}
           </form.Field>
         </FormField>
 
-        {/* ── Multimedia ── */}
+        {/* Multimedia */}
         <View className="mt-4">
           <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-4 uppercase tracking-label">
             MULTIMEDIA
           </Text>
 
-          {/* YouTube */}
           <form.Field name="youtube_video_url">
             {(field) => (
               <YouTubeVideoCard
@@ -247,7 +245,6 @@ export default function AddExercise() {
             )}
           </form.Field>
 
-          {/* Video local */}
           <View
             ref={uploadVideoCardRef}
             className="rounded-2xl mb-4 border border-brandPrimary-600 border-l-4"
@@ -266,7 +263,6 @@ export default function AddExercise() {
             </form.Field>
           </View>
 
-          {/* Imagen */}
           <form.Field name="image_url">
             {(field) => (
               <ImagePickerCard
@@ -283,7 +279,7 @@ export default function AddExercise() {
           </form.Field>
         </View>
 
-        {/* ── Instrucciones ── */}
+        {/* Instrucciones */}
         <View ref={instructionsRef}>
           <FormField label="INSTRUCCIONES" className="mt-6">
             <form.Field name="instructions">
@@ -304,7 +300,7 @@ export default function AddExercise() {
           </FormField>
         </View>
 
-        {/* ── Toggle Unilateral ── */}
+        {/* Toggle Unilateral */}
         <View className="mt-6">
           <form.Field name="is_unilateral">
             {(field) => (
@@ -316,10 +312,11 @@ export default function AddExercise() {
           </form.Field>
         </View>
 
-        {/* ── Submit ── */}
+        {/* Submit */}
         <SubmitButton
           onPress={() => form.handleSubmit()}
           isLoading={form.state.isSubmitting}
+          title="Guardar Ejercicio"
         />
       </View>
     </KeyboardAwareScrollView>

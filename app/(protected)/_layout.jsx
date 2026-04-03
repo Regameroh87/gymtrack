@@ -94,15 +94,10 @@ export default function ProtectedLayout() {
           }}
         />
         <Tabs.Screen
-          name="admin/register"
+          name="admin"
           options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="admin/addExercise"
-          options={{
-            title: "Agregar Ejercicio",
+            title: "Admin",
+            headerShown: false,
             tabBarIcon: ({ color }) => (
               <ShieldHalf color={color} width={24} height={24} />
             ),

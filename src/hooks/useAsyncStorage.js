@@ -32,6 +32,10 @@ export default function useAsyncStorage({ form, storageKey }) {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
   }, [form]);
 }
