@@ -1,1 +1,0 @@
-ALTER TABLE `exercises_base` ADD `sync_status` text DEFAULT 'pending' NOT NULL;

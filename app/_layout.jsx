@@ -56,7 +56,7 @@ export default function RootLayout() {
     Manrope_700Bold,
   });
 
-  const { successDb, errorDb } = useInitDatabase();
+  const { success, error } = useInitDatabase();
 
   useEffect(() => {
     // Se oculta el Splash cuando las fuentes están listas (o fallaron) Y el auth terminó de cargar
@@ -67,11 +67,11 @@ export default function RootLayout() {
 
   // Sincronización con Supabase una vez que la DB local está lista
   useEffect(() => {
-    if (successDb) {
+    if (success) {
       syncWithSupabase();
       startSyncListener();
     }
-  }, [successDb]);
+  }, [success]);
 
   // Si las fuentes no están listas (y no fallaron) O el auth sigue cargando, mostramos nuestra vista de carga
   if (!fontsLoaded && !fontError) {
@@ -81,9 +81,9 @@ export default function RootLayout() {
       </View>
     );
   }
-
-  if (errorDb) return <Text>Error al inicializar la base de datos</Text>;
-  if (!successDb) return (
+console.log('DB status:', { success, error });
+  if (error) return (<View className="flex-1 items-center justify-center bg-white"><Text>Error al inicializar la base de datos</Text></View>);
+  if (!success) return (
     <View className="flex-1 items-center justify-center bg-white">
       <Text>Cargando...</Text>
     </View>);

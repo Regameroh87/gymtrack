@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8b4efb6b-167b-419a-840f-265c946ecd82",
+  "id": "5e9b3792-a1ac-4665-8c2f-59b796d56822",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "exercises_base": {
@@ -91,6 +91,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "sync_status": {
+          "name": "sync_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
         }
       },
       "indexes": {},

@@ -10,5 +10,6 @@ CREATE TABLE `exercises_base` (
 	`instructions` text NOT NULL,
 	`is_unilateral` integer DEFAULT 0 NOT NULL,
 	`created_at` text NOT NULL,
-	`updated_at` text NOT NULL
+	`updated_at` text NOT NULL,
+	`sync_status` text DEFAULT 'pending' NOT NULL
 );
