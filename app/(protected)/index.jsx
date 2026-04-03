@@ -30,7 +30,7 @@ export default function Index() {
             <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-2xl tracking-tight mb-1">
               ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-xs w-fit text-center py-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-lexend-bold">
+            <Text className="text-xs w-fit text-center p-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-lexend-bold">
               Listo para entrenar 💪
             </Text>
           </View>
