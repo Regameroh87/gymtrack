@@ -83,7 +83,10 @@ export default function RootLayout() {
   }
 
   if (errorDb) return <Text>Error al inicializar la base de datos</Text>;
-  if (!successDb) return <Text>Cargando...</Text>;
+  if (!successDb) return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <Text>Cargando...</Text>
+    </View>);
 
   const toastConfig = {
     success: (props) => (
