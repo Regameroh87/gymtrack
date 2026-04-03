@@ -37,9 +37,9 @@ export default function Index() {
         </View>
       </View>
       {/* CARD PROGRESS */}
-      <View className=" flex rounded-2xl mx-4 py-10 bg-ui-background-light dark:bg-ui-card-dark shadow-md">
+      <View className=" flex rounded-2xl mx-4 py-10 bg-ui-surface-light dark:bg-ui-surface-dark shadow-md">
         <View className="flex justify-center items-center mt-6">
-          <View className=" relative bg-ui-secondary-light dark:bg-ui-secondary-dark rounded-3xl p-10 shadow-md rotate-3">
+          <View className=" relative bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-3xl p-10 shadow-md rotate-3">
             <Calendar size={72} className="text-brandPrimary-600" />
             <View className=" absolute -bottom-2 -right-2">
               <Clock size={48} className="text-brandSecondary-400" />
