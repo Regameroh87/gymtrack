@@ -5,6 +5,7 @@ import * as schema from "./schemas";
 import migrations from "./migrations/migrations";
 
 const sqlite = openDatabaseSync("gymtrack.db");
+sqlite.execSync("DROP TABLE IF EXISTS exercises_base");
 
 export const database = drizzle(sqlite, { schema });
 

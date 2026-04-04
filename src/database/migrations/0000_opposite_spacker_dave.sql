@@ -1,4 +1,4 @@
-CREATE TABLE `exercises_base` (
+CREATE TABLE IF NOT EXISTS `exercises_base` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`category` text NOT NULL,
