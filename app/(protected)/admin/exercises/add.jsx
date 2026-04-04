@@ -5,6 +5,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+import { useQueryClient } from "@tanstack/react-query";
 import { database } from "../../../../src/database";
 import { exercises_base } from "../../../../src/database/schemas";
 import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
@@ -32,6 +33,7 @@ import { Barbell } from "../../../../assets/icons";
 import { ui } from "../../../../src/theme/colors";
 
 export default function AddExercise() {
+  const queryClient = useQueryClient();
   const form = useForm({
     defaultValues: {
       name: "",
@@ -61,6 +63,7 @@ export default function AddExercise() {
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
         });
+        queryClient.invalidateQueries({ queryKey: ["exercises"] });
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
