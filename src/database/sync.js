@@ -19,10 +19,7 @@ export async function syncWithSupabase() {
   }
   const { data } = await query;
   if (data && data.length > 0) {
-    // Iteramos e insertamos o actualizamos cada registro.
     // Drizzle te permite hacer un "UPSERT" (Insertar si es nuevo, Actualizar si ya existe)
-
-    // Para SQLite en Drizzle usamos onConflictDoUpdate u otra lógica para reemplazar
     for (const remoteRow of data) {
       // Nos aseguramos que en local se guarde con estado "synced" porque ya está perfecto con la nube
       remoteRow.sync_status = "synced";
@@ -30,6 +27,7 @@ export async function syncWithSupabase() {
         .insert(exercises_base)
         .values(remoteRow)
         .onConflictDoUpdate({
+          // Para SQLite en Drizzle usamos onConflictDoUpdate u otra lógica para reemplazar
           target: exercises_base.id, // Si el ID ya existe en SQLite...
           set: remoteRow, // ...entonces pisa los datos con los nuevos
         });
