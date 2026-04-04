@@ -8,6 +8,7 @@ import Toast from "react-native-toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { database } from "../../../../src/database";
 import { exercises_base } from "../../../../src/database/schemas";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
 
 // Constants
@@ -64,6 +65,7 @@ export default function AddExercise() {
           is_unilateral: value.is_unilateral ? 1 : 0,
         });
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        checkNetInfoAndSync();
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
