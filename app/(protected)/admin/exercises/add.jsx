@@ -5,7 +5,8 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
-import { supabase } from "../../../../src/database/supabase";
+import { database } from "../../../../src/database";
+import { exercises_base } from "../../../../src/database/schemas";
 import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
 
 // Constants
@@ -46,14 +47,20 @@ export default function AddExercise() {
       is_unilateral: false,
     },
     onSubmit: async ({ value }) => {
-      const { video_url, image_url, ...dataToSend } = value;
-      
       try {
-        const { error } = await supabase
-          .from("exercises_base")
-          .insert([dataToSend]);
-
-        if (error) throw error;
+        // En Drizzle insertamos usando .values(). No retorna { data, error }.
+        // Si la operación falla, se lanza una excepción y cae al bloque "catch" de abajo.
+        await database.insert(exercises_base).values({
+          name: value.name,
+          category: value.category,
+          muscle_group: value.muscle_group,
+          equipment: value.equipment,
+          video_public_id: value.video_public_id,
+          youtube_video_url: value.youtube_video_url,
+          image_public_id: value.image_public_id,
+          instructions: value.instructions,
+          is_unilateral: value.is_unilateral ? 1 : 0,
+        });
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
