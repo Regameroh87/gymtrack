@@ -57,14 +57,6 @@ export default function RootLayout() {
   });
 
   const { success, error } = useInitDatabase();
-
-  useEffect(() => {
-    // Se oculta el Splash cuando las fuentes están listas (o fallaron) Y el auth terminó de cargar
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
-
   // Sincronización con Supabase una vez que la DB local está lista
   useEffect(() => {
     if (success) {
@@ -72,7 +64,14 @@ export default function RootLayout() {
       startSyncListener();
     }
   }, [success]);
+  console.log("DB status:", { success, error });
 
+  // Se oculta el Splash cuando las fuentes están listas (o fallaron)
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
   // Si las fuentes no están listas (y no fallaron) O el auth sigue cargando, mostramos nuestra vista de carga
   if (!fontsLoaded && !fontError) {
     return (
@@ -81,7 +80,7 @@ export default function RootLayout() {
       </View>
     );
   }
-  console.log("DB status:", { success, error });
+
   if (error)
     return (
       <View className="flex-1 items-center justify-center bg-white">

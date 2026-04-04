@@ -11,7 +11,7 @@ import { Calendar, Clock } from "../../assets/icons.jsx";
 export default function Index() {
   const imageProfile = require("../../assets/profile.png");
   const { user } = useAuth();
-  console.log("user en home", user);
+  //console.log("user en home", user);
 
   return (
     <Screen>

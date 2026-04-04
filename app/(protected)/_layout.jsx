@@ -1,5 +1,11 @@
 import { Tabs, Redirect } from "expo-router";
-import { Barbell, Home, Logs, ListDetails, ShieldHalf } from "../../assets/icons";
+import {
+  Barbell,
+  Home,
+  Logs,
+  ListDetails,
+  ShieldHalf,
+} from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
@@ -9,7 +15,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
   const { colorScheme, toggleColorScheme } = useColorScheme();
-  console.log("colorScheme", colorScheme);
+  //console.log("colorScheme", colorScheme);
 
   if (loading) {
     return (

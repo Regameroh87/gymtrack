@@ -10,27 +10,27 @@ export const useAuth = () => {
     // 1. Obtener sesión inicial del almacenamiento (AsyncStorage interno)
     const initializeAuth = async () => {
       try {
-        console.log("useAuth: Llamando a getSession()...");
+        //console.log("useAuth: Llamando a getSession()...");
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        console.log(
+        /*  console.log(
           "useAuth: getSession() completado. Sesión encontrada:",
           !!session
-        );
+        ); */
         if (session) {
           setSession(session);
           const user = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id);
-          console.log("user", user.data[0]);
+          //console.log("user", user.data[0]);
           setUser(user.data[0]);
         }
       } catch (error) {
         console.error("useAuth: Error al obtener la sesión inicial:", error);
       } finally {
-        console.log("useAuth: Finalizando carga (setLoading false)");
+        //console.log("useAuth: Finalizando carga (setLoading false)");
         setLoading(false);
       }
     };
@@ -41,7 +41,7 @@ export const useAuth = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      console.log("useAuth: onAuthStateChange disparado:", _event);
+      //console.log("useAuth: onAuthStateChange disparado:", _event);
 
       // Solo actualizamos si la sesión realmente cambió para evitar bucles de renderizado
       setSession((currentSession) => {
