@@ -18,10 +18,10 @@ export async function syncWithSupabase() {
     query = query.gt("updated_at", lastSync);
   }
   const { data } = await query;
-if (data && data.length > 0) {
+  if (data && data.length > 0) {
     // Iteramos e insertamos o actualizamos cada registro.
     // Drizzle te permite hacer un "UPSERT" (Insertar si es nuevo, Actualizar si ya existe)
-    
+
     // Para SQLite en Drizzle usamos onConflictDoUpdate u otra lógica para reemplazar
     for (const remoteRow of data) {
       // Nos aseguramos que en local se guarde con estado "synced" porque ya está perfecto con la nube
@@ -31,11 +31,11 @@ if (data && data.length > 0) {
         .values(remoteRow)
         .onConflictDoUpdate({
           target: exercises_base.id, // Si el ID ya existe en SQLite...
-          set: remoteRow            // ...entonces pisa los datos con los nuevos
+          set: remoteRow, // ...entonces pisa los datos con los nuevos
         });
     }
   }
-console.log("Ejercicios sincronizados correctamente...")
+  console.log("Ejercicios sincronizados correctamente...");
 
   // 3. Subir cambios locales → Supabase
   const localChanges = await database
@@ -47,40 +47,45 @@ console.log("Ejercicios sincronizados correctamente...")
         eq(exercises_base.sync_status, "dirty")
       )
     );
-    if (localChanges.length > 0) {
-  const changesToUpload = localChanges.map(row => {
-    // Excluimos sync_status ya que es de uso exclusivamente local en SQLite
-    const { sync_status, ...restOfRow } = row;
-    return restOfRow;
-  });
+  if (localChanges.length > 0) {
+    const changesToUpload = localChanges.map((row) => {
+      // Excluimos sync_status ya que es de uso exclusivamente local en SQLite
+      const { sync_status, ...restOfRow } = row;
+      return restOfRow;
+    });
 
-  // Enviamos todo de una vez con Supabase Batch Insert/Update
-  // Nota: Asegúrate de que tu tabla en Supabase se llame "exercises_base"
-  const { error } = await supabase
-    .from("exercises_base")
-    .upsert(changesToUpload, { onConflict: "id" });
+    // Enviamos todo de una vez con Supabase Batch Insert/Update
+    // Nota: Asegúrate de que tu tabla en Supabase se llame "exercises_base"
+    const { error } = await supabase
+      .from("exercises_base")
+      .upsert(changesToUpload, { onConflict: "id" });
 
-  if (!error) {
-    // Si todo salió bien, marcamos los registros como sincronizados en SQLite
-    await database
-      .update(exercises_base)
-      .set({ sync_status: "synced" })
-      .where(
-        or(
-          eq(exercises_base.sync_status, "pending"),
-          eq(exercises_base.sync_status, "dirty")
-        )
-      );
-    console.log("Cambios locales subidos exitosamente a Supabase.");
-  } else {
-    console.error("Error al subir cambios a Supabase:", error);
+    if (!error) {
+      // Si todo salió bien, marcamos los registros como sincronizados en SQLite
+      await database
+        .update(exercises_base)
+        .set({ sync_status: "synced" })
+        .where(
+          or(
+            eq(exercises_base.sync_status, "pending"),
+            eq(exercises_base.sync_status, "dirty")
+          )
+        );
+      console.log("Cambios locales subidos exitosamente a Supabase.");
+    } else {
+      console.error("Error al subir cambios a Supabase:", error);
+    }
   }
-}
   // 4. Actualizar timestamp
 }
 
 export function startSyncListener() {
+  let isFirstEvent = true;
   NetInfo.addEventListener((state) => {
+    if (isFirstEvent) {
+      isFirstEvent = false;
+      return;
+    }
     if (state.isConnected) {
       syncWithSupabase();
     }
