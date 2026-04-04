@@ -4,7 +4,7 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useFonts } from "expo-font";
 import {
   Lexend_400Regular,
@@ -56,10 +56,12 @@ export default function RootLayout() {
     Manrope_700Bold,
   });
 
+  const isSync = useRef(false); // Para evitar que se sincronice más de una vez
   const { success, error } = useInitDatabase();
   // Sincronización con Supabase una vez que la DB local está lista
   useEffect(() => {
-    if (success) {
+    if (success && !isSync.current) {
+      isSync.current = true;
       syncWithSupabase();
       startSyncListener();
     }

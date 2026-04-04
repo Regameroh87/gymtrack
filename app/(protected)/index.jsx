@@ -2,7 +2,6 @@ import { Text, View, Image, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
-import { supabase } from "../../src/database/supabase.js";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
 import { brandPrimary } from "../../src/theme/colors.js";
