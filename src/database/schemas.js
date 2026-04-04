@@ -1,9 +1,9 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { v4 as uuidv4 } from "uuid";
+import * as Crypto from "expo-crypto";
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => uuidv4()),
+    .$defaultFn(() => Crypto.randomUUID()),
   name: text("name").notNull(),
   category: text("category").notNull(),
   muscle_group: text("muscle_group").notNull(),
