@@ -12,7 +12,9 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { supabase } from "../../../../src/database/supabase";
+
+import { database } from "../../../../src/database";
+import { exercises_base } from "../../../../src/database/schemas";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
@@ -33,23 +35,16 @@ export default function ExercisesList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 
-  const { data: exercises, isLoading } = useQuery({
-    queryKey: ["admin_exercises"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exercises_base")
-        .select("*")
-        .order("name", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+  function useExercises() {
+    return useQuery({
+      queryKey: ["exercises"],
+      queryFn: async () => {
+        return await database.select().from(exercises_base);
+      },
+    });
+  }
 
-  const filtered = exercises?.filter((ex) => {
-    const match = ex.name?.toLowerCase().includes(search.toLowerCase());
-    if (filter === "Todos") return match;
-    return match && ex.category?.toLowerCase() === filter.toLowerCase();
-  });
+  const { data: exercises, isLoading } = useExercises();
 
   const renderItem = ({ item }) => (
     <Pressable
@@ -92,14 +87,17 @@ export default function ExercisesList() {
         </View>
       </View>
 
-      <ChevronRight size={14} className="text-ui-text-muted dark:text-ui-text-mutedDark" />
+      <ChevronRight
+        size={14}
+        className="text-ui-text-muted dark:text-ui-text-mutedDark"
+      />
     </Pressable>
   );
 
   return (
     <Screen>
       <FlatList
-        data={filtered}
+        data={exercises}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{
