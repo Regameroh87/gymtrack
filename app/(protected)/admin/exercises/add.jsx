@@ -31,11 +31,13 @@ import UnilateralToggle from "../../../../src/components/forms/UnilateralToggle"
 import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
-import { Barbell, CameraPlus } from "../../../../assets/icons";
-import { ui } from "../../../../src/theme/colors";
+import { Barbell, CameraPlus, CloudUpload } from "../../../../assets/icons";
+import { ui, brandPrimary } from "../../../../src/theme/colors";
+import { useTheme } from "../../../../src/theme/theme";
 
 export default function AddExercise() {
   const queryClient = useQueryClient();
+  const { isDark } = useTheme();
   const form = useForm({
     defaultValues: {
       name: "",
@@ -234,28 +236,34 @@ export default function AddExercise() {
             }}
           >
             {(field) => (
-              <View className=" gap-y-2">
+              <View className=" gap-y-2 w-full">
                 <StyledTextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
                   placeholder="Ej: Mancuernas, Barra"
                   icon={<Barbell color={ui.text.mutedDark} />}
                 />
-                <View className="flex-row rounded-xl gap-4 p-4 w-full items-center bg-ui-surface-light dark:bg-ui-surface-dark">
+                <View className="flex-row rounded-xl gap-4 p-4 w-full items-center border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark">
                   <View className=" w-32 h-32">
-                    <PreviewImage value={field.state.value} className="">
+                    <PreviewImage value={field.state.value}>
                       <CameraPlus color={ui.text.mutedDark} size={33} />
                     </PreviewImage>
                   </View>
-                  <View className=" h-full">
-                    <Text className=" text-xs text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta tracking-widest">
+                  <View className=" h-full flex-1 overflow-hidden">
+                    <Text className=" text-xs text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi tracking-widest">
                       IMAGEN DEL EQUIPO
                     </Text>
-                    <Text className=" text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark tracking-tight">
-                      Sube una foto del equipo
+                    <Text className=" text-xs font-jakarta-semi text-ui-text-muted dark:text-ui-text-mutedDark tracking-tight">
+                      Sube una foto del equipo o máquina
                     </Text>
-                    <Pressable>
-                      <Text>Subir Imagen</Text>
+                    <Pressable className=" flex-row border border-brandPrimary-600/30 dark:border-brandPrimary-300/30 justify-center items-center gap-2 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 rounded-xl p-4 w-full mt-4">
+                      <CloudUpload
+                        color={isDark ? brandPrimary[300] : brandPrimary[600]}
+                        size={16}
+                      />
+                      <Text className=" text-brandPrimary-600 dark:text-brandPrimary-300 text-center text-xs font-jakarta-semi -tracking-wide">
+                        SUBIR FOTO
+                      </Text>
                     </Pressable>
                   </View>
                 </View>
