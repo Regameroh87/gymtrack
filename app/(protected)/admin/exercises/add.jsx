@@ -243,7 +243,7 @@ export default function AddExercise() {
                   placeholder="Ej: Mancuernas, Barra"
                   icon={<Barbell color={ui.text.mutedDark} />}
                 />
-                <View className="flex-row rounded-xl gap-4 p-4 w-full items-center border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark">
+                <View className="flex-row rounded-xl gap-4 p-4 w-full items-center border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark/50">
                   <View className=" w-32 h-32">
                     <PreviewImage value={field.state.value}>
                       <CameraPlus color={ui.text.mutedDark} size={33} />
