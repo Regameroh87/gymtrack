@@ -57,10 +57,17 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
       />
 
       {/* Preview */}
-      <PreviewImage value={value} />
+      <View className=" h-44">
+        <PreviewImage value={value}>
+          <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
+          <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
+            Sin Previsualización
+          </Text>
+        </PreviewImage>
+      </View>
 
       {/* URL Input + Pick from gallery */}
-      <View className=" gap-y-4">
+      <View className=" gap-y-4 mt-4">
         <StyledInputCard
           value={value}
           onChange={onChange}

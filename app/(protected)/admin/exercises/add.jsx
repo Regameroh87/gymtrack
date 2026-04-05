@@ -1,4 +1,4 @@
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -20,6 +20,7 @@ import {
 // Shared components
 import CustomSelect from "../../../../src/components/CustomSelect";
 import InputUploadVideo from "../../../../src/components/videos/InputUploadVideo";
+import PreviewImage from "../../../../src/components/images/PreviewImage";
 
 // Form-specific sub-components
 import FormField from "../../../../src/components/forms/FormField";
@@ -30,7 +31,7 @@ import UnilateralToggle from "../../../../src/components/forms/UnilateralToggle"
 import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
-import { Barbell } from "../../../../assets/icons";
+import { Barbell, CameraPlus } from "../../../../assets/icons";
 import { ui } from "../../../../src/theme/colors";
 
 export default function AddExercise() {
@@ -40,7 +41,10 @@ export default function AddExercise() {
       name: "",
       category: "",
       muscle_group: "",
-      equipment: "",
+      equipment: {
+        name: "",
+        image_public_id: "",
+      },
       video_url: "",
       video_public_id: "",
       youtube_video_url: "",
@@ -57,7 +61,7 @@ export default function AddExercise() {
           name: value.name,
           category: value.category,
           muscle_group: value.muscle_group,
-          equipment: value.equipment,
+          equipment: JSON.stringify(value.equipment),
           video_public_id: value.video_public_id,
           youtube_video_url: value.youtube_video_url,
           image_public_id: value.image_public_id,
@@ -214,7 +218,7 @@ export default function AddExercise() {
         {/* Equipo */}
         <FormField label="EQUIPO">
           <form.Field
-            name="equipment"
+            name="equipment.name"
             validators={{
               onChange: ({ value }) => {
                 if (!value) return undefined;
@@ -230,12 +234,32 @@ export default function AddExercise() {
             }}
           >
             {(field) => (
-              <StyledTextInput
-                value={field.state.value}
-                onChangeText={field.handleChange}
-                placeholder="Ej: Mancuernas, Barra"
-                icon={<Barbell color={ui.text.mutedDark} />}
-              />
+              <View className=" gap-y-2">
+                <StyledTextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  placeholder="Ej: Mancuernas, Barra"
+                  icon={<Barbell color={ui.text.mutedDark} />}
+                />
+                <View className="flex-row rounded-xl gap-4 p-4 w-full items-center bg-ui-surface-light dark:bg-ui-surface-dark">
+                  <View className=" w-32 h-32">
+                    <PreviewImage value={field.state.value} className="">
+                      <CameraPlus color={ui.text.mutedDark} size={33} />
+                    </PreviewImage>
+                  </View>
+                  <View className=" h-full">
+                    <Text className=" text-xs text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta tracking-widest">
+                      IMAGEN DEL EQUIPO
+                    </Text>
+                    <Text className=" text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark tracking-tight">
+                      Sube una foto del equipo
+                    </Text>
+                    <Pressable>
+                      <Text>Subir Imagen</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </View>
             )}
           </form.Field>
         </FormField>
