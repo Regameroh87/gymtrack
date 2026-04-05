@@ -36,6 +36,8 @@ import { Barbell, CameraPlus, CloudUpload } from "../../../../assets/icons";
 import { ui, brandPrimary } from "../../../../src/theme/colors";
 import { useTheme } from "../../../../src/theme/theme";
 
+import HandlePickImage from "../../../../src/utils/handlePickImage";
+
 export default function AddExercise() {
   const queryClient = useQueryClient();
   const { isDark } = useTheme();
@@ -247,7 +249,7 @@ export default function AddExercise() {
                 />
                 <View className="flex-row rounded-xl gap-4 p-4 w-full items-center border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark/50">
                   <View className=" w-32 h-32">
-                    <PreviewImage value={field.state.value}>
+                    <PreviewImage value={field.state.value.image_public_id}>
                       <CameraPlus color={ui.text.mutedDark} size={33} />
                     </PreviewImage>
                   </View>
@@ -258,7 +260,19 @@ export default function AddExercise() {
                     <Text className=" text-xs font-jakarta-semi text-ui-text-muted dark:text-ui-text-mutedDark tracking-tight">
                       Sube una foto del equipo o máquina
                     </Text>
-                    <Pressable className=" flex-row border border-brandPrimary-600/30 dark:border-brandPrimary-300/30 justify-center items-center gap-2 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 rounded-xl p-4 w-full mt-4">
+                    <Pressable
+                      onPress={() =>
+                        HandlePickImage({
+                          onChange: (url) =>
+                            field.handleChange({
+                              ...field.state.value,
+                              urlImage: url,
+                            }),
+                          value: field.state.value,
+                        })
+                      } // Deberia hacer la logica de subir la imagen
+                      className=" flex-row border border-brandPrimary-600/30 dark:border-brandPrimary-300/30 justify-center items-center gap-2 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 rounded-xl p-4 w-full mt-4"
+                    >
                       <CloudUpload
                         color={isDark ? brandPrimary[300] : brandPrimary[600]}
                         size={16}
