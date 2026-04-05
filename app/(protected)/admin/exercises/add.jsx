@@ -4,6 +4,7 @@ import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
+import * as Crypto from "expo-crypto";
 import Toast from "react-native-toast-message";
 import { useQueryClient } from "@tanstack/react-query";
 import { database } from "../../../../src/database";
@@ -60,6 +61,7 @@ export default function AddExercise() {
         // En Drizzle insertamos usando .values(). No retorna { data, error }.
         // Si la operación falla, se lanza una excepción y cae al bloque "catch" de abajo.
         await database.insert(exercises_base).values({
+          id: Crypto.randomUUID(),
           name: value.name,
           category: value.category,
           muscle_group: value.muscle_group,

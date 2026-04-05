@@ -1,13 +1,11 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import * as Crypto from "expo-crypto";
+
 export const exercises_base = sqliteTable("exercises_base", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => Crypto.randomUUID()),
+  id: text("id").primaryKey(),
   name: text("name").notNull(),
   category: text("category").notNull(),
   muscle_group: text("muscle_group").notNull(),
-  equipment: text("equipment").notNull(),
+  equipment: text("equipment", { mode: "json" }).notNull(),
   video_public_id: text("video_public_id").notNull(),
   youtube_video_url: text("youtube_video_url").notNull(),
   image_public_id: text("image_public_id").notNull(),
