@@ -268,7 +268,7 @@ export default function AddExercise() {
                               ...field.state.value,
                               urlImage: url,
                             }),
-                          value: field.state.value,
+                          value: field.state.value.image_public_id,
                         })
                       } // Deberia hacer la logica de subir la imagen
                       className=" flex-row border border-brandPrimary-600/30 dark:border-brandPrimary-300/30 justify-center items-center gap-2 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 rounded-xl p-4 w-full mt-4"
