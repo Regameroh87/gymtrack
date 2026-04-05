@@ -5,7 +5,6 @@ export const exercises_base = sqliteTable("exercises_base", {
   name: text("name").notNull(),
   category: text("category").notNull(),
   muscle_group: text("muscle_group").notNull(),
-  equipment: text("equipment", { mode: "json" }).notNull(),
   video_public_id: text("video_public_id").notNull(),
   youtube_video_url: text("youtube_video_url").notNull(),
   image_public_id: text("image_public_id").notNull(),
@@ -17,5 +16,29 @@ export const exercises_base = sqliteTable("exercises_base", {
   updated_at: text("updated_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
+  sync_status: text("sync_status").notNull().default("pending"),
+});
+
+export const equipment = sqliteTable("equipment", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  image_public_id: text("image_public_id").notNull(),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  sync_status: text("sync_status").notNull().default("pending"),
+});
+
+export const exercise_equipment = sqliteTable("exercise_equipment", {
+  id: text("id").primaryKey(),
+  exercise_id: text("exercise_id")
+    .notNull()
+    .references(() => exercises_base.id),
+  equipment_id: text("equipment_id")
+    .notNull()
+    .references(() => equipment.id),
   sync_status: text("sync_status").notNull().default("pending"),
 });

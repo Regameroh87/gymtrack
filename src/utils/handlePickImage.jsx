@@ -1,8 +1,10 @@
-import { useMediaPicker } from "../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "./uploadFileToCloudinary";
-export default async function HandlePickImage({ onChange }) {
-  const { pickMedia } = useMediaPicker();
-  const result = await pickMedia();
+export default async function HandlePickImage({
+  onChange,
+  pickMedia,
+  source = "gallery",
+}) {
+  const result = await pickMedia({ source });
   if (result) {
     onChange(result.uri);
     //setIsUploading(true);

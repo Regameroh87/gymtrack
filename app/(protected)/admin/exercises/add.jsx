@@ -33,14 +33,16 @@ import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
 import { Barbell, CameraPlus, CloudUpload } from "../../../../assets/icons";
-import { ui, brandPrimary } from "../../../../src/theme/colors";
+import { ui } from "../../../../src/theme/colors";
 import { useTheme } from "../../../../src/theme/theme";
 
 import HandlePickImage from "../../../../src/utils/handlePickImage";
+import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
 
 export default function AddExercise() {
   const queryClient = useQueryClient();
   const { isDark } = useTheme();
+  const { pickMedia } = useMediaPicker();
   const form = useForm({
     defaultValues: {
       name: "",
@@ -260,27 +262,61 @@ export default function AddExercise() {
                     <Text className=" text-xs font-jakarta-semi text-ui-text-muted dark:text-ui-text-mutedDark tracking-tight">
                       Sube una foto del equipo o máquina
                     </Text>
-                    <Pressable
-                      onPress={() =>
-                        HandlePickImage({
-                          onChange: (url) =>
-                            field.handleChange({
-                              ...field.state.value,
-                              urlImage: url,
-                            }),
-                          value: field.state.value.image_public_id,
-                        })
-                      } // Deberia hacer la logica de subir la imagen
-                      className=" flex-row border border-brandPrimary-600/30 dark:border-brandPrimary-300/30 justify-center items-center gap-2 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 rounded-xl p-4 w-full mt-4"
-                    >
-                      <CloudUpload
-                        color={isDark ? brandPrimary[300] : brandPrimary[600]}
-                        size={16}
-                      />
-                      <Text className=" text-brandPrimary-600 dark:text-brandPrimary-300 text-center text-xs font-jakarta-semi -tracking-wide">
-                        SUBIR FOTO
-                      </Text>
-                    </Pressable>
+                    <View className="flex-row gap-2 mt-4">
+                      <Pressable
+                        onPress={() => {
+                          Haptics.impactAsync(
+                            Haptics.ImpactFeedbackStyle.Light
+                          );
+                          HandlePickImage({
+                            pickMedia,
+                            source: "gallery",
+                            onChange: (url) =>
+                              field.handleChange({
+                                ...field.state.value,
+                                urlImage: url,
+                              }),
+                            value: field.state.value.image_public_id,
+                          });
+                        }}
+                        className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
+                      >
+                        <CloudUpload
+                          color={isDark ? "#62fae3" : "#059669"}
+                          size={14}
+                        />
+                        <Text className="text-brandSecondary-700 dark:text-brandSecondary-300 text-center text-xs font-jakarta-semi">
+                          GALERÍA
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={() => {
+                          Haptics.impactAsync(
+                            Haptics.ImpactFeedbackStyle.Medium
+                          );
+                          HandlePickImage({
+                            pickMedia,
+                            source: "camera",
+                            onChange: (url) =>
+                              field.handleChange({
+                                ...field.state.value,
+                                urlImage: url,
+                              }),
+                            value: field.state.value.image_public_id,
+                          });
+                        }}
+                        className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
+                      >
+                        <CameraPlus
+                          color={isDark ? "#a5b4fc" : "#3023cd"}
+                          size={14}
+                        />
+                        <Text className="text-brandPrimary-700 dark:text-brandPrimary-300 text-center text-xs font-jakarta-semi">
+                          CÁMARA
+                        </Text>
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
               </View>

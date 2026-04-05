@@ -2,7 +2,10 @@ import { Alert, Linking } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 
 export const useMediaPicker = () => {
-  const [status, requestPermission] = ImagePicker.useMediaLibraryPermissions();
+  const [libraryStatus, requestLibraryPermission] =
+    ImagePicker.useMediaLibraryPermissions();
+  const [cameraStatus, requestCameraPermission] =
+    ImagePicker.useCameraPermissions();
 
   const pickMedia = async (options = {}) => {
     const {
@@ -11,10 +14,17 @@ export const useMediaPicker = () => {
       aspect = [4, 3],
       quality = 1,
       maxFileSizeMb = null,
-      permissionDeniedText = "Para seleccionar un archivo, necesitamos acceso a tu galería.",
+      permissionDeniedText = "Para continuar, necesitamos acceso a tu dispositivo.",
+      source = "gallery", // Puede ser "gallery" o "camera"
     } = options;
 
-    if (!status?.granted) {
+    const isCamera = source === "camera";
+    const currentStatus = isCamera ? cameraStatus : libraryStatus;
+    const requestPermission = isCamera
+      ? requestCameraPermission
+      : requestLibraryPermission;
+
+    if (!currentStatus?.granted) {
       const permission = await requestPermission();
       if (!permission.granted) {
         if (permission.canAskAgain) {
@@ -22,7 +32,7 @@ export const useMediaPicker = () => {
         } else {
           Alert.alert(
             "Permiso denegado",
-            "Has desactivado el acceso a la galería. Por favor actívalo en los ajustes de tu teléfono.",
+            `Has desactivado el acceso a la ${isCamera ? "cámara" : "galería"}. Por favor actívalo en los ajustes de tu teléfono.`,
             [
               { text: "Cancelar", style: "cancel" },
               { text: "Ir a Ajustes", onPress: () => Linking.openSettings() },
@@ -33,12 +43,22 @@ export const useMediaPicker = () => {
       }
     }
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: mediaTypes,
-      allowsEditing: allowsEditing,
-      aspect: aspect,
-      quality: quality,
-    });
+    let result;
+    if (isCamera) {
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: mediaTypes,
+        allowsEditing: allowsEditing,
+        aspect: aspect,
+        quality: quality,
+      });
+    } else {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: mediaTypes,
+        allowsEditing: allowsEditing,
+        aspect: aspect,
+        quality: quality,
+      });
+    }
 
     if (result.canceled) {
       return null;

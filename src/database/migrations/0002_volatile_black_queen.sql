@@ -1,0 +1,1 @@
+ALTER TABLE `exercises_base` DROP COLUMN `equipment`;

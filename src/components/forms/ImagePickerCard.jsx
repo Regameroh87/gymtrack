@@ -7,6 +7,7 @@ import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import { useTheme } from "../../theme/theme";
+import * as Haptics from "expo-haptics";
 import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
@@ -19,8 +20,13 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
   const { isDark } = useTheme();
   const [isUploading, setIsUploading] = useState(false);
   const { pickMedia } = useMediaPicker();
-  const handlePickImage = async () => {
-    const result = await pickMedia();
+
+  const handleSelection = async (type) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const result =
+      type === "camera"
+        ? await pickMedia({ source: "camera" })
+        : await pickMedia({ source: "gallery" });
     if (result) {
       onChange(result.uri);
       setIsUploading(true);
@@ -30,7 +36,6 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
-        console.log("uploadedImage", uploadedImage);
         setImagePublicId(uploadedImage.public_id);
       } catch (error) {
         console.error(error.message);
@@ -76,21 +81,39 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           icon={<Link color={ui.text.muted} size={16} />}
         />
 
-        <ButtonUploadAnimated
-          isUploading={isUploading}
-          labelLoading="Subiendo..."
-          label="Subir imagen desde galería"
-          onPress={handlePickImage}
-          backgroundColor="bg-brandSecondary-700/20"
-          textColor="text-brandSecondary-600 dark:text-brandSecondary-300"
-          backgroundColorAnimated="bg-brandSecondary-300/20"
-          textColorAnimated="text-brandSecondary-600 dark:text-brandSecondary-300"
-        >
-          <Upload
-            color={isDark ? brandSecondary[300] : brandSecondary[600]}
-            size={15}
-          />
-        </ButtonUploadAnimated>
+        <View className="flex-row gap-x-3">
+          <View className="flex-1">
+            <ButtonUploadAnimated
+              isUploading={isUploading}
+              labelLoading="Subiendo..."
+              label="Galería"
+              onPress={() => handleSelection("gallery")}
+              backgroundColor="bg-brandSecondary-600/10 dark:bg-brandSecondary-600/10 border border-brandSecondary-500/20"
+              textColor="text-brandSecondary-700 dark:text-brandSecondary-300"
+              backgroundColorAnimated="bg-brandSecondary-300/20"
+              textColorAnimated="text-brandSecondary-600 dark:text-brandSecondary-300"
+              height="h-14"
+            >
+              <Upload color={isDark ? "#62fae3" : "#059669"} size={16} />
+            </ButtonUploadAnimated>
+          </View>
+
+          <View className="flex-1">
+            <ButtonUploadAnimated
+              isUploading={isUploading}
+              labelLoading="..."
+              label="Cámara"
+              onPress={() => handleSelection("camera")}
+              backgroundColor="bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 border border-brandPrimary-500/20"
+              textColor="text-brandPrimary-700 dark:text-brandPrimary-300"
+              backgroundColorAnimated="bg-brandPrimary-300/20"
+              textColorAnimated="text-brandPrimary-600 dark:text-brandPrimary-200"
+              height="h-14"
+            >
+              <Photo color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
+            </ButtonUploadAnimated>
+          </View>
+        </View>
       </View>
       <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
         Referencia visual clara para asegurar la técnica correcta.
