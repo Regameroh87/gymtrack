@@ -42,6 +42,7 @@ import {
   CloudUpload,
   Plus,
   Trash,
+  X,
 } from "../../../../assets/icons";
 import { ui, brandPrimary, brandSecondary } from "../../../../src/theme/colors";
 import { useTheme } from "../../../../src/theme/theme";
@@ -337,9 +338,29 @@ export default function AddExercise() {
 
                 {selectedEquipmentValue === "NEW" && (
                   <View className="rounded-2xl p-4 border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark/30 mt-2">
-                    <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark mb-3 uppercase tracking-widest">
-                      Crear Nuevo Equipo
-                    </Text>
+                    <View className="flex-row justify-between items-center mb-3">
+                      <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
+                        Crear Nuevo Equipo
+                      </Text>
+                      <Pressable
+                        onPress={() => {
+                          Haptics.impactAsync(
+                            Haptics.ImpactFeedbackStyle.Light
+                          );
+                          setSelectedEquipmentValue("");
+                          setCurrentEquipment({
+                            name: "",
+                            image_public_id: "",
+                          });
+                        }}
+                        className="bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark p-1.5 rounded-full"
+                      >
+                        <X
+                          color={isDark ? ui.text.mainDark : ui.text.main}
+                          size={14}
+                        />
+                      </Pressable>
+                    </View>
 
                     <StyledTextInput
                       value={currentEquipment.name}
