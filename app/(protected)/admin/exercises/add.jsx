@@ -6,9 +6,13 @@ import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
 import Toast from "react-native-toast-message";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { database } from "../../../../src/database";
-import { exercises_base } from "../../../../src/database/schemas";
+import {
+  exercises_base,
+  equipment as equipmentSchema,
+  exercise_equipment,
+} from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
 
@@ -32,20 +36,44 @@ import UnilateralToggle from "../../../../src/components/forms/UnilateralToggle"
 import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
-import { Barbell, CameraPlus, CloudUpload, Plus, Trash } from "../../../../assets/icons";
+import {
+  Barbell,
+  CameraPlus,
+  CloudUpload,
+  Plus,
+  Trash,
+} from "../../../../assets/icons";
 import { ui, brandPrimary, brandSecondary } from "../../../../src/theme/colors";
 import { useTheme } from "../../../../src/theme/theme";
 
 import HandlePickImage from "../../../../src/utils/handlePickImage";
 import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function AddExercise() {
   const queryClient = useQueryClient();
   const { isDark } = useTheme();
   const { pickMedia } = useMediaPicker();
 
-  // Estado local para el equipo que se está agregando actualmente
+  const { data: dbEquipments = [] } = useQuery({
+    queryKey: ["equipments"],
+    queryFn: async () => {
+      const results = await database.select().from(equipmentSchema);
+      return results || [];
+    },
+  });
+
+  const equipmentOptions = useMemo(() => {
+    return [
+      ...dbEquipments.map((eq) => ({
+        label: eq.name,
+        value: eq.id,
+      })),
+      { label: "+ Crear nuevo equipamiento...", value: "NEW" },
+    ];
+  }, [dbEquipments]);
+
+  const [selectedEquipmentValue, setSelectedEquipmentValue] = useState("");
   const [currentEquipment, setCurrentEquipment] = useState({
     name: "",
     image_public_id: "",
@@ -66,21 +94,39 @@ export default function AddExercise() {
     },
     onSubmit: async ({ value }) => {
       try {
-        // En Drizzle insertamos usando .values(). No retorna { data, error }.
-        // Si la operación falla, se lanza una excepción y cae al bloque "catch" de abajo.
+        const newExerciseId = Crypto.randomUUID();
+
         await database.insert(exercises_base).values({
-          id: Crypto.randomUUID(),
+          id: newExerciseId,
           name: value.name,
           category: value.category,
           muscle_group: value.muscle_group,
-          equipment: JSON.stringify(value.equipment),
           video_public_id: value.video_public_id,
           youtube_video_url: value.youtube_video_url,
           image_public_id: value.image_public_id,
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
         });
+
+        for (const eq of value.equipments) {
+          let eqId = eq.id;
+          if (eq.isNew) {
+            eqId = Crypto.randomUUID();
+            await database.insert(equipmentSchema).values({
+              id: eqId,
+              name: eq.name,
+              image_public_id: eq.image_public_id,
+            });
+          }
+          await database.insert(exercise_equipment).values({
+            id: Crypto.randomUUID(),
+            exercise_id: newExerciseId,
+            equipment_id: eqId,
+          });
+        }
+
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        queryClient.invalidateQueries({ queryKey: ["equipments"] });
         checkNetInfoAndSync();
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -236,8 +282,8 @@ export default function AddExercise() {
                 {field.state.value.length > 0 && (
                   <View className="flex-row flex-wrap gap-2 mb-2">
                     {field.state.value.map((item, index) => (
-                      <View 
-                        key={index} 
+                      <View
+                        key={index}
                         className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark"
                       >
                         <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
@@ -246,12 +292,14 @@ export default function AddExercise() {
                         <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark mr-2">
                           {item.name}
                         </Text>
-                        <Pressable 
+                        <Pressable
                           onPress={() => {
                             const newList = [...field.state.value];
                             newList.splice(index, 1);
                             field.handleChange(newList);
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                            Haptics.impactAsync(
+                              Haptics.ImpactFeedbackStyle.Medium
+                            );
                           }}
                         >
                           <Trash color="#ef4444" size={14} />
@@ -261,71 +309,129 @@ export default function AddExercise() {
                   </View>
                 )}
 
-                {/* Constructor de nuevo equipo */}
-                <View className="rounded-2xl p-4 border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark/30">
-                  <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark mb-3 uppercase tracking-widest">
-                    Agregar Nuevo Equipo
-                  </Text>
-                  
-                  <StyledTextInput
-                    value={currentEquipment.name}
-                    onChangeText={(text) => setCurrentEquipment(prev => ({ ...prev, name: text }))}
-                    placeholder="Nombre (ej: Barra Olímpica)"
-                    icon={<Barbell color={ui.text.mutedDark} />}
-                  />
+                <CustomSelect
+                  label=""
+                  placeholder="Seleccionar equipamiento..."
+                  options={equipmentOptions}
+                  value={selectedEquipmentValue}
+                  onChange={(val) => {
+                    setSelectedEquipmentValue(val);
+                    if (val !== "NEW" && val) {
+                      const eq = dbEquipments.find((e) => e.id === val);
+                      if (
+                        eq &&
+                        !field.state.value.some((e) => e.id === eq.id)
+                      ) {
+                        field.handleChange([
+                          ...field.state.value,
+                          { ...eq, isNew: false },
+                        ]);
+                        Haptics.notificationAsync(
+                          Haptics.NotificationFeedbackType.Success
+                        );
+                      }
+                      setSelectedEquipmentValue("");
+                    }
+                  }}
+                />
 
-                  <View className="flex-row gap-4 mt-3 items-center">
-                    <View className="w-24 h-24">
-                      <PreviewImage value={currentEquipment.image_public_id}>
-                        <CameraPlus color={ui.text.mutedDark} size={24} />
-                      </PreviewImage>
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex-row gap-2">
+                {selectedEquipmentValue === "NEW" && (
+                  <View className="rounded-2xl p-4 border border-ui-input-light dark:border-ui-input-dark bg-ui-surface-light dark:bg-ui-surface-dark/30 mt-2">
+                    <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark mb-3 uppercase tracking-widest">
+                      Crear Nuevo Equipo
+                    </Text>
+
+                    <StyledTextInput
+                      value={currentEquipment.name}
+                      onChangeText={(text) =>
+                        setCurrentEquipment((prev) => ({ ...prev, name: text }))
+                      }
+                      placeholder="Nombre (ej: Barra Olímpica)"
+                      icon={<Barbell color={ui.text.mutedDark} />}
+                    />
+
+                    <View className="flex-row gap-4 mt-3 items-center">
+                      <View className="w-24 h-24">
+                        <PreviewImage value={currentEquipment.image_public_id}>
+                          <CameraPlus color={ui.text.mutedDark} size={24} />
+                        </PreviewImage>
+                      </View>
+                      <View className="flex-1">
+                        <View className="flex-row gap-2">
+                          <Pressable
+                            onPress={() => {
+                              Haptics.impactAsync(
+                                Haptics.ImpactFeedbackStyle.Light
+                              );
+                              HandlePickImage({
+                                pickMedia,
+                                source: "gallery",
+                                onChange: (_uri, public_id) =>
+                                  setCurrentEquipment((prev) => ({
+                                    ...prev,
+                                    image_public_id: public_id,
+                                  })),
+                              });
+                            }}
+                            className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-2.5"
+                          >
+                            <CloudUpload
+                              color={isDark ? "#62fae3" : "#059669"}
+                              size={14}
+                            />
+                          </Pressable>
+                          <Pressable
+                            onPress={() => {
+                              Haptics.impactAsync(
+                                Haptics.ImpactFeedbackStyle.Medium
+                              );
+                              HandlePickImage({
+                                pickMedia,
+                                source: "camera",
+                                onChange: (_uri, public_id) =>
+                                  setCurrentEquipment((prev) => ({
+                                    ...prev,
+                                    image_public_id: public_id,
+                                  })),
+                              });
+                            }}
+                            className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-2.5"
+                          >
+                            <CameraPlus
+                              color={isDark ? "#a5b4fc" : "#3023cd"}
+                              size={14}
+                            />
+                          </Pressable>
+                        </View>
+
                         <Pressable
+                          disabled={!currentEquipment.name}
                           onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            HandlePickImage({
-                              pickMedia,
-                              source: "gallery",
-                              onChange: (_uri, public_id) => setCurrentEquipment(prev => ({ ...prev, image_public_id: public_id })),
+                            if (!currentEquipment.name) return;
+                            field.handleChange([
+                              ...field.state.value,
+                              { ...currentEquipment, isNew: true },
+                            ]);
+                            setCurrentEquipment({
+                              name: "",
+                              image_public_id: "",
                             });
+                            setSelectedEquipmentValue("");
+                            Haptics.notificationAsync(
+                              Haptics.NotificationFeedbackType.Success
+                            );
                           }}
-                          className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-2.5"
+                          className={`flex-row justify-center items-center gap-2 rounded-xl p-3 mt-2 ${currentEquipment.name ? "bg-brandPrimary-600" : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"}`}
                         >
-                          <CloudUpload color={isDark ? "#62fae3" : "#059669"} size={14} />
-                        </Pressable>
-                        <Pressable
-                          onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            HandlePickImage({
-                              pickMedia,
-                              source: "camera",
-                              onChange: (_uri, public_id) => setCurrentEquipment(prev => ({ ...prev, image_public_id: public_id })),
-                            });
-                          }}
-                          className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-2.5"
-                        >
-                          <CameraPlus color={isDark ? "#a5b4fc" : "#3023cd"} size={14} />
+                          <Plus color="white" size={14} />
+                          <Text className="text-white text-xs font-jakarta-bold">
+                            AGREGAR EQUIPO
+                          </Text>
                         </Pressable>
                       </View>
-                      
-                      <Pressable
-                        disabled={!currentEquipment.name}
-                        onPress={() => {
-                          if (!currentEquipment.name) return;
-                          field.handleChange([...field.state.value, { ...currentEquipment }]);
-                          setCurrentEquipment({ name: "", image_public_id: "" });
-                          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                        }}
-                        className={`flex-row justify-center items-center gap-2 rounded-xl p-3 mt-2 ${currentEquipment.name ? 'bg-brandPrimary-600' : 'bg-ui-input-light dark:bg-ui-input-dark opacity-50'}`}
-                      >
-                        <Plus color="white" size={14} />
-                        <Text className="text-white text-xs font-jakarta-bold">AGREGAR EQUIPO</Text>
-                      </Pressable>
                     </View>
                   </View>
-                </View>
+                )}
               </View>
             )}
           </form.Field>
