@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable } from "react-native";
+import { View, Text, TextInput, Pressable, FlatList } from "react-native";
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -26,6 +26,7 @@ import {
 import CustomSelect from "../../../../src/components/CustomSelect";
 import InputUploadVideo from "../../../../src/components/videos/InputUploadVideo";
 import AddEquipment from "../../../../src/components/forms/AddEquipment";
+import PreviewImage from "../../../../src/components/images/PreviewImage";
 
 // Form-specific sub-components
 import FormField from "../../../../src/components/forms/FormField";
@@ -37,14 +38,13 @@ import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
 import { ui } from "../../../../src/theme/colors";
+import { Trash, Barbell } from "../../../../assets/icons";
 
 import HandlePickImage from "../../../../src/utils/handlePickImage";
 import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
-import { useState, useMemo } from "react";
 
 export default function AddExercise() {
   const queryClient = useQueryClient();
-
   const { pickMedia } = useMediaPicker();
 
   const { data: dbEquipments = [] } = useQuery({
@@ -53,22 +53,6 @@ export default function AddExercise() {
       const results = await database.select().from(equipmentSchema);
       return results || [];
     },
-  });
-
-  const equipmentOptions = useMemo(() => {
-    return [
-      ...dbEquipments.map((eq) => ({
-        label: eq.name,
-        value: eq.id,
-      })),
-      { label: "+ Crear nuevo equipamiento...", value: "NEW" },
-    ];
-  }, [dbEquipments]);
-
-  const [selectedEquipmentValue, setSelectedEquipmentValue] = useState("");
-  const [currentEquipment, setCurrentEquipment] = useState({
-    name: "",
-    image_public_id: "",
   });
 
   const form = useForm({
@@ -171,6 +155,36 @@ export default function AddExercise() {
     });
   };
 
+  const renderEquipmentItem = ({ item, index }, field) => (
+    <View
+      key={index}
+      className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark mr-2"
+    >
+      <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
+        <PreviewImage value={item.local_image_uri || item.image_public_id} />
+      </View>
+      <View>
+        <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
+          EQUIPO
+        </Text>
+        <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
+          {item.name}
+        </Text>
+      </View>
+      <Pressable
+        onPress={() => {
+          const newList = [...field.state.value];
+          newList.splice(index, 1);
+          field.handleChange(newList);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }}
+        className="ml-3 p-1"
+      >
+        <Trash color="#ef4444" size={14} />
+      </Pressable>
+    </View>
+  );
+
   return (
     <KeyboardAwareScrollView
       ref={scrollRef}
@@ -272,19 +286,34 @@ export default function AddExercise() {
         </View>
 
         {/* Equipo */}
-        <AddEquipment
-          form={form}
-          dbEquipments={dbEquipments}
-          equipmentOptions={equipmentOptions}
-          selectedEquipmentValue={selectedEquipmentValue}
-          setSelectedEquipmentValue={setSelectedEquipmentValue}
-          currentEquipment={currentEquipment}
-          setCurrentEquipment={setCurrentEquipment}
-          HandlePickImage={HandlePickImage}
-          pickMedia={pickMedia}
-          Haptics={Haptics}
-          ui={ui}
-        />
+        <form.Field name="equipments">
+          {(field) => (
+            <>
+              {/* Lista de equipos agregados con FlatList */}
+              {field.state.value.length > 0 && (
+                <View className="mb-2">
+                  <FlatList
+                    data={field.state.value}
+                    renderItem={(props) => renderEquipmentItem(props, field)}
+                    keyExtractor={(_, index) => index.toString()}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                  />
+                </View>
+              )}
+              <CustomSelect
+                label="EQUIPAMIENTO"
+                options={dbEquipments.map((eq) => ({
+                  value: eq.id,
+                  label: eq.name,
+                }))}
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
+              <AddEquipment />
+            </>
+          )}
+        </form.Field>
 
         {/* Multimedia */}
         <View className="mt-4">
