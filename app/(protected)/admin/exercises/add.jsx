@@ -283,6 +283,7 @@ export default function AddExercise() {
           Haptics={Haptics}
           ui={ui}
         />
+
         {/* Multimedia */}
         <View className="mt-4">
           <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-4 uppercase tracking-label">
