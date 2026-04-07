@@ -17,7 +17,7 @@ export const uploadFileToCloudinary = async ({
     name: fileName,
   });
   data.append("upload_preset", uploadPreset);
-  data.append("tags", "pending_approval");
+  data.append("tags", "pending_approval"); //etiqueta para que el admin pueda filtrar los archivos que estan pendientes de aprobacion
   const URL = `https://api.cloudinary.com/v1_1/${cloudName}/${typeFile}/upload`;
   console.log("Enviando a cloudinary", URL);
 
