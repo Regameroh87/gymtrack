@@ -68,34 +68,42 @@ export default function InputUploadVideo({
     };
   }, [isUploading, pulseAnim, uploadAnim]);
 
-  const sendVideoToCloudinary = async () => {
+  const handleVideoSelection = async () => {
     const videoFile = await pickMedia({
       mediaTypes: ["videos"],
       maxFileSizeMb: 50,
       permissionDeniedText:
         "Para subir un video de tus ejercicios, necesitamos acceso a tu galería.",
     });
+
     if (videoFile) {
-      onChange(videoFile.uri);
       setIsUploading(true);
       try {
+        // 1. Obtenemos extensión y creamos el nombre
         const ext = videoFile.uri.split(".").pop() || "mp4";
         const fileName = `${Crypto.randomUUID()}.${ext}`;
+
+        // 2. Definimos la ruta local permanente (Memoria de la app)
+        // eslint-disable-next-line import/namespace
         const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
-        
+
+        // 3. Copiamos el archivo!
+        // eslint-disable-next-line import/namespace
         await FileSystem.copyAsync({ from: videoFile.uri, to: permanentUri });
+
+        // 4. Sacamos información del archivo recién guardado para mostrar en la info card
+        // eslint-disable-next-line import/namespace
         const info = await FileSystem.getInfoAsync(permanentUri);
 
         onChange(permanentUri);
-        setVideoPublicId(""); // Lo vaciamos para que sync se encargue después
-        
+
         setCardInfo({
-          name: "Video de Ejercicio Local",
+          name: "Video Ejercicio",
           size: info.exists ? (info.size / 1024 / 1024).toFixed(2) : null,
           format: ext.toUpperCase(),
         });
       } catch (error) {
-        console.error("Error al guardar video local ❌:", error);
+        console.error("Error al guardar el video localmente ❌:", error);
         Alert.alert("Error", "No se pudo preparar el video.");
         onChange(null);
       } finally {
@@ -177,7 +185,7 @@ export default function InputUploadVideo({
             isUploading={isUploading}
             labelLoading="Subiendo video..."
             label="Subir archivo de video"
-            onPress={sendVideoToCloudinary}
+            onPress={handleVideoSelection}
             backgroundColor="bg-brandPrimary-600/20"
             textColor="text-brandPrimary-600 dark:text-brandPrimary-300"
             backgroundColorAnimated="bg-brandPrimary-300"

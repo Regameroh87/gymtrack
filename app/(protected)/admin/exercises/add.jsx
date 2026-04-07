@@ -44,7 +44,7 @@ import {
   Trash,
   X,
 } from "../../../../assets/icons";
-import { ui, brandPrimary, brandSecondary } from "../../../../src/theme/colors";
+import { ui } from "../../../../src/theme/colors";
 import { useTheme } from "../../../../src/theme/theme";
 
 import HandlePickImage from "../../../../src/utils/handlePickImage";
@@ -103,8 +103,8 @@ export default function AddExercise() {
           muscle_group: value.muscle_group,
           cloudinary_video_public_id: null,
           cloudinary_image_public_id: null,
-          local_video_uri: value.local_video_url || "",
-          local_image_uri: value.local_image_url || "",
+          local_video_uri: value.local_video_uri || "",
+          local_image_uri: value.local_image_uri || "",
           youtube_video_url: value.youtube_video_url,
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
@@ -481,7 +481,7 @@ export default function AddExercise() {
             ref={uploadVideoCardRef}
             className="rounded-2xl mb-4 border border-brandPrimary-600 border-l-4"
           >
-            <form.Field name="video_url">
+            <form.Field name="local_video_uri">
               {(field) => (
                 <InputUploadVideo
                   value={field.state.value}
@@ -496,7 +496,7 @@ export default function AddExercise() {
           </View>
 
           {/* Imagen de portada Ejercicio */}
-          <form.Field name="image_url">
+          <form.Field name="local_image_uri">
             {(field) => (
               <ImagePickerCard
                 ref={imageCardRef}
