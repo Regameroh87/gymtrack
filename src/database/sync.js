@@ -4,6 +4,8 @@ import { database } from "./index";
 import { exercises_base } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or } from "drizzle-orm";
+import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
+import { deleteMediaLocally } from "../utils/saveMediaLocally";
 
 const LAST_SYNC_KEY = "last_sync_at";
 
@@ -46,9 +48,67 @@ export async function syncWithSupabase() {
       )
     );
   if (localChanges.length > 0) {
+    // ---- AQUÍ OCURRE LA MAGIA DEL UPLOAD BACKGROUND ----
+    for (let row of localChanges) {
+      let updatedLocal = false;
+
+      // 1. Subir Imagen Local a Cloudinary
+      if (row.local_image_uri && row.local_image_uri.startsWith("file://")) {
+        try {
+          const { public_id } = await uploadFileToCloudinary({
+            fileUri: row.local_image_uri,
+            uploadPreset: "gymtrack_images",
+            typeFile: "image",
+          });
+          if (public_id) {
+            row.cloudinary_image_public_id = public_id;
+            await deleteMediaLocally(row.local_image_uri);
+            row.local_image_uri = ""; // Limpiamos porque ya no está local
+            updatedLocal = true;
+          }
+        } catch (err) {
+          console.error("Error subiendo imagen en background:", err);
+        }
+      }
+
+      // 2. Subir Video Local a Cloudinary
+      if (row.local_video_uri && row.local_video_uri.startsWith("file://")) {
+        try {
+          const { public_id } = await uploadFileToCloudinary({
+            fileUri: row.local_video_uri,
+            uploadPreset: "gymtrack_videos",
+            typeFile: "video",
+          });
+          if (public_id) {
+            row.cloudinary_video_public_id = public_id;
+            await deleteMediaLocally(row.local_video_uri);
+            row.local_video_uri = ""; // Limpiamos porque ya no está local
+            updatedLocal = true;
+          }
+        } catch (err) {
+          console.error("Error subiendo video en background:", err);
+        }
+      }
+
+      // 3. Persistir en SQLite si logramos subir algo, por si se cae internet en este instante y no llega a Supabase
+      if (updatedLocal) {
+        await database
+          .update(exercises_base)
+          .set({
+            cloudinary_image_public_id: row.cloudinary_image_public_id,
+            cloudinary_video_public_id: row.cloudinary_video_public_id,
+            local_image_uri: row.local_image_uri,
+            local_video_uri: row.local_video_uri,
+          })
+          .where(eq(exercises_base.id, row.id));
+      }
+    }
+    // ----------------------------------------------------
+
     const changesToUpload = localChanges.map((row) => {
-      // Excluimos sync_status ya que es de uso exclusivamente local en SQLite
-      const { sync_status, ...restOfRow } = row;
+      // Excluimos sync_status y las uris locales ya que son de uso EXCLUSIVAMENTE local en SQLite
+      const { sync_status, local_image_uri, local_video_uri, ...restOfRow } =
+        row;
       return restOfRow;
     });
 

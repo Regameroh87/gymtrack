@@ -4,7 +4,7 @@ import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { brandPrimary, ui } from "../../theme/colors";
-import { saveMediaLocally } from "../../utils/saveMediaLocally";
+import { saveMediaLocally, deleteMediaLocally } from "../../utils/saveMediaLocally";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import HeaderCard from "../cards/HeaderCard";
@@ -78,6 +78,11 @@ export default function InputUploadVideo({
     if (videoFile) {
       setIsUploading(true);
       try {
+        if (value && value.startsWith("file://")) {
+          // Si ya había un video local pendiendo antes y eligen otro distinto, borramos el viejo
+          await deleteMediaLocally(value);
+        }
+
         const {
           uri: permanentUri,
           size,
@@ -158,7 +163,10 @@ export default function InputUploadVideo({
                 ) : null}
               </View>
               <Pressable
-                onPress={() => {
+                onPress={async () => {
+                  if (value && value.startsWith("file://")) {
+                    await deleteMediaLocally(value);
+                  }
                   onChange(null);
                   setVideoPublicId(null);
                 }}

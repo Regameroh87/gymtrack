@@ -1,6 +1,4 @@
-import { saveMediaLocally } from "./saveMediaLocally";
 import { uploadFileToCloudinary } from "./uploadFileToCloudinary";
-
 export default async function HandlePickImage({
   onChange,
   pickMedia,
@@ -8,12 +6,11 @@ export default async function HandlePickImage({
 }) {
   const result = await pickMedia({ source });
   if (result) {
-    const { uri: permanentUri } = await saveMediaLocally(result.uri, "jpg");
-    onChange(permanentUri);
+    onChange(result.uri);
     //setIsUploading(true);
     try {
       const uploadedImage = await uploadFileToCloudinary({
-        fileUri: permanentUri,
+        fileUri: result.uri,
         uploadPreset: "gymtrack_images",
         typeFile: "image",
       });

@@ -12,7 +12,6 @@ import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
 import { ui } from "../../theme/colors";
-import { saveMediaLocally } from "../../utils/saveMediaLocally";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
@@ -29,12 +28,11 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
         ? await pickMedia({ source: "camera" })
         : await pickMedia({ source: "gallery" });
     if (result) {
+      onChange(result.uri);
       setIsUploading(true);
       try {
-        const { uri: permanentUri } = await saveMediaLocally(result.uri, "jpg");
-        onChange(permanentUri);
         const uploadedImage = await uploadFileToCloudinary({
-          fileUri: permanentUri,
+          fileUri: result.uri,
           uploadPreset: "gymtrack_images",
           typeFile: "image",
         });

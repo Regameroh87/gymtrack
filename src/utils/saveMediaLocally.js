@@ -28,3 +28,18 @@ export async function saveMediaLocally(tempUri, defaultExt = "jpg") {
     ext,
   };
 }
+
+/**
+ * Borra de manera segura un archivo local si es que existe.
+ * Ideal para limpiar la memoria de la aplicación después de subir a la nube
+ * o cuando el usuario aborta una subida.
+ */
+export async function deleteMediaLocally(uri) {
+  if (!uri || !uri.startsWith("file://")) return;
+  try {
+    // eslint-disable-next-line import/namespace
+    await FileSystem.deleteAsync(uri, { idempotent: true });
+  } catch (err) {
+    console.error("Error borrando archivo local:", err);
+  }
+}
