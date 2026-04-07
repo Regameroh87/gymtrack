@@ -1,5 +1,4 @@
-import * as FileSystem from "expo-file-system";
-import * as Crypto from "expo-crypto";
+import { saveMediaLocally } from "./saveMediaLocally";
 import { uploadFileToCloudinary } from "./uploadFileToCloudinary";
 
 export default async function HandlePickImage({
@@ -9,13 +8,7 @@ export default async function HandlePickImage({
 }) {
   const result = await pickMedia({ source });
   if (result) {
-    const ext = result.uri.split(".").pop() || "jpg";
-    const fileName = `${Crypto.randomUUID()}.${ext}`;
-    // eslint-disable-next-line import/namespace
-    const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
-    
-    // eslint-disable-next-line import/namespace
-    await FileSystem.copyAsync({ from: result.uri, to: permanentUri });
+    const { uri: permanentUri } = await saveMediaLocally(result.uri, "jpg");
     onChange(permanentUri);
     //setIsUploading(true);
     try {

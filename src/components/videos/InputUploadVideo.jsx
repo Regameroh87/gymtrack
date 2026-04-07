@@ -4,8 +4,7 @@ import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { brandPrimary, ui } from "../../theme/colors";
-import * as FileSystem from "expo-file-system";
-import * as Crypto from "expo-crypto";
+import { saveMediaLocally } from "../../utils/saveMediaLocally";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import HeaderCard from "../cards/HeaderCard";
@@ -79,27 +78,16 @@ export default function InputUploadVideo({
     if (videoFile) {
       setIsUploading(true);
       try {
-        // 1. Obtenemos extensión y creamos el nombre
-        const ext = videoFile.uri.split(".").pop() || "mp4";
-        const fileName = `${Crypto.randomUUID()}.${ext}`;
-
-        // 2. Definimos la ruta local permanente (Memoria de la app)
-        // eslint-disable-next-line import/namespace
-        const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
-
-        // 3. Copiamos el archivo!
-        // eslint-disable-next-line import/namespace
-        await FileSystem.copyAsync({ from: videoFile.uri, to: permanentUri });
-
-        // 4. Sacamos información del archivo recién guardado para mostrar en la info card
-        // eslint-disable-next-line import/namespace
-        const info = await FileSystem.getInfoAsync(permanentUri);
-
+        const {
+          uri: permanentUri,
+          size,
+          ext,
+        } = await saveMediaLocally(videoFile.uri, "mp4");
         onChange(permanentUri);
-
+        setVideoPublicId("");
         setCardInfo({
           name: "Video Ejercicio",
-          size: info.exists ? (info.size / 1024 / 1024).toFixed(2) : null,
+          size: size,
           format: ext.toUpperCase(),
         });
       } catch (error) {

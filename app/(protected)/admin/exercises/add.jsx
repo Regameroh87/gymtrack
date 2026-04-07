@@ -88,7 +88,9 @@ export default function AddExercise() {
       equipments: [], // Ahora es un array de objetos { name, image_public_id }
       youtube_video_url: "",
       local_image_uri: "",
+      cloudinary_image_public_id: "",
       local_video_uri: "",
+      cloudinary_video_public_id: "",
       instructions: "",
       is_unilateral: false,
     },
