@@ -27,8 +27,8 @@ export default function AddEquipment() {
     <FormField label="EQUIPAMIENTO REQUERIDO">
       <formEquipment.Field name="equipments">
         {(field) => (
-          <View className="gap-y-4 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl p-2">
-            <View className="flex-row gap-4 mt-3 items-center">
+          <View className="gap-y-4 w-full p-4 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl">
+            <View className="flex-row justify-center items-center gap-2 mt-3">
               <View className="w-24 h-24">
                 <PreviewImage value={field.state.value.image_public_id}>
                   <CameraPlus color={ui.text.mutedDark} size={24} />
