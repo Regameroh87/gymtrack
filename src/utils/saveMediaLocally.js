@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Crypto from "expo-crypto";
 
 /**
@@ -29,11 +29,6 @@ export async function saveMediaLocally(tempUri, defaultExt = "jpg") {
   };
 }
 
-/**
- * Borra de manera segura un archivo local si es que existe.
- * Ideal para limpiar la memoria de la aplicación después de subir a la nube
- * o cuando el usuario aborta una subida.
- */
 export async function deleteMediaLocally(uri) {
   if (!uri || !uri.startsWith("file://")) return;
   try {

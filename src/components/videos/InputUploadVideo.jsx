@@ -4,7 +4,10 @@ import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import { brandPrimary, ui } from "../../theme/colors";
-import { saveMediaLocally, deleteMediaLocally } from "../../utils/saveMediaLocally";
+import {
+  saveMediaLocally,
+  deleteMediaLocally,
+} from "../../utils/saveMediaLocally";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import HeaderCard from "../cards/HeaderCard";
@@ -79,10 +82,8 @@ export default function InputUploadVideo({
       setIsUploading(true);
       try {
         if (value && value.startsWith("file://")) {
-          // Si ya había un video local pendiendo antes y eligen otro distinto, borramos el viejo
           await deleteMediaLocally(value);
         }
-
         const {
           uri: permanentUri,
           size,
@@ -120,7 +121,7 @@ export default function InputUploadVideo({
         </PreviewVideo>
         {/* ── Video info card (uploaded) ── */}
         {(value || videoPublicId) && !isUploading ? (
-          <View className="p-4 rounded-xl bg-ui-surface-secondary-light dark:bg-ui-surface-secondary-dark">
+          <View className="p-4 rounded-xl bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark">
             <View className="flex-row justify-between items-center mb-2">
               <Text
                 className="font-manrope-bold text-sm w-56 text-ui-text-main dark:text-ui-text-mainDark"
