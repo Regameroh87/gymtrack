@@ -18,7 +18,7 @@ export default function useAsyncStorage({ form, storageKey }) {
       }
     };
     loadDraft();
-  }, []);
+  }, [form, storageKey]);
 
   useEffect(() => {
     if (!form) return;
@@ -37,5 +37,5 @@ export default function useAsyncStorage({ form, storageKey }) {
         unsubscribe();
       }
     };
-  }, [form]);
+  }, [form, storageKey]);
 }

@@ -79,6 +79,7 @@ export default function AddExercise() {
     name: "",
     image_public_id: "",
   });
+
   const form = useForm({
     defaultValues: {
       name: "",
