@@ -25,7 +25,7 @@ import {
 // Shared components
 import CustomSelect from "../../../../src/components/CustomSelect";
 import InputUploadVideo from "../../../../src/components/videos/InputUploadVideo";
-import PreviewImage from "../../../../src/components/images/PreviewImage";
+import AddEquipment from "../../../../src/components/forms/AddEquipment";
 
 // Form-specific sub-components
 import FormField from "../../../../src/components/forms/FormField";
@@ -36,16 +36,7 @@ import UnilateralToggle from "../../../../src/components/forms/UnilateralToggle"
 import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
-import {
-  Barbell,
-  CameraPlus,
-  CloudUpload,
-  Plus,
-  Trash,
-  X,
-} from "../../../../assets/icons";
 import { ui } from "../../../../src/theme/colors";
-import { useTheme } from "../../../../src/theme/theme";
 
 import HandlePickImage from "../../../../src/utils/handlePickImage";
 import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
@@ -53,7 +44,7 @@ import { useState, useMemo } from "react";
 
 export default function AddExercise() {
   const queryClient = useQueryClient();
-  const { isDark } = useTheme();
+
   const { pickMedia } = useMediaPicker();
 
   const { data: dbEquipments = [] } = useQuery({
@@ -279,7 +270,19 @@ export default function AddExercise() {
         </View>
 
         {/* Equipo */}
-
+        <AddEquipment
+          form={form}
+          dbEquipments={dbEquipments}
+          equipmentOptions={equipmentOptions}
+          selectedEquipmentValue={selectedEquipmentValue}
+          setSelectedEquipmentValue={setSelectedEquipmentValue}
+          currentEquipment={currentEquipment}
+          setCurrentEquipment={setCurrentEquipment}
+          HandlePickImage={HandlePickImage}
+          pickMedia={pickMedia}
+          Haptics={Haptics}
+          ui={ui}
+        />
         {/* Multimedia */}
         <View className="mt-4">
           <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-4 uppercase tracking-label">
