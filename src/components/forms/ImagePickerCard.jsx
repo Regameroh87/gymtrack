@@ -12,6 +12,8 @@ import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
 import { ui } from "../../theme/colors";
+import * as FileSystem from "expo-file-system";
+import * as Crypto from "expo-crypto";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, setImagePublicId, imagePublicId },
@@ -28,15 +30,15 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
         ? await pickMedia({ source: "camera" })
         : await pickMedia({ source: "gallery" });
     if (result) {
-      onChange(result.uri);
       setIsUploading(true);
       try {
-        const uploadedImage = await uploadFileToCloudinary({
-          fileUri: result.uri,
-          uploadPreset: "gymtrack_images",
-          typeFile: "image",
-        });
-        setImagePublicId(uploadedImage.public_id);
+        const ext = result.uri.split('.').pop() || 'jpg';
+        const fileName = `${Crypto.randomUUID()}.${ext}`;
+        const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
+        
+        await FileSystem.copyAsync({ from: result.uri, to: permanentUri });
+        onChange(permanentUri);
+        setImagePublicId(""); // Dejamos public_id limpio / vacío provisionalmente
       } catch (error) {
         console.error(error.message);
       } finally {

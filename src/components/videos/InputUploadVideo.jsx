@@ -3,8 +3,9 @@ import { Pressable, Text, Alert, View, Animated } from "react-native";
 import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
-import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary";
 import { brandPrimary, ui } from "../../theme/colors";
+import * as FileSystem from "expo-file-system";
+import * as Crypto from "expo-crypto";
 import { Upload, Movie, Trash } from "../../../assets/icons";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import HeaderCard from "../cards/HeaderCard";
@@ -76,28 +77,26 @@ export default function InputUploadVideo({
     });
     if (videoFile) {
       onChange(videoFile.uri);
-      setCardInfo(null);
       setIsUploading(true);
-      console.log("enviando video a cloudinary...");
       try {
-        const { public_id, result } = await uploadFileToCloudinary({
-          fileUri: videoFile.uri,
-          uploadPreset: "gymtrack_videos",
-          typeFile: "video",
+        const ext = videoFile.uri.split(".").pop() || "mp4";
+        const fileName = `${Crypto.randomUUID()}.${ext}`;
+        const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
+        
+        await FileSystem.copyAsync({ from: videoFile.uri, to: permanentUri });
+        const info = await FileSystem.getInfoAsync(permanentUri);
+
+        onChange(permanentUri);
+        setVideoPublicId(""); // Lo vaciamos para que sync se encargue después
+        
+        setCardInfo({
+          name: "Video de Ejercicio Local",
+          size: info.exists ? (info.size / 1024 / 1024).toFixed(2) : null,
+          format: ext.toUpperCase(),
         });
-        if (public_id) {
-          console.log("Video subido correctamente a Cloudinary ✅ ");
-          setVideoPublicId(public_id);
-          setCardInfo({
-            name: result.original_filename,
-            size: (result.bytes / 1024 / 1024).toFixed(2),
-            duration: Math.round(result.duration),
-            format: result.format,
-          });
-        }
       } catch (error) {
-        console.error("Error al subir el video a Cloudinary ❌:", error);
-        Alert.alert("Error", "No se pudo subir el video.");
+        console.error("Error al guardar video local ❌:", error);
+        Alert.alert("Error", "No se pudo preparar el video.");
         onChange(null);
       } finally {
         setIsUploading(false);

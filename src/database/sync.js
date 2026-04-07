@@ -4,6 +4,7 @@ import { database } from "./index";
 import { exercises_base } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or } from "drizzle-orm";
+import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 
 const LAST_SYNC_KEY = "last_sync_at";
 
@@ -46,9 +47,54 @@ export async function syncWithSupabase() {
       )
     );
   if (localChanges.length > 0) {
+    // Subimos archivos pesados a Cloudinary primero (Offline-First to Cloud logic)
+    for (let row of localChanges) {
+      let updatedLocal = false;
+      
+      if (row.local_image_uri && row.local_image_uri.startsWith("file://")) {
+        try {
+           const uploadedImage = await uploadFileToCloudinary({
+             fileUri: row.local_image_uri,
+             uploadPreset: "gymtrack_images",
+             typeFile: "image",
+           });
+           if (uploadedImage.public_id) {
+             row.cloudinary_image_public_id = uploadedImage.public_id;
+             row.local_image_uri = ""; // Limpiamos
+             updatedLocal = true;
+           }
+        } catch (err) { console.error("Error subiendo imagen local en background:", err); }
+      }
+
+      if (row.local_video_uri && row.local_video_uri.startsWith("file://")) {
+        try {
+           const { public_id } = await uploadFileToCloudinary({
+             fileUri: row.local_video_uri,
+             uploadPreset: "gymtrack_videos",
+             typeFile: "video",
+           });
+           if (public_id) {
+             row.cloudinary_video_public_id = public_id;
+             row.local_video_uri = ""; // Limpiamos
+             updatedLocal = true;
+           }
+        } catch (err) { console.error("Error subiendo video local en background:", err); }
+      }
+
+      // Si subimos algo, persistimos la nueva info temporalmente en SQLite local
+      if (updatedLocal) {
+         await database.update(exercises_base).set({
+            cloudinary_image_public_id: row.cloudinary_image_public_id,
+            cloudinary_video_public_id: row.cloudinary_video_public_id,
+            local_image_uri: row.local_image_uri,
+            local_video_uri: row.local_video_uri
+         }).where(eq(exercises_base.id, row.id));
+      }
+    }
+
     const changesToUpload = localChanges.map((row) => {
-      // Excluimos sync_status ya que es de uso exclusivamente local en SQLite
-      const { sync_status, ...restOfRow } = row;
+      // Excluimos sync_status y las url locales ya que es de uso exclusivamente local en SQLite
+      const { sync_status, local_image_uri, local_video_uri, ...restOfRow } = row;
       return restOfRow;
     });
 

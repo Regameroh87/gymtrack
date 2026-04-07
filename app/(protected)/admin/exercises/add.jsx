@@ -86,11 +86,9 @@ export default function AddExercise() {
       category: "",
       muscle_group: "",
       equipments: [], // Ahora es un array de objetos { name, image_public_id }
-      video_url: "",
-      video_public_id: "",
       youtube_video_url: "",
-      image_url: "",
-      image_public_id: "",
+      local_image_uri: "",
+      local_video_uri: "",
       instructions: "",
       is_unilateral: false,
     },
@@ -103,9 +101,11 @@ export default function AddExercise() {
           name: value.name,
           category: value.category,
           muscle_group: value.muscle_group,
-          video_public_id: value.video_public_id,
+          cloudinary_video_public_id: null,
+          cloudinary_image_public_id: null,
+          local_video_uri: value.local_video_url || "",
+          local_image_uri: value.local_image_url || "",
           youtube_video_url: value.youtube_video_url,
-          image_public_id: value.image_public_id,
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
         });
@@ -117,7 +117,8 @@ export default function AddExercise() {
             await database.insert(equipmentSchema).values({
               id: eqId,
               name: eq.name,
-              image_public_id: eq.image_public_id,
+              cloudinary_image_public_id: null,
+              local_image_uri: eq.image_public_id || "",
             });
           }
           await database.insert(exercise_equipment).values({
@@ -494,6 +495,7 @@ export default function AddExercise() {
             </form.Field>
           </View>
 
+          {/* Imagen de portada Ejercicio */}
           <form.Field name="image_url">
             {(field) => (
               <ImagePickerCard

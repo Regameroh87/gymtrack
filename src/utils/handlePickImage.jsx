@@ -1,4 +1,6 @@
-import { uploadFileToCloudinary } from "./uploadFileToCloudinary";
+import * as FileSystem from "expo-file-system";
+import * as Crypto from "expo-crypto";
+
 export default async function HandlePickImage({
   onChange,
   pickMedia,
@@ -6,20 +8,17 @@ export default async function HandlePickImage({
 }) {
   const result = await pickMedia({ source });
   if (result) {
-    onChange(result.uri);
-    //setIsUploading(true);
     try {
-      const uploadedImage = await uploadFileToCloudinary({
-        fileUri: result.uri,
-        uploadPreset: "gymtrack_images",
-        typeFile: "image",
-      });
-      console.log("uploadedImage", uploadedImage);
-      //setImagePublicId(uploadedImage.public_id);
+      const ext = result.uri.split(".").pop() || "jpg";
+      const fileName = `${Crypto.randomUUID()}.${ext}`;
+      const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
+      
+      await FileSystem.copyAsync({ from: result.uri, to: permanentUri });
+      
+      // Enviamos el permanentUri. El segundo parámetro (public_id) va vacío por ahora
+      onChange(permanentUri, ""); 
     } catch (error) {
-      console.error(error.message);
-    } finally {
-      //setIsUploading(false);
+      console.error("Error saving local file: ", error.message);
     }
   }
 }
