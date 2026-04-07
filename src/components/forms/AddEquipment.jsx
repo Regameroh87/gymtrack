@@ -1,9 +1,17 @@
-import { Pressable, Text, View } from "react-native";
-import { Trash } from "../../../assets/icons";
+import { Pressable, Text, View, FlatList } from "react-native";
+import {
+  Trash,
+  X,
+  Barbell,
+  CameraPlus,
+  CloudUpload,
+  Plus,
+} from "../../../assets/icons";
 import CustomSelect from "../../components/CustomSelect";
 import FormField from "../../components/forms/FormField";
 import PreviewImage from "../../components/images/PreviewImage";
 import StyledTextInput from "../../components/forms/StyledTextInput";
+import { useTheme } from "../../theme/theme";
 
 export default function AddEquipment({
   form,
@@ -17,40 +25,54 @@ export default function AddEquipment({
   pickMedia,
   Haptics,
   ui,
-  brandPrimary,
-  brandSecondary,
 }) {
+  const { isDark } = useTheme();
+
+  const renderEquipmentItem = ({ item, index }, field) => (
+    <View
+      key={index}
+      className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark mr-2"
+    >
+      <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
+        <PreviewImage value={item.local_image_uri || item.image_public_id} />
+      </View>
+      <View>
+        <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
+          EQUIPO
+        </Text>
+        <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
+          {item.name}
+        </Text>
+      </View>
+      <Pressable
+        onPress={() => {
+          const newList = [...field.state.value];
+          newList.splice(index, 1);
+          field.handleChange(newList);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }}
+        className="ml-3 p-1"
+      >
+        <Trash color="#ef4444" size={14} />
+      </Pressable>
+    </View>
+  );
+
   return (
     <FormField label="EQUIPAMIENTO REQUERIDO">
       <form.Field name="equipments">
         {(field) => (
           <View className="gap-y-4">
-            {/* Lista de equipos agregados */}
+            {/* Lista de equipos agregados con FlatList */}
             {field.state.value.length > 0 && (
-              <View className="flex-row flex-wrap gap-2 mb-2">
-                {field.state.value.map((item, index) => (
-                  <View
-                    key={index}
-                    className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark"
-                  >
-                    <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
-                      <PreviewImage value={item.image_public_id} />
-                    </View>
-                    <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark mr-2">
-                      {item.name}
-                    </Text>
-                    <Pressable
-                      onPress={() => {
-                        const newList = [...field.state.value];
-                        newList.splice(index, 1);
-                        field.handleChange(newList);
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      }}
-                    >
-                      <Trash color="#ef4444" size={14} />
-                    </Pressable>
-                  </View>
-                ))}
+              <View className="mb-2">
+                <FlatList
+                  data={field.state.value}
+                  renderItem={(props) => renderEquipmentItem(props, field)}
+                  keyExtractor={(_, index) => index.toString()}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                />
               </View>
             )}
 
@@ -126,10 +148,10 @@ export default function AddEquipment({
                           HandlePickImage({
                             pickMedia,
                             source: "gallery",
-                            onChange: (_uri, public_id) =>
+                            onChange: (uri) =>
                               setCurrentEquipment((prev) => ({
                                 ...prev,
-                                image_public_id: public_id,
+                                image_public_id: uri,
                               })),
                           });
                         }}
@@ -148,10 +170,10 @@ export default function AddEquipment({
                           HandlePickImage({
                             pickMedia,
                             source: "camera",
-                            onChange: (_uri, public_id) =>
+                            onChange: (uri) =>
                               setCurrentEquipment((prev) => ({
                                 ...prev,
-                                image_public_id: public_id,
+                                image_public_id: uri,
                               })),
                           });
                         }}

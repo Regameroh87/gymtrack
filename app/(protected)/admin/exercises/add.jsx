@@ -76,7 +76,7 @@ export default function AddExercise() {
       name: "",
       category: "",
       muscle_group: "",
-      equipments: [], // Ahora es un array de objetos { name, image_public_id }
+      equipments: [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
       youtube_video_url: "",
       local_image_uri: "",
       cloudinary_image_public_id: "",
@@ -89,13 +89,14 @@ export default function AddExercise() {
       try {
         const newExerciseId = Crypto.randomUUID();
 
+        // 1. Insertar Ejercicio Base
         await database.insert(exercises_base).values({
           id: newExerciseId,
           name: value.name,
           category: value.category,
           muscle_group: value.muscle_group,
-          cloudinary_video_public_id: null,
-          cloudinary_image_public_id: null,
+          cloudinary_video_public_id: value.cloudinary_video_public_id,
+          cloudinary_image_public_id: value.cloudinary_image_public_id,
           local_video_uri: value.local_video_uri || "",
           local_image_uri: value.local_image_uri || "",
           youtube_video_url: value.youtube_video_url,
@@ -103,6 +104,7 @@ export default function AddExercise() {
           is_unilateral: value.is_unilateral ? 1 : 0,
         });
 
+        // 2. Manejar Equipamiento (Muchos a Muchos)
         for (const eq of value.equipments) {
           let eqId = eq.id;
           if (eq.isNew) {
@@ -110,7 +112,7 @@ export default function AddExercise() {
             await database.insert(equipmentSchema).values({
               id: eqId,
               name: eq.name,
-              cloudinary_image_public_id: null,
+              cloudinary_image_public_id: null, // Se subirá en background si hay local_uri
               local_image_uri: eq.image_public_id || "",
             });
           }
@@ -310,10 +312,10 @@ export default function AddExercise() {
                 <InputUploadVideo
                   value={field.state.value}
                   onChange={field.handleChange}
-                  setVideoPublicId={(video_public_id) =>
-                    form.setFieldValue("video_public_id", video_public_id)
+                  setVideoPublicId={(id) =>
+                    form.setFieldValue("cloudinary_video_public_id", id)
                   }
-                  videoPublicId={form.state.values.video_public_id}
+                  videoPublicId={form.state.values.cloudinary_video_public_id}
                 />
               )}
             </form.Field>
@@ -326,10 +328,10 @@ export default function AddExercise() {
                 ref={imageCardRef}
                 value={field.state.value}
                 onChange={field.handleChange}
-                setImagePublicId={(image_public_id) =>
-                  form.setFieldValue("image_public_id", image_public_id)
+                setImagePublicId={(id) =>
+                  form.setFieldValue("cloudinary_image_public_id", id)
                 }
-                imagePublicId={form.state.values.image_public_id}
+                imagePublicId={form.state.values.cloudinary_image_public_id}
                 onFocus={() => scrollToCard(imageCardRef)}
               />
             )}
