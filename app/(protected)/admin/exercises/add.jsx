@@ -1,5 +1,5 @@
 import { View, Text, TextInput, Pressable, FlatList } from "react-native";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
@@ -46,6 +46,9 @@ import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
 export default function AddExercise() {
   const queryClient = useQueryClient();
   const { pickMedia } = useMediaPicker();
+
+  const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
+  const [initialEquipmentName, setInitialEquipmentName] = useState("");
 
   const { data: dbEquipments = [] } = useQuery({
     queryKey: ["equipments"],
@@ -301,16 +304,50 @@ export default function AddExercise() {
                   />
                 </View>
               )}
-              <CustomSelect
-                label="EQUIPAMIENTO"
-                options={dbEquipments.map((eq) => ({
-                  value: eq.id,
-                  label: eq.name,
-                }))}
-                value={field.state.value}
-                onChange={field.handleChange}
-              />
-              <AddEquipment />
+              {!isCreatingEquipment ? (
+                <CustomSelect
+                  label="EQUIPAMIENTO"
+                  options={dbEquipments.map((eq) => ({
+                    value: eq.id,
+                    label: eq.name,
+                  }))}
+                  value={null}
+                  searchable={true}
+                  onChange={(selectedId) => {
+                    const selectedEq = dbEquipments.find(
+                      (e) => e.id === selectedId
+                    );
+                    if (
+                      selectedEq &&
+                      !field.state.value.find((e) => e.id === selectedId)
+                    ) {
+                      field.handleChange([
+                        ...field.state.value,
+                        {
+                          id: selectedEq.id,
+                          name: selectedEq.name,
+                          image_public_id: selectedEq.local_image_uri,
+                          isNew: false,
+                        },
+                      ]);
+                    }
+                  }}
+                  actionLabel="Crear máquina nueva"
+                  onActionPress={(query) => {
+                    setInitialEquipmentName(query);
+                    setIsCreatingEquipment(true);
+                  }}
+                />
+              ) : (
+                <AddEquipment
+                  initialName={initialEquipmentName}
+                  onCancel={() => setIsCreatingEquipment(false)}
+                  onAdd={(newEq) => {
+                    field.handleChange([...field.state.value, newEq]);
+                    setIsCreatingEquipment(false);
+                  }}
+                />
+              )}
             </>
           )}
         </form.Field>

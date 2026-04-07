@@ -1,9 +1,10 @@
-import React, { useRef, useCallback, useMemo } from "react";
-import { View, Text, Pressable } from "react-native";
+import React, { useRef, useCallback, useMemo, useState } from "react";
+import { View, Text, Pressable, Keyboard } from "react-native";
 import {
   BottomSheetModal,
   BottomSheetFlatList,
   BottomSheetBackdrop,
+  BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { ui } from "../theme/colors";
 import { useColorScheme } from "nativewind";
@@ -14,12 +15,17 @@ const CustomSelect = ({
   value,
   onChange,
   placeholder = "Seleccionar...",
-  snapPoints = ["50%"],
+  snapPoints = ["50%", "90%"],
+  searchable = false,
+  actionLabel,
+  onActionPress,
 }) => {
   const bottomSheetModalRef = useRef(null);
   const { colorScheme } = useColorScheme();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handlePresentModalPress = useCallback(() => {
+    Keyboard.dismiss();
     bottomSheetModalRef.current?.present();
   }, []);
 
@@ -38,6 +44,14 @@ const CustomSelect = ({
     () => options.find((opt) => opt.value === value),
     [options, value]
   );
+
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !searchQuery) return options;
+    const lowerQuery = searchQuery.toLowerCase();
+    return options.filter((opt) =>
+      opt.label.toLowerCase().includes(lowerQuery)
+    );
+  }, [options, searchQuery, searchable]);
 
   return (
     <View className="flex w-full mb-4">
@@ -70,12 +84,14 @@ const CustomSelect = ({
         </Text>
       </Pressable>
 
-      {/* Bottom Sheet — tonal layered surface */}
+      {/* Bottom Sheet */}
       <BottomSheetModal
         ref={bottomSheetModalRef}
-        index={0}
+        index={searchable ? 1 : 0}
         snapPoints={snapPoints}
         backdropComponent={renderBackdrop}
+        keyboardBehavior="extend"
+        android_keyboardInputMode="adjustResize"
         backgroundStyle={{
           backgroundColor:
             colorScheme === "dark" ? ui.surface.dark : ui.surface.light,
@@ -91,20 +107,78 @@ const CustomSelect = ({
           height: 4,
           borderRadius: 2,
         }}
+        onDismiss={() => {
+          setSearchQuery("");
+        }}
       >
+        <View className="px-6 pt-4 pb-2 z-10">
+          <Text className="text-lg font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark mb-4">
+            {label
+              ? `Seleccionar ${label.charAt(0) + label.slice(1).toLowerCase()}`
+              : "Seleccionar"}
+          </Text>
+
+          {searchable && (
+            <BottomSheetTextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Buscar..."
+              placeholderTextColor={
+                colorScheme === "dark" ? ui.text.mutedDark : ui.text.muted
+              }
+              style={{
+                backgroundColor:
+                  colorScheme === "dark"
+                    ? ui.surfaceSecondary.dark
+                    : ui.surfaceSecondary.light,
+                color: colorScheme === "dark" ? ui.text.mainDark : ui.text.main,
+                padding: 14,
+                borderRadius: 12,
+                fontFamily: "Manrope_500Medium",
+                borderWidth: 1,
+                borderColor:
+                  colorScheme === "dark"
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.05)",
+              }}
+            />
+          )}
+        </View>
+
         <BottomSheetFlatList
-          data={options}
+          data={filteredOptions}
           keyExtractor={(item) => item.value.toString()}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingBottom: 100,
+            paddingTop: 8,
           }}
-          ListHeaderComponent={() => (
-            <Text className="text-lg font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark mb-6 mt-6">
-              {label
-                ? `Seleccionar ${label.charAt(0) + label.slice(1).toLowerCase()}`
-                : "Seleccionar"}
-            </Text>
+          ListEmptyComponent={() => (
+            <View className="items-center justify-center p-6 mt-4">
+              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-center mb-6 font-manrope">
+                No se encontraron opciones para "{searchQuery}"
+              </Text>
+
+              {actionLabel && onActionPress && (
+                <Pressable
+                  onPress={() => {
+                    Keyboard.dismiss();
+                    bottomSheetModalRef.current?.dismiss();
+
+                    // Esperar cierre antes de disparar
+                    setTimeout(() => {
+                      onActionPress(searchQuery);
+                    }, 400);
+                  }}
+                  className="px-6 py-4 bg-brandPrimary-600 rounded-xl flex-row justify-center items-center active:scale-[0.97] w-full shadow-sm shadow-brandPrimary-600/30"
+                >
+                  <Text className="text-white font-jakarta-bold">
+                    + {actionLabel}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           )}
           renderItem={({ item: option }) => {
             const isSelected = value === option.value;
@@ -114,7 +188,7 @@ const CustomSelect = ({
                   onChange(option.value);
                   bottomSheetModalRef.current?.dismiss();
                 }}
-                className="p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97]"
+                className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${isSelected ? "border-brandPrimary-500/20" : "border-transparent"}`}
                 style={{
                   backgroundColor: isSelected
                     ? "rgba(48, 35, 205, 0.08)"
