@@ -141,7 +141,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
               onPress={formAddEquipment.handleSubmit}
               className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
                 name.trim()
-                  ? "bg-brandPrimary-600"
+                  ? "bg-brandPrimary-600 active:scale-95 transition-all duration-200"
                   : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
               }`}
             >
