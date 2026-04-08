@@ -225,9 +225,9 @@ export default function AddExercise() {
                   onChangeText={field.handleChange}
                   placeholder="Ej: Press de Banca"
                 />
-                {field.state.meta.errors.length > 0 && (
+                {field.state.meta.errors?.length > 0 && (
                   <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
-                    {field.state.meta.errors.join(", ")}
+                    {(field.state.meta.errors ?? []).join(", ")}
                   </Text>
                 )}
               </View>
