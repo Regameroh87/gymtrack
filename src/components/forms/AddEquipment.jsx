@@ -82,6 +82,10 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
     },
   });
 
+  const formName = formAddEquipment.useStore((s) => s.values.name ?? "");
+  const formCanSubmit = formAddEquipment.useStore((s) => s.canSubmit);
+  const isValid = formCanSubmit && formName.trim().length > 0;
+
   return (
     <View className="gap-y-4 w-full p-4 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl mt-4 border border-ui-border-light dark:border-ui-border-dark shadow-sm">
       {/* Header */}
@@ -144,9 +148,9 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                   placeholder="Ej: Barra Z, Polea"
                   icon={<Barbell color={ui.text.mutedDark} />}
                 />
-                {field.state.meta.errors.length > 0 && (
+                {field.state.meta.errors?.length > 0 && (
                   <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
-                    {field.state.meta.errors.join(", ")}
+                    {(field.state.meta.errors ?? []).join(", ")}
                   </Text>
                 )}
               </View>
@@ -200,34 +204,22 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         </formAddEquipment.Field>
 
         {/* Botón confirmar */}
-        <formAddEquipment.Subscribe
-          selector={(state) => ({
-            name: state.values.name,
-            canSubmit: state.canSubmit,
-          })}
+        <Pressable
+          disabled={!isValid}
+          onPress={formAddEquipment.handleSubmit}
+          className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
+            isValid
+              ? "bg-brandPrimary-600 active:scale-95 transition-all duration-200"
+              : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
+          }`}
         >
-          {({ name, canSubmit }) => (
-            <Pressable
-              disabled={!canSubmit || !name.trim()}
-              onPress={formAddEquipment.handleSubmit}
-              className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
-                canSubmit && name.trim()
-                  ? "bg-brandPrimary-600 active:scale-95 transition-all duration-200"
-                  : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
-              }`}
-            >
-              <Plus
-                color={canSubmit && name.trim() ? "white" : ui.text.muted}
-                size={16}
-              />
-              <Text
-                className={`${canSubmit && name.trim() ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
-              >
-                CONFIRMAR Y AGREGAR
-              </Text>
-            </Pressable>
-          )}
-        </formAddEquipment.Subscribe>
+          <Plus color={isValid ? "white" : ui.text.muted} size={16} />
+          <Text
+            className={`${isValid ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
+          >
+            CONFIRMAR Y AGREGAR
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
