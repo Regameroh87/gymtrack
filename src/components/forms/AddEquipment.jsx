@@ -127,7 +127,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                   return "Mínimo 3 caracteres";
                 }
                 const exists = dbEquipments.some(
-                  (eq) => eq.name.toLowerCase() === trimmedValue.toLowerCase()
+                  (eq) => eq.name?.toLowerCase() === trimmedValue.toLowerCase()
                 );
                 if (exists) {
                   return "Ya existe máquina con este nombre";
