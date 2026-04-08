@@ -10,11 +10,22 @@ import StyledTextInput from "./StyledTextInput";
 import { database } from "../../database";
 import { equipment } from "../../database/schemas";
 import { useForm } from "@tanstack/react-form";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
+import Toast from "react-native-toast-message";
 
 export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
   const { isDark } = useTheme();
   const { pickMedia } = useMediaPicker();
+  const queryClient = useQueryClient();
+
+  const { data: dbEquipments = [] } = useQuery({
+    queryKey: ["equipments"],
+    queryFn: async () => {
+      const results = await database.select().from(equipment);
+      return results || [];
+    },
+  });
 
   const formAddEquipment = useForm({
     defaultValues: {
@@ -23,17 +34,38 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
     },
     onSubmit: async ({ value }) => {
       try {
+        const newId = Crypto.randomUUID();
+        const trimmedName = value.name.trim();
+
         await database.insert(equipment).values({
-          id: Crypto.randomUUID(),
-          name: value.name.trim(),
+          id: newId,
+          name: trimmedName,
           local_image_uri: value.local_image_uri,
           cloudinary_image_public_id: null,
           sync_status: "pending",
         });
+        queryClient.invalidateQueries({ queryKey: ["equipments"] });
 
-        // Notificar al padre con el nombre creado para que pueda
-        // seleccionarlo automáticamente en el CustomSelect
-        //onAdd?.(value.name.trim());
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        // Notificar al padre si existe, sino damos feedback visual y limpiamos el formulario
+        if (onAdd) {
+          onAdd({
+            id: newId,
+            name: trimmedName,
+            local_image_uri: value.local_image_uri,
+            image_public_id: value.local_image_uri,
+            isNew: true,
+          });
+        } else {
+          Toast.show({
+            type: "success",
+            text1: "¡Listo!",
+            text2: `${trimmedName} se agregó exitosamente.`,
+            position: "bottom",
+          });
+          formAddEquipment.reset();
+        }
       } catch (error) {
         console.error("Error al guardar equipo:", error);
       }
@@ -76,14 +108,38 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
 
         {/* Input nombre */}
         <View className="flex-1">
-          <formAddEquipment.Field name="name">
+          <formAddEquipment.Field
+            name="name"
+            validators={{
+              onChange: ({ value }) => {
+                const trimmedValue = value.trim();
+                if (trimmedValue.length > 0 && trimmedValue.length < 3) {
+                  return "Mínimo 3 caracteres";
+                }
+                const exists = dbEquipments.some(
+                  (eq) => eq.name.toLowerCase() === trimmedValue.toLowerCase()
+                );
+                if (exists) {
+                  return "Ya existe máquina con este nombre";
+                }
+                return undefined;
+              },
+            }}
+          >
             {(field) => (
-              <StyledTextInput
-                value={field.state.value}
-                onChangeText={field.handleChange}
-                placeholder="Ej: Barra Z, Polea"
-                icon={<Barbell color={ui.text.mutedDark} />}
-              />
+              <View>
+                <StyledTextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  placeholder="Ej: Barra Z, Polea"
+                  icon={<Barbell color={ui.text.mutedDark} />}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
+                    {field.state.meta.errors.join(", ")}
+                  </Text>
+                )}
+              </View>
             )}
           </formAddEquipment.Field>
         </View>
@@ -134,20 +190,28 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         </formAddEquipment.Field>
 
         {/* Botón confirmar */}
-        <formAddEquipment.Subscribe selector={(state) => state.values.name}>
-          {(name) => (
+        <formAddEquipment.Subscribe
+          selector={(state) => ({
+            name: state.values.name,
+            canSubmit: state.canSubmit,
+          })}
+        >
+          {({ name, canSubmit }) => (
             <Pressable
-              disabled={!name.trim()}
+              disabled={!canSubmit || !name.trim()}
               onPress={formAddEquipment.handleSubmit}
               className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
-                name.trim()
+                canSubmit && name.trim()
                   ? "bg-brandPrimary-600 active:scale-95 transition-all duration-200"
                   : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
               }`}
             >
-              <Plus color={name.trim() ? "white" : ui.text.muted} size={16} />
+              <Plus
+                color={canSubmit && name.trim() ? "white" : ui.text.muted}
+                size={16}
+              />
               <Text
-                className={`${name.trim() ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
+                className={`${canSubmit && name.trim() ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
               >
                 CONFIRMAR Y AGREGAR
               </Text>
