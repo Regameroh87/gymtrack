@@ -1,25 +1,21 @@
-import { uploadFileToCloudinary } from "./uploadFileToCloudinary";
-export default async function HandlePickImage({
+/**
+ * handlePickImage
+ *
+ * Flujo offline-first:
+ *  1. Abre el picker (galería o cámara) y persiste el archivo localmente.
+ *  2. Llama a `onChange` con la URI local persistente de inmediato.
+ *  3. NO sube a Cloudinary aquí — eso lo hace el job de sincronización
+ *     cuando detecta registros con sync_status = 'pending'.
+ */
+export default async function handlePickImage({
   onChange,
   pickMedia,
   source = "gallery",
 }) {
-  const result = await pickMedia({ source });
-  if (result) {
-    onChange(result.uri);
-    //setIsUploading(true);
-    try {
-      const uploadedImage = await uploadFileToCloudinary({
-        fileUri: result.uri,
-        uploadPreset: "gymtrack_images",
-        typeFile: "image",
-      });
-      console.log("uploadedImage", uploadedImage);
-      //setImagePublicId(uploadedImage.public_id);
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      //setIsUploading(false);
-    }
-  }
+  const file = await pickMedia({ source });
+
+  if (!file) return; // El usuario canceló o denegó el permiso
+
+  // Notificamos al formulario con la URI local persistida
+  onChange(file.uri);
 }

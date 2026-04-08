@@ -67,7 +67,7 @@ export const useAuth = () => {
   return {
     session,
     user,
-    userId: user?.id, // Acceso directo al ID para WatermelonDB
+    userId: user?.id,
     loading,
     isLoggedIn: !!session,
   };
