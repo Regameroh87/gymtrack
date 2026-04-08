@@ -33,7 +33,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
 
         // Notificar al padre con el nombre creado para que pueda
         // seleccionarlo automáticamente en el CustomSelect
-        onAdd?.(value.name.trim());
+        //onAdd?.(value.name.trim());
       } catch (error) {
         console.error("Error al guardar equipo:", error);
       }
