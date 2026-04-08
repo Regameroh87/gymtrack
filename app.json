@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
-    "schema": "gymtrack",
+    "scheme": "gymtrack",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
