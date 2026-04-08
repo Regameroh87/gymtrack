@@ -16,7 +16,7 @@ const CustomSelect = ({
   onChange,
   placeholder = "Seleccionar...",
   snapPoints = ["50%", "90%"],
-  searchable = false,
+  searchable = true,
   actionLabel,
   onActionPress,
 }) => {
@@ -156,11 +156,15 @@ const CustomSelect = ({
           }}
           ListEmptyComponent={() => (
             <View className="items-center justify-center p-6 mt-4">
-              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-center mb-6 font-manrope">
+              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-center font-manrope">
                 No se encontraron opciones para "{searchQuery}"
               </Text>
-
-              {actionLabel && onActionPress && (
+            </View>
+          )}
+          ListFooterComponent={() => {
+            if (!actionLabel || !onActionPress) return null;
+            return (
+              <View className="items-center justify-center pt-4 pb-6 mt-2">
                 <Pressable
                   onPress={() => {
                     Keyboard.dismiss();
@@ -171,15 +175,15 @@ const CustomSelect = ({
                       onActionPress(searchQuery);
                     }, 400);
                   }}
-                  className="px-6 py-4 bg-brandPrimary-600 rounded-xl flex-row justify-center items-center active:scale-[0.97] w-full shadow-sm shadow-brandPrimary-600/30"
+                  className="px-6 py-4 border border-brandPrimary-500/30 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/20 rounded-xl flex-row justify-center items-center active:scale-[0.97] w-full"
                 >
-                  <Text className="text-white font-jakarta-bold">
-                    + {actionLabel}
+                  <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-jakarta-bold">
+                    + {actionLabel} {searchQuery ? `"${searchQuery}"` : ""}
                   </Text>
                 </Pressable>
-              )}
-            </View>
-          )}
+              </View>
+            );
+          }}
           renderItem={({ item: option }) => {
             const isSelected = value === option.value;
             return (
