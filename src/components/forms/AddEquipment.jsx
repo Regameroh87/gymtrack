@@ -1,18 +1,28 @@
 import { Pressable, Text, View } from "react-native";
-import { CameraPlus, CloudUpload, Plus, Barbell } from "../../../assets/icons";
-import PreviewImage from "../../components/images/PreviewImage";
-import { useTheme } from "../../theme/theme";
-import { ui } from "../../theme/colors";
-import handlePickImage from "../../utils/handlePickImage";
-import { useMediaPicker } from "../../hooks/useMediaPicker";
-import * as Haptics from "expo-haptics";
-import StyledTextInput from "./StyledTextInput";
-import { database } from "../../database";
-import { equipment } from "../../database/schemas";
+
+// Libraries
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
+import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+
+// Database
+import { database } from "../../database";
+import { equipment } from "../../database/schemas";
+
+// Hooks & Utils
+import { useTheme } from "../../theme/theme";
+import { useMediaPicker } from "../../hooks/useMediaPicker";
+import handlePickImage from "../../utils/handlePickImage";
+
+// Components
+import PreviewImage from "../../components/images/PreviewImage";
+import StyledTextInput from "./StyledTextInput";
+
+// Icons & Theme
+import { CameraPlus, CloudUpload, Plus, Barbell } from "../../../assets/icons";
+import { ui } from "../../theme/colors";
 
 export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
   const { isDark } = useTheme();
@@ -25,6 +35,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
       const results = await database.select().from(equipment);
       return results || [];
     },
+    staleTime: Infinity,
   });
 
   const formAddEquipment = useForm({
@@ -45,7 +56,6 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           sync_status: "pending",
         });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
-
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // Notificar al padre si existe, sino damos feedback visual y limpiamos el formulario
