@@ -10,7 +10,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { database } from "../../../../src/database";
 import {
   exercises_base,
-  equipment as equipmentSchema,
+  equipment,
   exercise_equipment,
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
@@ -38,14 +38,10 @@ import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 // Icons & theme
 import { ui } from "../../../../src/theme/colors";
-import { Trash, Barbell } from "../../../../assets/icons";
-
-import HandlePickImage from "../../../../src/utils/handlePickImage";
-import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
+import { Trash } from "../../../../assets/icons";
 
 export default function AddExercise() {
   const queryClient = useQueryClient();
-  const { pickMedia } = useMediaPicker();
 
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
   const [initialEquipmentName, setInitialEquipmentName] = useState("");
@@ -92,17 +88,6 @@ export default function AddExercise() {
         });
 
         // 2. Manejar Equipamiento (Muchos a Muchos)
-        for (const eq of value.equipments) {
-          let eqId = eq.id;
-          if (eq.isNew) {
-            eqId = Crypto.randomUUID();
-            await database.insert(equipmentSchema).values({
-              id: eqId,
-              name: eq.name,
-              cloudinary_image_public_id: null, // Se subirá en background si hay local_uri
-              local_image_uri: eq.image_public_id || "",
-            });
-          }
           await database.insert(exercise_equipment).values({
             id: Crypto.randomUUID(),
             exercise_id: newExerciseId,
