@@ -49,7 +49,7 @@ export default function AddExercise() {
   const { data: dbEquipments = [] } = useQuery({
     queryKey: ["equipments"],
     queryFn: async () => {
-      const results = await database.select().from(equipmentSchema);
+      const results = await database.select().from(equipment);
       return results || [];
     },
   });
@@ -88,11 +88,14 @@ export default function AddExercise() {
         });
 
         // 2. Manejar Equipamiento (Muchos a Muchos)
-          await database.insert(exercise_equipment).values({
-            id: Crypto.randomUUID(),
-            exercise_id: newExerciseId,
-            equipment_id: eqId,
-          });
+        if (value.equipments && value.equipments.length > 0) {
+          for (const eq of value.equipments) {
+            await database.insert(exercise_equipment).values({
+              id: Crypto.randomUUID(),
+              exercise_id: newExerciseId,
+              equipment_id: eq.id,
+            });
+          }
         }
 
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
