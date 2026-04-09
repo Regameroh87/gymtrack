@@ -115,10 +115,12 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           }}
         >
           {(imageField) => (
-            <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
-              <PreviewImage value={imageField.state.value}>
-                <CameraPlus color={ui.text.mutedDark} size={20} />
-              </PreviewImage>
+            <View>
+              <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
+                <PreviewImage value={imageField.state.value}>
+                  <CameraPlus color={ui.text.mutedDark} size={20} />
+                </PreviewImage>
+              </View>
             </View>
           )}
         </formAddEquipment.Field>
@@ -159,16 +161,34 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                   placeholder="Ej: Barra Z, Polea"
                   icon={<Barbell color={ui.text.mutedDark} />}
                 />
-                {field.state.meta.errors.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
-                    {field.state.meta.errors.join(", ")}
-                  </Text>
-                )}
               </View>
             </>
           )}
         </formAddEquipment.Field>
       </View>
+
+      <formAddEquipment.Subscribe selector={(state) => [state.fieldMeta]}>
+        {([fieldMeta]) => {
+          const allErrors = Object.values(fieldMeta)
+            .flatMap((meta) => meta.errors)
+            .filter(Boolean);
+
+          if (allErrors.length === 0) return null;
+
+          return (
+            <View className=" px-1">
+              {allErrors.map((err, i) => (
+                <Text
+                  key={i}
+                  className="text-red-500 dark:text-red-400 text-xs font-manrope-medium"
+                >
+                  • {err}
+                </Text>
+              ))}
+            </View>
+          );
+        }}
+      </formAddEquipment.Subscribe>
 
       {/* Botones de media */}
       <formAddEquipment.Subscribe
@@ -223,18 +243,11 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         {/* Botón confirmar */}
         {([canSubmit]) => (
           <Pressable
-            disabled={!canSubmit}
             onPress={formAddEquipment.handleSubmit}
-            className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
-              canSubmit
-                ? "bg-brandPrimary-600 active:scale-95"
-                : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
-            }`}
+            className="flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-2 bg-brandPrimary-600 active:scale-95"
           >
-            <Plus color={canSubmit ? "white" : ui.text.muted} size={16} />
-            <Text
-              className={`${canSubmit ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
-            >
+            <Plus color="white" size={16} />
+            <Text className="text-white text-sm font-jakarta-bold">
               CONFIRMAR Y AGREGAR
             </Text>
           </Pressable>

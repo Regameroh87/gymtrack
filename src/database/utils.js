@@ -1,5 +1,6 @@
 import { database } from "./index";
 import { exercises_base, equipment, exercise_equipment } from "./schemas";
+import * as FileSystem from "expo-file-system/legacy";
 
 /**
  * Resets the database by deleting all rows from all tables.
@@ -11,6 +12,18 @@ export async function resetDatabase() {
     await database.delete(exercise_equipment);
     await database.delete(exercises_base);
     await database.delete(equipment);
+
+    const files = await FileSystem.readDirectoryAsync(
+      FileSystem.documentDirectory
+    );
+    console.log("Archivos:", files);
+
+    // Borrar cada uno
+    for (const file of files) {
+      await FileSystem.deleteAsync(FileSystem.documentDirectory + file);
+    }
+
+    console.log("Limpieza completada");
 
     console.log("Database reset successful");
     return { success: true };
