@@ -12,12 +12,7 @@ import { Upload, Movie, Trash } from "../../../assets/icons";
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import HeaderCard from "../cards/HeaderCard";
 
-export default function InputUploadVideo({
-  value,
-  onChange,
-  setVideoPublicId,
-  videoPublicId,
-}) {
+export default function InputUploadVideo({ value, onChange }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { pickMedia } = useMediaPicker();
@@ -116,7 +111,7 @@ export default function InputUploadVideo({
           </View>
         </PreviewVideo>
         {/* ── Video info card (uploaded) ── */}
-        {(value || videoPublicId) && !isUploading ? (
+        {value && !isUploading ? (
           <View className="p-4 rounded-xl bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark">
             <View className="flex-row justify-between items-center mb-2">
               <Text
@@ -165,7 +160,6 @@ export default function InputUploadVideo({
                     await deleteMediaLocally(value);
                   }
                   onChange(null);
-                  setVideoPublicId(null);
                 }}
                 className="active:scale-[0.97] p-2"
               >
