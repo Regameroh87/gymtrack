@@ -125,125 +125,112 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           },
         }}
       >
-        {(field) => {
-          const errors = Array.isArray(field.state.meta.errors)
-            ? field.state.meta.errors.filter(Boolean)
-            : [];
-          const hasValidName =
-            typeof field.state.value === "string" &&
-            field.state.value.trim().length >= 3;
-          const canConfirm = hasValidName && errors.length === 0;
+        {(field) => (
+          <>
+            {/* Imagen + Nombre */}
+            <View className="flex-row justify-center items-center gap-4 mt-1">
+              {/* Preview imagen */}
+              <formAddEquipment.Field name="local_image_uri">
+                {(imageField) => (
+                  <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
+                    <PreviewImage value={imageField.state.value}>
+                      <CameraPlus color={ui.text.mutedDark} size={20} />
+                    </PreviewImage>
+                  </View>
+                )}
+              </formAddEquipment.Field>
 
-          return (
-            <>
-              {/* Imagen + Nombre */}
-              <View className="flex-row justify-center items-center gap-4 mt-1">
-                {/* Preview imagen */}
-                <formAddEquipment.Field name="local_image_uri">
-                  {(imageField) => (
-                    <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
-                      <PreviewImage value={imageField.state.value}>
-                        <CameraPlus color={ui.text.mutedDark} size={20} />
-                      </PreviewImage>
-                    </View>
-                  )}
-                </formAddEquipment.Field>
-
-                {/* Input nombre */}
-                <View className="flex-1">
-                  <StyledTextInput
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="Ej: Barra Z, Polea"
-                    icon={<Barbell color={ui.text.mutedDark} />}
-                  />
-                  {errors.length > 0 && (
-                    <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
-                      {errors.join(", ")}
-                    </Text>
-                  )}
-                </View>
-              </View>
-
-              {/* Botones de media */}
-              <View className="mt-4">
-                <formAddEquipment.Field name="local_image_uri">
-                  {(imageField) => (
-                    <View className="flex-row gap-2">
-                      {/* Galería */}
-                      <Pressable
-                        onPress={() => {
-                          Haptics.impactAsync(
-                            Haptics.ImpactFeedbackStyle.Light
-                          );
-                          handlePickImage({
-                            pickMedia,
-                            source: "gallery",
-                            onChange: (uri) => imageField.handleChange(uri),
-                          });
-                        }}
-                        className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
-                      >
-                        <CloudUpload
-                          color={isDark ? "#62fae3" : "#059669"}
-                          size={16}
-                        />
-                        <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
-                          Galería
-                        </Text>
-                      </Pressable>
-
-                      {/* Cámara */}
-                      <Pressable
-                        onPress={() => {
-                          Haptics.impactAsync(
-                            Haptics.ImpactFeedbackStyle.Medium
-                          );
-                          handlePickImage({
-                            pickMedia,
-                            source: "camera",
-                            onChange: (uri) => imageField.handleChange(uri),
-                          });
-                        }}
-                        className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
-                      >
-                        <CameraPlus
-                          color={isDark ? "#a5b4fc" : "#3023cd"}
-                          size={16}
-                        />
-                        <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
-                          Cámara
-                        </Text>
-                      </Pressable>
-                    </View>
-                  )}
-                </formAddEquipment.Field>
-
-                {/* Botón confirmar */}
-                <Pressable
-                  disabled={!canConfirm}
-                  onPress={formAddEquipment.handleSubmit}
-                  className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
-                    canConfirm
-                      ? "bg-brandPrimary-600 active:opacity-80"
-                      : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
-                  }`}
-                >
-                  <Plus
-                    color={canConfirm ? "white" : ui.text.muted}
-                    size={16}
-                  />
-                  <Text
-                    className={`${canConfirm ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
-                  >
-                    CONFIRMAR Y AGREGAR
+              {/* Input nombre */}
+              <View className="flex-1">
+                <StyledTextInput
+                  value={field.state.value}
+                  onChangeText={field.handleChange}
+                  placeholder="Ej: Barra Z, Polea"
+                  icon={<Barbell color={ui.text.mutedDark} />}
+                />
+                {field.state.meta.errors.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
+                    {field.state.meta.errors.join(", ")}
                   </Text>
-                </Pressable>
+                )}
               </View>
-            </>
-          );
-        }}
+            </View>
+
+            {/* Botones de media */}
+            <View className="mt-4">
+              <formAddEquipment.Field name="local_image_uri">
+                {(imageField) => (
+                  <View className="flex-row gap-2">
+                    {/* Galería */}
+                    <Pressable
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        handlePickImage({
+                          pickMedia,
+                          source: "gallery",
+                          onChange: (uri) => imageField.handleChange(uri),
+                        });
+                      }}
+                      className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
+                    >
+                      <CloudUpload
+                        color={isDark ? "#62fae3" : "#059669"}
+                        size={16}
+                      />
+                      <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
+                        Galería
+                      </Text>
+                    </Pressable>
+
+                    {/* Cámara */}
+                    <Pressable
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        handlePickImage({
+                          pickMedia,
+                          source: "camera",
+                          onChange: (uri) => imageField.handleChange(uri),
+                        });
+                      }}
+                      className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
+                    >
+                      <CameraPlus
+                        color={isDark ? "#a5b4fc" : "#3023cd"}
+                        size={16}
+                      />
+                      <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
+                        Cámara
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+              </formAddEquipment.Field>
+            </View>
+          </>
+        )}
       </formAddEquipment.Field>
+
+      <formAddEquipment.Subscribe selector={(state) => [state.canSubmit]}>
+        {/* Botón confirmar */}
+        {({ canSubmit }) => (
+          <Pressable
+            disabled={!canSubmit}
+            onPress={formAddEquipment.handleSubmit}
+            className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
+              canSubmit
+                ? "bg-brandPrimary-600 active:opacity-80"
+                : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
+            }`}
+          >
+            <Plus color={canSubmit ? "white" : ui.text.muted} size={16} />
+            <Text
+              className={`${canSubmit ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
+            >
+              CONFIRMAR Y AGREGAR
+            </Text>
+          </Pressable>
+        )}
+      </formAddEquipment.Subscribe>
     </View>
   );
 }
