@@ -361,7 +361,15 @@ export default function AddExercise() {
             ref={uploadVideoCardRef}
             className="rounded-2xl mb-4 border border-brandPrimary-600 border-l-4"
           >
-            <form.Field name="local_video_uri">
+            <form.Field
+              name="local_video_uri"
+              validators={{
+                onSubmit: ({ value }) => {
+                  if (!value) return "El video es requerido";
+                  return undefined;
+                },
+              }}
+            >
               {(field) => (
                 <InputUploadVideo
                   value={field.state.value}
