@@ -103,58 +103,56 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         )}
       </View>
 
-      {/* Contenido principal envuelto en el Field name para acceder a errors */}
-      <formAddEquipment.Field
-        name="name"
-        validators={{
-          onChange: ({ value }) => {
-            if (!value || typeof value !== "string") return undefined;
-            const trimmed = value.trim();
-            if (trimmed.length > 0 && trimmed.length < 3) {
-              return "Mínimo 3 caracteres";
-            }
-            if (Array.isArray(dbEquipments)) {
-              const exists = dbEquipments.some(
-                (eq) =>
-                  typeof eq?.name === "string" &&
-                  eq.name.toLowerCase() === trimmed.toLowerCase()
-              );
-              if (exists) return "Ya existe máquina con este nombre";
-            }
-            return undefined;
-          },
-          onSubmit: ({ value }) => {
-            if (!value || typeof value !== "string")
-              return "El nombre es requerido";
-            return undefined;
-          },
-        }}
-      >
-        {(field) => (
-          <>
-            {/* Imagen + Nombre */}
-            <View className="flex-row justify-center items-center gap-4 mt-1">
-              {/* Preview imagen */}
-              <formAddEquipment.Field
-                name="local_image_uri"
-                validators={{
-                  onChange: ({ value }) => {
-                    if (!value) return "La imagen es requerida";
-                    return undefined;
-                  },
-                }}
-              >
-                {(imageField) => (
-                  <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
-                    <PreviewImage value={imageField.state.value}>
-                      <CameraPlus color={ui.text.mutedDark} size={20} />
-                    </PreviewImage>
-                  </View>
-                )}
-              </formAddEquipment.Field>
-
+      <View className=" flex-row gap-2 items-center">
+        {/* Preview imagen */}
+        <formAddEquipment.Field
+          name="local_image_uri"
+          validators={{
+            onSubmit: ({ value }) => {
+              if (!value) return "La imagen es requerida";
+              return undefined;
+            },
+          }}
+        >
+          {(imageField) => (
+            <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
+              <PreviewImage value={imageField.state.value}>
+                <CameraPlus color={ui.text.mutedDark} size={20} />
+              </PreviewImage>
+            </View>
+          )}
+        </formAddEquipment.Field>
+        {/* Input name */}
+        <formAddEquipment.Field
+          name="name"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value || typeof value !== "string") return undefined;
+              const trimmed = value.trim();
+              if (trimmed.length > 0 && trimmed.length < 3) {
+                return "Mínimo 3 caracteres";
+              }
+              if (Array.isArray(dbEquipments)) {
+                const exists = dbEquipments.some(
+                  (eq) =>
+                    typeof eq?.name === "string" &&
+                    eq.name.toLowerCase() === trimmed.toLowerCase()
+                );
+                if (exists) return "Ya existe máquina con este nombre";
+              }
+              return undefined;
+            },
+            onSubmit: ({ value }) => {
+              if (!value || typeof value !== "string")
+                return "El nombre es requerido";
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <>
               {/* Input nombre */}
-              <View className="flex-1">
+              <View className=" flex-1">
                 <StyledTextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
@@ -167,59 +165,51 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                   </Text>
                 )}
               </View>
-            </View>
+            </>
+          )}
+        </formAddEquipment.Field>
+      </View>
 
-            {/* Botones de media */}
-            <View className="mt-4">
-              <View className="flex-row gap-2">
-                {/* Galería */}
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    handlePickImage({
-                      pickMedia,
-                      source: "gallery",
-                      onChange: (uri) =>
-                        formAddEquipment.setFieldValue("local_image_uri", uri),
-                    });
-                  }}
-                  className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
-                >
-                  <CloudUpload
-                    color={isDark ? "#62fae3" : "#059669"}
-                    size={16}
-                  />
-                  <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
-                    Galería
-                  </Text>
-                </Pressable>
+      {/* Botones de media */}
+      <View className=" flex-row gap-2 mt-4">
+        {/* Galería */}
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            handlePickImage({
+              pickMedia,
+              source: "gallery",
+              onChange: (uri) =>
+                formAddEquipment.setFieldValue("local_image_uri", uri),
+            });
+          }}
+          className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
+        >
+          <CloudUpload color={isDark ? "#62fae3" : "#059669"} size={16} />
+          <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
+            Galería
+          </Text>
+        </Pressable>
 
-                {/* Cámara */}
-                <Pressable
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    handlePickImage({
-                      pickMedia,
-                      source: "camera",
-                      onChange: (uri) =>
-                        formAddEquipment.setFieldValue("local_image_uri", uri),
-                    });
-                  }}
-                  className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
-                >
-                  <CameraPlus
-                    color={isDark ? "#a5b4fc" : "#3023cd"}
-                    size={16}
-                  />
-                  <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
-                    Cámara
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </>
-        )}
-      </formAddEquipment.Field>
+        {/* Cámara */}
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            handlePickImage({
+              pickMedia,
+              source: "camera",
+              onChange: (uri) =>
+                formAddEquipment.setFieldValue("local_image_uri", uri),
+            });
+          }}
+          className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
+        >
+          <CameraPlus color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
+          <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
+            Cámara
+          </Text>
+        </Pressable>
+      </View>
 
       <formAddEquipment.Subscribe selector={(state) => [state.canSubmit]}>
         {/* Botón confirmar */}
