@@ -212,27 +212,24 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
 
       <formAddEquipment.Subscribe selector={(state) => [state.canSubmit]}>
         {/* Botón confirmar */}
-        {([canSubmit]) => {
-          console.log(canSubmit);
-          return (
-            <Pressable
-              disabled={!canSubmit}
-              onPress={formAddEquipment.handleSubmit}
-              className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
-                canSubmit
-                  ? "bg-brandPrimary-600 active:scale-95"
-                  : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
-              }`}
+        {([canSubmit]) => (
+          <Pressable
+            disabled={canSubmit}
+            onPress={formAddEquipment.handleSubmit}
+            className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
+              canSubmit
+                ? "bg-brandPrimary-600 active:scale-95"
+                : "bg-ui-input-light dark:bg-ui-input-dark opacity-50"
+            }`}
+          >
+            <Plus color={canSubmit ? "white" : ui.text.muted} size={16} />
+            <Text
+              className={`${canSubmit ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
             >
-              <Plus color={canSubmit ? "white" : ui.text.muted} size={16} />
-              <Text
-                className={`${canSubmit ? "text-white" : "text-ui-text-muted"} text-sm font-jakarta-bold`}
-              >
-                CONFIRMAR Y AGREGAR
-              </Text>
-            </Pressable>
-          );
-        }}
+              CONFIRMAR Y AGREGAR
+            </Text>
+          </Pressable>
+        )}
       </formAddEquipment.Subscribe>
     </View>
   );
