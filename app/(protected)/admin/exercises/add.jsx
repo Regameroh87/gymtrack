@@ -280,18 +280,6 @@ export default function AddExercise() {
         <form.Field name="equipments">
           {(field) => (
             <>
-              {/* Lista de equipos agregados con FlatList */}
-              {field.state.value.length > 0 && (
-                <View className="mb-2">
-                  <FlatList
-                    data={field.state.value}
-                    renderItem={(props) => renderEquipmentItem(props, field)}
-                    keyExtractor={(_, index) => index.toString()}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                  />
-                </View>
-              )}
               {!isCreatingEquipment ? (
                 <CustomSelect
                   label="EQUIPAMIENTO"
@@ -335,6 +323,18 @@ export default function AddExercise() {
                     setIsCreatingEquipment(false);
                   }}
                 />
+              )}
+              {/* Lista de equipos agregados con FlatList */}
+              {field.state.value.length > 0 && (
+                <View className="mb-2">
+                  <FlatList
+                    data={field.state.value}
+                    renderItem={(props) => renderEquipmentItem(props, field)}
+                    keyExtractor={(_, index) => index.toString()}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                  />
+                </View>
               )}
             </>
           )}
