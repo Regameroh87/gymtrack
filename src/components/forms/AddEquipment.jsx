@@ -135,7 +135,15 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             {/* Imagen + Nombre */}
             <View className="flex-row justify-center items-center gap-4 mt-1">
               {/* Preview imagen */}
-              <formAddEquipment.Field name="local_image_uri">
+              <formAddEquipment.Field
+                name="local_image_uri"
+                validators={{
+                  onChange: ({ value }) => {
+                    if (!value) return "La imagen es requerida";
+                    return undefined;
+                  },
+                }}
+              >
                 {(imageField) => (
                   <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
                     <PreviewImage value={imageField.state.value}>
@@ -163,53 +171,51 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
 
             {/* Botones de media */}
             <View className="mt-4">
-              <formAddEquipment.Field name="local_image_uri">
-                {(imageField) => (
-                  <View className="flex-row gap-2">
-                    {/* Galería */}
-                    <Pressable
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        handlePickImage({
-                          pickMedia,
-                          source: "gallery",
-                          onChange: (uri) => imageField.handleChange(uri),
-                        });
-                      }}
-                      className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
-                    >
-                      <CloudUpload
-                        color={isDark ? "#62fae3" : "#059669"}
-                        size={16}
-                      />
-                      <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
-                        Galería
-                      </Text>
-                    </Pressable>
+              <View className="flex-row gap-2">
+                {/* Galería */}
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    handlePickImage({
+                      pickMedia,
+                      source: "gallery",
+                      onChange: (uri) =>
+                        formAddEquipment.setFieldValue("local_image_uri", uri),
+                    });
+                  }}
+                  className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
+                >
+                  <CloudUpload
+                    color={isDark ? "#62fae3" : "#059669"}
+                    size={16}
+                  />
+                  <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
+                    Galería
+                  </Text>
+                </Pressable>
 
-                    {/* Cámara */}
-                    <Pressable
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        handlePickImage({
-                          pickMedia,
-                          source: "camera",
-                          onChange: (uri) => imageField.handleChange(uri),
-                        });
-                      }}
-                      className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
-                    >
-                      <CameraPlus
-                        color={isDark ? "#a5b4fc" : "#3023cd"}
-                        size={16}
-                      />
-                      <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
-                        Cámara
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
-              </formAddEquipment.Field>
+                {/* Cámara */}
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    handlePickImage({
+                      pickMedia,
+                      source: "camera",
+                      onChange: (uri) =>
+                        formAddEquipment.setFieldValue("local_image_uri", uri),
+                    });
+                  }}
+                  className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
+                >
+                  <CameraPlus
+                    color={isDark ? "#a5b4fc" : "#3023cd"}
+                    size={16}
+                  />
+                  <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
+                    Cámara
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </>
         )}
