@@ -214,7 +214,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         {/* Botón confirmar */}
         {([canSubmit]) => (
           <Pressable
-            disabled={canSubmit}
+            disabled={!canSubmit}
             onPress={formAddEquipment.handleSubmit}
             className={`flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-3 ${
               canSubmit
