@@ -64,7 +64,6 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             id: newId,
             name: trimmedName,
             local_image_uri: value.local_image_uri,
-            image_public_id: value.local_image_uri,
             isNew: true,
           });
         } else {
