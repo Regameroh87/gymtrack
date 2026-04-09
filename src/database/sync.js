@@ -107,7 +107,7 @@ export async function pushEquipmentChanges() {
 /**
  * PUSH: Sube cambios locales de Ejercicios (Media Pesada)
  */
-async function pushExercisesChanges() {
+export async function pushExercisesChanges() {
   const localChanges = await database
     .select()
     .from(exercises_base)
@@ -194,7 +194,9 @@ async function pushExercisesChanges() {
  * Función Principal de Sincronización
  * Permite filtrar qué tablas sincronizar. Por defecto sincroniza todas.
  */
-export async function syncWithSupabase(tablesToSync = ["exercises_base", "equipment"]) {
+export async function syncWithSupabase(
+  tablesToSync = ["exercises_base", "equipment"]
+) {
   try {
     const syncTime = new Date().toISOString();
     console.log(`Iniciando sincronización para: ${tablesToSync.join(", ")}...`);
@@ -203,7 +205,7 @@ export async function syncWithSupabase(tablesToSync = ["exercises_base", "equipm
     for (const table of tablesToSync) {
       const syncKey = `${LAST_SYNC_KEY}_${table}`;
       const lastSync = await AsyncStorage.getItem(syncKey);
-      
+
       let schemaTable;
       if (table === "exercises_base") schemaTable = exercises_base;
       else if (table === "equipment") schemaTable = equipment;
