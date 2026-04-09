@@ -81,16 +81,12 @@ export default function InputUploadVideo({
     if (videoFile) {
       setIsUploading(true);
       try {
-        if (value && value.startsWith("file://")) {
-          await deleteMediaLocally(value);
-        }
         const {
           uri: permanentUri,
           size,
           ext,
         } = await saveMediaLocally(videoFile.uri, "mp4");
         onChange(permanentUri);
-        setVideoPublicId("");
         setCardInfo({
           name: "Video Ejercicio",
           size: size,
