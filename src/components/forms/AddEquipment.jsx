@@ -15,6 +15,7 @@ import { equipment } from "../../database/schemas";
 import { useTheme } from "../../theme/theme";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import handlePickImage from "../../utils/handlePickImage";
+import { pushEquipmentChanges } from "../../database/sync";
 
 // Components
 import PreviewImage from "../../components/images/PreviewImage";
@@ -56,6 +57,8 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           sync_status: "pending",
         });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        //Tengo que ejecutar la sincronizacion??
+        /*   await pushEquipmentChanges(); */
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // Notificar al padre si existe, sino damos feedback visual y limpiamos el formulario

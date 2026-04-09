@@ -23,7 +23,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
 
   if (error) {
     console.error(`Error bajando cambios de ${tableName}:`, error);
-    return;
+    return false;
   }
 
   if (data && data.length > 0) {
@@ -36,12 +36,13 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     }
     console.log(`Tabla ${tableName} actualizada desde la nube.`);
   }
+  return true;
 }
 
 /**
  * PUSH: Sube cambios locales de Máquinas/Equipamiento
  */
-async function pushEquipmentChanges() {
+export async function pushEquipmentChanges() {
   const localChanges = await database
     .select()
     .from(equipment)
@@ -191,25 +192,41 @@ async function pushExercisesChanges() {
 
 /**
  * Función Principal de Sincronización
+ * Permite filtrar qué tablas sincronizar. Por defecto sincroniza todas.
  */
-export async function syncWithSupabase() {
+export async function syncWithSupabase(tablesToSync = ["exercises_base", "equipment"]) {
   try {
-    const lastSync = await AsyncStorage.getItem(LAST_SYNC_KEY);
     const syncTime = new Date().toISOString();
-
-    console.log("Iniciando sincronización global...");
+    console.log(`Iniciando sincronización para: ${tablesToSync.join(", ")}...`);
 
     // --- DOWNLOAD PHASE ---
-    await pullTableChanges("exercises_base", exercises_base, lastSync);
-    await pullTableChanges("equipment", equipment, lastSync);
+    for (const table of tablesToSync) {
+      const syncKey = `${LAST_SYNC_KEY}_${table}`;
+      const lastSync = await AsyncStorage.getItem(syncKey);
+      
+      let schemaTable;
+      if (table === "exercises_base") schemaTable = exercises_base;
+      else if (table === "equipment") schemaTable = equipment;
+
+      if (schemaTable) {
+        const success = await pullTableChanges(table, schemaTable, lastSync);
+        if (success) {
+          // Guardamos el timestamp solo si el pull fue exitoso
+          // Nota: El push se hace después, pero el timestamp de pull es el que manda para futuros deltas
+          await AsyncStorage.setItem(syncKey, syncTime);
+        }
+      }
+    }
 
     // --- UPLOAD PHASE ---
-    await pushExercisesChanges();
-    await pushEquipmentChanges();
+    if (tablesToSync.includes("exercises_base")) {
+      await pushExercisesChanges();
+    }
+    if (tablesToSync.includes("equipment")) {
+      await pushEquipmentChanges();
+    }
 
-    // Actualizar marca de tiempo
-    await AsyncStorage.setItem(LAST_SYNC_KEY, syncTime);
-    console.log("Sincronización completada con éxito.");
+    console.log("Sincronización completada.");
   } catch (error) {
     console.error("Error fatal en sincronización:", error);
   }
