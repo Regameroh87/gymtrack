@@ -171,47 +171,53 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
       </View>
 
       {/* Botones de media */}
-      {!formAddEquipment.state.local_image_uri ? (
-        <View className=" flex-row gap-2 mt-4">
-          {/* Galería */}
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              handlePickImage({
-                pickMedia,
-                source: "gallery",
-                onChange: (uri) =>
-                  formAddEquipment.setFieldValue("local_image_uri", uri),
-              });
-            }}
-            className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
-          >
-            <CloudUpload color={isDark ? "#62fae3" : "#059669"} size={16} />
-            <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
-              Galería
-            </Text>
-          </Pressable>
+      <formAddEquipment.Subscribe
+        selector={(state) => [state.values.local_image_uri]}
+      >
+        {([localImageUri]) =>
+          !localImageUri ? (
+            <View className=" flex-row gap-2 mt-4">
+              {/* Galería */}
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  handlePickImage({
+                    pickMedia,
+                    source: "gallery",
+                    onChange: (uri) =>
+                      formAddEquipment.setFieldValue("local_image_uri", uri),
+                  });
+                }}
+                className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
+              >
+                <CloudUpload color={isDark ? "#62fae3" : "#059669"} size={16} />
+                <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
+                  Galería
+                </Text>
+              </Pressable>
 
-          {/* Cámara */}
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              handlePickImage({
-                pickMedia,
-                source: "camera",
-                onChange: (uri) =>
-                  formAddEquipment.setFieldValue("local_image_uri", uri),
-              });
-            }}
-            className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
-          >
-            <CameraPlus color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
-            <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
-              Cámara
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
+              {/* Cámara */}
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  handlePickImage({
+                    pickMedia,
+                    source: "camera",
+                    onChange: (uri) =>
+                      formAddEquipment.setFieldValue("local_image_uri", uri),
+                  });
+                }}
+                className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
+              >
+                <CameraPlus color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
+                <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
+                  Cámara
+                </Text>
+              </Pressable>
+            </View>
+          ) : null
+        }
+      </formAddEquipment.Subscribe>
 
       <formAddEquipment.Subscribe selector={(state) => [state.canSubmit]}>
         {/* Botón confirmar */}
