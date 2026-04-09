@@ -16,6 +16,7 @@ import { useTheme } from "../../theme/theme";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import handlePickImage from "../../utils/handlePickImage";
 import { pushEquipmentChanges } from "../../database/sync";
+import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 // Components
 import PreviewImage from "../../components/images/PreviewImage";
@@ -58,7 +59,9 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
         //Tengo que ejecutar la sincronizacion??
-        /*   await pushEquipmentChanges(); */
+        pushEquipmentChanges().catch((err) =>
+          console.error("Sync failed", err)
+        );
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // Notificar al padre si existe, sino damos feedback visual y limpiamos el formulario
@@ -118,8 +121,29 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         >
           {(imageField) => (
             <View>
-              <View className="w-20 h-20 rounded-xl overflow-hidden bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
-                <PreviewImage value={imageField.state.value}>
+              <View className="w-20 h-20 rounded-xl bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
+                <PreviewImage
+                  value={imageField.state.value}
+                  sizeIconEdit={12}
+                  onPress={async () => {
+                    // 2. Obtenemos la URI actual antes de borrarla
+                    const uriToDelete = imageField.state.value;
+
+                    if (uriToDelete) {
+                      try {
+                        // 3. Borramos el archivo físico del dispositivo
+                        await deleteMediaLocally(uriToDelete);
+
+                        // 4. Limpiamos el estado del formulario de forma reactiva
+                        imageField.handleChange("");
+
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      } catch (error) {
+                        console.error("Error al borrar el archivo:", error);
+                      }
+                    }
+                  }}
+                >
                   <CameraPlus color={ui.text.mutedDark} size={20} />
                 </PreviewImage>
               </View>
