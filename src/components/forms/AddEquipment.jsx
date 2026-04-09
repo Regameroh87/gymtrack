@@ -123,6 +123,11 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             }
             return undefined;
           },
+          onSubmit: ({ value }) => {
+            if (!value || typeof value !== "string")
+              return "El nombre es requerido";
+            return undefined;
+          },
         }}
       >
         {(field) => (
