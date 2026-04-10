@@ -371,14 +371,21 @@ export default function AddExercise() {
               }}
             >
               {(field) => (
-                <InputUploadVideo
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  setVideoPublicId={(id) =>
-                    form.setFieldValue("cloudinary_video_public_id", id)
-                  }
-                  videoPublicId={form.state.values.cloudinary_video_public_id}
-                />
+                <>
+                  <InputUploadVideo
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    setVideoPublicId={(id) =>
+                      form.setFieldValue("cloudinary_video_public_id", id)
+                    }
+                    videoPublicId={form.state.values.cloudinary_video_public_id}
+                  />
+                  {field.state.error && (
+                    <Text className="text-red-500 text-xs font-manrope">
+                      {field.state.error}
+                    </Text>
+                  )}
+                </>
               )}
             </form.Field>
           </View>
@@ -390,10 +397,6 @@ export default function AddExercise() {
                 ref={imageCardRef}
                 value={field.state.value}
                 onChange={field.handleChange}
-                setImagePublicId={(id) =>
-                  form.setFieldValue("cloudinary_image_public_id", id)
-                }
-                imagePublicId={form.state.values.cloudinary_image_public_id}
                 onFocus={() => scrollToCard(imageCardRef)}
               />
             )}

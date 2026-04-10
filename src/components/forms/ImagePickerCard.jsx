@@ -12,9 +12,10 @@ import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
 import { ui } from "../../theme/colors";
+import { deleteAsync } from "expo-file-system/legacy";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
-  { value, onChange, onFocus, setImagePublicId, imagePublicId },
+  { value, onChange, onFocus },
   ref
 ) {
   const { isDark } = useTheme();
@@ -31,12 +32,11 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
       onChange(result.uri);
       setIsUploading(true);
       try {
-        const uploadedImage = await uploadFileToCloudinary({
+        /*  const uploadedImage = await uploadFileToCloudinary({
           fileUri: result.uri,
           uploadPreset: "gymtrack_images",
           typeFile: "image",
-        });
-        setImagePublicId(uploadedImage.public_id);
+        }); */
       } catch (error) {
         console.error(error.message);
       } finally {
@@ -63,7 +63,19 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
 
       {/* Preview */}
       <View className=" h-44">
-        <PreviewImage value={value}>
+        <PreviewImage
+          value={value}
+          onPress={async () => {
+            if (value && value.startsWith("file://")) {
+              try {
+                await deleteAsync(value, { idempotent: true });
+              } catch (error) {
+                console.warn("No se pudo borrar el archivo físico:", error);
+              }
+            }
+            onChange("");
+          }}
+        >
           <Photo color={isDark ? "#334155" : ui.text.muted} size={33} />
           <Text className="font-manrope-bold mt-2 text-ui-text-muted dark:text-slate-700 text-tiny">
             Sin Previsualización
