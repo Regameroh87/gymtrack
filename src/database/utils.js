@@ -1,6 +1,7 @@
 import { database } from "./index";
 import { exercises_base, equipment, exercise_equipment } from "./schemas";
 import * as FileSystem from "expo-file-system/legacy";
+import { checkNetInfoAndSync } from "./sync";
 
 /**
  * Resets the database by deleting all rows from all tables.
@@ -22,11 +23,14 @@ export async function resetDatabase() {
     for (const file of files) {
       await FileSystem.deleteAsync(FileSystem.documentDirectory + file);
     }
-
     console.log("Limpieza completada");
-
     console.log("Database reset successful");
-    return { success: true };
+
+    const syncResult = await checkNetInfoAndSync();
+    if (!syncResult.success) {
+      console.error("Error syncing database:", syncResult.error);
+    }
+    console.log("Sincronización completada");
   } catch (error) {
     console.error("Error resetting database:", error);
     return { success: false, error };
