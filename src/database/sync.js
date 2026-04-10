@@ -186,7 +186,7 @@ export async function pushExercisesChanges() {
         .where(eq(exercises_base.id, row.id));
     } else {
       // Si el error es por duplicado (ej: el nombre ya existe en Supabase)
-      // Marcamos como synced para no trabar la cola de sincronización, 
+      // Marcamos como synced para no trabar la cola de sincronización,
       // aunque lo ideal es que el usuario lo corrija o lo borre.
       if (error.code === "23505") {
         console.warn(

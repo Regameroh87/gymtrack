@@ -29,12 +29,11 @@ export async function resetDatabase() {
     console.log("Limpieza completada");
     console.log("Database reset successful");
 
-    const syncResult = await checkNetInfoAndSync();
-    console.warn(syncResult);
-    /*   if (!syncResult.success) {
-      console.error("Error syncing database:", syncResult.error);
-    } */
+    const { success, error } = await checkNetInfoAndSync();
+    console.warn(success, error);
+    if (error) throw error;
     console.log("Sincronización completada");
+    return { success: true };
   } catch (error) {
     console.error("Error resetting database:", error);
     return { success: false, error };
