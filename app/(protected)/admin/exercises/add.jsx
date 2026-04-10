@@ -119,7 +119,7 @@ export default function AddExercise() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         Toast.show({
           type: "error",
-          text1: "Error al guardar",
+          text1: "Error al guardar, intente nuevamente.",
           text2: error.message,
           position: "bottom",
         });
