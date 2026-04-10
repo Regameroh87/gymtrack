@@ -426,7 +426,15 @@ export default function AddExercise() {
 
         {/* Instrucciones */}
         <View ref={instructionsRef}>
-          <form.Field name="instructions">
+          <form.Field
+            name="instructions"
+            validators={{
+              onSubmit: ({ value }) => {
+                if (!value) return "Las instrucciones son requeridas";
+                return undefined;
+              },
+            }}
+          >
             {(field) => (
               <FormField
                 label="INSTRUCCIONES"
