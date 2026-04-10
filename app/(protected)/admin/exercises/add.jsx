@@ -387,7 +387,7 @@ export default function AddExercise() {
                   />
                 </View>
                 {field.state.meta.errors?.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 mb-2 ml-4 font-manrope-semi italic">
+                  <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
                     {field.state.meta.errors[0]}
                   </Text>
                 )}
