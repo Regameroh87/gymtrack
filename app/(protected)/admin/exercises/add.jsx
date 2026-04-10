@@ -391,7 +391,15 @@ export default function AddExercise() {
           </View>
 
           {/* Imagen de portada Ejercicio */}
-          <form.Field name="local_image_uri">
+          <form.Field
+            name="local_image_uri"
+            validators={{
+              onSubmit: ({ value }) => {
+                if (!value) return "La imagen es requerida";
+                return undefined;
+              },
+            }}
+          >
             {(field) => (
               <ImagePickerCard
                 ref={imageCardRef}
