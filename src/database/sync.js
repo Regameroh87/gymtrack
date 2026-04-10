@@ -229,8 +229,10 @@ export async function syncWithSupabase(
     }
 
     console.log("Sincronización completada.");
+    return { success: true };
   } catch (error) {
     console.error("Error fatal en sincronización:", error);
+    return { success: false, error };
   }
 }
 

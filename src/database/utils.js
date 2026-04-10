@@ -21,15 +21,19 @@ export async function resetDatabase() {
 
     // Borrar cada uno
     for (const file of files) {
-      await FileSystem.deleteAsync(FileSystem.documentDirectory + file);
+      if (!file.endsWith(".db")) {
+        // excluís la base de datos
+        await FileSystem.deleteAsync(FileSystem.documentDirectory + file);
+      }
     }
     console.log("Limpieza completada");
     console.log("Database reset successful");
 
     const syncResult = await checkNetInfoAndSync();
-    if (!syncResult.success) {
+    console.warn(syncResult);
+    /*   if (!syncResult.success) {
       console.error("Error syncing database:", syncResult.error);
-    }
+    } */
     console.log("Sincronización completada");
   } catch (error) {
     console.error("Error resetting database:", error);
