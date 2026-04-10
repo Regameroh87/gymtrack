@@ -185,7 +185,20 @@ export async function pushExercisesChanges() {
         .set({ sync_status: "synced" })
         .where(eq(exercises_base.id, row.id));
     } else {
-      console.error("Error al subir ejercicio a Supabase:", error);
+      // Si el error es por duplicado (ej: el nombre ya existe en Supabase)
+      // Marcamos como synced para no trabar la cola de sincronización, 
+      // aunque lo ideal es que el usuario lo corrija o lo borre.
+      if (error.code === "23505") {
+        console.warn(
+          `Conflicto de unicidad para "${row.name}". Saltando push y marcando como sincronizado.`
+        );
+        await database
+          .update(exercises_base)
+          .set({ sync_status: "synced" })
+          .where(eq(exercises_base.id, row.id));
+      } else {
+        console.error("Error al subir ejercicio a Supabase:", error);
+      }
     }
   }
 }

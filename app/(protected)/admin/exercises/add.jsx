@@ -15,6 +15,7 @@ import {
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
+import { eq } from "drizzle-orm";
 
 // Constants
 import {
@@ -75,7 +76,7 @@ export default function AddExercise() {
         // 1. Insertar Ejercicio Base
         await database.insert(exercises_base).values({
           id: newExerciseId,
-          name: value.name,
+          name: value.name.trim(),
           category: value.category,
           muscle_group: value.muscle_group,
           cloudinary_video_public_id: value.cloudinary_video_public_id,
@@ -213,6 +214,19 @@ export default function AddExercise() {
             },
             onSubmit: ({ value }) => {
               if (!value) return "El nombre es requerido";
+              return undefined;
+            },
+            onChangeAsync: async ({ value }) => {
+              if (!value || value.trim().length < 3) return undefined;
+              
+              const existing = await database
+                .select()
+                .from(exercises_base)
+                .where(eq(exercises_base.name, value.trim()));
+              
+              if (existing.length > 0) {
+                return "Ya existe un ejercicio con este nombre.";
+              }
               return undefined;
             },
           }}
