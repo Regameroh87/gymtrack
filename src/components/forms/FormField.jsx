@@ -4,7 +4,7 @@ import { View, Text } from "react-native";
  * Generic form field wrapper with a styled uppercase label.
  * Replaces the repeated <View mb-5><Text label></Text>...</View> pattern.
  */
-export default function FormField({ label, children, className = "" }) {
+export default function FormField({ label, children, error, className = "" }) {
   return (
     <View className={`mb-5 ${className}`}>
       {label ? (
@@ -13,6 +13,11 @@ export default function FormField({ label, children, className = "" }) {
         </Text>
       ) : null}
       {children}
+      {error ? (
+        <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1.5 ml-1 font-manrope-semi italic">
+          {error}
+        </Text>
+      ) : null}
     </View>
   );
 }

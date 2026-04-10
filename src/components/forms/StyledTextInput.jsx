@@ -1,7 +1,7 @@
 import { View, TextInput } from "react-native";
 import { ui } from "../../theme/colors";
 
-export default function StyledTextInput({ icon, ...props }) {
+export default function StyledTextInput({ icon, error, ...props }) {
   return (
     <View className="flex relative">
       {icon && (
@@ -14,7 +14,9 @@ export default function StyledTextInput({ icon, ...props }) {
         value={props.value}
         onChangeText={props.onChangeText}
         onFocus={props.onFocus}
-        className={` bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope ${icon ? "pl-10" : ""}`}
+        className={` bg-ui-input-light dark:bg-ui-input-dark border rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope ${
+          icon ? "pl-10" : ""
+        } ${error ? "border-red-500/50" : "border-ui-input-border"}`}
         {...props}
       />
     </View>

@@ -198,57 +198,49 @@ export default function AddExercise() {
       {/* ── Form ── */}
       <View className="px-4 pt-4 pb-8">
         {/* Nombre */}
-        <FormField label="NOMBRE DEL EJERCICIO">
-          <form.Field
-            name="name"
-            validators={{
-              onChange: ({ value }) => {
-                if (!value) return undefined;
-                const result = z
-                  .string()
-                  .min(3, "Mínimo 3 caracteres")
-                  .safeParse(value);
-                return result.success
-                  ? undefined
-                  : result.error.errors[0].message;
-              },
-              onSubmit: ({ value }) => {
-                if (!value) return "El nombre es requerido";
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <View>
-                <StyledTextInput
-                  value={field.state.value}
-                  onChangeText={field.handleChange}
-                  placeholder="Ej: Press de Banca"
-                />
-                {field.state.meta.errors?.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-xs mt-1 ml-1 font-manrope">
-                    {(field.state.meta.errors ?? []).join(", ")}
-                  </Text>
-                )}
-              </View>
-            )}
-          </form.Field>
-        </FormField>
+        <form.Field
+          name="name"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return undefined;
+              const result = z
+                .string()
+                .min(3, "Mínimo 3 caracteres")
+                .safeParse(value);
+              return result.success
+                ? undefined
+                : result.error.errors[0].message;
+            },
+            onSubmit: ({ value }) => {
+              if (!value) return "El nombre es requerido";
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <FormField
+              label="NOMBRE DEL EJERCICIO"
+              error={field.state.meta.errors?.[0]}
+            >
+              <StyledTextInput
+                value={field.state.value}
+                onChangeText={field.handleChange}
+                placeholder="Ej: Press de Banca"
+                error={field.state.meta.errors?.length > 0}
+              />
+            </FormField>
+          )}
+        </form.Field>
 
         {/* Categoría + Grupo Muscular */}
-        <View className="flex-row w-full justify-center gap-3 mb-5">
-          <View className="w-1/2">
+        <View className="flex-row w-full justify-center gap-3">
+          <View className="flex-1">
             <form.Field
               name="category"
               validators={{
-                onChange: ({ value }) => {
-                  const result = z
-                    .string()
-                    .min(1, "La categoría es requerida")
-                    .safeParse(value);
-                  return result.success
-                    ? undefined
-                    : result.error.errors[0].message;
+                onSubmit: ({ value }) => {
+                  if (!value) return "La categoría es requerida";
+                  return undefined;
                 },
               }}
             >
@@ -258,18 +250,28 @@ export default function AddExercise() {
                   options={EXERCISE_CATEGORIES}
                   value={field.state.value}
                   onChange={field.handleChange}
+                  error={field.state.meta.errors?.[0]}
                 />
               )}
             </form.Field>
           </View>
-          <View className="w-1/2">
-            <form.Field name="muscle_group">
+          <View className="flex-1">
+            <form.Field
+              name="muscle_group"
+              validators={{
+                onSubmit: ({ value }) => {
+                  if (!value) return "El grupo muscular es requerido";
+                  return undefined;
+                },
+              }}
+            >
               {(field) => (
                 <CustomSelect
                   label="GRUPO MUSCULAR"
                   options={MUSCLE_GROUPS}
                   value={field.state.value}
                   onChange={field.handleChange}
+                  error={field.state.meta.errors?.[0]}
                 />
               )}
             </form.Field>
@@ -357,21 +359,24 @@ export default function AddExercise() {
             )}
           </form.Field>
 
-          <View
-            ref={uploadVideoCardRef}
-            className="rounded-2xl mb-4 border border-brandPrimary-600 border-l-4"
+          <form.Field
+            name="local_video_uri"
+            validators={{
+              onSubmit: ({ value }) => {
+                if (!value) return "El video es requerido";
+                return undefined;
+              },
+            }}
           >
-            <form.Field
-              name="local_video_uri"
-              validators={{
-                onSubmit: ({ value }) => {
-                  if (!value) return "El video es requerido";
-                  return undefined;
-                },
-              }}
-            >
-              {(field) => (
-                <>
+            {(field) => (
+              <View ref={uploadVideoCardRef}>
+                <View
+                  className={`rounded-2xl mb-4 border-l-4 border border-1 ${
+                    field.state.meta.errors?.length > 0
+                      ? "border-red-500 bg-red-50/10"
+                      : "border-brandPrimary-600"
+                  }`}
+                >
                   <InputUploadVideo
                     value={field.state.value}
                     onChange={field.handleChange}
@@ -380,15 +385,15 @@ export default function AddExercise() {
                     }
                     videoPublicId={form.state.values.cloudinary_video_public_id}
                   />
-                  {field.state.error && (
-                    <Text className="text-red-500 text-xs font-manrope">
-                      {field.state.error}
-                    </Text>
-                  )}
-                </>
-              )}
-            </form.Field>
-          </View>
+                </View>
+                {field.state.meta.errors?.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 mb-2 ml-4 font-manrope-semi italic">
+                    {field.state.meta.errors[0]}
+                  </Text>
+                )}
+              </View>
+            )}
+          </form.Field>
 
           {/* Imagen de portada Ejercicio */}
           <form.Field
@@ -401,21 +406,33 @@ export default function AddExercise() {
             }}
           >
             {(field) => (
-              <ImagePickerCard
-                ref={imageCardRef}
-                value={field.state.value}
-                onChange={field.handleChange}
-                onFocus={() => scrollToCard(imageCardRef)}
-              />
+              <View>
+                <ImagePickerCard
+                  ref={imageCardRef}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onFocus={() => scrollToCard(imageCardRef)}
+                  error={field.state.meta.errors?.length > 0}
+                />
+                {field.state.meta.errors?.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
+                    {field.state.meta.errors[0]}
+                  </Text>
+                )}
+              </View>
             )}
           </form.Field>
         </View>
 
         {/* Instrucciones */}
         <View ref={instructionsRef}>
-          <FormField label="INSTRUCCIONES" className="mt-6">
-            <form.Field name="instructions">
-              {(field) => (
+          <form.Field name="instructions">
+            {(field) => (
+              <FormField
+                label="INSTRUCCIONES"
+                className="mt-6"
+                error={field.state.meta.errors?.[0]}
+              >
                 <TextInput
                   value={field.state.value}
                   onChangeText={field.handleChange}
@@ -425,11 +442,15 @@ export default function AddExercise() {
                   multiline
                   numberOfLines={6}
                   textAlignVertical="top"
-                  className="font-manrope rounded-xl min-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm"
+                  className={`font-manrope rounded-xl min-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm border ${
+                    field.state.meta.errors?.length > 0
+                      ? "border-red-500/50"
+                      : "border-transparent"
+                  }`}
                 />
-              )}
-            </form.Field>
-          </FormField>
+              </FormField>
+            )}
+          </form.Field>
         </View>
 
         {/* Toggle Unilateral */}

@@ -19,6 +19,7 @@ const CustomSelect = ({
   searchable = true,
   actionLabel,
   onActionPress,
+  error,
 }) => {
   const bottomSheetModalRef = useRef(null);
   const { colorScheme } = useColorScheme();
@@ -64,10 +65,11 @@ const CustomSelect = ({
       {/* Trigger — surface_container_high bg, Ghost Border */}
       <Pressable
         onPress={handlePresentModalPress}
-        className="bg-ui-input-light dark:bg-ui-input-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97]"
+        className={`bg-ui-input-light dark:bg-ui-input-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97] border ${
+          error ? "border-red-500/50" : "border-ui-input-border"
+        }`}
         style={{
           borderWidth: 1,
-          borderColor: ui.input.border,
         }}
       >
         <Text
@@ -83,6 +85,12 @@ const CustomSelect = ({
           ▼
         </Text>
       </Pressable>
+
+      {error ? (
+        <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1.5 ml-1 font-manrope-semi italic">
+          {error}
+        </Text>
+      ) : null}
 
       {/* Bottom Sheet */}
       <BottomSheetModal

@@ -15,7 +15,7 @@ import { ui } from "../../theme/colors";
 import { deleteAsync } from "expo-file-system/legacy";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
-  { value, onChange, onFocus },
+  { value, onChange, onFocus, error },
   ref
 ) {
   const { isDark } = useTheme();
@@ -48,7 +48,9 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
   return (
     <View
       ref={ref}
-      className="rounded-2xl p-5 mb-4 border bg-ui-surface-light dark:bg-ui-surface-dark border-brandSecondary-600 border-l-4"
+      className={`rounded-2xl p-5 mb-4 border bg-ui-surface-light dark:bg-ui-surface-dark border-l-4 ${
+        error ? "border-red-500 bg-red-50/5" : "border-brandSecondary-600"
+      }`}
     >
       {/* Header */}
       <HeaderCard
