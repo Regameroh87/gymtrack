@@ -110,6 +110,7 @@ export default function InputUploadVideo({ value, onChange }) {
             <Movie color={isDark ? brandPrimary[600] : "#ffffff"} size={25} />
           </View>
         </PreviewVideo>
+
         {/* ── Video info card (uploaded) ── */}
         {value && !isUploading ? (
           <View className="p-4 rounded-xl bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark">
