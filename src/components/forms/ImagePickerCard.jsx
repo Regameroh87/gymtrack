@@ -83,7 +83,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
         </PreviewImage>
       </View>
 
-      {/* URL Input + Pick from gallery */}
+      {/* URL Input */}
       <View className=" gap-y-4 mt-4">
         <StyledInputCard
           value={value}
@@ -92,40 +92,42 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           placeholder="Pegar URL de imagen..."
           icon={<Link color={ui.text.muted} size={16} />}
         />
+        {/* Botones subir imagen */}
+        {!value && (
+          <View className="flex-row gap-x-3">
+            <View className="flex-1">
+              <ButtonUploadAnimated
+                isUploading={isUploading}
+                labelLoading="Subiendo..."
+                label="Galería"
+                onPress={() => handleSelection("gallery")}
+                backgroundColor="bg-brandSecondary-600/10 dark:bg-brandSecondary-600/10 border border-brandSecondary-500/20"
+                textColor="text-brandSecondary-700 dark:text-brandSecondary-300"
+                backgroundColorAnimated="bg-brandSecondary-300/20"
+                textColorAnimated="text-brandSecondary-600 dark:text-brandSecondary-300"
+                height="h-14"
+              >
+                <Upload color={isDark ? "#62fae3" : "#059669"} size={16} />
+              </ButtonUploadAnimated>
+            </View>
 
-        <View className="flex-row gap-x-3">
-          <View className="flex-1">
-            <ButtonUploadAnimated
-              isUploading={isUploading}
-              labelLoading="Subiendo..."
-              label="Galería"
-              onPress={() => handleSelection("gallery")}
-              backgroundColor="bg-brandSecondary-600/10 dark:bg-brandSecondary-600/10 border border-brandSecondary-500/20"
-              textColor="text-brandSecondary-700 dark:text-brandSecondary-300"
-              backgroundColorAnimated="bg-brandSecondary-300/20"
-              textColorAnimated="text-brandSecondary-600 dark:text-brandSecondary-300"
-              height="h-14"
-            >
-              <Upload color={isDark ? "#62fae3" : "#059669"} size={16} />
-            </ButtonUploadAnimated>
+            <View className="flex-1">
+              <ButtonUploadAnimated
+                isUploading={isUploading}
+                labelLoading="..."
+                label="Cámara"
+                onPress={() => handleSelection("camera")}
+                backgroundColor="bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 border border-brandPrimary-500/20"
+                textColor="text-brandPrimary-700 dark:text-brandPrimary-300"
+                backgroundColorAnimated="bg-brandPrimary-300/20"
+                textColorAnimated="text-brandPrimary-600 dark:text-brandPrimary-200"
+                height="h-14"
+              >
+                <Photo color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
+              </ButtonUploadAnimated>
+            </View>
           </View>
-
-          <View className="flex-1">
-            <ButtonUploadAnimated
-              isUploading={isUploading}
-              labelLoading="..."
-              label="Cámara"
-              onPress={() => handleSelection("camera")}
-              backgroundColor="bg-brandPrimary-600/10 dark:bg-brandPrimary-600/10 border border-brandPrimary-500/20"
-              textColor="text-brandPrimary-700 dark:text-brandPrimary-300"
-              backgroundColorAnimated="bg-brandPrimary-300/20"
-              textColorAnimated="text-brandPrimary-600 dark:text-brandPrimary-200"
-              height="h-14"
-            >
-              <Photo color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
-            </ButtonUploadAnimated>
-          </View>
-        </View>
+        )}
       </View>
       <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
         Referencia visual clara para asegurar la técnica correcta.
