@@ -4,8 +4,9 @@ import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import * as schema from "./schemas";
 import migrations from "./migrations/migrations";
 
-const sqlite = openDatabaseSync("gymtrack.db");
-sqlite.execSync("PRAGMA journal_mode = WAL;");
+const sqlite = openDatabaseSync("gymtrack.db", {
+  useNewConnection: true,
+});
 
 export const database = drizzle(sqlite, { schema });
 

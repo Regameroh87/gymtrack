@@ -268,6 +268,7 @@ export function startSyncListener() {
 export async function checkNetInfoAndSync() {
   const netInfo = await NetInfo.fetch();
   if (netInfo.isConnected) {
-    await syncWithSupabase();
+    const { success, error } = await syncWithSupabase();
+    return { success, error };
   }
 }
