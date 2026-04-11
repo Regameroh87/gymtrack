@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import { Photo, Upload, Link } from "../../../assets/icons";
 import { brandSecondary } from "../../theme/colors";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
-import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
+
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import { useTheme } from "../../theme/theme";
 import * as Haptics from "expo-haptics";
@@ -12,7 +12,7 @@ import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
 import { ui } from "../../theme/colors";
-import { deleteAsync } from "expo-file-system/legacy";
+import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
   { value, onChange, onFocus, error },
@@ -70,7 +70,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           onPress={async () => {
             if (value && value.startsWith("file://")) {
               try {
-                await deleteAsync(value, { idempotent: true });
+                await deleteMediaLocally(value);
               } catch (error) {
                 console.warn("No se pudo borrar el archivo físico:", error);
               }
