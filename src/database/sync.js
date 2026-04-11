@@ -1,7 +1,7 @@
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { database } from "./index";
-import { exercises_base, equipment } from "./schemas";
+import { exercises_base, equipment, exercise_equipment } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
@@ -49,13 +49,29 @@ export async function pushEquipmentChanges() {
     .where(
       or(
         eq(equipment.sync_status, "pending"),
-        eq(equipment.sync_status, "dirty")
+        eq(equipment.sync_status, "dirty"),
+        eq(equipment.sync_status, "deleted")
       )
     );
 
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
+    // Si está marcado para borrar, lo borramos de Supabase y luego localmente
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("equipment")
+        .delete()
+        .eq("id", row.id);
+
+      if (!error) {
+        await database.delete(equipment).where(eq(equipment.id, row.id));
+      } else {
+        console.error("Error al borrar equipo en Supabase:", error);
+      }
+      continue;
+    }
+
     let updatedLocal = false;
 
     // 1. Subir Imagen a Cloudinary si es local
@@ -114,13 +130,31 @@ export async function pushExercisesChanges() {
     .where(
       or(
         eq(exercises_base.sync_status, "pending"),
-        eq(exercises_base.sync_status, "dirty")
+        eq(exercises_base.sync_status, "dirty"),
+        eq(exercises_base.sync_status, "deleted")
       )
     );
 
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
+    // Si está marcado para borrar, lo borramos de Supabase y luego localmente
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("exercises_base")
+        .delete()
+        .eq("id", row.id);
+
+      if (!error) {
+        await database
+          .delete(exercises_base)
+          .where(eq(exercises_base.id, row.id));
+      } else {
+        console.error("Error al borrar ejercicio en Supabase:", error);
+      }
+      continue;
+    }
+
     let updatedLocal = false;
 
     // 1. Imagen
@@ -204,11 +238,61 @@ export async function pushExercisesChanges() {
 }
 
 /**
+ * PUSH: Sube cambios locales de Relación Ejercicio-Equipo
+ */
+export async function pushExerciseEquipmentChanges() {
+  const localChanges = await database
+    .select()
+    .from(exercise_equipment)
+    .where(
+      or(
+        eq(exercise_equipment.sync_status, "pending"),
+        eq(exercise_equipment.sync_status, "dirty"),
+        eq(exercise_equipment.sync_status, "deleted")
+      )
+    );
+
+  if (localChanges.length === 0) return;
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("exercise_equipment")
+        .delete()
+        .eq("id", row.id);
+
+      if (!error) {
+        await database
+          .delete(exercise_equipment)
+          .where(eq(exercise_equipment.id, row.id));
+      } else {
+        console.error("Error al borrar relación en Supabase:", error);
+      }
+      continue;
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("exercise_equipment")
+      .upsert(restOfRow, { onConflict: "id" });
+
+    if (!error) {
+      await database
+        .update(exercise_equipment)
+        .set({ sync_status: "synced" })
+        .where(eq(exercise_equipment.id, row.id));
+    } else {
+      console.error("Error al subir relación a Supabase:", error);
+    }
+  }
+}
+
+/**
  * Función Principal de Sincronización
  * Permite filtrar qué tablas sincronizar. Por defecto sincroniza todas.
  */
 export async function syncWithSupabase(
-  tablesToSync = ["exercises_base", "equipment"]
+  tablesToSync = ["exercises_base", "equipment", "exercise_equipment"]
 ) {
   try {
     const syncTime = new Date().toISOString();
@@ -222,6 +306,7 @@ export async function syncWithSupabase(
       let schemaTable;
       if (table === "exercises_base") schemaTable = exercises_base;
       else if (table === "equipment") schemaTable = equipment;
+      else if (table === "exercise_equipment") schemaTable = exercise_equipment;
 
       if (schemaTable) {
         const success = await pullTableChanges(table, schemaTable, lastSync);
@@ -239,6 +324,9 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("equipment")) {
       await pushEquipmentChanges();
+    }
+    if (tablesToSync.includes("exercise_equipment")) {
+      await pushExerciseEquipmentChanges();
     }
 
     console.log("Sincronización completada.");

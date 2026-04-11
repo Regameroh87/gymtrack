@@ -10,9 +10,10 @@ import { checkNetInfoAndSync } from "./sync";
 export async function resetDatabase() {
   try {
     // Delete in order to respect potential foreign keys (though SQLite doesn't always enforce them unless pragma is on)
-    await database.delete(exercise_equipment);
-    await database.delete(exercises_base);
-    await database.delete(equipment);
+    // Instead of deleting, we mark them as deleted to sync the deletion to Supabase
+    await database.update(exercise_equipment).set({ sync_status: "deleted" });
+    await database.update(exercises_base).set({ sync_status: "deleted" });
+    await database.update(equipment).set({ sync_status: "deleted" });
 
     const files = await FileSystem.readDirectoryAsync(
       FileSystem.documentDirectory
