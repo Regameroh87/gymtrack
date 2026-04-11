@@ -15,7 +15,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    
     "ios": {
       "supportsTablet": true,
       "jsEngine": "hermes",
@@ -51,7 +50,8 @@
             "newArchEnabled": true
           }
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

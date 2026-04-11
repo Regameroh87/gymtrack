@@ -6,6 +6,7 @@ import { supabase } from "../database/supabase";
 import { eq, or } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
+import { sql } from "drizzle-orm";
 
 const LAST_SYNC_KEY = "last_sync_at";
 
@@ -53,6 +54,7 @@ export async function pushEquipmentChanges() {
         eq(equipment.sync_status, "deleted")
       )
     );
+  console.log("Local changes EQUIPMENT:", localChanges);
 
   if (localChanges.length === 0) return;
 
@@ -65,6 +67,7 @@ export async function pushEquipmentChanges() {
         .eq("id", row.id);
 
       if (!error) {
+        console.log("Borrando equipo en SQLite");
         await database.delete(equipment).where(eq(equipment.id, row.id));
       } else {
         console.error("Error al borrar equipo en Supabase:", error);
@@ -134,7 +137,7 @@ export async function pushExercisesChanges() {
         eq(exercises_base.sync_status, "deleted")
       )
     );
-
+  console.log("Local changes EXERCISES_BASE:", localChanges);
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
@@ -146,6 +149,7 @@ export async function pushExercisesChanges() {
         .eq("id", row.id);
 
       if (!error) {
+        console.log("Borrando ejercicio en SQLite");
         await database
           .delete(exercises_base)
           .where(eq(exercises_base.id, row.id));
@@ -253,6 +257,7 @@ export async function pushExerciseEquipmentChanges() {
       )
     );
 
+  console.log("Local changes EXERCISE_EQUIPMENT:", localChanges);
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
@@ -264,6 +269,7 @@ export async function pushExerciseEquipmentChanges() {
         .eq("id", row.id);
 
       if (!error) {
+        console.log("Borrando fila en SQLite");
         await database
           .delete(exercise_equipment)
           .where(eq(exercise_equipment.id, row.id));
