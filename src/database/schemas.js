@@ -43,5 +43,11 @@ export const exercise_equipment = sqliteTable("exercise_equipment", {
   equipment_id: text("equipment_id")
     .notNull()
     .references(() => equipment.id),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
   sync_status: text("sync_status").notNull().default("pending"),
 });
