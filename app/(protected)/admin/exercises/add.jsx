@@ -218,12 +218,12 @@ export default function AddExercise() {
             },
             onChangeAsync: async ({ value }) => {
               if (!value || value.trim().length < 3) return undefined;
-              
+
               const existing = await database
                 .select()
                 .from(exercises_base)
                 .where(eq(exercises_base.name, value.trim()));
-              
+
               if (existing.length > 0) {
                 return "Ya existe un ejercicio con este nombre.";
               }
