@@ -22,7 +22,12 @@ export async function resetDatabase() {
 
     // Borrar cada uno
     for (const file of files) {
-      if (!file.endsWith(".db")) {
+      if (
+        !file.endsWith(".db") &&
+        !file.endsWith(".db-wal") &&
+        !file.endsWith(".db-shm") &&
+        !file.endsWith(".db-journal")
+      ) {
         // excluís la base de datos
         await FileSystem.deleteAsync(FileSystem.documentDirectory + file);
       }
