@@ -151,6 +151,7 @@ export async function pushExercisesChanges() {
           .where(eq(exercises_base.id, row.id));
       } else {
         console.error("Error al borrar ejercicio en Supabase:", error);
+        //Deberia guardar el error en un tabla de errores
       }
       continue;
     }
@@ -255,6 +256,7 @@ export async function pushExerciseEquipmentChanges() {
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
+    //Si esta marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
       const { error } = await supabase
         .from("exercise_equipment")
@@ -266,7 +268,7 @@ export async function pushExerciseEquipmentChanges() {
           .delete(exercise_equipment)
           .where(eq(exercise_equipment.id, row.id));
       } else {
-        console.error("Error al borrar relación en Supabase:", error);
+        console.error("Error al borrar fila en SQLite:", error);
       }
       continue;
     }
