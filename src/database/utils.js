@@ -1,6 +1,7 @@
 import { database } from "./index";
 import { exercises_base, equipment, exercise_equipment } from "./schemas";
 import * as FileSystem from "expo-file-system/legacy";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { checkNetInfoAndSync } from "./sync";
 
 /**
@@ -34,6 +35,18 @@ export async function resetDatabase() {
     }
     console.log("Limpieza completada");
     console.log("Database reset successful");
+
+    // Borrar borradores y timestamps de sincronización de AsyncStorage
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const keysToClear = keys.filter((key) => key.includes("Draft"));
+      if (keysToClear.length > 0) {
+        await AsyncStorage.multiRemove(keysToClear);
+        console.log("AsyncStorage limpiado:", keysToClear);
+      }
+    } catch (e) {
+      console.error("Error al limpiar AsyncStorage:", e);
+    }
 
     const { success, error } = await checkNetInfoAndSync();
     console.warn(success, error);
