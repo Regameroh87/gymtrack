@@ -20,6 +20,7 @@ import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
 import { Plus, ChevronRight, Barbell } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
+import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
 const CATEGORY_FILTERS = [
   "Todos",
@@ -55,9 +56,13 @@ export default function ExercisesList() {
     >
       {/* Thumbnail */}
       <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center bg-brandSecondary-50 dark:bg-brandSecondary-950">
-        {item.image_url ? (
+        {item.cloudinary_image_public_id || item.image_url ? (
           <Image
-            source={{ uri: item.image_url }}
+            source={{
+              uri:
+                getCloudinaryUrl(item.cloudinary_image_public_id) ??
+                `${item.local_image_uri}`,
+            }}
             className="w-full h-full"
             contentFit="cover"
             transition={200}

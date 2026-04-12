@@ -1,11 +1,12 @@
 import { supabase } from "../database/supabase";
+import { CLOUD_NAME } from "./cloudinary";
 
 export const uploadFileToCloudinary = async ({
   fileUri,
   uploadPreset,
   typeFile,
 }) => {
-  const cloudName = "ddupuyeko";
+  const cloudName = CLOUD_NAME;
 
   const data = new FormData();
   const fileName = fileUri.split("/").pop();
