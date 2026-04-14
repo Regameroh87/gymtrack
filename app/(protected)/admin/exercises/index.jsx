@@ -12,7 +12,7 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 
 import { database } from "../../../../src/database";
 import { exercises_base } from "../../../../src/database/schemas";
@@ -71,7 +71,9 @@ export default function ExercisesList() {
                   // y la unimos al directorio actual de la aplicación.
                   const parts = item.local_image_uri.split("Documents/");
                   const relativePath =
-                    parts.length > 1 ? parts[1] : item.local_image_uri.split("/").pop();
+                    parts.length > 1
+                      ? parts[1]
+                      : item.local_image_uri.split("/").pop();
                   return FileSystem.documentDirectory + relativePath;
                 }
                 return null;
