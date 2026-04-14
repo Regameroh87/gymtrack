@@ -84,7 +84,6 @@ export default function ExercisesList() {
               }}
               width={"100%"}
               height={"100%"}
-              cla
               contentFit="cover"
               transition={200}
               onLoad={(e) => console.log("Imagen cargada:", e.source.uri)}
