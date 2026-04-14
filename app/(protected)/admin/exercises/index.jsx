@@ -48,74 +48,80 @@ export default function ExercisesList() {
 
   const { data: exercises, isLoading } = useExercises();
 
-  const renderItem = ({ item }) => (
-    <Pressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }}
-      className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center active:scale-[0.98]"
-    >
-      {/* Thumbnail */}
-      <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center ">
-        {item.cloudinary_image_public_id || item.local_image_uri ? (
-          <Image
-            source={{
-              uri: (() => {
-                const cloudinaryUrl = getCloudinaryUrl(
-                  item.cloudinary_image_public_id
-                );
-                if (cloudinaryUrl) return cloudinaryUrl;
+  const renderItem = ({ item }) => {
+    console.log(item);
+    return (
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }}
+        className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center active:scale-[0.98]"
+      >
+        {/* Thumbnail */}
+        <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center ">
+          {item.cloudinary_image_public_id || item.local_image_uri ? (
+            <Image
+              source={{
+                uri: (() => {
+                  const cloudinaryUrl = getCloudinaryUrl(
+                    item.cloudinary_image_public_id
+                  );
+                  console.log("cloudinaryUrl", cloudinaryUrl);
+                  if (cloudinaryUrl) return cloudinaryUrl;
 
-                if (item.local_image_uri) {
-                  // Parche para iOS: extraemos la ruta relativa después de 'Documents/' o similar
-                  // y la unimos al directorio actual de la aplicación.
-                  const parts = item.local_image_uri.split("Documents/");
-                  const relativePath =
-                    parts.length > 1
-                      ? parts[1]
-                      : item.local_image_uri.split("/").pop();
-                  return FileSystem.documentDirectory + relativePath;
-                }
-                return null;
-              })(),
-            }}
-            className="w-full h-full"
-            contentFit="cover"
-            transition={200}
-            onLoad={(e) => console.log("Imagen cargada:", e.source.uri)}
-            onError={(e) => console.log("Error cargando imagen:", e.error)}
-          />
-        ) : (
-          <Barbell size={24} color={brandSecondary[500]} />
-        )}
-      </View>
+                  if (item.local_image_uri) {
+                    // Parche para iOS: extraemos la ruta relativa después de 'Documents/' o similar
+                    // y la unimos al directorio actual de la aplicación.
+                    const parts = item.local_image_uri.split("Documents/");
+                    const relativePath =
+                      parts.length > 1
+                        ? parts[1]
+                        : item.local_image_uri.split("/").pop();
+                    return FileSystem.documentDirectory + relativePath;
+                  }
+                  return null;
+                })(),
+              }}
+              width={"100%"}
+              height={"100%"}
+              cla
+              contentFit="cover"
+              transition={200}
+              onLoad={(e) => console.log("Imagen cargada:", e.source.uri)}
+              onError={(e) => console.log("Error cargando imagen:", e.error)}
+            />
+          ) : (
+            <Barbell size={24} color={brandSecondary[500]} />
+          )}
+        </View>
 
-      {/* Info */}
-      <View className="flex-1 ml-3">
-        <Text
-          className="text-[15px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
-        <View className="flex-row items-center mt-1">
-          <View className="px-1.5 py-0.5 rounded mr-2 bg-brandSecondary-100 dark:bg-brandSecondary-900">
-            <Text className="text-[9px] font-jakarta-semi uppercase text-brandSecondary-700 dark:text-brandSecondary-300">
-              {item.muscle_group || "General"}
+        {/* Info */}
+        <View className="flex-1 ml-3">
+          <Text
+            className="text-[15px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+          <View className="flex-row items-center mt-1">
+            <View className="px-1.5 py-0.5 rounded mr-2 bg-brandSecondary-100 dark:bg-brandSecondary-900">
+              <Text className="text-[9px] font-jakarta-semi uppercase text-brandSecondary-700 dark:text-brandSecondary-300">
+                {item.muscle_group || "General"}
+              </Text>
+            </View>
+            <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+              {item.equipment || "Peso libre"}
             </Text>
           </View>
-          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
-            {item.equipment || "Peso libre"}
-          </Text>
         </View>
-      </View>
 
-      <ChevronRight
-        size={14}
-        className="text-ui-text-muted dark:text-ui-text-mutedDark"
-      />
-    </Pressable>
-  );
+        <ChevronRight
+          size={14}
+          className="text-ui-text-muted dark:text-ui-text-mutedDark"
+        />
+      </Pressable>
+    );
+  };
 
   return (
     <Screen>
