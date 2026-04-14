@@ -12,6 +12,7 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+import * as FileSystem from "expo-file-system";
 
 import { database } from "../../../../src/database";
 import { exercises_base } from "../../../../src/database/schemas";
@@ -55,17 +56,32 @@ export default function ExercisesList() {
       className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center active:scale-[0.98]"
     >
       {/* Thumbnail */}
-      <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center bg-brandSecondary-50 dark:bg-brandSecondary-950">
-        {item.cloudinary_image_public_id || item.image_url ? (
+      <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center ">
+        {item.cloudinary_image_public_id || item.local_image_uri ? (
           <Image
             source={{
-              uri:
-                getCloudinaryUrl(item.cloudinary_image_public_id) ??
-                `${item.local_image_uri}`,
+              uri: (() => {
+                const cloudinaryUrl = getCloudinaryUrl(
+                  item.cloudinary_image_public_id
+                );
+                if (cloudinaryUrl) return cloudinaryUrl;
+
+                if (item.local_image_uri) {
+                  // Parche para iOS: extraemos la ruta relativa después de 'Documents/' o similar
+                  // y la unimos al directorio actual de la aplicación.
+                  const parts = item.local_image_uri.split("Documents/");
+                  const relativePath =
+                    parts.length > 1 ? parts[1] : item.local_image_uri.split("/").pop();
+                  return FileSystem.documentDirectory + relativePath;
+                }
+                return null;
+              })(),
             }}
             className="w-full h-full"
             contentFit="cover"
             transition={200}
+            onLoad={(e) => console.log("Imagen cargada:", e.source.uri)}
+            onError={(e) => console.log("Error cargando imagen:", e.error)}
           />
         ) : (
           <Barbell size={24} color={brandSecondary[500]} />
