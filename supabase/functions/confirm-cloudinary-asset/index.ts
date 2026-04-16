@@ -19,21 +19,20 @@ serve(async (req) => {
     const apiSecret = Deno.env.get("CLOUDINARY_API_SECRET");
 
     if (!cloudName || !apiKey || !apiSecret) {
-      throw new Error("Faltan variables de entorno de Cloudinary");
+      throw new Error("Missing Cloudinary environment variables");
     }
 
     if (!public_id) {
-      throw new Error("El public_id es requerido");
+      throw new Error("Missing public_id");
     }
 
     const timestamp = Math.floor(Date.now() / 1000);
 
-    // 1. FIRMA: En la API de Tags, el string a firmar usa public_ids, tag, command y timestamp
-    // Vamos a usar 'replace' para quitar 'pending' y dejar solo 'confirmed'
+    // SIGNATURE: Using 'replace' to remove 'pending_approval' and set 'confirmed'
     const command = "replace";
     const tag = "confirmed";
     
-    // Los parámetros deben estar en orden alfabético para la firma
+    // Parameters must be in alphabetical order for the signature to be valid
     const stringToSign = `command=${command}&public_ids=${public_id}&tag=${tag}&timestamp=${timestamp}${apiSecret}`;
     const signature = CryptoJS.SHA1(stringToSign).toString(CryptoJS.enc.Hex);
 
@@ -45,7 +44,6 @@ serve(async (req) => {
     formData.append("timestamp", timestamp.toString());
     formData.append("signature", signature);
 
-    // La URL para manejar tags es diferente a la de destroy
     const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/tags`;
 
     const response = await fetch(url, {
@@ -67,4 +65,3 @@ serve(async (req) => {
     });
   }
 });
-
