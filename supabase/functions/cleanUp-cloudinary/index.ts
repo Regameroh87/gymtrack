@@ -24,8 +24,9 @@ serve(async () => {
     console.log("Buscando assets con tag pending_approval...");
     
     // Cloudinary separa los assets en image y video en la API REST
-    const urlImages = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/tags/pending_approval`;
-    const urlVideos = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/video/tags/pending_approval`;
+    // Por defecto devuelve 10, agregamos max_results=500 para traer todos.
+    const urlImages = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/tags/pending_approval?max_results=500`;
+    const urlVideos = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/video/tags/pending_approval?max_results=500`;
 
     const [respImages, respVideos] = await Promise.all([
       fetch(urlImages, { headers }),
