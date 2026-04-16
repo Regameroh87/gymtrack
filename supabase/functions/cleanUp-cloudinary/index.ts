@@ -1,8 +1,6 @@
 // supabase/functions/cleanup-pending-cloudinary/index.ts
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-
 const CLOUD_NAME = Deno.env.get("CLOUDINARY_CLOUD_NAME");
 const API_KEY = Deno.env.get("CLOUDINARY_API_KEY");
 const API_SECRET = Deno.env.get("CLOUDINARY_API_SECRET");
