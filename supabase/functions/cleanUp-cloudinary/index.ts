@@ -61,18 +61,31 @@ serve(async () => {
 
     const deleted: string[] = [];
     for (const resource of toDelete) {
-      const deleteUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/${resource.resource_type}/upload`;
-      await fetch(deleteUrl, {
+      // Enviar el public_id por URL resuelve el problema de los DELETEs con body,
+      // que a veces son ignorados o mal procesados.
+      const queryParams = new URLSearchParams([
+        ["public_ids[]", resource.public_id]
+      ]).toString();
+
+      const deleteUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/${resource.resource_type}/upload?${queryParams}`;
+      
+      const delResponse = await fetch(deleteUrl, {
         method: "DELETE",
         headers: {
           Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ public_ids: [resource.public_id] }),
       });
-      deleted.push(resource.public_id);
-    }
 
+      const delData = await delResponse.json();
+      console.log(`Borrado ${resource.public_id}:`, delData);
+
+      // Cloudinary responde con { deleted: { "public_id": "deleted" } } o "not_found"
+      if (delData.deleted && delData.deleted[resource.public_id] === "deleted") {
+        deleted.push(resource.public_id);
+      } else {
+        console.warn(`Respuesta inesperada al borrar ${resource.public_id}:`, delData);
+      }
+    }
     return new Response(
       JSON.stringify({ deleted_count: deleted.length, deleted }),
       { status: 200, headers: { "Content-Type": "application/json" } }
