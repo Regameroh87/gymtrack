@@ -12,8 +12,12 @@ serve(async (req) => {
   }
 
   try {
-    const { public_id, resource_type = "image" } = await req.json();
+    const payload = await req.json();
     
+    // Soporta invocación manual (Frontend) o Webhooks (Backend)
+    // El Webhook guarda los datos de la fila nueva dentro de "record"
+    const public_id = payload.record?.cloudinary_image_public_id || payload.public_id;
+    const resource_type = payload.resource_type || "image"; // Por defecto asumimos image
     const cloudName = Deno.env.get("CLOUDINARY_CLOUD_NAME");
     const apiKey = Deno.env.get("CLOUDINARY_API_KEY");
     const apiSecret = Deno.env.get("CLOUDINARY_API_SECRET");
