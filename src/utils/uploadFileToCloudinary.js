@@ -1,4 +1,3 @@
-import { supabase } from "../database/supabase";
 import { CLOUD_NAME } from "./cloudinary";
 
 export const uploadFileToCloudinary = async ({
@@ -37,17 +36,4 @@ export const uploadFileToCloudinary = async ({
   } else {
     throw new Error(result.error?.message || "Error al subir a Cloudinary"); // Deberia hacer un rollback de la transaccion
   }
-};
-
-export const deleteVideoFromCloudinary = async ({
-  public_id,
-  resource_type,
-}) => {
-  const result = await supabase.functions.invoke("delete-cloudinary", {
-    body: {
-      public_id,
-      resource_type,
-    },
-  });
-  console.log("Respuesta de cloudinary", result);
 };
