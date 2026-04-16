@@ -23,33 +23,28 @@ serve(async () => {
 
     console.log("Buscando assets con tag pending_approval...");
     
-    // Cloudinary separa los assets en image y video en la API REST
-    // Por defecto devuelve 10, agregamos max_results=500 para traer todos.
-    const urlImages = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/tags/pending_approval?max_results=500`;
-    const urlVideos = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/video/tags/pending_approval?max_results=500`;
+    // Creamos un array con las URLs de los tipos que necesitamos
+    const endpoints = [
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/tags/pending_approval?max_results=500`,
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/video/tags/pending_approval?max_results=500`
+    ];
 
-    const [respImages, respVideos] = await Promise.all([
-      fetch(urlImages, { headers }),
-      fetch(urlVideos, { headers })
-    ]);
+    // Ejecutamos ambos fetch, extraemos el json y devolvemos los arrays de resources
+    const combinedResults = await Promise.all(
+      endpoints.map(async (url) => {
+        const resp = await fetch(url, { headers });
+        if (!resp.ok) {
+          console.warn(`Error buscando assets en: ${url.includes('/image/') ? 'image' : 'video'}`, await resp.text());
+          return []; // Devolvemos un array vacío para no romper todo si un tipo falla
+        }
+        const data = await resp.json();
+        return data.resources || [];
+      })
+    );
 
-    let resources: any[] = [];
-
-    // Validar y parsear imágenes
-    if (respImages.ok) {
-      const dataImg = await respImages.json();
-      if (dataImg.resources) resources = resources.concat(dataImg.resources);
-    } else {
-      console.log("Error buscando imágenes:", await respImages.text());
-    }
-
-    // Validar y parsear videos
-    if (respVideos.ok) {
-      const dataVid = await respVideos.json();
-      if (dataVid.resources) resources = resources.concat(dataVid.resources);
-    } else {
-      console.log("Error buscando videos:", await respVideos.text());
-    }
+    // combinedResults es ahora un array de arrays: [ [img1, img2], [vid1] ]
+    // Usamos flat() para aplanarlo en un solo nivel: [img1, img2, vid1]
+    const resources = combinedResults.flat();
 
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 86400;
 
