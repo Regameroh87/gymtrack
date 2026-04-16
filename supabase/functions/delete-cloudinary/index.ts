@@ -1,56 +1,53 @@
+// supabase/functions/cleanup-pending-cloudinary/index.ts
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import CryptoJS from "https://esm.sh/crypto-js@4.1.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const CLOUD_NAME = Deno.env.get("CLOUDINARY_CLOUD_NAME")!;
+const API_KEY = Deno.env.get("CLOUDINARY_API_KEY")!;
+const API_SECRET = Deno.env.get("CLOUDINARY_API_SECRET")!;
+console.log()
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
+serve(async () => {
   try {
-    let { public_id, resource_type = "video" } = await req.json();
-    const cloudName = Deno.env.get("CLOUDINARY_CLOUD_NAME");
-    const apiKey = Deno.env.get("CLOUDINARY_API_KEY");
-    const apiSecret = Deno.env.get("CLOUDINARY_API_SECRET");
+    // 1. Buscar todos los assets con tag "pending_approval"
+    //    que tengan más de 24hs (created_at <= now - 24h)
+    const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 86400;
 
-    if (!cloudName || !apiKey || !apiSecret) {
-      throw new Error("Faltan variables de entorno de Cloudinary");
+    // Cloudinary Admin API: buscar por tag
+    const searchUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/by_tag/pending_approval`;
+
+    const credentials = btoa(`${API_KEY}:${API_SECRET}`);
+    const searchResp = await fetch(searchUrl, {
+      headers: { Authorization: `Basic ${credentials}` },
+    });
+
+    const { resources } = await searchResp.json();
+
+    // 2. Filtrar los que tienen más de 24hs
+    const toDelete = resources.filter((r: any) => {
+      const createdAt = new Date(r.created_at).getTime() / 1000;
+      return createdAt < twentyFourHoursAgo;
+    });
+
+    // 3. Eliminar en batch (Cloudinary acepta hasta 100 por request)
+    const deleted: string[] = [];
+    for (const resource of toDelete) {
+      const deleteUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/${resource.resource_type}/upload`;
+      await fetch(deleteUrl, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ public_ids: [resource.public_id] }),
+      });
+      deleted.push(resource.public_id);
     }
-    const timestamp = Math.floor(Date.now() / 1000);
 
-    // 3. FIRMA: Orden alfabético estricto y concatenación limpia
-    const stringToSign = `public_id=${public_id}&timestamp=${timestamp}${apiSecret}`;
-    
-    const signature = CryptoJS.SHA1(stringToSign).toString(CryptoJS.enc.Hex);
-    
-    const formData = new FormData();
-    formData.append("public_id", public_id);
-    formData.append("api_key", apiKey);
-    formData.append("timestamp", timestamp.toString());
-    formData.append("signature", signature);
-
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/destroy`;
-
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-    });
-
-    const result = await response.json();
-    console.log(result)
-
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify({ deleted_count: deleted.length, deleted }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 });
