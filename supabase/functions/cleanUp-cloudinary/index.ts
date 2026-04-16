@@ -19,24 +19,37 @@ serve(async () => {
     }
 
     const credentials = btoa(`${API_KEY}:${API_SECRET}`);
-    const searchUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/by_tag/pending_approval`;
+    const headers = { Authorization: `Basic ${credentials}` };
 
     console.log("Buscando assets con tag pending_approval...");
-    const searchResp = await fetch(searchUrl, {
-      headers: { Authorization: `Basic ${credentials}` },
-    });
+    
+    // Cloudinary separa los assets en image y video en la API REST
+    const urlImages = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/tags/pending_approval`;
+    const urlVideos = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/video/tags/pending_approval`;
 
-    const searchData = await searchResp.json();
-    console.log("Respuesta Cloudinary:", JSON.stringify(searchData));
+    const [respImages, respVideos] = await Promise.all([
+      fetch(urlImages, { headers }),
+      fetch(urlVideos, { headers })
+    ]);
 
-    if (!searchResp.ok) {
-      return new Response(
-        JSON.stringify({ error: "Error de Cloudinary", details: searchData }),
-        { status: searchResp.status, headers: { "Content-Type": "application/json" } }
-      );
+    let resources: any[] = [];
+
+    // Validar y parsear imágenes
+    if (respImages.ok) {
+      const dataImg = await respImages.json();
+      if (dataImg.resources) resources = resources.concat(dataImg.resources);
+    } else {
+      console.log("Error buscando imágenes:", await respImages.text());
     }
 
-    const resources = searchData.resources || [];
+    // Validar y parsear videos
+    if (respVideos.ok) {
+      const dataVid = await respVideos.json();
+      if (dataVid.resources) resources = resources.concat(dataVid.resources);
+    } else {
+      console.log("Error buscando videos:", await respVideos.text());
+    }
+
     const twentyFourHoursAgo = Math.floor(Date.now() / 1000) - 86400;
 
     const toDelete = resources.filter((r: any) => {
