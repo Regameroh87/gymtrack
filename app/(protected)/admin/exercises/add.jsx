@@ -101,7 +101,7 @@ export default function AddExercise() {
 
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
-        checkNetInfoAndSync(); //Acá sincroniza y sube los assets a cloudinary
+        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err)); //Acá sincroniza y sube los assets a cloudinary
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
