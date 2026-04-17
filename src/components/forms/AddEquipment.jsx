@@ -190,7 +190,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           )}
         </formAddEquipment.Field>
       </View>
-
+      {/* Errores */}
       <formAddEquipment.Subscribe selector={(state) => [state.fieldMeta]}>
         {([fieldMeta]) => {
           const allErrors = Object.values(fieldMeta)
