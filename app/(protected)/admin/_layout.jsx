@@ -52,6 +52,18 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
+        name="equipments/index"
+        options={{
+          title: "Inventario",
+        }}
+      />
+      <Stack.Screen
+        name="equipments/add"
+        options={{
+          title: "Nueva Máquina",
+        }}
+      />
+      <Stack.Screen
         name="routines/index"
         options={{
           title: "Rutinas",

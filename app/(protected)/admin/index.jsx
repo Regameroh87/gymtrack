@@ -79,6 +79,13 @@ export default function AdminDashboard() {
               onPress={() => nav("exercises")}
             />
             <AdminModuleCard
+              icon={Barbell}
+              title="Máquinas"
+              subtitle="Inventario"
+              accentColor={["#f43f5e", "#e11d48"]}
+              onPress={() => nav("equipments")}
+            />
+            <AdminModuleCard
               icon={ClipboardList}
               title="Rutinas"
               subtitle="Armador técnico"
