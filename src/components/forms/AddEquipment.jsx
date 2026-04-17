@@ -58,7 +58,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           sync_status: "pending",
         });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
-        //Tengo que ejecutar la sincronizacion??
+        //Ejecuto la sincronización
         checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
