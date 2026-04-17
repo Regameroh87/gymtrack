@@ -35,10 +35,14 @@ export default function EquipmentsList() {
   const { data: equipments, isLoading } = useQuery({
     queryKey: ["equipments"],
     queryFn: async () => {
-      const results = await database.select().from(equipment).where(eq(equipment.sync_status, "synced")).execute();
+      const results = await database
+        .select()
+        .from(equipment)
+        .where(eq(equipment.sync_status, "synced"))
+        .execute();
       // También podríamos querer mostrar los pending/dirty
       const allResults = await database.select().from(equipment).execute();
-      return allResults.filter(eq => eq.sync_status !== "deleted");
+      return allResults.filter((eq) => eq.sync_status !== "deleted");
     },
   });
 
@@ -77,15 +81,14 @@ export default function EquipmentsList() {
     );
   };
 
-  const filteredEquipments = equipments?.filter((eq) =>
-    eq.name.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const filteredEquipments =
+    equipments?.filter((eq) =>
+      eq.name.toLowerCase().includes(search.toLowerCase())
+    ) || [];
 
   const renderItem = ({ item }) => {
     return (
-      <View
-        className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center"
-      >
+      <View className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center">
         {/* Thumbnail */}
         <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark">
           {item.cloudinary_image_public_id || item.local_image_uri ? (
@@ -99,7 +102,10 @@ export default function EquipmentsList() {
 
                   if (item.local_image_uri) {
                     const parts = item.local_image_uri.split("gymtrack/media/");
-                    const relativePath = parts.length > 1 ? parts[1] : item.local_image_uri.split("/").pop();
+                    const relativePath =
+                      parts.length > 1
+                        ? parts[1]
+                        : item.local_image_uri.split("/").pop();
                     return `${FileSystem.documentDirectory}gymtrack/media/${relativePath}`;
                   }
                   return null;
