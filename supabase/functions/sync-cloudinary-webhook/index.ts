@@ -5,6 +5,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Maps each Cloudinary column to its resource_type for the API
+const ASSET_FIELDS = [
+  { column: "cloudinary_image_public_id", resource_type: "image" },
+  { column: "cloudinary_video_public_id", resource_type: "video" },
+] as const;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") { return new Response("ok", { headers: corsHeaders }); }
 
@@ -32,14 +38,14 @@ serve(async (req) => {
         ["public_ids[]", public_id], ["tag", "confirmed"], ["command", "replace"]
       ]);
       await fetch(url, { method: "POST", headers: { Authorization: `Basic ${credentials}` }, body: data });
-      console.log(`[+] Asset ${public_id} confirmed.`);
+      console.log(`[+] Asset ${public_id} (${resource_type}) confirmed.`);
     };
 
     // Action 2: Delete asset permanently from Cloudinary
     const destroyAsset = async (public_id: string, resource_type: string = "image") => {
       const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/upload?public_ids[]=${public_id}`;
       await fetch(url, { method: "DELETE", headers });
-      console.log(`[-] Asset ${public_id} deleted permanently.`);
+      console.log(`[-] Asset ${public_id} (${resource_type}) deleted permanently.`);
     };
 
 
@@ -48,26 +54,29 @@ serve(async (req) => {
     const record = payload.record || null;
     const old_record = payload.old_record || null;
 
-    if (type === "INSERT" && record?.cloudinary_image_public_id) {
-       await confirmAsset(record.cloudinary_image_public_id);
-    } 
-    
-    else if (type === "DELETE" && old_record?.cloudinary_image_public_id) {
-       await destroyAsset(old_record.cloudinary_image_public_id);
-    } 
-    
-    else if (type === "UPDATE") {
-        const newId = record?.cloudinary_image_public_id;
-        const oldId = old_record?.cloudinary_image_public_id;
+    // Process each asset field (image and video) independently
+    for (const { column, resource_type } of ASSET_FIELDS) {
+      if (type === "INSERT" && record?.[column]) {
+        await confirmAsset(record[column], resource_type);
+      } 
+      
+      else if (type === "DELETE" && old_record?.[column]) {
+        await destroyAsset(old_record[column], resource_type);
+      } 
+      
+      else if (type === "UPDATE") {
+        const newId = record?.[column];
+        const oldId = old_record?.[column];
 
-        // If the photo ID changed (or was removed), delete the old one from Cloudinary
+        // If the asset ID changed (or was removed), delete the old one from Cloudinary
         if (oldId && oldId !== newId) {
-            await destroyAsset(oldId);
+          await destroyAsset(oldId, resource_type);
         }
-        // If there is a new photo ID, and it's different from the old one, confirm it
+        // If there is a new asset ID, and it's different from the old one, confirm it
         if (newId && newId !== oldId) {
-            await confirmAsset(newId);
+          await confirmAsset(newId, resource_type);
         }
+      }
     }
 
     return new Response(JSON.stringify({ success: true, action: type }), {
