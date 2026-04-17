@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,6 +30,12 @@ serve(async (req) => {
     const credentials = btoa(`${apiKey}:${apiSecret}`);
     const headers = { Authorization: `Basic ${credentials}`, "Content-Type": "application/json" };
 
+    // Supabase client para encolar fallos
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     // --- CLOUDINARY ACTIONS --- //
 
     // Action 1: Remove pending tag and add "confirmed" 
@@ -41,13 +48,27 @@ serve(async (req) => {
       console.log(`[+] Asset ${public_id} (${resource_type}) confirmed.`);
     };
 
-    // Action 2: Delete asset permanently from Cloudinary
+    // Action 2: Delete asset permanently from Cloudinary. Si falla, encola para reintento.
     const destroyAsset = async (public_id: string, resource_type: string = "image") => {
-      const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/upload?public_ids[]=${public_id}`;
-      await fetch(url, { method: "DELETE", headers });
-      console.log(`[-] Asset ${public_id} (${resource_type}) deleted permanently.`);
-    };
+      try {
+        const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/upload?public_ids[]=${public_id}`;
+        const response = await fetch(url, { method: "DELETE", headers });
+        const result = await response.json();
 
+        // Verificar si realmente se borró
+        if (result.deleted && (result.deleted[public_id] === "deleted" || result.deleted[public_id] === "not_found")) {
+          console.log(`[-] Asset ${public_id} (${resource_type}) deleted permanently.`);
+        } else {
+          // Cloudinary respondió pero no borró → encolar
+          console.warn(`[!] Respuesta inesperada al borrar ${public_id}:`, result);
+          await queueForDeletion(supabase, public_id, resource_type);
+        }
+      } catch (err) {
+        // Error de red o timeout → encolar para reintento
+        console.error(`[!] Error al borrar ${public_id}:`, err.message);
+        await queueForDeletion(supabase, public_id, resource_type);
+      }
+    };
 
     // --- WEBHOOK LOGIC PARSER --- //
     
@@ -91,3 +112,22 @@ serve(async (req) => {
     });
   }
 });
+
+/**
+ * Encola un asset para eliminación posterior por el cron.
+ * Usa ON CONFLICT para evitar duplicados si el PG trigger ya lo encoló.
+ */
+async function queueForDeletion(supabase: any, public_id: string, resource_type: string) {
+  const { error } = await supabase
+    .from("cloudinary_delete_queue")
+    .upsert(
+      { public_id, resource_type },
+      { onConflict: "public_id" }
+    );
+
+  if (error) {
+    console.error(`[!] Error al encolar ${public_id}:`, error);
+  } else {
+    console.log(`[Q] Asset ${public_id} encolado para reintento por el cron.`);
+  }
+}
