@@ -34,6 +34,7 @@ import {
   DefaultTheme,
   DarkTheme,
 } from "@react-navigation/native";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 const queryClient = new QueryClient();
 
@@ -122,25 +123,30 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-            <Screen>
-              <Stack>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(protected)"
-                  options={{
-                    headerShown: false,
-                  }}
-                />
-              </Stack>
-              <Toast config={toastConfig} />
-            </Screen>
-          </ThemeProvider>
-        </QueryClientProvider>
+        <KeyboardProvider statusBarTranslucent>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+              <Screen>
+                <Stack>
+                  <Stack.Screen
+                    name="(auth)"
+                    options={{ headerShown: false }}
+                  />
+                  <Stack.Screen
+                    name="(protected)"
+                    options={{
+                      headerShown: false,
+                    }}
+                  />
+                </Stack>
+                <Toast config={toastConfig} />
+              </Screen>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
