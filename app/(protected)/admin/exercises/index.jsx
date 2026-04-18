@@ -5,8 +5,9 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,9 +20,12 @@ import { exercises_base } from "../../../../src/database/schemas";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
-import { Plus, ChevronRight, Barbell } from "../../../../assets/icons";
+import { Plus, ChevronRight, Barbell, Pencil, Trash } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
+import Toast from "react-native-toast-message";
+import { eq } from "drizzle-orm";
 
 const CATEGORY_FILTERS = [
   "Todos",
@@ -34,6 +38,7 @@ const CATEGORY_FILTERS = [
 export default function ExercisesList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 
@@ -41,22 +46,52 @@ export default function ExercisesList() {
     return useQuery({
       queryKey: ["exercises"],
       queryFn: async () => {
-        return await database.select().from(exercises_base);
+        const results = await database.select().from(exercises_base).execute();
+        return results.filter((ex) => ex.sync_status !== "deleted");
       },
     });
   }
 
   const { data: exercises, isLoading } = useExercises();
 
+  const handleDelete = (item) => {
+    Alert.alert(
+      "Eliminar Ejercicio",
+      `¿Estás seguro que deseas eliminar "${item.name}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await database
+                .update(exercises_base)
+                .set({ sync_status: "deleted" })
+                .where(eq(exercises_base.id, item.id));
+
+              queryClient.invalidateQueries(["exercises"]);
+              checkNetInfoAndSync();
+
+              Toast.show({
+                type: "success",
+                text1: "Ejercicio eliminado",
+                text2: "Se eliminará también en la nube en unos segundos.",
+                position: "bottom",
+              });
+            } catch (error) {
+              console.error("Error al borrar el ejercicio:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+
   const renderItem = ({ item }) => {
-    console.log(item);
     return (
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }}
-        className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center active:scale-[0.98]"
-      >
+      <View className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center">
         {/* Thumbnail */}
         <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center ">
           {item.cloudinary_image_public_id || item.local_image_uri ? (
@@ -114,11 +149,28 @@ export default function ExercisesList() {
           </View>
         </View>
 
-        <ChevronRight
-          size={14}
-          className="text-ui-text-muted dark:text-ui-text-mutedDark"
-        />
-      </Pressable>
+        {/* Actions */}
+        <View className="flex-row items-center gap-2 ml-2">
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push(`/admin/exercises/edit/${item.id}`);
+            }}
+            className="p-3 bg-brandPrimary-100 dark:bg-brandPrimary-900/30 rounded-xl active:scale-95"
+          >
+            <Pencil size={16} className="text-brandPrimary-500" color="#3b82f6" />
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              handleDelete(item);
+            }}
+            className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl active:scale-95"
+          >
+            <Trash size={16} className="text-red-500" color="#ef4444" />
+          </Pressable>
+        </View>
+      </View>
     );
   };
 

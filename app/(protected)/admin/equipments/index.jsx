@@ -21,7 +21,7 @@ import { equipment } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
-import { Plus, Barbell, Trash } from "../../../../assets/icons";
+import { Plus, Barbell, Trash, Pencil } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { eq } from "drizzle-orm";
@@ -135,15 +135,30 @@ export default function EquipmentsList() {
         </View>
 
         {/* Actions */}
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            handleDelete(item);
-          }}
-          className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl active:scale-95 ml-2"
-        >
-          <Trash size={16} className="text-red-500" color="#ef4444" />
-        </Pressable>
+        <View className="flex-row items-center gap-2 ml-2">
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push(`/admin/equipments/edit/${item.id}`);
+            }}
+            className="p-3 bg-brandPrimary-100 dark:bg-brandPrimary-900/30 rounded-xl active:scale-95"
+          >
+            <Pencil
+              size={16}
+              className="text-brandPrimary-500"
+              color="#3b82f6"
+            />
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              handleDelete(item);
+            }}
+            className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl active:scale-95"
+          >
+            <Trash size={16} className="text-red-500" color="#ef4444" />
+          </Pressable>
+        </View>
       </View>
     );
   };
