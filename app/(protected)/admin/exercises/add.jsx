@@ -41,7 +41,12 @@ import SubmitButton from "../../../../src/components/forms/SubmitButton";
 import { ui } from "../../../../src/theme/colors";
 import { Trash } from "../../../../assets/icons";
 
-export default function FormExercise() {
+//Debo Agregar la función que pueda recibir un ejercicio y editarlo
+export default function FormExercise({
+  exercise,
+  headerTitle,
+  headerDescription,
+}) {
   const queryClient = useQueryClient();
 
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
@@ -57,17 +62,21 @@ export default function FormExercise() {
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      category: "",
-      muscle_group: "",
-      equipments: [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
-      youtube_video_url: "",
-      local_image_uri: "",
-      cloudinary_image_public_id: "",
-      local_video_uri: "",
-      cloudinary_video_public_id: "",
-      instructions: "",
-      is_unilateral: false,
+      name: exercise ? exercise.name : "",
+      category: exercise ? exercise.category : "",
+      muscle_group: exercise ? exercise.muscle_group : "",
+      equipments: exercise ? exercise.equipments : [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
+      youtube_video_url: exercise ? exercise.youtube_video_url : "",
+      local_image_uri: exercise ? exercise.local_image_uri : "",
+      cloudinary_image_public_id: exercise
+        ? exercise.cloudinary_image_public_id
+        : "",
+      local_video_uri: exercise ? exercise.local_video_uri : "",
+      cloudinary_video_public_id: exercise
+        ? exercise.cloudinary_video_public_id
+        : "",
+      instructions: exercise ? exercise.instructions : "",
+      is_unilateral: exercise ? exercise.is_unilateral : false,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -189,10 +198,12 @@ export default function FormExercise() {
       {/* ── Header ── */}
       <View className="px-4 pt-6 pb-2">
         <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-          Nuevo Ejercicio
+          {headerTitle ? headerTitle : "Nuevo Ejercicio"}
         </Text>
         <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
-          Completá los datos para agregar un ejercicio al catálogo.
+          {headerDescription
+            ? headerDescription
+            : "Completá los datos para agregar un ejercicio al catálogo."}
         </Text>
       </View>
 
