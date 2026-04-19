@@ -45,11 +45,11 @@ export default function Login() {
   };
 
   return (
-    <Screen safe className=" items-center">
+    <Screen safe className="flex-1 items-center justify-center">
       {/* FONDO */}
       <Image
         source={{
-          uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBPWXQqN8-va4pFiXFH26fGuWPUBCqiDnW5BUNTUV_i4xKIB2zCplkf3Eyah63k73zjEWmQIBMMXwZtmJcX-jSwA9LQ7cLrwAKjaa3eOPDqpu4pYU_WN7A3Ow_DJbwWHyoYio889Ab-DOnpNXDDsGsNbTbeR_Jh7Bqx2_DGEX7ht7uqJ4hPZf74Wp_0GVziW17LORf1NibrSISa6YEhzgcFGHbP06rhBxIOq_BOksEdvCi2fzyowFkX3iK2xyNExqhonj3GyrhQkDhT",
+          uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDoyQqhQRW3b2Vbr6hJyuoRkX5vGZxxyBkrnNT_8WqhkfME9l9LkLhUA_C3_k6XtyLFePmcWfsBWScKNkQmyFoSMiuWg66Dt48saP_-i2wjNYcKhOaQbBimLgaEdmin3fHsBW_-jYlb8LWwiu0WzBxde3FVh2kpvj-60rFmKDkx_4ZV6E9X1Dccci4F6HNjQKYp2TGbf-EHgPMdHlEmF7F1sujc9BfVeJY119gwEa-sQ7imnUfz3ziFPUO-LIL9C-WMtmaeGFAr9gfD",
         }}
         style={{
           display: "flex",
@@ -60,124 +60,131 @@ export default function Login() {
         }}
       />
 
+      {/* OVERLAY STITCH PULSE KINETIC (Indigo) */}
       <LinearGradient
-        colors={["rgba(0,0,0,0.2)", "rgba(0,0,0,0.9)"]}
+        colors={["rgba(74, 68, 228, 0.6)", "rgba(28, 28, 36, 0.9)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         pointerEvents="none"
       />
-      {/* TITULO */}
-      <View className=" mt-24">
-        <View className="self-center flex flex-row justify-center p-2 rounded-full bg-white/10">
-          <Barbell color="#a3e635" />
-        </View>
-        <View className="flex items-center mt-10">
-          <Text className=" text-white text-4xl font-jakarta-ebold">
-            Back to the Grind
+
+      {/* CONTENEDOR CENTRAL */}
+      <View className="flex w-full items-center justify-center flex-1 -mt-10">
+        {/* TITULO */}
+        <View className="w-[90%] items-center mb-10 mt-6">
+          <View className="self-center flex flex-row justify-center p-3 rounded-full bg-white/20 mb-6 shadow-sm shadow-[#4a44e4]/30">
+            <Barbell color="#ffffff" size={36} />
+          </View>
+          <Text className="text-white text-5xl font-jakarta-ebold text-center tracking-tight px-1 drop-shadow-md">
+            Entrena con Propósito
           </Text>
-          <Text className=" text-white font-jakarta-regular mt-2  text-xl">
-            Ready to crush your goals today
+          <Text className="text-[#e2dfff] font-jakarta-regular mt-4 text-center px-4 text-lg drop-shadow-md">
+            Ingresa tu email para recibir un enlace de acceso mágico.
           </Text>
         </View>
-      </View>
-      {/* FORMULARIO */}
-      <View className="flex w-[90%] h-72 mt-40 pt-4 rounded-2xl items-center bg-white/70">
-        <form.Field
-          name="email"
-          validators={{
-            onChange: ({ value, fieldApi }) => {
-              if (
-                !fieldApi.state.meta.isBlurred &&
-                fieldApi.form.state.submissionAttempts === 0
-              ) {
+
+        {/* GLASS CARD FORMULARIO */}
+        <View className="flex w-[85%] pt-10 pb-10 px-6 rounded-[32px] items-center bg-white/10 border border-white/20 backdrop-blur-3xl shadow-2xl shadow-[#4a44e4]/20">
+          <form.Field
+            name="email"
+            validators={{
+              onChange: ({ value, fieldApi }) => {
+                if (
+                  !fieldApi.state.meta.isBlurred &&
+                  fieldApi.form.state.submissionAttempts === 0
+                ) {
+                  return undefined;
+                }
+                if (!value) return "El email es obligatorio";
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) return "Ingresá un email válido";
                 return undefined;
-              }
-              if (!value) return "El email es obligatorio";
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (!emailRegex.test(value)) return "Ingresá un email válido";
-              return undefined;
-            },
-          }}
-        >
-          {(field) => (
-            <View className="flex w-full px-12">
-              <Text className=" font-jakarta-bold text-md text-slate-600">
-                Direccion de correo electrónico
-              </Text>
-              <View className="flex-row items-center border-gray-400 border-2 rounded-xl bg-slate-50 mt-2 px-3">
-                {field.state.value === "" && (
-                  <Mail color="#9ca3af" size={18} style={{ marginRight: -5 }} />
-                )}
-                <TextInput
-                  className="flex-1 h-12 ml-2 text-black"
-                  placeholder="mail@mail.com"
-                  placeholderTextColor={"gray"}
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  value={field.state.value}
-                  onChangeText={(text) => {
-                    setErrorSupabase("");
-                    field.setValue(text);
-                  }}
-                />
-              </View>
-              {/* Mostrar errores de validación */}
-              <View className="flex min-h-16">
-                {field.state.meta.errors.length > 0 && (
-                  <View>
-                    {(field.state.meta.isBlurred ||
-                      form.state.submissionAttempts > 0) && (
-                      <Text className=" text-red-600 mt-2 text-sm font-jakarta-regular">
-                        {field.state.meta.errors[0]}
-                      </Text>
-                    )}
-                  </View>
-                )}
-                {errorSupabase && (
-                  <View>
-                    <Text className=" text-red-600 mt-2 text-sm font-jakarta-regular">
-                      {errorSupabase}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
-        </form.Field>
-        {/* {Boton} */}
-        <View className="flex items-center justify-center">
-          <form.Subscribe selector={(state) => [state.canSubmit]}>
-            {([canSubmit]) => (
-              <Pressable
-                className={` flex flex-row w-[70%] p-4 items-center rounded-xl mb-4 ${
-                  isPending || !canSubmit ? "bg-lime-100" : "bg-lime-400"
-                }`}
-                disabled={isPending || !canSubmit}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  form.handleSubmit();
-                }}
-              >
-                <Text
-                  className={`font-jakarta-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}
-                >
-                  {isPending ? "Enviando código..." : "Enviar código "}
+              },
+            }}
+          >
+            {(field) => (
+              <View className="flex w-full">
+                <Text className="font-jakarta-bold text-sm text-[#e2dfff] mb-2 px-1">
+                  Correo electrónico
                 </Text>
-                {!isPending && (
-                  <ArrowRight
-                    color={`${isPending || !canSubmit ? "#4b5563" : "black"}`}
-                    size={18}
+                <View className="flex-row items-center border-[#4a44e4]/40 border rounded-2xl bg-[#0c006a]/40 px-4 py-1">
+                  {field.state.value === "" && (
+                    <Mail color="#c2c1ff" size={20} />
+                  )}
+                  <TextInput
+                    className="flex-1 h-14 ml-3 text-white font-jakarta-regular text-base"
+                    placeholder="hola@ejemplo.com"
+                    placeholderTextColor={"#c2c1ff80"}
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    value={field.state.value}
+                    onChangeText={(text) => {
+                      setErrorSupabase("");
+                      field.setValue(text);
+                    }}
                   />
-                )}
-              </Pressable>
+                </View>
+                {/* Mostrar errores de validación */}
+                <View className="flex min-h-10 mt-1 px-1">
+                  {field.state.meta.errors.length > 0 && (
+                    <View>
+                      {(field.state.meta.isBlurred ||
+                        form.state.submissionAttempts > 0) && (
+                        <Text className="text-[#ffdad6] mt-1 text-sm font-jakarta-bold">
+                          {field.state.meta.errors[0]}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                  {errorSupabase && (
+                    <View>
+                      <Text className="text-[#ffdad6] mt-1 text-sm font-jakarta-bold">
+                        {errorSupabase}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
             )}
-          </form.Subscribe>
-          <Text className=" font-jakarta-light text-xs px-2 text-slate-600">
-            Enviaremos un código de verificación a tu correo electrónico.
-          </Text>
+          </form.Field>
+
+          {/* Boton */}
+          <View className="flex items-center justify-center w-full mt-4">
+            <form.Subscribe selector={(state) => [state.canSubmit]}>
+              {([canSubmit]) => (
+                <Pressable
+                  className={`flex flex-row w-[100%] p-4 justify-center items-center rounded-2xl mb-6 shadow-md ${
+                    isPending || !canSubmit
+                      ? "bg-[#4a44e4]/60 border border-[#4a44e4]/30"
+                      : "bg-[#4a44e4] border border-[#d6d4ff]/30 shadow-[#4a44e4]/50"
+                  }`}
+                  disabled={isPending || !canSubmit}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    form.handleSubmit();
+                  }}
+                >
+                  <Text
+                    className={`font-jakarta-bold text-lg mr-2 ${isPending || !canSubmit ? "text-white/60" : "text-white"}`}
+                  >
+                    {isPending ? "Procesando..." : "Continuar"}
+                  </Text>
+                  {!isPending && (
+                    <ArrowRight
+                      color={`${isPending || !canSubmit ? "rgba(255,255,255,0.6)" : "white"}`}
+                      size={20}
+                    />
+                  )}
+                </Pressable>
+              )}
+            </form.Subscribe>
+            <Text className="font-jakarta-light italic text-[11px] px-2 text-[#c2c1ff] text-center leading-relaxed">
+              "La disciplina es el puente entre las metas y los logros."
+            </Text>
+          </View>
         </View>
       </View>
     </Screen>

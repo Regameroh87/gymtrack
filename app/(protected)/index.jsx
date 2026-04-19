@@ -1,38 +1,67 @@
-import { Text, View, Image, Pressable } from "react-native";
+import { Text, View, Image, Pressable, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
 import { brandPrimary } from "../../src/theme/colors.js";
-import { Calendar, Clock } from "../../assets/icons.jsx";
+import { Calendar, Clock, Logout } from "../../assets/icons.jsx";
+import { supabase } from "../../src/database/supabase.js";
 
 export default function Index() {
   const imageProfile = require("../../assets/profile.png");
   const { user } = useAuth();
-  //console.log("user en home", user);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Alert.alert("Cerrar Sesión", "¿Estás seguro de que deseas salir?", [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Salir",
+        style: "destructive",
+        onPress: async () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          await supabase.auth.signOut();
+          router.replace("/(auth)/login");
+        },
+      },
+    ]);
+  };
 
   return (
     <Screen>
       {/* CARD PROFILE */}
       <View className="flex w-full p-4">
-        <View className="flex flex-row gap-4">
-          <View className=" flex justify-center items-center w-14 h-14 p-2 rounded-full border-2 border-brandPrimary-600 shadow-sm">
-            <Image
-              source={
-                user?.image_profile ? { uri: user.image_profile } : imageProfile
-              }
-              className="w-full h-full object-contain"
-            />
+        <View className="flex flex-row justify-between items-center w-full">
+          <View className="flex flex-row gap-4 items-center">
+            <View className=" flex justify-center items-center w-14 h-14 p-2 rounded-full border-2 border-brandPrimary-600 shadow-sm">
+              <Image
+                source={
+                  user?.image_profile
+                    ? { uri: user.image_profile }
+                    : imageProfile
+                }
+                className="w-full h-full object-contain"
+              />
+            </View>
+            <View className="flex-col">
+              <Text className="text-ui-text-main dark:text-ui-text-mainDark font-jakarta-bold text-2xl tracking-tight mb-1">
+                ¡Hola, {user?.name}!
+              </Text>
+              <Text className="text-xs w-fit text-center p-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-jakarta-bold">
+                Listo para entrenar 💪
+              </Text>
+            </View>
           </View>
-          <View className="flex-col">
-            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-jakarta-bold text-2xl tracking-tight mb-1">
-              ¡Hola, {user?.name}!
-            </Text>
-            <Text className="text-xs w-fit text-center p-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-jakarta-bold">
-              Listo para entrenar 💪
-            </Text>
-          </View>
+          <Pressable
+            onPress={handleLogout}
+            className="p-3 border border-red-500/20 bg-red-500/10 rounded-full active:scale-95 transition-all"
+          >
+            <Logout color="#ef4444" size={24} />
+          </Pressable>
         </View>
       </View>
       {/* CARD PROGRESS */}
