@@ -9,23 +9,23 @@ import {
 } from "../../../../../src/database/schemas";
 import { eq, inArray } from "drizzle-orm";
 
-// Shared components
 import FormExercise from "../../../../../src/components/forms/FormExercise";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();
+  console.log("soy el id", id);
 
-  const { data, isLoading: isLoadingExercise } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["exercise", id],
     queryFn: async () => {
-      const exResults = await database
+      const result = await database
         .select()
         .from(exercises_base)
         .where(eq(exercises_base.id, id));
 
-      if (exResults.length === 0) return null;
+      if (result.length === 0) return null;
 
-      const exData = exResults[0];
+      const exerciseData = result[0];
 
       const relResults = await database
         .select()
@@ -43,7 +43,7 @@ export default function EditExercise() {
       }
 
       return {
-        ...exData,
+        ...exerciseData,
         equipments: equipmentsForExercise.map((eq) => ({
           id: eq.id,
           name: eq.name,
@@ -54,13 +54,19 @@ export default function EditExercise() {
     },
   });
 
-  if (isLoadingExercise) {
+  if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <ActivityIndicator size="large" />
       </View>
     );
   }
-
-  return <FormExercise exercise={data} />;
+  console.log("soy el data", data);
+  return (
+    <FormExercise
+      headerTitle="Editar Ejercicio"
+      headerDescription="Modifica los datos del ejercicio"
+      exercise={data}
+    />
+  );
 }

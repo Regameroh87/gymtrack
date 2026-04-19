@@ -51,7 +51,6 @@ export default function FormExercise({
 
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
   const [initialEquipmentName, setInitialEquipmentName] = useState("");
-
   const { data: dbEquipments = [] } = useQuery({
     queryKey: ["equipments"],
     queryFn: async () => {
@@ -80,43 +79,65 @@ export default function FormExercise({
     },
     onSubmit: async ({ value }) => {
       try {
-        const newExerciseId = Crypto.randomUUID();
+        const exerciseId = exercise ? exercise.id : Crypto.randomUUID();
 
-        // 1. Insertar Ejercicio Base
-        await database.insert(exercises_base).values({
-          id: newExerciseId,
+        const exerciseValues = {
           name: value.name.trim(),
           category: value.category,
           muscle_group: value.muscle_group,
           cloudinary_video_public_id: value.cloudinary_video_public_id,
           cloudinary_image_public_id: value.cloudinary_image_public_id,
-          local_video_uri: value.local_video_uri || "",
-          local_image_uri: value.local_image_uri || "",
+          local_video_uri:
+            value.local_video_uri || exercise?.local_video_uri || "",
+          local_image_uri:
+            value.local_image_uri || exercise?.local_image_uri || "",
           youtube_video_url: value.youtube_video_url,
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
-        });
+        };
+
+        if (exercise) {
+          // MODO EDICIÓN: Update
+          await database
+            .update(exercises_base)
+            .set(exerciseValues)
+            .where(eq(exercises_base.id, exercise.id));
+
+          // Limpiar relaciones viejas de equipo para re-insertar las nuevas
+          await database
+            .delete(exercise_equipment)
+            .where(eq(exercise_equipment.exercise_id, exercise.id));
+        } else {
+          // MODO NUEVO: Insert
+          await database.insert(exercises_base).values({
+            id: exerciseId,
+            ...exerciseValues,
+          });
+        }
 
         // 2. Manejar Equipamiento (Muchos a Muchos)
         if (value.equipments && value.equipments.length > 0) {
           for (const eq of value.equipments) {
             await database.insert(exercise_equipment).values({
               id: Crypto.randomUUID(),
-              exercise_id: newExerciseId,
+              exercise_id: exerciseId,
               equipment_id: eq.id,
             });
           }
         }
 
-        queryClient.invalidateQueries({ queryKey: ["exercises"] }); //Invalido las queries para que se actualice la lista
-        queryClient.invalidateQueries({ queryKey: ["equipments"] }); //Invalido las queries para que se actualice la lista
-        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err)); //Acá sincroniza y sube los assets a cloudinary
+        queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        queryClient.invalidateQueries({ queryKey: ["exercise", exerciseId] });
+        queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
-          text1: "¡Éxito!",
-          text2: "El ejercicio fue agregado exitosamente al catálogo.",
+          text1: exercise ? "¡Actualizado!" : "¡Éxito!",
+          text2: exercise
+            ? "El ejercicio se actualizó correctamente."
+            : "El ejercicio fue agregado exitosamente al catálogo.",
           position: "bottom",
         });
 
@@ -137,7 +158,12 @@ export default function FormExercise({
     },
   });
 
-  useAsyncStorage({ form, storageKey: "addExerciseDraft" });
+  useAsyncStorage({
+    form,
+    storageKey: "addExerciseDraft",
+    enabled: !exercise,
+  });
+
   const scrollRef = useRef(null);
   const scrollOffset = useRef(0);
   const youtubeCardRef = useRef(null);

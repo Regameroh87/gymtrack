@@ -20,13 +20,7 @@ import { exercises_base } from "../../../../src/database/schemas";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
-import {
-  Plus,
-  ChevronRight,
-  Barbell,
-  Pencil,
-  Trash,
-} from "../../../../assets/icons";
+import { Plus, Barbell, Pencil, Trash } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";

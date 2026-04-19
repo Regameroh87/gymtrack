@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
 
-export default function useAsyncStorage({ form, storageKey }) {
+export default function useAsyncStorage({ form, storageKey, enabled = true }) {
   useEffect(() => {
+    if (!enabled) return;
     const loadDraft = async () => {
       try {
         const saved = await AsyncStorage.getItem(storageKey);
@@ -18,10 +19,10 @@ export default function useAsyncStorage({ form, storageKey }) {
       }
     };
     loadDraft();
-  }, [form, storageKey]);
+  }, [form, storageKey, enabled]);
 
   useEffect(() => {
-    if (!form) return;
+    if (!enabled || !form) return;
 
     const unsubscribe = form.store.subscribe(() => {
       try {
@@ -37,5 +38,5 @@ export default function useAsyncStorage({ form, storageKey }) {
         unsubscribe();
       }
     };
-  }, [form, storageKey]);
+  }, [form, storageKey, enabled]);
 }
