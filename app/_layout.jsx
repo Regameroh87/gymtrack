@@ -7,14 +7,11 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
 import { useFonts } from "expo-font";
 import {
-  Lexend_400Regular,
-  Lexend_700Bold,
-  Lexend_300Light,
-  Lexend_800ExtraBold,
-} from "@expo-google-fonts/lexend";
-import {
+  PlusJakartaSans_300Light,
+  PlusJakartaSans_400Regular,
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
 } from "@expo-google-fonts/plus-jakarta-sans";
 import {
   Manrope_400Regular,
@@ -45,13 +42,12 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   const [fontsLoaded, fontError] = useFonts({
-    Lexend_400Regular,
-    Lexend_700Bold,
-    Lexend_300Light,
-    Lexend_800ExtraBold,
-    // Design System: Editorial Typography
+    PlusJakartaSans_300Light,
+    PlusJakartaSans_400Regular,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+    // Design System: Editorial Typography
     Manrope_400Regular,
     Manrope_600SemiBold,
     Manrope_700Bold,

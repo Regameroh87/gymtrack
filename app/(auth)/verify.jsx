@@ -34,7 +34,7 @@ export default function Verify() {
       if (message.includes("expired")) {
         return (
           <View>
-            <Text className="text-cyan-800 mt-2 text-center">
+            <Text className="text-red-500 mt-2 text-center font-jakarta-regular">
               El código ha expirado, pedí uno nuevo
             </Text>
             <Pressable
@@ -47,7 +47,7 @@ export default function Verify() {
                 inputRefs.current[0]?.focus();
               }}
             >
-              <Text className="text-cyan-500 underline text-center">
+              <Text className="text-lime-500 font-jakarta-bold underline text-center">
                 Reenviar código
               </Text>
             </Pressable>
@@ -56,7 +56,7 @@ export default function Verify() {
       }
       if (message.includes("invalid")) {
         return (
-          <Text className="text-cyan-800 mt-2 text-center">
+          <Text className="text-red-500 mt-2 text-center font-jakarta-regular">
             Código incorrecto, verificalo e intentá de nuevo
           </Text>
         );
@@ -64,7 +64,7 @@ export default function Verify() {
     }
     return (
       <View>
-        <Text className="text-cyan-800 mt-2 text-center">
+        <Text className="text-red-500 mt-2 text-center font-jakarta-regular">
           Ha ocurrido un error, intentalo de nuevo
         </Text>
         <Pressable
@@ -77,7 +77,7 @@ export default function Verify() {
             inputRefs.current[0]?.focus();
           }}
         >
-          <Text className="text-cyan-500 underline text-center">
+          <Text className="text-lime-500 font-jakarta-bold underline text-center">
             Reenviar código
           </Text>
         </Pressable>
@@ -101,7 +101,7 @@ export default function Verify() {
         <CheckMail color="#65a30d" size={48} />
       </View>
       <View className=" flex items-center mt-6">
-        <Text className=" font-extralight text-lg text-gray-400 ">
+        <Text className=" font-jakarta-light text-lg text-gray-400 ">
           Enviamos un codigo de 6 digitos a tu mail.
         </Text>
       </View>
@@ -114,7 +114,7 @@ export default function Verify() {
                   <TextInput
                     key={index}
                     ref={(el) => (inputRefs.current[index] = el)}
-                    className="w-12 h-14 focus:border-2 focus:border-lime-400 bg-lime-200/20 rounded-xl text-white text-center text-2xl font-lexend-bold"
+                    className="w-12 h-14 focus:border-2 focus:border-lime-400 bg-lime-200/20 rounded-xl text-white text-center text-2xl font-jakarta-bold"
                     value={digit}
                     maxLength={1}
                     keyboardType="numeric"
@@ -159,7 +159,7 @@ export default function Verify() {
               }}
             >
               <Text
-                className={`font-lexend-ebold text-xl text-center ${
+                className={`font-jakarta-ebold text-xl text-center ${
                   isPending || !canSubmit ? "text-gray-600" : "text-black"
                 } `}
               >
@@ -171,7 +171,7 @@ export default function Verify() {
         {error ? (
           errorVerify(error)
         ) : (
-          <Text className="text-cyan-800 font-lexend text-md">
+          <Text className="text-lime-500 font-jakarta-regular text-md">
             Revisa tu correo
           </Text>
         )}

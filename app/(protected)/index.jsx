@@ -26,10 +26,10 @@ export default function Index() {
             />
           </View>
           <View className="flex-col">
-            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-lexend-bold text-2xl tracking-tight mb-1">
+            <Text className="text-ui-text-main dark:text-ui-text-mainDark font-jakarta-bold text-2xl tracking-tight mb-1">
               ¡Hola, {user?.name}!
             </Text>
-            <Text className="text-xs w-fit text-center p-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-lexend-bold">
+            <Text className="text-xs w-fit text-center p-1 rounded-xl bg-brandPrimary-100 text-brandPrimary-600 font-jakarta-bold">
               Listo para entrenar 💪
             </Text>
           </View>
@@ -44,10 +44,10 @@ export default function Index() {
               <Clock size={48} className="text-brandSecondary-400" />
             </View>
           </View>
-          <Text className="flex text-center text-ui-text-main dark:text-ui-text-mainDark font-lexend text-xl my-4 w-3/4">
+          <Text className="flex text-center text-ui-text-main dark:text-ui-text-mainDark font-jakarta-regular text-xl my-4 w-3/4">
             {"Aun no tienes una rutina para\nhoy"}
           </Text>
-          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-lexend text-sm leading-relaxed text-center w-[85%]">
+          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-regular text-sm leading-relaxed text-center w-[85%]">
             {
               "Parece que no hay ejercicios programados para hoy.\n¡Mantén el ritmo y comienza\nahora mismo!"
             }
@@ -69,7 +69,7 @@ export default function Index() {
                 className="rounded-2xl"
               >
                 <View className="py-4 px-8">
-                  <Text className="text-white text-center font-lexend-bold text-lg">
+                  <Text className="text-white text-center font-jakarta-bold text-lg">
                     Explorar Rutinas
                   </Text>
                 </View>
@@ -79,7 +79,7 @@ export default function Index() {
         </View>
         <View className="flex mt-6 px-4">
           <Pressable className=" border border-brandPrimary-600 py-4 px-8 rounded-2xl active:bg-ui-background-light active:scale-95 transition-all">
-            <Text className="text-brandPrimary-600 text-center font-lexend-bold text-lg">
+            <Text className="text-brandPrimary-600 text-center font-jakarta-bold text-lg">
               Crear Nueva Rutina
             </Text>
           </Pressable>

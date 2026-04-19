@@ -9,13 +9,12 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        // Existing
-        lexend: ["Lexend_400Regular"],
-        "lexend-light": ["Lexend_300Light"],
-        "lexend-bold": ["Lexend_700Bold"],
-        "lexend-ebold": ["Lexend_800ExtraBold"],
-        // Design System: Editorial Typography
+        // Jakarta Family
         jakarta: ["PlusJakartaSans_700Bold"],
+        "jakarta-regular": ["PlusJakartaSans_400Regular"],
+        "jakarta-light": ["PlusJakartaSans_300Light"],
+        "jakarta-bold": ["PlusJakartaSans_700Bold"],
+        "jakarta-ebold": ["PlusJakartaSans_800ExtraBold"],
         "jakarta-semi": ["PlusJakartaSans_600SemiBold"],
         manrope: ["Manrope_400Regular"],
         "manrope-semi": ["Manrope_600SemiBold"],

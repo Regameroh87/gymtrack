@@ -73,10 +73,10 @@ export default function Login() {
           <Barbell color="#a3e635" />
         </View>
         <View className="flex items-center mt-10">
-          <Text className=" text-white text-4xl font-lexend-ebold">
+          <Text className=" text-white text-4xl font-jakarta-ebold">
             Back to the Grind
           </Text>
-          <Text className=" text-white font-lexend mt-2  text-xl">
+          <Text className=" text-white font-jakarta-regular mt-2  text-xl">
             Ready to crush your goals today
           </Text>
         </View>
@@ -102,7 +102,7 @@ export default function Login() {
         >
           {(field) => (
             <View className="flex w-full px-12">
-              <Text className=" font-lexend-bold text-md text-slate-600">
+              <Text className=" font-jakarta-bold text-md text-slate-600">
                 Direccion de correo electrónico
               </Text>
               <View className="flex-row items-center border-gray-400 border-2 rounded-xl bg-slate-50 mt-2 px-3">
@@ -130,7 +130,7 @@ export default function Login() {
                   <View>
                     {(field.state.meta.isBlurred ||
                       form.state.submissionAttempts > 0) && (
-                      <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
+                      <Text className=" text-red-600 mt-2 text-sm font-jakarta-regular">
                         {field.state.meta.errors[0]}
                       </Text>
                     )}
@@ -138,7 +138,7 @@ export default function Login() {
                 )}
                 {errorSupabase && (
                   <View>
-                    <Text className=" text-cyan-800 mt-2 text-sm font-lexend">
+                    <Text className=" text-red-600 mt-2 text-sm font-jakarta-regular">
                       {errorSupabase}
                     </Text>
                   </View>
@@ -162,7 +162,7 @@ export default function Login() {
                 }}
               >
                 <Text
-                  className={`font-lexend-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}
+                  className={`font-jakarta-ebold text-xl ${isPending || !canSubmit ? "text-gray-600" : "text-black"} `}
                 >
                   {isPending ? "Enviando código..." : "Enviar código "}
                 </Text>
@@ -175,7 +175,7 @@ export default function Login() {
               </Pressable>
             )}
           </form.Subscribe>
-          <Text className=" font-lexend-light text-xs px-2 text-slate-600">
+          <Text className=" font-jakarta-light text-xs px-2 text-slate-600">
             Enviaremos un código de verificación a tu correo electrónico.
           </Text>
         </View>
