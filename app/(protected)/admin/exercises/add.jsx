@@ -41,7 +41,7 @@ import SubmitButton from "../../../../src/components/forms/SubmitButton";
 import { ui } from "../../../../src/theme/colors";
 import { Trash } from "../../../../assets/icons";
 
-export default function AddExercise() {
+export default function FormExercise() {
   const queryClient = useQueryClient();
 
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);

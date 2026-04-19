@@ -20,7 +20,13 @@ import { exercises_base } from "../../../../src/database/schemas";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
-import { Plus, ChevronRight, Barbell, Pencil, Trash } from "../../../../assets/icons";
+import {
+  Plus,
+  ChevronRight,
+  Barbell,
+  Pencil,
+  Trash,
+} from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
@@ -87,7 +93,6 @@ export default function ExercisesList() {
       ]
     );
   };
-
 
   const renderItem = ({ item }) => {
     return (
@@ -158,7 +163,11 @@ export default function ExercisesList() {
             }}
             className="p-3 bg-brandPrimary-100 dark:bg-brandPrimary-900/30 rounded-xl active:scale-95"
           >
-            <Pencil size={16} className="text-brandPrimary-500" color="#3b82f6" />
+            <Pencil
+              size={16}
+              className="text-brandPrimary-500"
+              color="#3b82f6"
+            />
           </Pressable>
           <Pressable
             onPress={() => {
