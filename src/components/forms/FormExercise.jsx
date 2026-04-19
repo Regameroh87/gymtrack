@@ -7,39 +7,39 @@ import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
 import Toast from "react-native-toast-message";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
-import { database } from "../../../../src/database";
+import { database } from "../../database";
 import {
   exercises_base,
   equipment,
   exercise_equipment,
-} from "../../../../src/database/schemas";
-import { checkNetInfoAndSync } from "../../../../src/database/sync";
-import useAsyncStorage from "../../../../src/hooks/useAsyncStorage";
+} from "../../database/schemas";
+import { checkNetInfoAndSync } from "../../database/sync";
+import useAsyncStorage from "../../hooks/useAsyncStorage";
 import { eq } from "drizzle-orm";
 
 // Constants
 import {
   EXERCISE_CATEGORIES,
   MUSCLE_GROUPS,
-} from "../../../../src/constants/exerciseOptions";
+} from "../../constants/exerciseOptions";
 
 // Shared components
-import CustomSelect from "../../../../src/components/CustomSelect";
-import InputUploadVideo from "../../../../src/components/videos/InputUploadVideo";
-import AddEquipment from "../../../../src/components/forms/AddEquipment";
-import PreviewImage from "../../../../src/components/images/PreviewImage";
+import CustomSelect from "../CustomSelect";
+import InputUploadVideo from "../videos/InputUploadVideo";
+import AddEquipment from "./AddEquipment";
+import PreviewImage from "../images/PreviewImage";
 
 // Form-specific sub-components
-import FormField from "../../../../src/components/forms/FormField";
-import StyledTextInput from "../../../../src/components/forms/StyledTextInput";
-import YouTubeVideoCard from "../../../../src/components/forms/YouTubeVideoCard";
-import ImagePickerCard from "../../../../src/components/forms/ImagePickerCard";
-import UnilateralToggle from "../../../../src/components/forms/UnilateralToggle";
-import SubmitButton from "../../../../src/components/forms/SubmitButton";
+import FormField from "./FormField";
+import StyledTextInput from "./StyledTextInput";
+import YouTubeVideoCard from "./YouTubeVideoCard";
+import ImagePickerCard from "./ImagePickerCard";
+import UnilateralToggle from "./UnilateralToggle";
+import SubmitButton from "./SubmitButton";
 
 // Icons & theme
-import { ui } from "../../../../src/theme/colors";
-import { Trash } from "../../../../assets/icons";
+import { ui } from "../../theme/colors";
+import { Trash } from "../../../assets/icons";
 
 //Debo Agregar la función que pueda recibir un ejercicio y editarlo
 export default function FormExercise({
