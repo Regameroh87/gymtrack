@@ -1,4 +1,11 @@
-import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -63,9 +70,9 @@ export default function EditExercise() {
         .select()
         .from(exercises_base)
         .where(eq(exercises_base.id, id));
-      
+
       if (exResults.length === 0) return null;
-      
+
       const exData = exResults[0];
 
       // Obtener equipamientos del ejercicio
@@ -73,9 +80,9 @@ export default function EditExercise() {
         .select()
         .from(exercise_equipment)
         .where(eq(exercise_equipment.exercise_id, id));
-        
-      const equipmentIds = relResults.map(r => r.equipment_id);
-      
+
+      const equipmentIds = relResults.map((r) => r.equipment_id);
+
       let equipmentsForExercise = [];
       if (equipmentIds.length > 0) {
         equipmentsForExercise = await database
@@ -86,12 +93,12 @@ export default function EditExercise() {
 
       return {
         ...exData,
-        equipments: equipmentsForExercise.map(eq => ({
+        equipments: equipmentsForExercise.map((eq) => ({
           id: eq.id,
           name: eq.name,
           image_public_id: eq.local_image_uri || eq.cloudinary_image_public_id,
-          isNew: false
-        }))
+          isNew: false,
+        })),
       };
     },
   });
@@ -113,25 +120,29 @@ export default function EditExercise() {
     onSubmit: async ({ value }) => {
       try {
         // 1. Update Ejercicio Base
-        await database.update(exercises_base).set({
-          name: value.name.trim(),
-          category: value.category,
-          muscle_group: value.muscle_group,
-          cloudinary_video_public_id: value.cloudinary_video_public_id,
-          cloudinary_image_public_id: value.cloudinary_image_public_id,
-          local_video_uri: value.local_video_uri || "",
-          local_image_uri: value.local_image_uri || "",
-          youtube_video_url: value.youtube_video_url,
-          instructions: value.instructions,
-          is_unilateral: value.is_unilateral ? 1 : 0,
-          sync_status: "pending",
-        }).where(eq(exercises_base.id, id));
+        await database
+          .update(exercises_base)
+          .set({
+            name: value.name.trim(),
+            category: value.category,
+            muscle_group: value.muscle_group,
+            cloudinary_video_public_id: value.cloudinary_video_public_id,
+            cloudinary_image_public_id: value.cloudinary_image_public_id,
+            local_video_uri: value.local_video_uri || "",
+            local_image_uri: value.local_image_uri || "",
+            youtube_video_url: value.youtube_video_url,
+            instructions: value.instructions,
+            is_unilateral: value.is_unilateral ? 1 : 0,
+            sync_status: "pending",
+          })
+          .where(eq(exercises_base.id, id));
 
         // 2. Manejar Equipamiento (Muchos a Muchos)
         // Borrar actuales y re-insertar
-        await database.delete(exercise_equipment)
+        await database
+          .delete(exercise_equipment)
           .where(eq(exercise_equipment.exercise_id, id));
-        
+
         if (value.equipments && value.equipments.length > 0) {
           for (const eqData of value.equipments) {
             await database.insert(exercise_equipment).values({
@@ -170,7 +181,7 @@ export default function EditExercise() {
 
   // Since useForm does not auto-reinitialize when initialData changes naturally like Formik does,
   // and we show loading until initialData is present, it will initialize correctly.
-  
+
   const scrollRef = useRef(null);
   const scrollOffset = useRef(0);
   const youtubeCardRef = useRef(null);

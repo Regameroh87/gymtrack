@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 // Libraries
 import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { eq } from "drizzle-orm";
@@ -17,7 +17,6 @@ import { useTheme } from "../../theme/theme";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import handlePickImage from "../../utils/handlePickImage";
 import { checkNetInfoAndSync } from "../../database/sync";
-import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 // Components
 import PreviewImage from "../../components/images/PreviewImage";

@@ -99,8 +99,8 @@ export default function AddExercise() {
           }
         }
 
-        queryClient.invalidateQueries({ queryKey: ["exercises"] });
-        queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        queryClient.invalidateQueries({ queryKey: ["exercises"] }); //Invalido las queries para que se actualice la lista
+        queryClient.invalidateQueries({ queryKey: ["equipments"] }); //Invalido las queries para que se actualice la lista
         checkNetInfoAndSync().catch((err) => console.error("Sync failed", err)); //Acá sincroniza y sube los assets a cloudinary
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
