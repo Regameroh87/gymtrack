@@ -36,7 +36,7 @@ export default function Verify() {
       if (message.includes("expired")) {
         return (
           <View>
-            <Text className="text-[#ffdad6] mt-2 text-center font-jakarta-bold">
+            <Text className="text-[#ffdad6] mt-2 text-center font-manrope-bold">
               El código ha expirado, pedí uno nuevo
             </Text>
             <Pressable
@@ -49,7 +49,7 @@ export default function Verify() {
                 inputRefs.current[0]?.focus();
               }}
             >
-              <Text className="text-[#c2c1ff] font-jakarta-bold underline text-center">
+              <Text className="text-[#c2c1ff] font-manrope-bold underline text-center">
                 Reenviar código
               </Text>
             </Pressable>
@@ -58,7 +58,7 @@ export default function Verify() {
       }
       if (message.includes("invalid")) {
         return (
-          <Text className="text-[#ffdad6] mt-2 text-center font-jakarta-bold">
+          <Text className="text-[#ffdad6] mt-2 text-center font-manrope-bold">
             Código incorrecto, verificalo e intentá de nuevo
           </Text>
         );
@@ -66,7 +66,7 @@ export default function Verify() {
     }
     return (
       <View>
-        <Text className="text-[#ffdad6] mt-2 text-center font-jakarta-bold">
+        <Text className="text-[#ffdad6] mt-2 text-center font-manrope-bold">
           Ha ocurrido un error, intentalo de nuevo
         </Text>
         <Pressable
@@ -79,7 +79,7 @@ export default function Verify() {
             inputRefs.current[0]?.focus();
           }}
         >
-          <Text className="text-[#c2c1ff] font-jakarta-bold underline text-center">
+          <Text className="text-[#c2c1ff] font-manrope-bold underline text-center">
             Reenviar código
           </Text>
         </Pressable>
@@ -123,7 +123,6 @@ export default function Verify() {
       />
 
       <View className="flex w-full items-center justify-center flex-1 -mt-10">
-        
         {/* TITULO */}
         <View className="w-[90%] items-center mb-6 mt-6">
           <View className="flex flex-col items-center justify-center p-4 rounded-full bg-white/20 shadow-sm shadow-[#4a44e4]/30 mb-6">
@@ -132,7 +131,7 @@ export default function Verify() {
           <Text className="text-white text-5xl font-jakarta-ebold text-center tracking-tight px-1 drop-shadow-md">
             Casi Listos
           </Text>
-          <Text className="text-[#e2dfff] font-jakarta-regular mt-4 text-center px-4 text-lg drop-shadow-md">
+          <Text className="text-[#e2dfff] font-manrope mt-4 text-center px-4 text-lg drop-shadow-md">
             Enviamos un código de 6 dígitos de seguridad a tu mail.
           </Text>
         </View>
@@ -147,7 +146,7 @@ export default function Verify() {
                     <TextInput
                       key={index}
                       ref={(el) => (inputRefs.current[index] = el)}
-                      className="w-11 h-14 border border-[#4a44e4]/30 focus:border-2 focus:border-[#c2c1ff] bg-[#0c006a]/40 rounded-xl text-white text-center text-2xl font-jakarta-bold"
+                      className="w-11 h-14 border border-[#4a44e4]/30 focus:border-2 focus:border-[#c2c1ff] bg-[#0c006a]/40 rounded-xl text-white text-center text-2xl font-manrope-bold"
                       value={digit}
                       maxLength={1}
                       keyboardType="numeric"
@@ -185,7 +184,7 @@ export default function Verify() {
             {error ? (
               errorVerify(error)
             ) : (
-              <Text className="text-[#c2c1ff] font-jakarta-regular text-sm text-center">
+              <Text className="text-[#c2c1ff] font-manrope text-sm text-center">
                 Revisa tu correo no deseado por si acaso
               </Text>
             )}
@@ -206,7 +205,7 @@ export default function Verify() {
                 }}
               >
                 <Text
-                  className={`font-jakarta-bold text-lg text-center ${
+                  className={`font-manrope-bold text-lg text-center ${
                     isPending || !canSubmit ? "text-white/60" : "text-white"
                   }`}
                 >

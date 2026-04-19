@@ -79,7 +79,7 @@ export default function Login() {
           <Text className="text-white text-5xl font-jakarta-ebold text-center tracking-tight px-1 drop-shadow-md">
             Entrena con Propósito
           </Text>
-          <Text className="text-[#e2dfff] font-jakarta-regular mt-4 text-center px-4 text-lg drop-shadow-md">
+          <Text className="text-[#e2dfff] font-manrope mt-4 text-center px-4 text-lg drop-shadow-md">
             Ingresa tu email para recibir un enlace de acceso mágico.
           </Text>
         </View>
@@ -105,7 +105,7 @@ export default function Login() {
           >
             {(field) => (
               <View className="flex w-full">
-                <Text className="font-jakarta-bold text-sm text-[#e2dfff] mb-2 px-1">
+                <Text className="font-manrope-bold text-sm text-[#e2dfff] mb-2 px-1">
                   Correo electrónico
                 </Text>
                 <View className="flex-row items-center border-[#4a44e4]/40 border rounded-2xl bg-[#0c006a]/40 px-4 py-1">
@@ -113,7 +113,7 @@ export default function Login() {
                     <Mail color="#c2c1ff" size={20} />
                   )}
                   <TextInput
-                    className="flex-1 h-14 ml-3 text-white font-jakarta-regular text-base"
+                    className="flex-1 h-14 ml-3 text-white font-manrope text-base"
                     placeholder="hola@ejemplo.com"
                     placeholderTextColor={"#c2c1ff80"}
                     keyboardType="email-address"
@@ -133,7 +133,7 @@ export default function Login() {
                     <View>
                       {(field.state.meta.isBlurred ||
                         form.state.submissionAttempts > 0) && (
-                        <Text className="text-[#ffdad6] mt-1 text-sm font-jakarta-bold">
+                        <Text className="text-[#ffdad6] mt-1 text-sm font-manrope-bold">
                           {field.state.meta.errors[0]}
                         </Text>
                       )}
@@ -141,7 +141,7 @@ export default function Login() {
                   )}
                   {errorSupabase && (
                     <View>
-                      <Text className="text-[#ffdad6] mt-1 text-sm font-jakarta-bold">
+                      <Text className="text-[#ffdad6] mt-1 text-sm font-manrope-bold">
                         {errorSupabase}
                       </Text>
                     </View>
@@ -168,7 +168,7 @@ export default function Login() {
                   }}
                 >
                   <Text
-                    className={`font-jakarta-bold text-lg mr-2 ${isPending || !canSubmit ? "text-white/60" : "text-white"}`}
+                    className={`font-manrope-bold text-lg mr-2 ${isPending || !canSubmit ? "text-white/60" : "text-white"}`}
                   >
                     {isPending ? "Procesando..." : "Continuar"}
                   </Text>
@@ -181,7 +181,7 @@ export default function Login() {
                 </Pressable>
               )}
             </form.Subscribe>
-            <Text className="font-jakarta-light italic text-[11px] px-2 text-[#c2c1ff] text-center leading-relaxed">
+            <Text className="font-manrope italic text-[11px] px-2 text-[#c2c1ff] text-center leading-relaxed">
               "La disciplina es el puente entre las metas y los logros."
             </Text>
           </View>
