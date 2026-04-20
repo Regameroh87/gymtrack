@@ -1,19 +1,11 @@
 import { View, Text, TextInput, Pressable, FlatList } from "react-native";
 import { useRef, useState } from "react";
-import { useForm } from "@tanstack/react-form";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
-import * as Crypto from "expo-crypto";
-import Toast from "react-native-toast-message";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { database } from "../../database";
-import {
-  exercises_base,
-  equipment,
-  exercise_equipment,
-} from "../../database/schemas";
-import { checkNetInfoAndSync } from "../../database/sync";
+import { exercises_base, equipment } from "../../database/schemas";
 import useAsyncStorage from "../../hooks/useAsyncStorage";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 import { eq } from "drizzle-orm";
@@ -47,9 +39,8 @@ export default function FormExercise({
   exercise,
   headerTitle,
   headerDescription,
+  form,
 }) {
-  const queryClient = useQueryClient();
-
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
   const [initialEquipmentName, setInitialEquipmentName] = useState("");
   const { data: dbEquipments = [] } = useQuery({
@@ -57,95 +48,6 @@ export default function FormExercise({
     queryFn: async () => {
       const results = await database.select().from(equipment);
       return results || [];
-    },
-  });
-
-  const form = useForm({
-    defaultValues: {
-      name: exercise ? exercise.name : "",
-      category: exercise ? exercise.category : "",
-      muscle_group: exercise ? exercise.muscle_group : "",
-      equipments: exercise ? exercise.equipments : [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
-      youtube_video_url: exercise ? exercise.youtube_video_url : "",
-      image_uri: exercise ? exercise.image_uri : "",
-      video_uri: exercise ? exercise.video_uri : "",
-      instructions: exercise ? exercise.instructions : "",
-      is_unilateral: exercise ? exercise.is_unilateral : false,
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        const exerciseId = exercise ? exercise.id : Crypto.randomUUID();
-
-        const exerciseValues = {
-          name: value.name.trim(),
-          category: value.category,
-          muscle_group: value.muscle_group,
-          video_uri: value.video_uri,
-          image_uri: value.image_uri,
-          youtube_video_url: value.youtube_video_url,
-          instructions: value.instructions,
-          is_unilateral: value.is_unilateral ? 1 : 0,
-        };
-
-        if (exercise) {
-          // MODO EDICIÓN: Update
-          await database
-            .update(exercises_base)
-            .set(exerciseValues)
-            .where(eq(exercises_base.id, exercise.id));
-
-          // Limpiar relaciones viejas de equipo para re-insertar las nuevas
-          await database
-            .delete(exercise_equipment)
-            .where(eq(exercise_equipment.exercise_id, exercise.id));
-        } else {
-          // MODO NUEVO: Insert
-          await database.insert(exercises_base).values({
-            id: exerciseId,
-            ...exerciseValues,
-          });
-        }
-
-        // 2. Manejar Equipamiento (Muchos a Muchos)
-        if (value.equipments && value.equipments.length > 0) {
-          for (const eq of value.equipments) {
-            await database.insert(exercise_equipment).values({
-              id: Crypto.randomUUID(),
-              exercise_id: exerciseId,
-              equipment_id: eq.id,
-            });
-          }
-        }
-
-        queryClient.invalidateQueries({ queryKey: ["exercises"] });
-        queryClient.invalidateQueries({ queryKey: ["exercise", exerciseId] });
-        queryClient.invalidateQueries({ queryKey: ["equipments"] });
-        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
-
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Toast.show({
-          type: "success",
-          text1: exercise ? "¡Actualizado!" : "¡Éxito!",
-          text2: exercise
-            ? "El ejercicio se actualizó correctamente."
-            : "El ejercicio fue agregado exitosamente al catálogo.",
-          position: "bottom",
-        });
-
-        form.reset();
-        if (scrollRef.current) {
-          scrollRef.current.scrollTo({ y: 0, animated: true });
-        }
-      } catch (error) {
-        console.error("Error al insertar un ejercicio", error.message);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        Toast.show({
-          type: "error",
-          text1: "Error al guardar, intente nuevamente.",
-          text2: error.message,
-          position: "bottom",
-        });
-      }
     },
   });
 

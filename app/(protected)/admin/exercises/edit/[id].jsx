@@ -53,7 +53,7 @@ export default function EditExercise() {
       </View>
     );
   }
-  console.log("soy el data", data);
+
   return (
     <FormExercise
       headerTitle="Editar Ejercicio"
