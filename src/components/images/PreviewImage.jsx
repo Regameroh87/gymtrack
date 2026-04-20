@@ -10,6 +10,7 @@ export default function PreviewImage({
   onPress,
   sizeIconEdit = 16,
 }) {
+  console.log("value", value);
   return (
     <View className="items-center justify-center bg-ui-surfaceSecondary-light dark:bg-slate-950 h-full rounded-xl">
       {value ? (

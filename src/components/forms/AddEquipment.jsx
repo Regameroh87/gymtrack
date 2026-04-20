@@ -116,15 +116,15 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             },
           }}
         >
-          {(imageField) => (
+          {(field) => (
             <View>
               <View className="w-20 h-20 rounded-xl bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark border border-ui-input-light dark:border-ui-input-dark">
                 <PreviewImage
-                  value={imageField.state.value}
+                  value={field.state.value}
                   sizeIconEdit={12}
                   onPress={async () => {
                     // 2. Obtenemos la URI actual antes de borrarla
-                    const uriToDelete = imageField.state.value;
+                    const uriToDelete = field.state.value;
 
                     if (uriToDelete) {
                       try {
@@ -132,7 +132,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                         await deleteMediaLocally(uriToDelete);
 
                         // 4. Limpiamos el estado del formulario de forma reactiva
-                        imageField.handleChange("");
+                        field.handleChange("");
 
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                       } catch (error) {
@@ -228,7 +228,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                     pickMedia,
                     source: "gallery",
                     onChange: (uri) =>
-                      formAddEquipment.setFieldValue("local_image_uri", uri),
+                      formAddEquipment.setFieldValue("image_uri", uri),
                   });
                 }}
                 className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
