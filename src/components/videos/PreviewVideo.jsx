@@ -14,6 +14,7 @@ export default function PreviewVideo({ videoUrl, children }) {
   const URL = getCloudinaryUrl(videoUrl) ?? videoUrl;
   const player = useVideoPlayer(URL, (p) => {
     p.loop = true;
+    p.muted = true;
     p.play();
   });
 
