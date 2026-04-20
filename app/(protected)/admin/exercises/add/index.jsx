@@ -5,7 +5,6 @@ import {
   exercises_base,
   exercise_equipment,
 } from "../../../../../src/database/schemas";
-import { eq } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 import { useQueryClient } from "@tanstack/react-query";
 import { checkNetInfoAndSync } from "../../../../../src/database/sync";
@@ -71,9 +70,9 @@ export default function AddExerciseScreen() {
         });
 
         addForm.reset();
-        if (scrollRef.current) {
+        /*  if (scrollRef.current) {
           scrollRef.current.scrollTo({ y: 0, animated: true });
-        }
+        } */
       } catch (error) {
         console.error("Error al insertar un ejercicio", error.message);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
