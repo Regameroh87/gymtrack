@@ -13,7 +13,6 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import * as FileSystem from "expo-file-system/legacy";
 import Toast from "react-native-toast-message";
 
 import { database } from "../../../../src/database";
