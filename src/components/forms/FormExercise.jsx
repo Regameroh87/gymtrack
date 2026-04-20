@@ -80,12 +80,8 @@ export default function FormExercise({
           name: value.name.trim(),
           category: value.category,
           muscle_group: value.muscle_group,
-          cloudinary_video_public_id: value.cloudinary_video_public_id,
-          cloudinary_image_public_id: value.cloudinary_image_public_id,
-          local_video_uri:
-            value.local_video_uri || exercise?.local_video_uri || "",
-          local_image_uri:
-            value.local_image_uri || exercise?.local_image_uri || "",
+          video_uri: value.video_uri || exercise?.video_uri || "",
+          image_uri: value.image_uri || exercise?.image_uri || "",
           youtube_video_url: value.youtube_video_url,
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
