@@ -179,7 +179,7 @@ export default function FormExercise({
       className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark mr-2"
     >
       <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
-        <PreviewImage value={item.local_image_uri || item.image_public_id} />
+        <PreviewImage value={item.image_uri} />
       </View>
       <View>
         <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">

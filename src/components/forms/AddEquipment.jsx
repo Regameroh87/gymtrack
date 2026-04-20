@@ -215,10 +215,10 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
 
       {/* Botones de media */}
       <formAddEquipment.Subscribe
-        selector={(state) => [state.values.local_image_uri]}
+        selector={(state) => [state.values.image_uri]}
       >
-        {([localImageUri]) =>
-          !localImageUri ? (
+        {([imageUri]) =>
+          !imageUri ? (
             <View className=" flex-row gap-2 mt-4">
               {/* Galería */}
               <Pressable
