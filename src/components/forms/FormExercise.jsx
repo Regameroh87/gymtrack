@@ -28,7 +28,6 @@ import {
 import CustomSelect from "../CustomSelect";
 import InputUploadVideo from "../videos/InputUploadVideo";
 import AddEquipment from "./AddEquipment";
-import PreviewImage from "../images/PreviewImage";
 
 // Form-specific sub-components
 import FormField from "./FormField";
@@ -41,6 +40,7 @@ import SubmitButton from "./SubmitButton";
 // Icons & theme
 import { ui } from "../../theme/colors";
 import { Trash } from "../../../assets/icons";
+import { Image } from "expo-image";
 
 //Debo Agregar la función que pueda recibir un ejercicio y editarlo
 export default function FormExercise({
@@ -80,8 +80,8 @@ export default function FormExercise({
           name: value.name.trim(),
           category: value.category,
           muscle_group: value.muscle_group,
-          video_uri: value.video_uri || exercise?.video_uri || "",
-          image_uri: value.image_uri || exercise?.image_uri || "",
+          video_uri: value.video_uri,
+          image_uri: value.image_uri,
           youtube_video_url: value.youtube_video_url,
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
@@ -173,35 +173,45 @@ export default function FormExercise({
     });
   };
 
-  const renderEquipmentItem = ({ item, index }, field) => (
-    <View
-      key={index}
-      className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark mr-2"
-    >
-      <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
-        <PreviewImage value={item.image_uri} />
-      </View>
-      <View>
-        <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
-          EQUIPO
-        </Text>
-        <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
-          {item.name}
-        </Text>
-      </View>
-      <Pressable
-        onPress={() => {
-          const newList = [...field.state.value];
-          newList.splice(index, 1);
-          field.handleChange(newList);
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }}
-        className="ml-3 p-1"
+  const renderEquipmentItem = ({ item, index }, field) => {
+    console.log("item en renderItem", item);
+    return (
+      <View
+        key={index}
+        className="flex-row items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl p-2 border border-ui-input-light dark:border-ui-input-dark mr-2"
       >
-        <Trash color="#ef4444" size={14} />
-      </Pressable>
-    </View>
-  );
+        <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
+          <Image
+            source={{
+              uri: getCloudinaryUrl(item.image_public_id) ?? item.image_uri,
+            }}
+            width={"100%"}
+            height={"100%"}
+            contentFit="cover"
+          />
+        </View>
+        <View>
+          <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
+            EQUIPO
+          </Text>
+          <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
+            {item.name}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => {
+            const newList = [...field.state.value];
+            newList.splice(index, 1);
+            field.handleChange(newList);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }}
+          className="ml-3 p-1"
+        >
+          <Trash color="#ef4444" size={14} />
+        </Pressable>
+      </View>
+    );
+  };
 
   return (
     <KeyboardAwareScrollView
