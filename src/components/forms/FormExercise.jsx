@@ -415,36 +415,49 @@ export default function FormExercise({
             name="local_video_uri"
             validators={{
               onSubmit: ({ value }) => {
-                if (!value) return "El video es requerido";
+                if (!value && !form.state.values.cloudinary_video_public_id) {
+                  return "El video es requerido";
+                }
                 return undefined;
               },
             }}
           >
-            {(field) => (
-              <View ref={uploadVideoCardRef}>
-                <View
-                  className={`rounded-2xl mb-4 border-l-4 border border-1 ${
-                    field.state.meta.errors?.length > 0
-                      ? "border-red-500 bg-red-50/10"
-                      : "border-brandPrimary-600"
-                  }`}
-                >
-                  <InputUploadVideo
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    setVideoPublicId={(id) =>
-                      form.setFieldValue("cloudinary_video_public_id", id)
-                    }
-                    videoPublicId={form.state.values.cloudinary_video_public_id}
-                  />
+            {(field) => {
+              const videoPreviewUrl =
+                field.state.value ||
+                getCloudinaryUrl(form.state.values.cloudinary_video_public_id);
+
+              return (
+                <View ref={uploadVideoCardRef}>
+                  <View
+                    className={`rounded-2xl mb-4 border-l-4 border border-1 ${
+                      field.state.meta.errors?.length > 0
+                        ? "border-red-500 bg-red-50/10"
+                        : "border-brandPrimary-600"
+                    }`}
+                  >
+                    <InputUploadVideo
+                      value={videoPreviewUrl}
+                      onChange={(val) => {
+                        field.handleChange(val);
+                        form.setFieldValue("cloudinary_video_public_id", "");
+                      }}
+                      setVideoPublicId={(id) =>
+                        form.setFieldValue("cloudinary_video_public_id", id)
+                      }
+                      videoPublicId={
+                        form.state.values.cloudinary_video_public_id
+                      }
+                    />
+                  </View>
+                  {field.state.meta.errors?.length > 0 && (
+                    <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
+                      {field.state.meta.errors[0]}
+                    </Text>
+                  )}
                 </View>
-                {field.state.meta.errors?.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
-                    {field.state.meta.errors[0]}
-                  </Text>
-                )}
-              </View>
-            )}
+              );
+            }}
           </form.Field>
 
           {/* Imagen de portada Ejercicio */}
@@ -452,7 +465,9 @@ export default function FormExercise({
             name="local_image_uri"
             validators={{
               onSubmit: ({ value }) => {
-                if (!value) return "La imagen es requerida";
+                if (!value && !form.state.values.cloudinary_image_public_id) {
+                  return "La imagen es requerida";
+                }
                 return undefined;
               },
             }}
@@ -466,7 +481,10 @@ export default function FormExercise({
                   <ImagePickerCard
                     ref={imageCardRef}
                     value={imagePreviewUrl}
-                    onChange={field.handleChange}
+                    onChange={(val) => {
+                      field.handleChange(val);
+                      form.setFieldValue("cloudinary_image_public_id", "");
+                    }}
                     onFocus={() => scrollToCard(imageCardRef)}
                     error={field.state.meta.errors?.length > 0}
                   />
