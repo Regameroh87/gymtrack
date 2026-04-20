@@ -183,7 +183,7 @@ export default function FormExercise({
         <View className="w-10 h-10 rounded-lg overflow-hidden mr-2">
           <Image
             source={{
-              uri: getCloudinaryUrl(item.image_public_id) ?? item.image_uri,
+              uri: getCloudinaryUrl(item.image_uri) ?? item.image_uri,
             }}
             width={"100%"}
             height={"100%"}
@@ -356,7 +356,7 @@ export default function FormExercise({
                         {
                           id: selectedEq.id,
                           name: selectedEq.name,
-                          image_public_id: selectedEq.local_image_uri,
+                          image_uri: selectedEq.image_uri,
                           isNew: false,
                         },
                       ]);
