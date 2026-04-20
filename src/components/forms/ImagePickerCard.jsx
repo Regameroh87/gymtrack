@@ -19,7 +19,6 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
   ref
 ) {
   const { isDark } = useTheme();
-  const [isUploading, setIsUploading] = useState(false);
   const { pickMedia } = useMediaPicker();
 
   const handleSelection = async (type) => {
@@ -30,18 +29,6 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
         : await pickMedia({ source: "gallery" });
     if (result) {
       onChange(result.uri);
-      setIsUploading(true);
-      try {
-        /*  const uploadedImage = await uploadFileToCloudinary({
-          fileUri: result.uri,
-          uploadPreset: "gymtrack_images",
-          typeFile: "image",
-        }); */
-      } catch (error) {
-        console.error(error.message);
-      } finally {
-        setIsUploading(false);
-      }
     }
   };
 
