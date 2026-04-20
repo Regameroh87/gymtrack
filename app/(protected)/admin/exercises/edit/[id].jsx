@@ -7,13 +7,12 @@ import {
   equipment,
   exercise_equipment,
 } from "../../../../../src/database/schemas";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import FormExercise from "../../../../../src/components/forms/FormExercise";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();
-  console.log("soy el id", id);
 
   const { data, isLoading } = useQuery({
     queryKey: ["exercise", id],
@@ -27,27 +26,20 @@ export default function EditExercise() {
 
       const exerciseData = result[0];
 
-      const relResults = await database
-        .select()
+      const equipmentsForExercise = await database
+        .select({
+          id: equipment.id,
+          name: equipment.name,
+          image_uri: equipment.image_uri,
+        })
         .from(exercise_equipment)
+        .innerJoin(equipment, eq(exercise_equipment.equipment_id, equipment.id))
         .where(eq(exercise_equipment.exercise_id, id));
-
-      const equipmentIds = relResults.map((r) => r.equipment_id);
-
-      let equipmentsForExercise = [];
-      if (equipmentIds.length > 0) {
-        equipmentsForExercise = await database
-          .select()
-          .from(equipment)
-          .where(inArray(equipment.id, equipmentIds));
-      }
 
       return {
         ...exerciseData,
-        equipments: equipmentsForExercise.map((eq) => ({
-          id: eq.id,
-          name: eq.name,
-          image_public_id: eq.local_image_uri || eq.cloudinary_image_public_id,
+        equipments: equipmentsForExercise.map((item) => ({
+          ...item,
           isNew: false,
         })),
       };
