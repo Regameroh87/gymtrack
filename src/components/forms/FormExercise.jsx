@@ -67,14 +67,8 @@ export default function FormExercise({
       muscle_group: exercise ? exercise.muscle_group : "",
       equipments: exercise ? exercise.equipments : [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
       youtube_video_url: exercise ? exercise.youtube_video_url : "",
-      local_image_uri: exercise ? exercise.local_image_uri : "",
-      cloudinary_image_public_id: exercise
-        ? exercise.cloudinary_image_public_id
-        : "",
-      local_video_uri: exercise ? exercise.local_video_uri : "",
-      cloudinary_video_public_id: exercise
-        ? exercise.cloudinary_video_public_id
-        : "",
+      image_uri: exercise ? exercise.image_uri : "",
+      video_uri: exercise ? exercise.video_uri : "",
       instructions: exercise ? exercise.instructions : "",
       is_unilateral: exercise ? exercise.is_unilateral : false,
     },
@@ -412,90 +406,67 @@ export default function FormExercise({
           </form.Field>
 
           <form.Field
-            name="local_video_uri"
+            name="video_uri"
             validators={{
               onSubmit: ({ value }) => {
-                if (!value && !form.state.values.cloudinary_video_public_id) {
+                if (!value) {
                   return "El video es requerido";
                 }
                 return undefined;
               },
             }}
           >
-            {(field) => {
-              const videoPreviewUrl =
-                field.state.value ||
-                getCloudinaryUrl(form.state.values.cloudinary_video_public_id);
-
-              return (
-                <View ref={uploadVideoCardRef}>
-                  <View
-                    className={`rounded-2xl mb-4 border-l-4 border border-1 ${
-                      field.state.meta.errors?.length > 0
-                        ? "border-red-500 bg-red-50/10"
-                        : "border-brandPrimary-600"
-                    }`}
-                  >
-                    <InputUploadVideo
-                      value={videoPreviewUrl}
-                      onChange={(val) => {
-                        field.handleChange(val);
-                        form.setFieldValue("cloudinary_video_public_id", "");
-                      }}
-                      setVideoPublicId={(id) =>
-                        form.setFieldValue("cloudinary_video_public_id", id)
-                      }
-                      videoPublicId={
-                        form.state.values.cloudinary_video_public_id
-                      }
-                    />
-                  </View>
-                  {field.state.meta.errors?.length > 0 && (
-                    <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
-                      {field.state.meta.errors[0]}
-                    </Text>
-                  )}
+            {(field) => (
+              <View ref={uploadVideoCardRef}>
+                <View
+                  className={`rounded-2xl mb-4 border-l-4 border border-1 ${
+                    field.state.meta.errors?.length > 0
+                      ? "border-red-500 bg-red-50/10"
+                      : "border-brandPrimary-600"
+                  }`}
+                >
+                  <InputUploadVideo
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                  />
                 </View>
-              );
-            }}
+                {field.state.meta.errors?.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
+                    {field.state.meta.errors[0]}
+                  </Text>
+                )}
+              </View>
+            )}
           </form.Field>
 
           {/* Imagen de portada Ejercicio */}
           <form.Field
-            name="local_image_uri"
+            name="image_uri"
             validators={{
               onSubmit: ({ value }) => {
-                if (!value && !form.state.values.cloudinary_image_public_id) {
+                if (!value) {
                   return "La imagen es requerida";
                 }
                 return undefined;
               },
             }}
           >
-            {(field) => {
-              const imagePreviewUrl =
-                field.state.value ||
-                getCloudinaryUrl(form.state.values.cloudinary_image_public_id);
-              return (
-                <View>
-                  <ImagePickerCard
-                    ref={imageCardRef}
-                    value={imagePreviewUrl}
-                    onChange={(val) => {
-                      field.handleChange(val);
-                      form.setFieldValue("cloudinary_image_public_id", "");
-                    }}
-                    onFocus={() => scrollToCard(imageCardRef)}
-                    error={field.state.meta.errors?.length > 0}
-                  />
-                  {field.state.meta.errors?.length > 0 && (
-                    <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
-                      {field.state.meta.errors[0]}
-                    </Text>
-                  )}
-                </View>
-              );
-            }}
+            {(field) => (
+              <View>
+                <ImagePickerCard
+                  ref={imageCardRef}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onFocus={() => scrollToCard(imageCardRef)}
+                  error={field.state.meta.errors?.length > 0}
+                />
+                {field.state.meta.errors?.length > 0 && (
+                  <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
+                    {field.state.meta.errors[0]}
+                  </Text>
+                )}
+              </View>
+            )}
           </form.Field>
         </View>
 
