@@ -78,17 +78,16 @@ export async function pushEquipmentChanges() {
     let updatedLocal = false;
 
     // 1. Subir Imagen a Cloudinary si es local
-    if (row.local_image_uri && row.local_image_uri.startsWith("file://")) {
+    if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
         const { public_id } = await uploadFileToCloudinary({
-          fileUri: row.local_image_uri,
+          fileUri: row.image_uri,
           uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
-          row.cloudinary_image_public_id = public_id;
-          await deleteMediaLocally(row.local_image_uri);
-          row.local_image_uri = "";
+          await deleteMediaLocally(row.image_uri);
+          row.image_uri = public_id;
           updatedLocal = true;
         }
       } catch (err) {
@@ -100,14 +99,13 @@ export async function pushEquipmentChanges() {
       await database
         .update(equipment)
         .set({
-          cloudinary_image_public_id: row.cloudinary_image_public_id,
-          local_image_uri: row.local_image_uri,
+          image_uri: row.image_uri,
         })
         .where(eq(equipment.id, row.id));
     }
 
     // 2. Push a Supabase
-    const { sync_status, local_image_uri, ...restOfRow } = row;
+    const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
       .from("equipment")
       .upsert(restOfRow, { onConflict: "id" });
