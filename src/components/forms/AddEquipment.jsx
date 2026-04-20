@@ -43,7 +43,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
   const formAddEquipment = useForm({
     defaultValues: {
       name: initialName,
-      local_image_uri: "",
+      image_uri: "",
     },
     onSubmit: async ({ value }) => {
       try {
@@ -53,8 +53,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
         await database.insert(equipment).values({
           id: newId,
           name: trimmedName,
-          local_image_uri: value.local_image_uri,
-          cloudinary_image_public_id: null,
+          image_uri: value.image_uri,
           sync_status: "pending",
         });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
@@ -67,7 +66,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
           onAdd({
             id: newId,
             name: trimmedName,
-            local_image_uri: value.local_image_uri,
+            image_uri: value.image_uri,
             isNew: true,
           });
         } else {
@@ -109,7 +108,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
       <View className=" flex-row gap-2 items-center">
         {/* Preview imagen */}
         <formAddEquipment.Field
-          name="local_image_uri"
+          name="image_uri"
           validators={{
             onSubmit: ({ value }) => {
               if (!value) return "La imagen es requerida";
