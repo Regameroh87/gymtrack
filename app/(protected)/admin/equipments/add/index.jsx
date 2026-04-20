@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 
-import AddEquipment from "../../../../src/components/forms/AddEquipment";
+import AddEquipment from "../../../../../src/components/forms/AddEquipment";
 
 export default function AddEquipmentScreen() {
   const router = useRouter();
