@@ -176,9 +176,9 @@ export default function FormExercise({
   const renderEquipmentItem = ({ item, index }, field) => (
     <View
       key={index}
-      className="flex-row w-1/2 items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl border border-ui-input-light dark:border-ui-input-dark"
+      className="flex-row p-2 gap-x-2 w-1/2 justify-center items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl border border-ui-input-light dark:border-ui-input-dark"
     >
-      <View className=" flex w-10 h-10 rounded-lg overflow-hidden mr-2">
+      <View className=" flex w-10 h-10 rounded-lg overflow-hidden">
         <Image
           source={{
             uri: getCloudinaryUrl(item.image_uri) ?? item.image_uri,
@@ -188,15 +188,15 @@ export default function FormExercise({
           contentFit="cover"
         />
       </View>
-      <View className=" flex-1">
-        <Text className="text-[10px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest ">
+      <View className=" flex">
+        <Text className="text-xs font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest ">
           EQUIPO
         </Text>
         <Text className="text-xs font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
           {item.name}
         </Text>
       </View>
-      <View>
+      <View className=" flex">
         <Pressable
           onPress={() => {
             const newList = [...field.state.value];
@@ -204,7 +204,7 @@ export default function FormExercise({
             field.handleChange(newList);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }}
-          className="ml-3 p-1"
+          className="p-1"
         >
           <Trash color="#ef4444" size={14} />
         </Pressable>
