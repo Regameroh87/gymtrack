@@ -4,13 +4,15 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
 import { gradient } from "../../theme/colors";
 import YoutubePlayer from "react-native-youtube-iframe";
+import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 export default function PreviewVideo({ videoUrl, children }) {
   const { colorScheme } = useColorScheme();
   const isYoutube = videoUrl?.includes("youtube.com");
 
   const isDark = colorScheme === "dark";
-  const player = useVideoPlayer(videoUrl, (p) => {
+  const URL = getCloudinaryUrl(videoUrl) ?? videoUrl;
+  const player = useVideoPlayer(URL, (p) => {
     p.loop = true;
     p.play();
   });
