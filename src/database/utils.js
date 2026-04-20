@@ -39,7 +39,10 @@ export async function resetDatabase() {
     // Borrar borradores y timestamps de sincronización de AsyncStorage
     try {
       const keys = await AsyncStorage.getAllKeys();
-      const keysToClear = keys.filter((key) => key.includes("Draft"));
+      const keysToClear = keys.filter(
+        (key) => key.includes("Draft") || key.includes("last_sync_at")
+      );
+      //console.log("Keys to clear:", keysToClear);
       if (keysToClear.length > 0) {
         await AsyncStorage.multiRemove(keysToClear);
         console.log("AsyncStorage limpiado:", keysToClear);

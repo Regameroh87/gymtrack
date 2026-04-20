@@ -135,19 +135,20 @@ export async function pushExercisesChanges() {
         eq(exercises_base.sync_status, "deleted")
       )
     );
-  console.log("Local changes EXERCISES_BASE:", localChanges);
   if (localChanges.length === 0) return;
+  console.log("filas a subir EXERCISES_BASE:", localChanges);
 
   for (let row of localChanges) {
     // Si está marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
+      console.log("Borrando ejercicio en Supabase:", row.id);
       const { error } = await supabase
         .from("exercises_base")
         .delete()
         .eq("id", row.id);
 
       if (!error) {
-        console.log("Borrando ejercicio en SQLite");
+        console.log("Borrando ejercicio en SQLite", row.id);
         await database
           .delete(exercises_base)
           .where(eq(exercises_base.id, row.id));
@@ -157,8 +158,6 @@ export async function pushExercisesChanges() {
       }
       continue;
     }
-
-    let updatedLocal = false;
 
     // 1. Imagen
     if (row.image_uri && row.image_uri.startsWith("file://")) {
@@ -170,8 +169,11 @@ export async function pushExercisesChanges() {
         });
         if (public_id) {
           await deleteMediaLocally(row.image_uri);
-          row.image_uri = public_id;
-          updatedLocal = true;
+          row.image_uri = public_id; // Necesario para el push a Supabase después
+          await database
+            .update(exercises_base)
+            .set({ image_uri: public_id })
+            .where(eq(exercises_base.id, row.id));
         }
       } catch (err) {
         console.error("Error imagen ejercicio:", err);
@@ -189,21 +191,14 @@ export async function pushExercisesChanges() {
         if (public_id) {
           await deleteMediaLocally(row.video_uri);
           row.video_uri = public_id;
-          updatedLocal = true;
+          await database
+            .update(exercises_base)
+            .set({ video_uri: public_id })
+            .where(eq(exercises_base.id, row.id));
         }
       } catch (err) {
         console.error("Error video ejercicio:", err);
       }
-    }
-
-    if (updatedLocal) {
-      await database
-        .update(exercises_base)
-        .set({
-          image_uri: row.image_uri,
-          video_uri: row.video_uri,
-        })
-        .where(eq(exercises_base.id, row.id));
     }
 
     // 3. Enviar a Supabase
@@ -218,7 +213,6 @@ export async function pushExercisesChanges() {
         .set({ sync_status: "synced" })
         .where(eq(exercises_base.id, row.id));
     } else {
-      // Si el error es por duplicado (ej: el nombre ya existe en Supabase)
       // Marcamos como synced para no trabar la cola de sincronización,
       // aunque lo ideal es que el usuario lo corrija o lo borre.
       if (error.code === "23505") {

@@ -9,7 +9,9 @@ export const exercises_base = sqliteTable("exercises_base", {
   image_uri: text("image_uri"),
   video_uri: text("video_uri"),
   instructions: text("instructions").notNull(),
-  is_unilateral: integer("is_unilateral").notNull().default(0),
+  is_unilateral: integer("is_unilateral", { mode: "boolean" })
+    .notNull()
+    .default(false),
   created_at: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
