@@ -163,17 +163,16 @@ export async function pushExercisesChanges() {
     let updatedLocal = false;
 
     // 1. Imagen
-    if (row.local_image_uri && row.local_image_uri.startsWith("file://")) {
+    if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
         const { public_id } = await uploadFileToCloudinary({
-          fileUri: row.local_image_uri,
+          fileUri: row.image_uri,
           uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
-          row.cloudinary_image_public_id = public_id;
-          await deleteMediaLocally(row.local_image_uri);
-          row.local_image_uri = "";
+          await deleteMediaLocally(row.image_uri);
+          row.image_uri = public_id;
           updatedLocal = true;
         }
       } catch (err) {
@@ -182,17 +181,16 @@ export async function pushExercisesChanges() {
     }
 
     // 2. Video
-    if (row.local_video_uri && row.local_video_uri.startsWith("file://")) {
+    if (row.video_uri && row.video_uri.startsWith("file://")) {
       try {
         const { public_id } = await uploadFileToCloudinary({
-          fileUri: row.local_video_uri,
+          fileUri: row.video_uri,
           uploadPreset: "gymtrack_videos",
           typeFile: "video",
         });
         if (public_id) {
-          row.cloudinary_video_public_id = public_id;
-          await deleteMediaLocally(row.local_video_uri);
-          row.local_video_uri = "";
+          await deleteMediaLocally(row.video_uri);
+          row.video_uri = public_id;
           updatedLocal = true;
         }
       } catch (err) {
@@ -204,16 +202,14 @@ export async function pushExercisesChanges() {
       await database
         .update(exercises_base)
         .set({
-          cloudinary_image_public_id: row.cloudinary_image_public_id,
-          cloudinary_video_public_id: row.cloudinary_video_public_id,
-          local_image_uri: row.local_image_uri,
-          local_video_uri: row.local_video_uri,
+          image_uri: row.image_uri,
+          video_uri: row.video_uri,
         })
         .where(eq(exercises_base.id, row.id));
     }
 
     // 3. Enviar a Supabase
-    const { sync_status, local_image_uri, local_video_uri, ...restOfRow } = row;
+    const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercises_base")
       .upsert(restOfRow, { onConflict: "id" });
