@@ -13,7 +13,7 @@ import Toast from "react-native-toast-message";
 
 export default function AddExerciseScreen() {
   const queryClient = useQueryClient();
-  const addForm = useForm({
+  const addExerciseForm = useForm({
     defaultValues: {
       name: "",
       category: "",
@@ -69,7 +69,7 @@ export default function AddExerciseScreen() {
           position: "bottom",
         });
 
-        addForm.reset();
+        addExerciseForm.reset();
         /*  if (scrollRef.current) {
           scrollRef.current.scrollTo({ y: 0, animated: true });
         } */
@@ -87,7 +87,7 @@ export default function AddExerciseScreen() {
   });
   return (
     <FormExercise
-      form={addForm}
+      form={addExerciseForm}
       headerTitle="Nuevo Ejercicio"
       headerDescription="Completá los datos para agregar un ejercicio al catálogo."
     />
