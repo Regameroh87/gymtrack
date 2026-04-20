@@ -19,6 +19,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
   ref
 ) {
   const { isDark } = useTheme();
+  const [isUploading, setIsUploading] = useState(false);
   const { pickMedia } = useMediaPicker();
 
   const handleSelection = async (type) => {
