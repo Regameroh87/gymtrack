@@ -176,7 +176,7 @@ export default function FormExercise({
   const renderEquipmentItem = ({ item, index }, field) => (
     <View
       key={index}
-      className="flex-row p-2 gap-x-2 w-1/2 justify-center items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl border border-ui-input-light dark:border-ui-input-dark"
+      className="flex-row relative p-2 gap-x-2 w-1/2 items-center bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark rounded-xl border border-ui-input-light dark:border-ui-input-dark"
     >
       <View className=" flex w-10 h-10 rounded-lg overflow-hidden">
         <Image
@@ -196,7 +196,7 @@ export default function FormExercise({
           {item.name}
         </Text>
       </View>
-      <View className=" flex">
+      <View className=" absolute top-2 right-2">
         <Pressable
           onPress={() => {
             const newList = [...field.state.value];
@@ -204,7 +204,7 @@ export default function FormExercise({
             field.handleChange(newList);
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }}
-          className="p-1"
+          className=" active:scale-95 transition-all duration-200"
         >
           <Trash color="#ef4444" size={14} />
         </Pressable>
@@ -384,9 +384,9 @@ export default function FormExercise({
                     data={field.state.value}
                     renderItem={(props) => renderEquipmentItem(props, field)}
                     keyExtractor={(_, index) => index.toString()}
-                    numColumns={2}
-                    columnWrapperClassName="mb-3"
                     className="flex w-full"
+                    numColumns={2}
+                    columnWrapperClassName="mb-3 gap-2 justify-center px-1"
                     showsVerticalScrollIndicator={false}
                     scrollEnabled={false}
                   />
