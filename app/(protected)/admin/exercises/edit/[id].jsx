@@ -51,31 +51,23 @@ export default function EditExercise() {
     },
   });
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
   const queryClient = useQueryClient();
   const editExerciseForm = useForm({
     defaultValues: {
-      name: "",
-      category: "",
-      muscle_group: "",
-      equipments: [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
-      youtube_video_url: "",
-      image_uri: "",
-      video_uri: "",
-      instructions: "",
-      is_unilateral: false,
+      name: data?.name || "",
+      category: data?.category || "",
+      muscle_group: data?.muscle_group || "",
+      equipments: data?.equipments || [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
+      youtube_video_url: data?.youtube_video_url || "",
+      image_uri: data?.image_uri || "",
+      video_uri: data?.video_uri || "",
+      instructions: data?.instructions || "",
+      is_unilateral: data?.is_unilateral || false,
     },
     onSubmit: async ({ value }) => {
       try {
-        const exerciseId = Crypto.randomUUID();
-
         const exerciseValues = {
+          id: data.id,
           name: value.name.trim(),
           category: value.category,
           muscle_group: value.muscle_group,
@@ -86,8 +78,8 @@ export default function EditExercise() {
           is_unilateral: value.is_unilateral ? 1 : 0,
         };
 
-        await database.insert(exercises_base).values({
-          id: exerciseId,
+        await database.upsert(exercises_base).values({
+          id: data.id,
           ...exerciseValues,
         });
 
@@ -96,14 +88,14 @@ export default function EditExercise() {
           for (const eq of value.equipments) {
             await database.insert(exercise_equipment).values({
               id: Crypto.randomUUID(),
-              exercise_id: exerciseId,
+              exercise_id: data.id,
               equipment_id: eq.id,
             });
           }
         }
 
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
-        queryClient.invalidateQueries({ queryKey: ["exercise", exerciseId] });
+        queryClient.invalidateQueries({ queryKey: ["exercise", data.id] });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
         checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
 
@@ -111,11 +103,9 @@ export default function EditExercise() {
         Toast.show({
           type: "success",
           text1: "¡Éxito!",
-          text2: "El ejercicio fue agregado exitosamente al catálogo.",
+          text2: "El ejercicio fue editado exitosamente.",
           position: "bottom",
         });
-
-        addForm.reset();
         /*  if (scrollRef.current) {
           scrollRef.current.scrollTo({ y: 0, animated: true });
         } */
@@ -131,6 +121,16 @@ export default function EditExercise() {
       }
     },
   });
+  if (!data) return;
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <FormExercise
       headerTitle="Editar Ejercicio"
