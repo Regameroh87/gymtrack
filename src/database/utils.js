@@ -16,6 +16,9 @@ export async function resetDatabase() {
     await database.update(exercises_base).set({ sync_status: "deleted" });
     await database.update(equipment).set({ sync_status: "deleted" });
 
+    const data = await database.select().from("exercises_base");
+    console.log("Exercises base:", data);
+
     const files = await FileSystem.readDirectoryAsync(
       FileSystem.documentDirectory
     );
