@@ -15,6 +15,7 @@ import {
 } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
 import useAsyncStorage from "../../hooks/useAsyncStorage";
+import { getCloudinaryUrl } from "../../utils/cloudinary";
 import { eq } from "drizzle-orm";
 
 // Constants
@@ -456,22 +457,27 @@ export default function FormExercise({
               },
             }}
           >
-            {(field) => (
-              <View>
-                <ImagePickerCard
-                  ref={imageCardRef}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  onFocus={() => scrollToCard(imageCardRef)}
-                  error={field.state.meta.errors?.length > 0}
-                />
-                {field.state.meta.errors?.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
-                    {field.state.meta.errors[0]}
-                  </Text>
-                )}
-              </View>
-            )}
+            {(field) => {
+              const imagePreviewUrl =
+                field.state.value ||
+                getCloudinaryUrl(form.state.values.cloudinary_image_public_id);
+              return (
+                <View>
+                  <ImagePickerCard
+                    ref={imageCardRef}
+                    value={imagePreviewUrl}
+                    onChange={field.handleChange}
+                    onFocus={() => scrollToCard(imageCardRef)}
+                    error={field.state.meta.errors?.length > 0}
+                  />
+                  {field.state.meta.errors?.length > 0 && (
+                    <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
+                      {field.state.meta.errors[0]}
+                    </Text>
+                  )}
+                </View>
+              );
+            }}
           </form.Field>
         </View>
 
