@@ -6,7 +6,6 @@ import { supabase } from "../database/supabase";
 import { eq, or } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
-import { sql } from "drizzle-orm";
 
 const LAST_SYNC_KEY = "last_sync_at";
 
@@ -26,7 +25,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     console.error(`Error bajando cambios de ${tableName}:`, error);
     return false;
   }
-
+  console.log("Bajando filas de supabase");
   if (data && data.length > 0) {
     for (const remoteRow of data) {
       remoteRow.sync_status = "synced";
@@ -54,20 +53,19 @@ export async function pushEquipmentChanges() {
         eq(equipment.sync_status, "deleted")
       )
     );
-  console.log("Local changes EQUIPMENT:", localChanges);
-
+  console.log("Cargando filas a sincronizar...", localChanges);
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
     // Si está marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
+      console.log("Borrando las filas a borrar de supabase...");
       const { error } = await supabase
         .from("equipment")
         .delete()
         .eq("id", row.id);
 
       if (!error) {
-        console.log("Borrando equipo en SQLite");
         await database.delete(equipment).where(eq(equipment.id, row.id));
       } else {
         console.error("Error al borrar equipo en Supabase:", error);
@@ -80,6 +78,7 @@ export async function pushEquipmentChanges() {
     // 1. Subir Imagen a Cloudinary si es local
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
+        console.log("Subiendo imagen de equipo a cloudinary...");
         const { public_id } = await uploadFileToCloudinary({
           fileUri: row.image_uri,
           uploadPreset: "gymtrack_images",
@@ -115,6 +114,7 @@ export async function pushEquipmentChanges() {
         .update(equipment)
         .set({ sync_status: "synced" })
         .where(eq(equipment.id, row.id));
+      console.log("Equipamiento sincronizado correctamente.");
     } else {
       console.error("Error al subir equipo a Supabase:", error);
     }
