@@ -93,28 +93,10 @@ export default function ExercisesList() {
       <View className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center">
         {/* Thumbnail */}
         <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center ">
-          {item.cloudinary_image_public_id || item.local_image_uri ? (
+          {item.image_uri ? (
             <Image
               source={{
-                uri: (() => {
-                  const cloudinaryUrl = getCloudinaryUrl(
-                    item.cloudinary_image_public_id
-                  );
-                  console.log("cloudinaryUrl", cloudinaryUrl);
-                  if (cloudinaryUrl) return cloudinaryUrl;
-
-                  if (item.local_image_uri) {
-                    // Parche para iOS: extraemos la ruta relativa después de 'Documents/' o similar
-                    // y la unimos al directorio actual de la aplicación.
-                    const parts = item.local_image_uri.split("Documents/");
-                    const relativePath =
-                      parts.length > 1
-                        ? parts[1]
-                        : item.local_image_uri.split("/").pop();
-                    return FileSystem.documentDirectory + relativePath;
-                  }
-                  return null;
-                })(),
+                uri: getCloudinaryUrl(item.image_uri) ?? `${item.image_uri}`,
               }}
               width={"100%"}
               height={"100%"}
@@ -124,7 +106,9 @@ export default function ExercisesList() {
               onError={(e) => console.log("Error cargando imagen:", e.error)}
             />
           ) : (
-            <Barbell size={24} color={brandSecondary[500]} />
+            <View className=" bg-brandSecondary-200/10 items-center justify-center w-full h-full">
+              <Barbell size={24} color={brandSecondary[500]} />
+            </View>
           )}
         </View>
 
