@@ -72,9 +72,11 @@ export default function ExercisesList() {
                 .set({ sync_status: "deleted" })
                 .where(eq(exercises_base.id, item.id));
               await database
-                .delete(exercise_equipment)
+                .update(exercise_equipment)
+                .set({ sync_status: "deleted" })
                 .where(eq(exercise_equipment.exercise_id, item.id));
               queryClient.invalidateQueries(["exercises"]);
+              queryClient.invalidateQueries(["exercise_equipment"]);
               checkNetInfoAndSync();
 
               Toast.show({

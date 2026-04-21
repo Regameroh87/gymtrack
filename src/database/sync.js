@@ -244,7 +244,8 @@ export async function pushExerciseEquipmentChanges() {
     .where(
       or(
         eq(exercise_equipment.sync_status, "pending"),
-        eq(exercise_equipment.sync_status, "dirty")
+        eq(exercise_equipment.sync_status, "dirty"),
+        eq(exercise_equipment.sync_status, "deleted")
       )
     );
 
@@ -252,6 +253,24 @@ export async function pushExerciseEquipmentChanges() {
   console.log("Filas de exercises_equipments a sincronizar:", localChanges);
 
   for (let row of localChanges) {
+    //Si esta marcado para borrar, lo borramos de Supabase y luego localmente
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("exercise_equipment")
+        .delete()
+        .eq("id", row.id);
+
+      if (!error) {
+        console.log("Borrando database local de exercise_equipment");
+        await database
+          .delete(exercise_equipment)
+          .where(eq(exercise_equipment.id, row.id));
+      } else {
+        console.error("Error al borrar fila en SQLite:", error);
+      }
+      continue;
+    }
+
     const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercise_equipment")
