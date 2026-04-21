@@ -68,16 +68,7 @@ export default function AddEquipmentScreen() {
       </View>
 
       <View className="px-5">
-        <FormEquipment
-          onAdd={() => {
-            // El componente AddEquipment se encarga de mostrar su propio Toast, nosotros solo volvemos.
-            router.back();
-          }}
-          onCancel={() => {
-            router.back();
-          }}
-          form={formAddEquipment}
-        />
+        <FormEquipment form={formAddEquipment} />
       </View>
     </KeyboardAwareScrollView>
   );

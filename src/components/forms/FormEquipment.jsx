@@ -1,21 +1,12 @@
 import { Pressable, Text, View } from "react-native";
 
 // Libraries
-import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
-import Toast from "react-native-toast-message";
-
-// Database
-import { database } from "../../database";
-import { equipment } from "../../database/schemas";
 
 // Hooks & Utils
 import { useTheme } from "../../theme/theme";
 import { useMediaPicker } from "../../hooks/useMediaPicker";
 import handlePickImage from "../../utils/handlePickImage";
-import { checkNetInfoAndSync } from "../../database/sync";
 import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 // Components
