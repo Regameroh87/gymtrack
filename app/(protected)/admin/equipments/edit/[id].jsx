@@ -1,15 +1,45 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { database } from "../../../../../src/database";
+import { equipment } from "../../../../../src/database/schemas";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-
-import EditEquipment from "../../../../../src/components/forms/EditEquipment";
+import { useForm } from "@tanstack/react-form";
+import FormEquipment from "../../../../../src/components/forms/FormEquipment";
+import { checkNetInfoAndSync } from "../../../../../src/database/sync";
+import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function EditEquipmentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
+  const queryClient = useQueryClient;
+  const formEditEquipment = useForm({
+    defaultValues: {
+      name: "",
+      image_uri: "",
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const trimmedName = (value.name || "").trim();
+
+        queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+          type: "success",
+          text1: "¡Actualizado!",
+          text2: `${trimmedName} se actualizó exitosamente.`,
+          position: "bottom",
+        });
+      } catch (error) {
+        console.error("Error al actualizar equipo:", error);
+      }
+    },
+  });
 
   return (
     <KeyboardAwareScrollView
@@ -27,15 +57,7 @@ export default function EditEquipmentScreen() {
       </View>
 
       <View className="px-5">
-        <EditEquipment
-          id={id}
-          onUpdate={() => {
-            router.back();
-          }}
-          onCancel={() => {
-            router.back();
-          }}
-        />
+        <FormEquipment form={formEditEquipment} />
       </View>
     </KeyboardAwareScrollView>
   );
