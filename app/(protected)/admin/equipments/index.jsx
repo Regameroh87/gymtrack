@@ -11,8 +11,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
 
 import { database } from "../../../../src/database";
@@ -21,12 +19,14 @@ import {
   exercise_equipment,
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
+import * as Haptics from "expo-haptics";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
-import { Plus, Barbell, Trash, Pencil } from "../../../../assets/icons";
+import ButtonAdd from "../../../../src/components/buttons/ButtonAdd";
+import { Barbell, Trash, Pencil } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
-import { eq } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 
 export default function EquipmentsList() {
   const router = useRouter();
@@ -37,14 +37,13 @@ export default function EquipmentsList() {
   const { data: equipments, isLoading } = useQuery({
     queryKey: ["equipments"],
     queryFn: async () => {
+      // Obtenemos todos los equipos excepto los que están marcados para borrar
       const results = await database
         .select()
         .from(equipment)
-        .where(eq(equipment.sync_status, "synced"))
+        .where(ne(equipment.sync_status, "deleted"))
         .execute();
-      // También podríamos querer mostrar los pending/dirty
-      const allResults = await database.select().from(equipment).execute();
-      return allResults.filter((eq) => eq.sync_status !== "deleted");
+      return results;
     },
   });
 
@@ -198,33 +197,12 @@ export default function EquipmentsList() {
           )
         }
       />
-
       {isLoading && (
         <View className="absolute inset-0 items-center justify-center bg-ui-background-light/50 dark:bg-ui-background-dark/50">
           <ActivityIndicator size="large" color={brandPrimary[600]} />
         </View>
       )}
-
-      {/* FAB */}
-      <View
-        className="absolute bottom-0 right-0 pr-5"
-        style={{ paddingBottom: insets.bottom + 20 }}
-      >
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            router.push("/admin/equipments/add");
-          }}
-          className="active:scale-95"
-        >
-          <LinearGradient
-            colors={[brandSecondary[500], brandSecondary[400]]}
-            className="w-14 h-14 rounded-2xl items-center justify-center shadow-xl shadow-brandSecondary-600/30"
-          >
-            <Plus size={28} color="#ffffff" />
-          </LinearGradient>
-        </Pressable>
-      </View>
+      <ButtonAdd route="/admin/equipments/add" />
     </Screen>
   );
 }
