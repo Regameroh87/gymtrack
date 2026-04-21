@@ -16,7 +16,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import Toast from "react-native-toast-message";
 
 import { database } from "../../../../src/database";
-import { equipment } from "../../../../src/database/schemas";
+import {
+  equipment,
+  exercise_equipment,
+} from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
@@ -62,7 +65,14 @@ export default function EquipmentsList() {
                 .set({ sync_status: "deleted" })
                 .where(eq(equipment.id, item.id));
 
+              // También marcamos como 'deleted' todas las relaciones en exercise_equipment
+              await database
+                .update(exercise_equipment)
+                .set({ sync_status: "deleted" })
+                .where(eq(exercise_equipment.equipment_id, item.id));
+
               queryClient.invalidateQueries(["equipments"]);
+              queryClient.invalidateQueries(["exercise_equipment"]);
               checkNetInfoAndSync(); // Sube el cambio y dispara el borrado en Supabase y Cloudinary
 
               Toast.show({
