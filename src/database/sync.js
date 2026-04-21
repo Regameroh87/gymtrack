@@ -297,6 +297,7 @@ export async function syncWithSupabase(
   try {
     const syncTime = new Date().toISOString();
     console.log(`Iniciando sincronización para: ${tablesToSync.join(", ")}...`);
+    console.log("Hora de sincronizacion:", syncTime);
 
     // --- DOWNLOAD PHASE ---
     for (const table of tablesToSync) {
