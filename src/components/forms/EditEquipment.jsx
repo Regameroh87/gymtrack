@@ -133,7 +133,7 @@ export default function EditEquipment({ id, onUpdate, onCancel }) {
       <View className=" flex-row gap-2 items-center">
         {/* Preview imagen */}
         <formEditEquipment.Field
-          name="local_image_uri"
+          name="image_uri"
           validators={{
             onSubmit: ({ value }) => {
               if (!value) return "La imagen es requerida";

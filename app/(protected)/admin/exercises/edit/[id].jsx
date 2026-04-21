@@ -52,6 +52,7 @@ export default function EditExercise() {
   });
 
   const queryClient = useQueryClient();
+
   const editExerciseForm = useForm({
     defaultValues: {
       name: data?.name || "",
