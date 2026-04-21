@@ -19,7 +19,7 @@ import {
 // Shared components
 import CustomSelect from "../CustomSelect";
 import InputUploadVideo from "../videos/InputUploadVideo";
-import AddEquipment from "./AddEquipment";
+import AddEquipment from "./FormEquipment";
 
 // Form-specific sub-components
 import FormField from "./FormField";

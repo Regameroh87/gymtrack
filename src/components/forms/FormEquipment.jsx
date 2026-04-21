@@ -19,78 +19,14 @@ import { checkNetInfoAndSync } from "../../database/sync";
 import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 // Components
-import PreviewImage from "../../components/images/PreviewImage";
+import PreviewImage from "../images/PreviewImage";
 import StyledTextInput from "./StyledTextInput";
 
 // Icons & Theme
 import { CameraPlus, CloudUpload, Plus, Barbell } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
 
-export default function AddEquipment({
-  onAdd,
-  onCancel,
-  equipment,
-  dbEquipments,
-  initialName = "",
-}) {
-  const queryClient = useQueryClient();
-
-  const formAddEquipment = useForm({
-    defaultValues: {
-      name: initialName,
-      image_uri: "",
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        const newId = Crypto.randomUUID();
-        const trimmedName = (value.name || "").trim();
-
-        await database.insert(equipment).values({
-          id: newId,
-          name: trimmedName,
-          image_uri: value.image_uri,
-          sync_status: "pending",
-        });
-        queryClient.invalidateQueries({ queryKey: ["equipments"] });
-        //Ejecuto la sincronización
-        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-        // Notificar al padre si existe, sino damos feedback visual y limpiamos el formulario
-        if (onAdd) {
-          onAdd({
-            id: newId,
-            name: trimmedName,
-            image_uri: value.image_uri,
-            isNew: true,
-          });
-        } else {
-          Toast.show({
-            type: "success",
-            text1: "¡Listo!",
-            text2: `${trimmedName} se agregó exitosamente.`,
-            position: "bottom",
-          });
-          formAddEquipment.reset();
-        }
-      } catch (error) {
-        console.error("Error al guardar equipo:", error);
-      }
-    },
-  });
-
-  return (
-    <View className="gap-y-4 w-full p-4 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl mt-4 border border-ui-border-light dark:border-ui-border-dark shadow-sm">
-      <FormEquipment
-        form={formAddEquipment}
-        onCancel={onCancel}
-        dbEquipments={dbEquipments}
-      />
-    </View>
-  );
-}
-
-export const FormEquipment = ({ form, onCancel, dbEquipments }) => {
+export default function FormEquipment({ form, onCancel, dbEquipments }) {
   const { isDark } = useTheme();
   const { pickMedia } = useMediaPicker();
   return (
@@ -285,4 +221,4 @@ export const FormEquipment = ({ form, onCancel, dbEquipments }) => {
       </form.Subscribe>
     </>
   );
-};
+}
