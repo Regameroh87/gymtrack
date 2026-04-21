@@ -26,7 +26,12 @@ import StyledTextInput from "./StyledTextInput";
 import { CameraPlus, CloudUpload, Plus, Barbell } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
 
-export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
+export default function AddEquipment({
+  onAdd,
+  onCancel,
+  equipment,
+  initialName = "",
+}) {
   const { isDark } = useTheme();
   const { pickMedia } = useMediaPicker();
   const queryClient = useQueryClient();
@@ -87,6 +92,13 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
   return (
     <View className="gap-y-4 w-full p-4 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl mt-4 border border-ui-border-light dark:border-ui-border-dark shadow-sm">
       {/* Header */}
+    </View>
+  );
+}
+
+export const FormEquipment = ({ form, onCancel }) => {
+  return (
+    <>
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-sm font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark uppercase tracking-widest">
           NUEVA MÁQUINA / ACCESORIO
@@ -107,7 +119,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
 
       <View className=" flex-row gap-2 items-center">
         {/* Preview imagen */}
-        <formAddEquipment.Field
+        <form.Field
           name="image_uri"
           validators={{
             onSubmit: ({ value }) => {
@@ -146,9 +158,9 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
               </View>
             </View>
           )}
-        </formAddEquipment.Field>
+        </form.Field>
         {/* Input name */}
-        <formAddEquipment.Field
+        <form.Field
           name="name"
           validators={{
             onChange: ({ value }) => {
@@ -187,10 +199,10 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
               </View>
             </>
           )}
-        </formAddEquipment.Field>
+        </form.Field>
       </View>
       {/* Errores */}
-      <formAddEquipment.Subscribe selector={(state) => [state.fieldMeta]}>
+      <form.Subscribe selector={(state) => [state.fieldMeta]}>
         {([fieldMeta]) => {
           const allErrors = Object.values(fieldMeta)
             .flatMap((meta) => meta.errors)
@@ -211,12 +223,10 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             </View>
           );
         }}
-      </formAddEquipment.Subscribe>
+      </form.Subscribe>
 
       {/* Botones de media */}
-      <formAddEquipment.Subscribe
-        selector={(state) => [state.values.image_uri]}
-      >
+      <form.Subscribe selector={(state) => [state.values.image_uri]}>
         {([imageUri]) =>
           !imageUri ? (
             <View className=" flex-row gap-2 mt-4">
@@ -227,8 +237,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                   handlePickImage({
                     pickMedia,
                     source: "gallery",
-                    onChange: (uri) =>
-                      formAddEquipment.setFieldValue("image_uri", uri),
+                    onChange: (uri) => form.setFieldValue("image_uri", uri),
                   });
                 }}
                 className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
@@ -247,7 +256,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
                     pickMedia,
                     source: "camera",
                     onChange: (uri) =>
-                      formAddEquipment.setFieldValue("local_image_uri", uri),
+                      form.setFieldValue("local_image_uri", uri),
                   });
                 }}
                 className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
@@ -260,14 +269,14 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             </View>
           ) : null
         }
-      </formAddEquipment.Subscribe>
+      </form.Subscribe>
 
-      <formAddEquipment.Subscribe selector={(state) => [state.canSubmit]}>
+      <form.Subscribe selector={(state) => [state.canSubmit]}>
         {/* Botón confirmar */}
         {([canSubmit]) => (
           <Pressable
             disabled={!canSubmit}
-            onPress={formAddEquipment.handleSubmit}
+            onPress={form.handleSubmit}
             className="flex-row justify-center items-center gap-2 rounded-xl p-3.5 mt-2 bg-brandPrimary-600 active:scale-95"
           >
             <Plus color="white" size={16} />
@@ -276,7 +285,7 @@ export default function AddEquipment({ onAdd, onCancel, initialName = "" }) {
             </Text>
           </Pressable>
         )}
-      </formAddEquipment.Subscribe>
-    </View>
+      </form.Subscribe>
+    </>
   );
-}
+};
