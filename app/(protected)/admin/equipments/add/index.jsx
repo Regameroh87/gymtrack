@@ -6,10 +6,11 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useForm } from "@tanstack/react-form";
 import { database } from "../../../../../src/database";
 import { equipment } from "../../../../../src/database/schemas";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { checkNetInfoAndSync } from "../../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
+import { ne } from "drizzle-orm";
 import Toast from "react-native-toast-message";
 import FormEquipment from "../../../../../src/components/forms/FormEquipment";
 
@@ -50,6 +51,19 @@ export default function AddEquipmentScreen() {
       }
     },
   });
+  const { data: equipments, isLoading } = useQuery({
+    queryKey: ["equipments"],
+    queryFn: async () => {
+      // Obtenemos todos los equipos excepto los que están marcados para borrar
+      const results = await database
+        .select()
+        .from(equipment)
+        .where(ne(equipment.sync_status, "deleted"))
+        .execute();
+      return results;
+    },
+    staleTime: Infinity,
+  });
 
   return (
     <KeyboardAwareScrollView
@@ -68,7 +82,7 @@ export default function AddEquipmentScreen() {
       </View>
 
       <View className="px-5">
-        <FormEquipment form={formAddEquipment} />
+        <FormEquipment form={formAddEquipment} dbEquipments={equipments} />
       </View>
     </KeyboardAwareScrollView>
   );
