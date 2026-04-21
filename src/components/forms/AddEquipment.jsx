@@ -30,20 +30,10 @@ export default function AddEquipment({
   onAdd,
   onCancel,
   equipment,
+  dbEquipments,
   initialName = "",
 }) {
-  const { isDark } = useTheme();
-  const { pickMedia } = useMediaPicker();
   const queryClient = useQueryClient();
-
-  const { data: dbEquipments = [] } = useQuery({
-    queryKey: ["equipments"],
-    queryFn: async () => {
-      const results = await database.select().from(equipment);
-      return results || [];
-    },
-    staleTime: Infinity,
-  });
 
   const formAddEquipment = useForm({
     defaultValues: {
@@ -91,14 +81,21 @@ export default function AddEquipment({
 
   return (
     <View className="gap-y-4 w-full p-4 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl mt-4 border border-ui-border-light dark:border-ui-border-dark shadow-sm">
-      {/* Header */}
+      <FormEquipment
+        form={formAddEquipment}
+        onCancel={onCancel}
+        dbEquipments={dbEquipments}
+      />
     </View>
   );
 }
 
-export const FormEquipment = ({ form, onCancel }) => {
+export const FormEquipment = ({ form, onCancel, dbEquipments }) => {
+  const { isDark } = useTheme();
+  const { pickMedia } = useMediaPicker();
   return (
     <>
+      {/* Header */}
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-sm font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark uppercase tracking-widest">
           NUEVA MÁQUINA / ACCESORIO

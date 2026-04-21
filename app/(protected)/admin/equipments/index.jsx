@@ -45,6 +45,7 @@ export default function EquipmentsList() {
         .execute();
       return results;
     },
+    staleTime: Infinity,
   });
 
   const handleDelete = (item) => {
