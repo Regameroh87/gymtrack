@@ -10,17 +10,29 @@ import FormEquipment from "../../../../../src/components/forms/FormEquipment";
 import { checkNetInfoAndSync } from "../../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
-import { useQueryClient } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function EditEquipmentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient;
+  const { data: item, isLoading } = useQuery({
+    queryKey: ["equipment", id],
+    queryFn: async () => {
+      const results = await database
+        .select()
+        .from(equipment)
+        .where(eq(equipment.id, id))
+        .execute();
+      return results[0]; // Retornamos el primer (y único) resultado
+    },
+  });
   const formEditEquipment = useForm({
     defaultValues: {
-      name: "",
-      image_uri: "",
+      name: item?.name || "",
+      image_uri: item?.image_uri || "",
     },
     onSubmit: async ({ value }) => {
       try {
