@@ -244,8 +244,7 @@ export async function pushExerciseEquipmentChanges() {
     .where(
       or(
         eq(exercise_equipment.sync_status, "pending"),
-        eq(exercise_equipment.sync_status, "dirty"),
-        eq(exercise_equipment.sync_status, "deleted")
+        eq(exercise_equipment.sync_status, "dirty")
       )
     );
 
@@ -253,15 +252,6 @@ export async function pushExerciseEquipmentChanges() {
   console.log("Filas de exercises_equipments a sincronizar:", localChanges);
 
   for (let row of localChanges) {
-    // Si está marcado para borrar, lo borramos de SQLite (Supabase lo borra vía webhook/trigger)
-    if (row.sync_status === "deleted") {
-      console.log("Borrando relación en SQLite");
-      await database
-        .delete(exercise_equipment)
-        .where(eq(exercise_equipment.id, row.id));
-      continue;
-    }
-
     const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercise_equipment")
