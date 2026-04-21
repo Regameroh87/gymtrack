@@ -249,25 +249,16 @@ export async function pushExerciseEquipmentChanges() {
       )
     );
 
-  console.log("Local changes EXERCISE_EQUIPMENT:", localChanges);
   if (localChanges.length === 0) return;
+  console.log("Filas de exercises_equipments a sincronizar:", localChanges);
 
   for (let row of localChanges) {
-    //Si esta marcado para borrar, lo borramos de Supabase y luego localmente
+    // Si está marcado para borrar, lo borramos de SQLite (Supabase lo borra vía webhook/trigger)
     if (row.sync_status === "deleted") {
-      const { error } = await supabase
-        .from("exercise_equipment")
-        .delete()
-        .eq("id", row.id);
-
-      if (!error) {
-        console.log("Borrando fila en SQLite");
-        await database
-          .delete(exercise_equipment)
-          .where(eq(exercise_equipment.id, row.id));
-      } else {
-        console.error("Error al borrar fila en SQLite:", error);
-      }
+      console.log("Borrando relación en SQLite");
+      await database
+        .delete(exercise_equipment)
+        .where(eq(exercise_equipment.id, row.id));
       continue;
     }
 

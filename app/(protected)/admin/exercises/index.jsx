@@ -13,10 +13,12 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import * as FileSystem from "expo-file-system/legacy";
 
 import { database } from "../../../../src/database";
-import { exercises_base } from "../../../../src/database/schemas";
+import {
+  exercises_base,
+  exercise_equipment,
+} from "../../../../src/database/schemas";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
@@ -69,7 +71,9 @@ export default function ExercisesList() {
                 .update(exercises_base)
                 .set({ sync_status: "deleted" })
                 .where(eq(exercises_base.id, item.id));
-
+              await database
+                .delete(exercise_equipment)
+                .where(eq(exercise_equipment.exercise_id, item.id));
               queryClient.invalidateQueries(["exercises"]);
               checkNetInfoAndSync();
 

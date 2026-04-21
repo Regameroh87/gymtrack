@@ -28,7 +28,6 @@ export default function AddExerciseScreen() {
     onSubmit: async ({ value }) => {
       try {
         const exerciseId = Crypto.randomUUID();
-
         const exerciseValues = {
           name: value.name.trim(),
           category: value.category,
@@ -39,13 +38,13 @@ export default function AddExerciseScreen() {
           instructions: value.instructions,
           is_unilateral: value.is_unilateral ? 1 : 0,
         };
-
+        // Inserto el ejercicio en la tabla exercises_base
         await database.insert(exercises_base).values({
           id: exerciseId,
           ...exerciseValues,
         });
 
-        // 2. Manejar Equipamiento (Muchos a Muchos)
+        // Inserto el equipamiento en la tabla exercises_equipments
         if (value.equipments && value.equipments.length > 0) {
           for (const eq of value.equipments) {
             await database.insert(exercise_equipment).values({
@@ -59,6 +58,7 @@ export default function AddExerciseScreen() {
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
         queryClient.invalidateQueries({ queryKey: ["exercise", exerciseId] });
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        //Sincronizo si hay internet
         checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
