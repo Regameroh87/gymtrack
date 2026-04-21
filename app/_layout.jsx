@@ -63,7 +63,6 @@ export default function RootLayout() {
       startSyncListener();
     }
   }, [success]);
-  console.log("DB status:", { success, error });
 
   // Se oculta el Splash cuando las fuentes están listas (o fallaron)
   useEffect(() => {

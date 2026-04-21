@@ -53,13 +53,15 @@ export async function pushEquipmentChanges() {
         eq(equipment.sync_status, "deleted")
       )
     );
-  console.log("Cargando filas a sincronizar...", localChanges);
+  console.log("Cargando filas de equipamientos a sincronizar...", localChanges);
   if (localChanges.length === 0) return;
 
   for (let row of localChanges) {
     // Si está marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
-      console.log("Borrando las filas a borrar de supabase...");
+      console.log(
+        "Borrando las filas de equipamientos a borrar de supabase..."
+      );
       const { error } = await supabase
         .from("equipment")
         .delete()
@@ -67,8 +69,9 @@ export async function pushEquipmentChanges() {
 
       if (!error) {
         await database.delete(equipment).where(eq(equipment.id, row.id));
+        console.log("Equipamiento eliminado correctamente.");
       } else {
-        console.error("Error al borrar equipo en Supabase:", error);
+        console.error("Error al borrar equipamiento en Supabase:", error);
       }
       continue;
     }
@@ -85,6 +88,7 @@ export async function pushEquipmentChanges() {
           typeFile: "image",
         });
         if (public_id) {
+          console.log("Imagen de equipo subida correctamente.");
           await deleteMediaLocally(row.image_uri);
           row.image_uri = public_id;
           updatedLocal = true;
