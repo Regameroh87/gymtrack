@@ -14,7 +14,6 @@ const sqlite = openDatabaseSync(
 Mucho más rápido: Las operaciones de escritura son significativamente más rápidas porque escribir en el log de WAL es más eficiente que el método tradicional.
 Mejor persistencia: Es más resistente a fallos de energía o cierres inesperados de la app. */
 sqlite.execSync("PRAGMA journal_mode = WAL;");
-console.log("DB abierta:", sqlite);
 
 export const database = drizzle(sqlite, { schema });
 
