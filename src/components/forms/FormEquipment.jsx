@@ -17,7 +17,12 @@ import StyledTextInput from "./StyledTextInput";
 import { CameraPlus, CloudUpload, Plus, Barbell } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
 
-export default function FormEquipment({ form, onCancel, dbEquipments }) {
+export default function FormEquipment({
+  form,
+  onCancel,
+  dbEquipments,
+  header = "NUEVA MAQUINA / ACCESORIO",
+}) {
   const { isDark } = useTheme();
   const { pickMedia } = useMediaPicker();
   return (
@@ -25,7 +30,7 @@ export default function FormEquipment({ form, onCancel, dbEquipments }) {
       {/* Header */}
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-sm font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark uppercase tracking-widest">
-          NUEVA MÁQUINA / ACCESORIO
+          {header}
         </Text>
         {onCancel && (
           <Pressable
