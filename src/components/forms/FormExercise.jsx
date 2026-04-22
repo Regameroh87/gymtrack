@@ -12,6 +12,7 @@ import useAsyncStorage from "../../hooks/useAsyncStorage";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 import { eq } from "drizzle-orm";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { useEquipmentForm } from "../../hooks/useEquipmentForm";
 
 // Constants
 import {
@@ -47,40 +48,19 @@ export default function FormExercise({
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
   const queryClient = useQueryClient();
 
-  const equipmentForm = useForm({
-    defaultValues: {
-      name: "",
-      image_uri: "",
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        const newId = Crypto.randomUUID();
-        const trimmedName = (value.name || "").trim();
-
-        const newEquipment = {
-          id: newId,
-          name: trimmedName,
-          image_uri: value.image_uri,
-          sync_status: "pending",
-        };
-        await database.insert(equipment).values(newEquipment);
-        queryClient.invalidateQueries({ queryKey: ["equipments"] });
-        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        const currentEquipments = form.getFieldValue("equipments") || [];
-        form.setFieldValue("equipments", [
-          ...currentEquipments,
-          {
-            id: newEquipment.id,
-            name: newEquipment.name,
-            image_uri: newEquipment.image_uri,
-          },
-        ]);
-        equipmentForm.reset();
-        setIsCreatingEquipment(false);
-      } catch (error) {
-        console.error("Error al crear equipo desde ejercicio:", error);
-      }
+  const equipmentForm = useEquipmentForm({
+    onSuccess: (newEquipment) => {
+      const currentEquipments = form.getFieldValue("equipments") || [];
+      form.setFieldValue("equipments", [
+        ...currentEquipments,
+        {
+          id: newEquipment.id,
+          name: newEquipment.name,
+          image_uri: newEquipment.image_uri,
+        },
+      ]);
+      equipmentForm.reset();
+      setIsCreatingEquipment(false);
     },
   });
 
