@@ -19,7 +19,7 @@ export default function Verify() {
     mutationFn: (code) => verifyCode({ email, code }),
     onSuccess: (result) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      console.log("Success result:", result);
+      //console.log("Success result:", result);
       router.replace("/(protected)/");
     },
     onError: (error) => {
@@ -27,7 +27,7 @@ export default function Verify() {
       console.log("Error result:", error.message, error.status);
     },
   });
-  console.log("VERIFY", email);
+  //console.log("VERIFY", email);
 
   const errorVerify = (error) => {
     if (error.status === 400) {

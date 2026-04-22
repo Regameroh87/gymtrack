@@ -25,7 +25,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     console.error(`Error bajando cambios de ${tableName}:`, error);
     return false;
   }
-  console.log("Bajando filas de supabase");
+  console.log("Descargando datos remotos");
   if (data && data.length > 0) {
     for (const remoteRow of data) {
       remoteRow.sync_status = "synced";
@@ -145,19 +145,19 @@ export async function pushExercisesChanges() {
   for (let row of localChanges) {
     // Si está marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
-      console.log("Borrando ejercicio en Supabase:", row.id);
+      console.log("Borrando ejercicio en remoto:", row.id);
       const { error } = await supabase
         .from("exercises_base")
         .delete()
         .eq("id", row.id);
 
       if (!error) {
-        console.log("Borrando ejercicio en SQLite", row.id);
+        console.log("Borrando ejercicio en local", row.id);
         await database
           .delete(exercises_base)
           .where(eq(exercises_base.id, row.id));
       } else {
-        console.error("Error al borrar ejercicio en Supabase:", error);
+        console.error("Error al borrar ejercicio en remoto:", error);
         //Deberia guardar el error en un tabla de errores
       }
       continue;
@@ -166,6 +166,7 @@ export async function pushExercisesChanges() {
     // 1. Imagen
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
+        console.log("Subiendo imagen ejercicio a remoto...");
         const { public_id } = await uploadFileToCloudinary({
           fileUri: row.image_uri,
           uploadPreset: "gymtrack_images",
@@ -187,6 +188,7 @@ export async function pushExercisesChanges() {
     // 2. Video
     if (row.video_uri && row.video_uri.startsWith("file://")) {
       try {
+        console.log("Subiendo video ejercicio a remoto...");
         const { public_id } = await uploadFileToCloudinary({
           fileUri: row.video_uri,
           uploadPreset: "gymtrack_videos",
@@ -206,6 +208,7 @@ export async function pushExercisesChanges() {
     }
 
     // 3. Enviar a Supabase
+    console.log("Subiendo ejercicio a remoto...", row.id);
     const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercises_base")
