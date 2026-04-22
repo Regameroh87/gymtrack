@@ -184,8 +184,7 @@ export default function FormEquipment({
                   handlePickImage({
                     pickMedia,
                     source: "camera",
-                    onChange: (uri) =>
-                      form.setFieldValue("local_image_uri", uri),
+                    onChange: (uri) => form.setFieldValue("image_uri", uri),
                   });
                 }}
                 className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"

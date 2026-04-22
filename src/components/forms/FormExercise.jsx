@@ -3,12 +3,15 @@ import { useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "@tanstack/react-form";
+import * as Crypto from "expo-crypto";
 import { database } from "../../database";
 import { exercises_base, equipment } from "../../database/schemas";
 import useAsyncStorage from "../../hooks/useAsyncStorage";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 import { eq } from "drizzle-orm";
+import { checkNetInfoAndSync } from "../../database/sync";
 
 // Constants
 import {
@@ -19,7 +22,7 @@ import {
 // Shared components
 import CustomSelect from "../CustomSelect";
 import InputUploadVideo from "../videos/InputUploadVideo";
-import AddEquipment from "./FormEquipment";
+import FormEquipment from "./FormEquipment";
 
 // Form-specific sub-components
 import FormField from "./FormField";
@@ -42,13 +45,52 @@ export default function FormExercise({
   form,
 }) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
-  const [initialEquipmentName, setInitialEquipmentName] = useState("");
+  const queryClient = useQueryClient();
+
+  const equipmentForm = useForm({
+    defaultValues: {
+      name: "",
+      image_uri: "",
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const newId = Crypto.randomUUID();
+        const trimmedName = (value.name || "").trim();
+
+        const newEquipment = {
+          id: newId,
+          name: trimmedName,
+          image_uri: value.image_uri,
+          sync_status: "pending",
+        };
+        await database.insert(equipment).values(newEquipment);
+        queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        const currentEquipments = form.getFieldValue("equipments") || [];
+        form.setFieldValue("equipments", [
+          ...currentEquipments,
+          {
+            id: newEquipment.id,
+            name: newEquipment.name,
+            image_uri: newEquipment.image_uri,
+          },
+        ]);
+        equipmentForm.reset();
+        setIsCreatingEquipment(false);
+      } catch (error) {
+        console.error("Error al crear equipo desde ejercicio:", error);
+      }
+    },
+  });
+
   const { data: dbEquipments = [] } = useQuery({
     queryKey: ["equipments"],
     queryFn: async () => {
       const results = await database.select().from(equipment);
       return results || [];
     },
+    staleTime: Infinity,
   });
 
   useAsyncStorage({
@@ -265,16 +307,16 @@ export default function FormExercise({
                   }}
                   actionLabel="Crear máquina nueva"
                   onActionPress={(query) => {
-                    setInitialEquipmentName(query);
+                    equipmentForm.setFieldValue("name", query);
                     setIsCreatingEquipment(true);
                   }}
                 />
               ) : (
-                <AddEquipment
-                  initialName={initialEquipmentName}
-                  onCancel={() => setIsCreatingEquipment(false)}
-                  onAdd={(newEq) => {
-                    field.handleChange([...field.state.value, newEq]);
+                <FormEquipment
+                  form={equipmentForm}
+                  dbEquipments={dbEquipments}
+                  onCancel={() => {
+                    equipmentForm.reset();
                     setIsCreatingEquipment(false);
                   }}
                 />

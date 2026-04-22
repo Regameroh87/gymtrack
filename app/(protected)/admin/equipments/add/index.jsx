@@ -15,7 +15,7 @@ import Toast from "react-native-toast-message";
 import FormEquipment from "../../../../../src/components/forms/FormEquipment";
 
 export default function AddEquipmentScreen() {
-  const router = useRouter();
+  //const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
@@ -51,7 +51,8 @@ export default function AddEquipmentScreen() {
       }
     },
   });
-  const { data: equipments, isLoading } = useQuery({
+
+  const { data: equipments } = useQuery({
     queryKey: ["equipments"],
     queryFn: async () => {
       // Obtenemos todos los equipos excepto los que están marcados para borrar

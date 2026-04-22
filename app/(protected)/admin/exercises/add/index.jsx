@@ -18,7 +18,7 @@ export default function AddExerciseScreen() {
       name: "",
       category: "",
       muscle_group: "",
-      equipments: [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
+      equipments: [], // Ahora es un array de objetos { name, image_uri }
       youtube_video_url: "",
       image_uri: "",
       video_uri: "",
