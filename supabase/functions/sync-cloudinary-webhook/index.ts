@@ -8,8 +8,8 @@ const corsHeaders = {
 
 // Maps each Cloudinary column to its resource_type for the API
 const ASSET_FIELDS = [
-  { column: "cloudinary_image_public_id", resource_type: "image" },
-  { column: "cloudinary_video_public_id", resource_type: "video" },
+  { column: "image_uri", resource_type: "image" },
+  { column: "video_uri", resource_type: "video" },
 ] as const;
 
 serve(async (req) => {
@@ -51,7 +51,7 @@ serve(async (req) => {
     // Action 2: Delete asset permanently from Cloudinary. Si falla, encola para reintento.
     const destroyAsset = async (public_id: string, resource_type: string = "image") => {
       try {
-        const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/upload?public_ids[]=${public_id}`;
+        const url = `https://api.cloudinary.com/v1_1/${cloudName}/resources/${resource_type}/upload?public_ids[]=${public_id}`;
         const response = await fetch(url, { method: "DELETE", headers });
         const result = await response.json();
 
