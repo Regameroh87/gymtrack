@@ -38,14 +38,19 @@ serve(async (req) => {
 
     // --- CLOUDINARY ACTIONS --- //
 
-    // Action 1: Remove pending tag and add "confirmed" 
+    // Action 1: Remove pending tag and add "confirmed"
     const confirmAsset = async (public_id: string, resource_type: string = "image") => {
       const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/tags`;
       const data = new URLSearchParams([
         ["public_ids[]", public_id], ["tag", "confirmed"], ["command", "replace"]
       ]);
-      await fetch(url, { method: "POST", headers: { Authorization: `Basic ${credentials}` }, body: data });
-      console.log(`[+] Asset ${public_id} (${resource_type}) confirmed.`);
+      const response = await fetch(url, { method: "POST", headers: { Authorization: `Basic ${credentials}` }, body: data });
+      const result = await response.json();
+      if (!response.ok || !result.public_ids?.includes(public_id)) {
+        console.error(`[!] Error confirmando ${public_id} (${resource_type}):`, result);
+      } else {
+        console.log(`[+] Asset ${public_id} (${resource_type}) confirmed.`);
+      }
     };
 
     // Action 2: Delete asset permanently from Cloudinary. Si falla, encola para reintento.
