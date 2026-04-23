@@ -9,6 +9,7 @@ import { ne } from "drizzle-orm";
 import Toast from "react-native-toast-message";
 import FormEquipment from "../../../../../src/components/forms/FormEquipment";
 import { useEquipmentForm } from "../../../../../src/hooks/useEquipmentForm";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AddEquipmentScreen() {
   //const router = useRouter();
