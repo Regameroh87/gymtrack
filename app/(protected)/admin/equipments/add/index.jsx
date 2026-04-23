@@ -57,7 +57,7 @@ export default function AddEquipmentScreen() {
         </Text>
       </View>
 
-      <View className="px-5">
+      <View className=" px-5">
         <FormEquipment form={formAddEquipment} dbEquipments={equipments} />
       </View>
     </KeyboardAwareScrollView>

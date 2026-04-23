@@ -209,7 +209,7 @@ export default function FormEquipment({
           >
             <Plus color="white" size={16} />
             <Text className="text-white text-sm font-jakarta-bold">
-              CONFIRMAR Y AGREGAR
+              AGREGAR
             </Text>
           </Pressable>
         )}
