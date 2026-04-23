@@ -30,8 +30,12 @@ export const useEquipmentForm = ({ onSuccess, initialValues = {} } = {}) => {
 
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
 
-        // Ejecuto la sincronización en segundo plano
-        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
+        // Ejecuto la sincronización en segundo plano y refresco la lista al terminar
+        checkNetInfoAndSync()
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ["equipments"] });
+          })
+          .catch((err) => console.error("Sync failed", err));
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 

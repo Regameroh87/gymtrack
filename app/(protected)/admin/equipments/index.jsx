@@ -71,9 +71,13 @@ export default function EquipmentsList() {
                 .set({ sync_status: "deleted" })
                 .where(eq(exercise_equipment.equipment_id, item.id));
 
-              queryClient.invalidateQueries(["equipments"]);
-              queryClient.invalidateQueries(["exercise_equipment"]);
-              checkNetInfoAndSync(); // Sube el cambio y dispara el borrado en Supabase y Cloudinary
+              queryClient.invalidateQueries({ queryKey: ["equipments"] });
+              queryClient.invalidateQueries({ queryKey: ["exercise_equipment"] });
+              checkNetInfoAndSync()
+                .then(() => {
+                  queryClient.invalidateQueries({ queryKey: ["equipments"] });
+                })
+                .catch((err) => console.error("Sync failed", err));
 
               Toast.show({
                 type: "success",
