@@ -46,7 +46,6 @@ export default function FormExercise({
   form,
 }) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
-  const queryClient = useQueryClient();
 
   const equipmentForm = useEquipmentForm({
     onSuccess: (newEquipment) => {

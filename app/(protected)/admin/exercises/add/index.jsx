@@ -85,6 +85,7 @@ export default function AddExerciseScreen() {
       }
     },
   });
+
   return (
     <FormExercise
       form={addExerciseForm}
