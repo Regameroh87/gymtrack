@@ -47,17 +47,16 @@ export default function AddEquipmentScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="px-5 pt-6">
+      <View className="px-5 pt-6 pb-2">
         <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark mb-1">
           Agregar Máquina
         </Text>
-        <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mb-4">
-          Registra un nuevo elemento para el inventario de tu gimnasio. Podrás
-          asignarlo a los ejercicios después.
+        <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+          Registra un nuevo elemento para el inventario de tu gimnasio.
         </Text>
       </View>
 
-      <View className=" px-5">
+      <View className="px-5 pt-4">
         <FormEquipment form={formAddEquipment} dbEquipments={equipments} />
       </View>
     </KeyboardAwareScrollView>
