@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { database } from "./index";
 import { exercises_base, equipment, exercise_equipment } from "./schemas";
 import { supabase } from "../database/supabase";
-import { eq, or } from "drizzle-orm";
+import { eq, or, notInArray, and } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 
@@ -25,6 +25,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     console.error(`Error bajando cambios de ${tableName}:`, error);
     return false;
   }
+
   console.log("Descargando datos remotos");
   if (data && data.length > 0) {
     for (const remoteRow of data) {
@@ -36,6 +37,33 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     }
     console.log(`Tabla ${tableName} actualizada desde la nube.`);
   }
+
+  // Reconciliar borrados remotos: detectar registros locales "synced" que ya
+  // no existen en Supabase (fueron borrados desde otro dispositivo)
+  const { data: remoteIds, error: idsError } = await supabase
+    .from(tableName)
+    .select("id");
+
+  if (!idsError && remoteIds) {
+    const remoteIdList = remoteIds.map((r) => r.id);
+    if (remoteIdList.length > 0) {
+      await database
+        .delete(schemaTable)
+        .where(
+          and(
+            eq(schemaTable.sync_status, "synced"),
+            notInArray(schemaTable.id, remoteIdList)
+          )
+        );
+    } else {
+      // Tabla vacía en Supabase: borrar todos los registros synced locales
+      await database
+        .delete(schemaTable)
+        .where(eq(schemaTable.sync_status, "synced"));
+    }
+    console.log(`Reconciliación de borrados completada para ${tableName}.`);
+  }
+
   return true;
 }
 
