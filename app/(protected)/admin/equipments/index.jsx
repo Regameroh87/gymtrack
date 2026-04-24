@@ -72,7 +72,9 @@ export default function EquipmentsList() {
                 .where(eq(exercise_equipment.equipment_id, item.id));
 
               queryClient.invalidateQueries({ queryKey: ["equipments"] });
-              queryClient.invalidateQueries({ queryKey: ["exercise_equipment"] });
+              queryClient.invalidateQueries({
+                queryKey: ["exercise_equipment"],
+              });
               checkNetInfoAndSync()
                 .then(() => {
                   queryClient.invalidateQueries({ queryKey: ["equipments"] });

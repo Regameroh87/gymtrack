@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text } from "react-native";
 import { database } from "../../../../../src/database";
 import { equipment } from "../../../../../src/database/schemas";
@@ -17,7 +17,7 @@ export default function EditEquipmentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
-  const queryClient = useQueryClient;
+  const queryClient = useQueryClient();
   const { data: item, isLoading } = useQuery({
     queryKey: ["equipment", id],
     queryFn: async () => {
@@ -26,7 +26,7 @@ export default function EditEquipmentScreen() {
         .from(equipment)
         .where(eq(equipment.id, id))
         .execute();
-      return results[0]; // Retornamos el primer (y único) resultado
+      return results[0];
     },
   });
   const formEditEquipment = useForm({
@@ -38,8 +38,22 @@ export default function EditEquipmentScreen() {
       try {
         const trimmedName = (value.name || "").trim();
 
+        await database
+          .update(equipment)
+          .set({
+            name: trimmedName,
+            image_uri: value.image_uri,
+            sync_status: "pending",
+          })
+          .where(eq(equipment.id, id));
+
         queryClient.invalidateQueries({ queryKey: ["equipments"] });
-        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
+        queryClient.invalidateQueries({ queryKey: ["equipment", id] });
+        checkNetInfoAndSync()
+          .then(() =>
+            queryClient.invalidateQueries({ queryKey: ["equipments"] })
+          )
+          .catch((err) => console.error("Sync failed", err));
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
@@ -47,11 +61,14 @@ export default function EditEquipmentScreen() {
           text2: `${trimmedName} se actualizó exitosamente.`,
           position: "bottom",
         });
+        router.back();
       } catch (error) {
         console.error("Error al actualizar equipo:", error);
       }
     },
   });
+
+  if (isLoading) return null;
 
   return (
     <KeyboardAwareScrollView

@@ -174,7 +174,10 @@ export default function FormEquipment({
                   onPress={pickFromGallery}
                   className="flex-1 flex-row border border-brandSecondary-500/20 justify-center items-center gap-2 bg-brandSecondary-600/10 rounded-xl p-3"
                 >
-                  <CloudUpload color={isDark ? "#62fae3" : "#059669"} size={16} />
+                  <CloudUpload
+                    color={isDark ? "#62fae3" : "#059669"}
+                    size={16}
+                  />
                   <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
                     Galería
                   </Text>
@@ -183,7 +186,10 @@ export default function FormEquipment({
                   onPress={pickFromCamera}
                   className="flex-1 flex-row border border-brandPrimary-500/20 justify-center items-center gap-2 bg-brandPrimary-600/10 rounded-xl p-3"
                 >
-                  <CameraPlus color={isDark ? "#a5b4fc" : "#3023cd"} size={16} />
+                  <CameraPlus
+                    color={isDark ? "#a5b4fc" : "#3023cd"}
+                    size={16}
+                  />
                   <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
                     Cámara
                   </Text>
@@ -245,7 +251,9 @@ export default function FormEquipment({
                   <View className="items-center gap-1">
                     <View className="w-14 h-14 rounded-2xl bg-ui-input-light dark:bg-ui-input-dark items-center justify-center">
                       <CameraPlus
-                        color={isDark ? ui.text.mutedDark : ui.placeholder.light}
+                        color={
+                          isDark ? ui.text.mutedDark : ui.placeholder.light
+                        }
                         size={26}
                       />
                     </View>
@@ -259,7 +267,10 @@ export default function FormEquipment({
                       onPress={pickFromGallery}
                       className="flex-row items-center gap-2 bg-brandSecondary-600/10 border border-brandSecondary-500/25 rounded-xl px-4 py-2.5 active:scale-95"
                     >
-                      <CloudUpload color={isDark ? "#62fae3" : "#059669"} size={15} />
+                      <CloudUpload
+                        color={isDark ? "#62fae3" : "#059669"}
+                        size={15}
+                      />
                       <Text className="text-brandSecondary-600 dark:text-brandSecondary-400 font-manrope-semi text-xs">
                         Galería
                       </Text>
@@ -269,7 +280,10 @@ export default function FormEquipment({
                       onPress={pickFromCamera}
                       className="flex-row items-center gap-2 bg-brandPrimary-600/10 border border-brandPrimary-500/25 rounded-xl px-4 py-2.5 active:scale-95"
                     >
-                      <CameraPlus color={isDark ? "#a5b4fc" : "#3023cd"} size={15} />
+                      <CameraPlus
+                        color={isDark ? "#a5b4fc" : "#3023cd"}
+                        size={15}
+                      />
                       <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-manrope-semi text-xs">
                         Cámara
                       </Text>
