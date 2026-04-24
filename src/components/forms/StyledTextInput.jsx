@@ -1,7 +1,11 @@
+import { forwardRef } from "react";
 import { View, TextInput } from "react-native";
 import { ui } from "../../theme/colors";
 
-export default function StyledTextInput({ icon, error, ...props }) {
+const StyledTextInput = forwardRef(function StyledTextInput(
+  { icon, error, ...props },
+  ref
+) {
   return (
     <View className="flex relative">
       {icon && (
@@ -10,6 +14,7 @@ export default function StyledTextInput({ icon, error, ...props }) {
         </View>
       )}
       <TextInput
+        ref={ref}
         placeholderTextColor={ui.placeholder.light}
         value={props.value}
         onChangeText={props.onChangeText}
@@ -21,4 +26,6 @@ export default function StyledTextInput({ icon, error, ...props }) {
       />
     </View>
   );
-}
+});
+
+export default StyledTextInput;

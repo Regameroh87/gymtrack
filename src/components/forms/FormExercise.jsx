@@ -1,5 +1,5 @@
 import { View, Text, TextInput, Pressable, FlatList } from "react-native";
-import { useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
@@ -38,13 +38,12 @@ import { ui } from "../../theme/colors";
 import { Trash } from "../../../assets/icons";
 import { Image } from "expo-image";
 
-//Debo Agregar la función que pueda recibir un ejercicio y editarlo
-export default function FormExercise({
+const FormExercise = forwardRef(function FormExercise({
   exercise,
   headerTitle,
   headerDescription,
   form,
-}) {
+}, ref) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
 
   const equipmentForm = useEquipmentForm({
@@ -80,10 +79,18 @@ export default function FormExercise({
 
   const scrollRef = useRef(null);
   const scrollOffset = useRef(0);
+  const nameInputRef = useRef(null);
   const youtubeCardRef = useRef(null);
   const uploadVideoCardRef = useRef(null);
   const imageCardRef = useRef(null);
   const instructionsRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focusFirstInput: () => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      setTimeout(() => nameInputRef.current?.focus(), 300);
+    },
+  }));
 
   const scrollToCard = (cardRef) => {
     if (!cardRef.current || !scrollRef.current) return;
@@ -197,6 +204,7 @@ export default function FormExercise({
               error={field.state.meta.errors?.[0]}
             >
               <StyledTextInput
+                ref={nameInputRef}
                 value={field.state.value}
                 onChangeText={field.handleChange}
                 placeholder="Ej: Press de Banca"
@@ -459,4 +467,6 @@ export default function FormExercise({
       </View>
     </KeyboardAwareScrollView>
   );
-}
+});
+
+export default FormExercise;

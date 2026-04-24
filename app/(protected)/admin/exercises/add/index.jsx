@@ -1,4 +1,5 @@
 import FormExercise from "../../../../../src/components/forms/FormExercise";
+import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { database } from "../../../../../src/database";
 import {
@@ -12,6 +13,7 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 export default function AddExerciseScreen() {
+  const formRef = useRef(null);
   const queryClient = useQueryClient();
   const addExerciseForm = useForm({
     defaultValues: {
@@ -70,6 +72,7 @@ export default function AddExerciseScreen() {
         });
 
         addExerciseForm.reset();
+        formRef.current?.focusFirstInput();
         /*  if (scrollRef.current) {
           scrollRef.current.scrollTo({ y: 0, animated: true });
         } */
@@ -88,6 +91,7 @@ export default function AddExerciseScreen() {
 
   return (
     <FormExercise
+      ref={formRef}
       form={addExerciseForm}
       headerTitle="Nuevo Ejercicio"
       headerDescription="Completá los datos para agregar un ejercicio al catálogo."
