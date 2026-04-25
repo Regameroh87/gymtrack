@@ -5,7 +5,6 @@ import {
   BottomSheetFlatList,
   BottomSheetBackdrop,
   BottomSheetTextInput,
-  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { ui } from "../theme/colors";
 import { useColorScheme } from "nativewind";
@@ -132,7 +131,7 @@ const CustomSelect = ({
           setIsOpen(false);
         }}
       >
-        <BottomSheetView className="px-6 pt-4 pb-2 z-10">
+        <View className="px-6 pt-4 pb-2 z-10">
           <Text className="text-lg font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark mb-4">
             {label
               ? `Seleccionar ${label.charAt(0) + label.slice(1).toLowerCase()}`
@@ -164,7 +163,7 @@ const CustomSelect = ({
               }}
             />
           )}
-        </BottomSheetView>
+        </View>
 
         <BottomSheetFlatList
           data={filteredOptions}
