@@ -8,6 +8,7 @@ import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 
 const LAST_SYNC_KEY = "last_sync_at";
+let isSyncing = false;
 
 /**
  * PULL: Descarga cambios de Supabase hacia SQLite de forma genérica
@@ -22,11 +23,10 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
   const { data, error } = await query;
 
   if (error) {
-    console.error(`Error bajando cambios de ${tableName}:`, error);
+    console.error(`❌ [PULL] Error descargando "${tableName}":`, error.message);
     return false;
   }
 
-  console.log("Descargando datos remotos");
   if (data && data.length > 0) {
     for (const remoteRow of data) {
       remoteRow.sync_status = "synced";
@@ -35,7 +35,9 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
         set: remoteRow,
       });
     }
-    console.log(`Tabla ${tableName} actualizada desde la nube.`);
+    console.log(
+      `⬇️  [PULL] "${tableName}": ${data.length} registro(s) descargado(s)`
+    );
   }
 
   // Reconciliar borrados remotos: detectar registros locales "synced" que ya
@@ -61,7 +63,9 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
         .delete(schemaTable)
         .where(eq(schemaTable.sync_status, "synced"));
     }
-    console.log(`Reconciliación de borrados completada para ${tableName}.`);
+    console.log(
+      `🗑️  [PULL] "${tableName}": reconciliación de borrados completada`
+    );
   }
 
   return true;
@@ -81,14 +85,16 @@ export async function pushEquipmentChanges() {
         eq(equipment.sync_status, "deleted")
       )
     );
-  console.log("Cargando filas de equipamientos a sincronizar...", localChanges);
   if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] equipment: ${localChanges.length} cambio(s) pendiente(s)`
+  );
 
   for (let row of localChanges) {
     // Si está marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
       console.log(
-        "Borrando las filas de equipamientos a borrar de supabase..."
+        `🗑️  [PUSH] Eliminando equipamiento "${row.name}" (id: ${row.id})`
       );
       const { error } = await supabase
         .from("equipment")
@@ -97,9 +103,12 @@ export async function pushEquipmentChanges() {
 
       if (!error) {
         await database.delete(equipment).where(eq(equipment.id, row.id));
-        console.log("Equipamiento eliminado correctamente.");
+        console.log(`✅ [PUSH] Equipamiento "${row.name}" eliminado`);
       } else {
-        console.error("Error al borrar equipamiento en Supabase:", error);
+        console.error(
+          `❌ [PUSH] Error eliminando equipamiento "${row.name}":`,
+          error.message
+        );
       }
       continue;
     }
@@ -109,20 +118,27 @@ export async function pushEquipmentChanges() {
     // 1. Subir Imagen a Cloudinary si es local
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
-        console.log("Subiendo imagen de equipo a cloudinary...");
+        console.log(
+          `⬆️  [PUSH] Subiendo imagen de "${row.name}" a Cloudinary...`
+        );
         const { public_id } = await uploadFileToCloudinary({
           fileUri: row.image_uri,
           uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
-          console.log("Imagen de equipo subida correctamente.");
+          console.log(
+            `✅ [PUSH] Imagen de "${row.name}" subida (${public_id})`
+          );
           await deleteMediaLocally(row.image_uri);
           row.image_uri = public_id;
           updatedLocal = true;
         }
       } catch (err) {
-        console.error("Error subiendo imagen de equipo:", err);
+        console.error(
+          `❌ [PUSH] Error subiendo imagen de "${row.name}":`,
+          err.message
+        );
       }
     }
 
@@ -146,9 +162,12 @@ export async function pushEquipmentChanges() {
         .update(equipment)
         .set({ sync_status: "synced" })
         .where(eq(equipment.id, row.id));
-      console.log("Equipamiento sincronizado correctamente.");
+      console.log(`✅ [PUSH] Equipamiento "${row.name}" sincronizado`);
     } else {
-      console.error("Error al subir equipo a Supabase:", error);
+      console.error(
+        `❌ [PUSH] Error subiendo equipamiento "${row.name}":`,
+        error.message
+      );
     }
   }
 }
@@ -168,24 +187,31 @@ export async function pushExercisesChanges() {
       )
     );
   if (localChanges.length === 0) return;
-  console.log("filas a subir EXERCISES_BASE:", localChanges);
+  console.log(
+    `⬆️  [PUSH] exercises_base: ${localChanges.length} cambio(s) pendiente(s)`
+  );
 
   for (let row of localChanges) {
     // Si está marcado para borrar, lo borramos de Supabase y luego localmente
     if (row.sync_status === "deleted") {
-      console.log("Borrando ejercicio en remoto:", row.id);
+      console.log(
+        `🗑️  [PUSH] Eliminando ejercicio "${row.name}" (id: ${row.id})`
+      );
       const { error } = await supabase
         .from("exercises_base")
         .delete()
         .eq("id", row.id);
 
       if (!error) {
-        console.log("Borrando ejercicio en local", row.id);
+        console.log(`✅ [PUSH] Ejercicio "${row.name}" eliminado`);
         await database
           .delete(exercises_base)
           .where(eq(exercises_base.id, row.id));
       } else {
-        console.error("Error al borrar ejercicio en remoto:", error);
+        console.error(
+          `❌ [PUSH] Error eliminando ejercicio "${row.name}":`,
+          error.message
+        );
         //Deberia guardar el error en un tabla de errores
       }
       continue;
@@ -194,13 +220,18 @@ export async function pushExercisesChanges() {
     // 1. Imagen
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
-        console.log("Subiendo imagen ejercicio a remoto...");
+        console.log(
+          `⬆️  [PUSH] Subiendo imagen de "${row.name}" a Cloudinary...`
+        );
         const { public_id } = await uploadFileToCloudinary({
           fileUri: row.image_uri,
           uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
+          console.log(
+            `✅ [PUSH] Imagen de "${row.name}" subida (${public_id})`
+          );
           await deleteMediaLocally(row.image_uri);
           row.image_uri = public_id; // Necesario para el push a Supabase después
           await database
@@ -209,20 +240,26 @@ export async function pushExercisesChanges() {
             .where(eq(exercises_base.id, row.id));
         }
       } catch (err) {
-        console.error("Error imagen ejercicio:", err);
+        console.error(
+          `❌ [PUSH] Error subiendo imagen de "${row.name}":`,
+          err.message
+        );
       }
     }
 
     // 2. Video
     if (row.video_uri && row.video_uri.startsWith("file://")) {
       try {
-        console.log("Subiendo video ejercicio a remoto...");
+        console.log(
+          `⬆️  [PUSH] Subiendo video de "${row.name}" a Cloudinary...`
+        );
         const { public_id } = await uploadFileToCloudinary({
           fileUri: row.video_uri,
           uploadPreset: "gymtrack_videos",
           typeFile: "video",
         });
         if (public_id) {
+          console.log(`✅ [PUSH] Video de "${row.name}" subido (${public_id})`);
           await deleteMediaLocally(row.video_uri);
           row.video_uri = public_id;
           await database
@@ -231,12 +268,17 @@ export async function pushExercisesChanges() {
             .where(eq(exercises_base.id, row.id));
         }
       } catch (err) {
-        console.error("Error video ejercicio:", err);
+        console.error(
+          `❌ [PUSH] Error subiendo video de "${row.name}":`,
+          err.message
+        );
       }
     }
 
     // 3. Enviar a Supabase
-    console.log("Subiendo ejercicio a remoto...", row.id);
+    console.log(
+      `⬆️  [PUSH] Subiendo ejercicio "${row.name}" (id: ${row.id})...`
+    );
     const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercises_base")
@@ -247,19 +289,23 @@ export async function pushExercisesChanges() {
         .update(exercises_base)
         .set({ sync_status: "synced" })
         .where(eq(exercises_base.id, row.id));
+      console.log(`✅ [PUSH] Ejercicio "${row.name}" sincronizado`);
     } else {
       // Marcamos como synced para no trabar la cola de sincronización,
       // aunque lo ideal es que el usuario lo corrija o lo borre.
       if (error.code === "23505") {
         console.warn(
-          `Conflicto de unicidad para "${row.name}". Saltando push y marcando como sincronizado.`
+          `⚠️  [PUSH] Conflicto de nombre duplicado en "${row.name}" — se marca como sincronizado para no bloquear la cola`
         );
         await database
           .update(exercises_base)
           .set({ sync_status: "synced" })
           .where(eq(exercises_base.id, row.id));
       } else {
-        console.error("Error al subir ejercicio a Supabase:", error);
+        console.error(
+          `❌ [PUSH] Error subiendo ejercicio "${row.name}":`,
+          error.message
+        );
       }
     }
   }
@@ -281,7 +327,9 @@ export async function pushExerciseEquipmentChanges() {
     );
 
   if (localChanges.length === 0) return;
-  console.log("Filas de exercises_equipments a sincronizar:", localChanges);
+  console.log(
+    `⬆️  [PUSH] exercise_equipment: ${localChanges.length} cambio(s) pendiente(s)`
+  );
 
   for (let row of localChanges) {
     //Si esta marcado para borrar, lo borramos de Supabase y luego localmente
@@ -292,12 +340,17 @@ export async function pushExerciseEquipmentChanges() {
         .eq("id", row.id);
 
       if (!error) {
-        console.log("Borrando database local de exercise_equipment");
+        console.log(
+          `✅ [PUSH] Relación exercise_equipment (id: ${row.id}) eliminada`
+        );
         await database
           .delete(exercise_equipment)
           .where(eq(exercise_equipment.id, row.id));
       } else {
-        console.error("Error al borrar fila en SQLite:", error);
+        console.error(
+          `❌ [PUSH] Error eliminando relación exercise_equipment (id: ${row.id}) en Supabase:`,
+          error.message
+        );
       }
       continue;
     }
@@ -312,8 +365,14 @@ export async function pushExerciseEquipmentChanges() {
         .update(exercise_equipment)
         .set({ sync_status: "synced" })
         .where(eq(exercise_equipment.id, row.id));
+      console.log(
+        `✅ [PUSH] Relación exercise_equipment (id: ${row.id}) sincronizada`
+      );
     } else {
-      console.error("Error al subir relación a Supabase:", error);
+      console.error(
+        `❌ [PUSH] Error subiendo relación exercise_equipment (id: ${row.id}):`,
+        error.message
+      );
     }
   }
 }
@@ -325,10 +384,18 @@ export async function pushExerciseEquipmentChanges() {
 export async function syncWithSupabase(
   tablesToSync = ["exercises_base", "equipment", "exercise_equipment"]
 ) {
+  if (isSyncing) {
+    console.log(
+      `⏳ [SYNC] Ya hay una sincronización en progreso, ignorando...`
+    );
+    return { success: false, skipped: true };
+  }
+  isSyncing = true;
   try {
     const syncTime = new Date().toISOString();
-    console.log(`Iniciando sincronización para: ${tablesToSync.join(", ")}...`);
-    console.log("Hora de sincronizacion:", syncTime);
+    console.log(
+      `🔄 [SYNC] Iniciando — tablas: [${tablesToSync.join(", ")}] — ${syncTime}`
+    );
 
     // --- DOWNLOAD PHASE ---
     for (const table of tablesToSync) {
@@ -361,11 +428,13 @@ export async function syncWithSupabase(
       await pushExerciseEquipmentChanges();
     }
 
-    console.log("Sincronización completada.");
+    console.log(`✅ [SYNC] Sincronización completada`);
     return { success: true };
   } catch (error) {
-    console.error("Error fatal en sincronización:", error);
+    console.error(`❌ [SYNC] Error fatal:`, error.message);
     return { success: false, error };
+  } finally {
+    isSyncing = false;
   }
 }
 

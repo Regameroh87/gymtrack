@@ -25,7 +25,7 @@ export function useSync(tables = ["exercises_base"]) {
     try {
       await syncWithSupabase({ tablesToSync: tables });
     } catch (error) {
-      console.error("Error en sync:", error);
+      console.error(`❌ [SYNC] Error inesperado en tablas [${tables.join(", ")}]:`, error.message);
     } finally {
       isSyncing.current = false;
     }
