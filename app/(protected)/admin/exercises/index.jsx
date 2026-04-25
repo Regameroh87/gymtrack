@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,8 @@ import {
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
-import { Plus, Barbell, Pencil, Trash } from "../../../../assets/icons";
+import ExerciseDetailSheet from "../../../../src/components/sheets/ExerciseDetailSheet";
+import { Plus, Barbell, ChevronRight } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
@@ -43,6 +44,8 @@ export default function ExercisesList() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
+  const [selectedExercise, setSelectedExercise] = useState(null);
+  const detailSheetRef = useRef(null);
 
   function useExercises() {
     return useQuery({
@@ -96,72 +99,58 @@ export default function ExercisesList() {
 
   const renderItem = ({ item }) => {
     return (
-      <View className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center">
-        {/* Thumbnail */}
-        <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center ">
-          {item.image_uri ? (
-            <Image
-              source={{
-                uri: getCloudinaryUrl(item.image_uri) ?? `${item.image_uri}`,
-              }}
-              width={"100%"}
-              height={"100%"}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View className=" bg-brandSecondary-200/10 items-center justify-center w-full h-full">
-              <Barbell size={24} color={brandSecondary[500]} />
-            </View>
-          )}
-        </View>
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setSelectedExercise(item);
+          detailSheetRef.current?.present();
+        }}
+        className="mx-5 mb-3 active:scale-[0.98]"
+      >
+        <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center">
+          {/* Thumbnail */}
+          <View className="w-14 h-14 rounded-xl overflow-hidden items-center justify-center">
+            {item.image_uri ? (
+              <Image
+                source={{
+                  uri: getCloudinaryUrl(item.image_uri) ?? `${item.image_uri}`,
+                }}
+                width={"100%"}
+                height={"100%"}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View className="bg-brandSecondary-200/10 items-center justify-center w-full h-full">
+                <Barbell size={24} color={brandSecondary[500]} />
+              </View>
+            )}
+          </View>
 
-        {/* Info */}
-        <View className="flex-1 ml-3">
-          <Text
-            className="text-[15px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-            numberOfLines={1}
-          >
-            {item.name}
-          </Text>
-          <View className="flex-row items-center mt-1">
-            <View className="px-1.5 py-0.5 rounded mr-2 bg-brandSecondary-100 dark:bg-brandSecondary-900">
-              <Text className="text-[9px] font-jakarta-semi uppercase text-brandSecondary-700 dark:text-brandSecondary-300">
-                {item.muscle_group || "General"}
+          {/* Info */}
+          <View className="flex-1 ml-3">
+            <Text
+              className="text-[15px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
+              numberOfLines={1}
+            >
+              {item.name}
+            </Text>
+            <View className="flex-row items-center mt-1">
+              <View className="px-1.5 py-0.5 rounded mr-2 bg-brandSecondary-100 dark:bg-brandSecondary-900">
+                <Text className="text-[9px] font-jakarta-semi uppercase text-brandSecondary-700 dark:text-brandSecondary-300">
+                  {item.muscle_group || "General"}
+                </Text>
+              </View>
+              <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+                {item.category || ""}
               </Text>
             </View>
-            <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
-              {item.equipment || "Peso libre"}
-            </Text>
           </View>
-        </View>
 
-        {/* Actions */}
-        <View className="flex-row items-center gap-2 ml-2">
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push(`/admin/exercises/edit/${item.id}`);
-            }}
-            className="p-3 bg-brandPrimary-100 dark:bg-brandPrimary-900/30 rounded-xl active:scale-95"
-          >
-            <Pencil
-              size={16}
-              className="text-brandPrimary-500"
-              color="#3b82f6"
-            />
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              handleDelete(item);
-            }}
-            className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl active:scale-95"
-          >
-            <Trash size={16} className="text-red-500" color="#ef4444" />
-          </Pressable>
+          {/* Chevron */}
+          <ChevronRight size={16} color={ui.text.muted} />
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -238,6 +227,13 @@ export default function ExercisesList() {
           </LinearGradient>
         </Pressable>
       </View>
+
+      <ExerciseDetailSheet
+        sheetRef={detailSheetRef}
+        exercise={selectedExercise}
+        onEdit={(item) => router.push(`/admin/exercises/edit/${item.id}`)}
+        onDelete={handleDelete}
+      />
     </Screen>
   );
 }
