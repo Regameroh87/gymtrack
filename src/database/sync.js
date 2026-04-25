@@ -442,15 +442,13 @@ export async function syncWithSupabase(
  * Listeners y Triggers
  */
 export function startSyncListener() {
-  let isFirstEvent = true;
+  let previouslyConnected = null;
   NetInfo.addEventListener((state) => {
-    if (isFirstEvent) {
-      isFirstEvent = false;
-      return;
-    }
-    if (state.isConnected) {
+    const isConnected = !!(state.isConnected && state.isInternetReachable);
+    if (previouslyConnected === false && isConnected) {
       syncWithSupabase();
     }
+    previouslyConnected = isConnected;
   });
 }
 
