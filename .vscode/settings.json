@@ -19,5 +19,5 @@
   "deno.enablePaths": ["supabase/functions"],
   "deno.lint": true,
   "deno.unstable": [],
-  "claudeCode.useTerminal": true
+  "claudeCode.useTerminal": false
 }
