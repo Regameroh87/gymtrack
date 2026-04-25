@@ -108,8 +108,6 @@ export default function ExercisesList() {
               height={"100%"}
               contentFit="cover"
               transition={200}
-              onLoad={(e) => console.log("Imagen cargada:", e.source.uri)}
-              onError={(e) => console.log("Error cargando imagen:", e.error)}
             />
           ) : (
             <View className=" bg-brandSecondary-200/10 items-center justify-center w-full h-full">
