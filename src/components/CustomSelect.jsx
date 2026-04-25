@@ -5,6 +5,7 @@ import {
   BottomSheetFlatList,
   BottomSheetBackdrop,
   BottomSheetTextInput,
+  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { ui } from "../theme/colors";
 import { useColorScheme } from "nativewind";
@@ -24,10 +25,15 @@ const CustomSelect = ({
   const bottomSheetModalRef = useRef(null);
   const { colorScheme } = useColorScheme();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const handlePresentModalPress = useCallback(() => {
     Keyboard.dismiss();
     bottomSheetModalRef.current?.present();
+  }, []);
+
+  const handleSheetChange = useCallback((index) => {
+    setIsOpen(index >= 0);
   }, []);
 
   const renderBackdrop = useCallback(
@@ -72,13 +78,10 @@ const CustomSelect = ({
             : (selectedOption?.label ?? placeholder)
         }
         accessibilityHint="Abre una lista de opciones"
-        accessibilityState={{ expanded: false }}
+        accessibilityState={{ expanded: isOpen }}
         className={`bg-ui-input-light dark:bg-ui-input-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97] border ${
           error ? "border-red-500/50" : "border-ui-input-border"
         }`}
-        style={{
-          borderWidth: 1,
-        }}
       >
         <Text
           className={`font-manrope ${
@@ -123,11 +126,13 @@ const CustomSelect = ({
           height: 4,
           borderRadius: 2,
         }}
+        onChange={handleSheetChange}
         onDismiss={() => {
           setSearchQuery("");
+          setIsOpen(false);
         }}
       >
-        <View className="px-6 pt-4 pb-2 z-10">
+        <BottomSheetView className="px-6 pt-4 pb-2 z-10">
           <Text className="text-lg font-jakarta tracking-editorial text-ui-text-main dark:text-ui-text-mainDark mb-4">
             {label
               ? `Seleccionar ${label.charAt(0) + label.slice(1).toLowerCase()}`
@@ -150,7 +155,7 @@ const CustomSelect = ({
                 color: colorScheme === "dark" ? ui.text.mainDark : ui.text.main,
                 padding: 14,
                 borderRadius: 12,
-                fontFamily: "Manrope_500Medium",
+                fontFamily: "Manrope_400Regular",
                 borderWidth: 1,
                 borderColor:
                   colorScheme === "dark"
@@ -159,7 +164,7 @@ const CustomSelect = ({
               }}
             />
           )}
-        </View>
+        </BottomSheetView>
 
         <BottomSheetFlatList
           data={filteredOptions}
@@ -210,9 +215,12 @@ const CustomSelect = ({
                   onChange(option.value);
                   bottomSheetModalRef.current?.dismiss();
                 }}
-                accessibilityRole="option"
+                accessibilityRole="radio"
                 accessibilityLabel={option.label}
-                accessibilityState={{ selected: isSelected }}
+                accessibilityState={{
+                  checked: isSelected,
+                  selected: isSelected,
+                }}
                 className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${isSelected ? "border-brandPrimary-500/20" : "border-transparent"}`}
                 style={{
                   backgroundColor: isSelected
