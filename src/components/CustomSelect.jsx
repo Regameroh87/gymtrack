@@ -65,6 +65,14 @@ const CustomSelect = ({
       {/* Trigger — surface_container_high bg, Ghost Border */}
       <Pressable
         onPress={handlePresentModalPress}
+        accessibilityRole="combobox"
+        accessibilityLabel={
+          label
+            ? `${label}: ${selectedOption?.label ?? placeholder}`
+            : (selectedOption?.label ?? placeholder)
+        }
+        accessibilityHint="Abre una lista de opciones"
+        accessibilityState={{ expanded: false }}
         className={`bg-ui-input-light dark:bg-ui-input-dark rounded-xl p-4 flex-row justify-between items-center active:scale-[0.97] border ${
           error ? "border-red-500/50" : "border-ui-input-border"
         }`}
@@ -183,6 +191,8 @@ const CustomSelect = ({
                       onActionPress(searchQuery);
                     }, 400);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Crear ${actionLabel}${searchQuery ? `: ${searchQuery}` : ""}`}
                   className="px-6 py-4 border border-brandPrimary-500/30 bg-brandPrimary-600/10 dark:bg-brandPrimary-600/20 rounded-xl flex-row justify-center items-center active:scale-[0.97] w-full"
                 >
                   <Text className="text-brandPrimary-600 dark:text-brandPrimary-400 font-jakarta-bold">
@@ -200,6 +210,9 @@ const CustomSelect = ({
                   onChange(option.value);
                   bottomSheetModalRef.current?.dismiss();
                 }}
+                accessibilityRole="option"
+                accessibilityLabel={option.label}
+                accessibilityState={{ selected: isSelected }}
                 className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${isSelected ? "border-brandPrimary-500/20" : "border-transparent"}`}
                 style={{
                   backgroundColor: isSelected
