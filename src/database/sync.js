@@ -1,7 +1,13 @@
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { database } from "./index";
-import { exercises_base, equipment, exercise_equipment } from "./schemas";
+import {
+  exercises_base,
+  equipment,
+  exercise_equipment,
+  routines,
+  routine_exercises,
+} from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or, notInArray, and } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
@@ -378,6 +384,117 @@ export async function pushExerciseEquipmentChanges() {
 }
 
 /**
+ * PUSH: Sube cambios locales de Rutinas
+ */
+export async function pushRoutinesChanges() {
+  const localChanges = await database
+    .select()
+    .from(routines)
+    .where(
+      or(
+        eq(routines.sync_status, "pending"),
+        eq(routines.sync_status, "dirty"),
+        eq(routines.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(`⬆️  [PUSH] routines: ${localChanges.length} cambio(s) pendiente(s)`);
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase.from("routines").delete().eq("id", row.id);
+      if (!error) {
+        await database.delete(routines).where(eq(routines.id, row.id));
+        console.log(`✅ [PUSH] Rutina "${row.name}" eliminada`);
+      } else {
+        console.error(`❌ [PUSH] Error eliminando rutina "${row.name}":`, error.message);
+      }
+      continue;
+    }
+
+    // Subir imagen de portada a Cloudinary si es local
+    if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.cover_image_uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.cover_image_uri);
+          row.cover_image_uri = public_id;
+          await database
+            .update(routines)
+            .set({ cover_image_uri: public_id })
+            .where(eq(routines.id, row.id));
+        }
+      } catch (err) {
+        console.error(`❌ [PUSH] Error subiendo imagen de rutina "${row.name}":`, err.message);
+      }
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase.from("routines").upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database.update(routines).set({ sync_status: "synced" }).where(eq(routines.id, row.id));
+      console.log(`✅ [PUSH] Rutina "${row.name}" sincronizada`);
+    } else {
+      console.error(`❌ [PUSH] Error subiendo rutina "${row.name}":`, error.message);
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Ejercicios de Rutina
+ */
+export async function pushRoutineExercisesChanges() {
+  const localChanges = await database
+    .select()
+    .from(routine_exercises)
+    .where(
+      or(
+        eq(routine_exercises.sync_status, "pending"),
+        eq(routine_exercises.sync_status, "dirty"),
+        eq(routine_exercises.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(`⬆️  [PUSH] routine_exercises: ${localChanges.length} cambio(s) pendiente(s)`);
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("routine_exercises")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(routine_exercises)
+          .where(eq(routine_exercises.id, row.id));
+        console.log(`✅ [PUSH] routine_exercise (id: ${row.id}) eliminado`);
+      } else {
+        console.error(`❌ [PUSH] Error eliminando routine_exercise (id: ${row.id}):`, error.message);
+      }
+      continue;
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("routine_exercises")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(routine_exercises)
+        .set({ sync_status: "synced" })
+        .where(eq(routine_exercises.id, row.id));
+      console.log(`✅ [PUSH] routine_exercise (id: ${row.id}) sincronizado`);
+    } else {
+      console.error(`❌ [PUSH] Error subiendo routine_exercise (id: ${row.id}):`, error.message);
+    }
+  }
+}
+
+/**
  * Función Principal de Sincronización
  * Permite filtrar qué tablas sincronizar. Por defecto sincroniza todas.
  */
@@ -406,6 +523,8 @@ export async function syncWithSupabase(
       if (table === "exercises_base") schemaTable = exercises_base;
       else if (table === "equipment") schemaTable = equipment;
       else if (table === "exercise_equipment") schemaTable = exercise_equipment;
+      else if (table === "routines") schemaTable = routines;
+      else if (table === "routine_exercises") schemaTable = routine_exercises;
 
       if (schemaTable) {
         const success = await pullTableChanges(table, schemaTable, lastSync);
@@ -426,6 +545,12 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("exercise_equipment")) {
       await pushExerciseEquipmentChanges();
+    }
+    if (tablesToSync.includes("routines")) {
+      await pushRoutinesChanges();
+    }
+    if (tablesToSync.includes("routine_exercises")) {
+      await pushRoutineExercisesChanges();
     }
 
     console.log(`✅ [SYNC] Sincronización completada`);
