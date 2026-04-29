@@ -89,9 +89,7 @@ export default function FormRoutine({ form, routine }) {
   });
 
   return (
-    <KeyboardAwareScrollView
-      className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-    >
+    <KeyboardAwareScrollView className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       {/* ── Header ── */}
       <View className="px-4 pt-6 pb-2">
         <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
@@ -113,7 +111,10 @@ export default function FormRoutine({ form, routine }) {
             validators={{
               onChange: ({ value }) => {
                 if (!value) return undefined;
-                const r = z.string().min(3, "Mínimo 3 caracteres").safeParse(value);
+                const r = z
+                  .string()
+                  .min(3, "Mínimo 3 caracteres")
+                  .safeParse(value);
                 return r.success ? undefined : r.error.errors[0].message;
               },
               onSubmit: ({ value }) => {
