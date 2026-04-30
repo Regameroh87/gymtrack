@@ -24,7 +24,8 @@ export default function AdminLayout() {
         name="index"
         options={{
           title: "Admin",
-          headerShown: false, // Usamos AdminHeader custom en el index
+          headerShown: false,
+          unmountOnBlur: true,
         }}
       />
       <Stack.Screen
@@ -77,7 +78,10 @@ export default function AdminLayout() {
       />
       {/* Placeholders */}
       <Stack.Screen name="billing/index" options={{ title: "Contabilidad" }} />
-      <Stack.Screen name="settings/index" options={{ title: "Configuración" }} />
+      <Stack.Screen
+        name="settings/index"
+        options={{ title: "Configuración" }}
+      />
       <Stack.Screen name="reports/index" options={{ title: "Reportes" }} />
     </Stack>
   );
