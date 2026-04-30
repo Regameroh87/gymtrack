@@ -104,7 +104,7 @@ export default function ProtectedLayout() {
           options={{
             title: "Admin",
             headerShown: false,
-            unmountOnBlur: true,
+
             tabBarIcon: ({ color }) => (
               <ShieldHalf color={color} width={24} height={24} />
             ),
