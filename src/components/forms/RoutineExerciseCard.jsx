@@ -2,7 +2,13 @@ import { useState } from "react";
 import { View, Text, Pressable, TextInput } from "react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { Barbell, Trash, ChevronRight } from "../../../assets/icons";
+import { ScaleDecorator } from "react-native-draggable-flatlist";
+import {
+  Barbell,
+  Trash,
+  ChevronRight,
+  GripVertical,
+} from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import { useColorScheme } from "nativewind";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
@@ -53,7 +59,13 @@ function getSummary(ex) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function RoutineExerciseCard({ exercise, onChange, onDelete }) {
+export default function RoutineExerciseCard({
+  exercise,
+  onChange,
+  onDelete,
+  drag,
+  isActive,
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -62,8 +74,12 @@ export default function RoutineExerciseCard({ exercise, onChange, onDelete }) {
   const imageUri = getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri;
   const set = (field, value) => onChange(field, value);
 
-  return (
-    <View className="mb-2.5 border border-ui-input-border rounded-xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark">
+  const card = (
+    <View
+      className={`mb-2.5 border border-ui-input-border rounded-xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark ${
+        isActive ? "shadow-lg" : ""
+      }`}
+    >
       {/* ── Header (always visible) ── */}
       <Pressable
         onPress={() => {
@@ -72,6 +88,20 @@ export default function RoutineExerciseCard({ exercise, onChange, onDelete }) {
         }}
         className="flex-row items-center p-3 active:opacity-70"
       >
+        {drag && (
+          <Pressable
+            onLongPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              drag();
+            }}
+            disabled={isActive}
+            hitSlop={8}
+            className="pr-2 -ml-1 active:opacity-50"
+          >
+            <GripVertical size={16} color={mutedColor} />
+          </Pressable>
+        )}
+
         {imageUri ? (
           <Image
             source={{ uri: imageUri }}
@@ -266,4 +296,6 @@ export default function RoutineExerciseCard({ exercise, onChange, onDelete }) {
       )}
     </View>
   );
+
+  return drag ? <ScaleDecorator>{card}</ScaleDecorator> : card;
 }

@@ -691,6 +691,21 @@ export const CloudUpload = ({ size = 24, className, ...props }) => (
   </Svg>
 );
 
+export const GripVertical = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={`icon icon-tabler icons-tabler-filled icon-tabler-grip-vertical ${className}`}
+    {...props}
+  >
+    <Path fill="none" d="M0 0h24v24H0z" />
+    <Path d="M9 18a2 2 0 1 1-.001 4.001A2 2 0 0 1 9 18M15 18a2 2 0 1 1-.001 4.001A2 2 0 0 1 15 18M9 10a2 2 0 1 1-.001 4.001A2 2 0 0 1 9 10M15 10a2 2 0 1 1-.001 4.001A2 2 0 0 1 15 10M9 2a2 2 0 1 1-.001 4.001A2 2 0 0 1 9 2M15 2a2 2 0 1 1-.001 4.001A2 2 0 0 1 15 2" />
+  </Svg>
+);
+
 export const Logout = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
