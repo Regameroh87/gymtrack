@@ -5,12 +5,9 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import {
-  NestableScrollContainer,
-  NestableDraggableFlatList,
-} from "react-native-draggable-flatlist";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
@@ -103,7 +100,7 @@ export default function FormRoutine({ form, routine }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
-      <NestableScrollContainer
+      <ScrollView
         className="flex-1"
         keyboardShouldPersistTaps="handled"
       >
@@ -334,32 +331,37 @@ export default function FormRoutine({ form, routine }) {
                   }}
                 />
 
-                <NestableDraggableFlatList
-                  data={field.state.value}
-                  keyExtractor={(item) => item.id}
-                  onDragEnd={({ data }) => field.handleChange(data)}
-                  activationDistance={8}
-                  renderItem={({ item, drag, isActive, getIndex }) => (
-                    <RoutineExerciseCard
-                      exercise={item}
-                      drag={drag}
-                      isActive={isActive}
-                      onChange={(fieldName, value) => {
-                        const idx = getIndex();
-                        const newList = [...field.state.value];
-                        newList[idx] = { ...newList[idx], [fieldName]: value };
-                        field.handleChange(newList);
-                      }}
-                      onDelete={() => {
-                        const idx = getIndex();
-                        field.handleChange(
-                          field.state.value.filter((_, i) => i !== idx)
-                        );
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      }}
-                    />
-                  )}
-                />
+                {field.state.value.map((item, idx) => (
+                  <RoutineExerciseCard
+                    key={item.id}
+                    exercise={item}
+                    canMoveUp={idx > 0}
+                    canMoveDown={idx < field.state.value.length - 1}
+                    onMoveUp={() => {
+                      const list = [...field.state.value];
+                      [list[idx - 1], list[idx]] = [list[idx], list[idx - 1]];
+                      field.handleChange(list);
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }}
+                    onMoveDown={() => {
+                      const list = [...field.state.value];
+                      [list[idx + 1], list[idx]] = [list[idx], list[idx + 1]];
+                      field.handleChange(list);
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }}
+                    onChange={(fieldName, value) => {
+                      const list = [...field.state.value];
+                      list[idx] = { ...list[idx], [fieldName]: value };
+                      field.handleChange(list);
+                    }}
+                    onDelete={() => {
+                      field.handleChange(
+                        field.state.value.filter((_, i) => i !== idx)
+                      );
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }}
+                  />
+                ))}
 
                 {field.state.value.length === 0 && (
                   <View className="py-10 items-center justify-center rounded-xl border border-dashed border-ui-input-border">
@@ -380,7 +382,7 @@ export default function FormRoutine({ form, routine }) {
             isLoading={form.state.isSubmitting}
           />
         </View>
-      </NestableScrollContainer>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

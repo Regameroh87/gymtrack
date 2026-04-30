@@ -2,13 +2,7 @@ import { useState } from "react";
 import { View, Text, Pressable, TextInput } from "react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
-import { ScaleDecorator } from "react-native-draggable-flatlist";
-import {
-  Barbell,
-  Trash,
-  ChevronRight,
-  GripVertical,
-} from "../../../assets/icons";
+import { Barbell, Trash, ChevronRight } from "../../../assets/icons";
 import { brandPrimary, ui } from "../../theme/colors";
 import { useColorScheme } from "nativewind";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
@@ -63,8 +57,10 @@ export default function RoutineExerciseCard({
   exercise,
   onChange,
   onDelete,
-  drag,
-  isActive,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { colorScheme } = useColorScheme();
@@ -74,12 +70,10 @@ export default function RoutineExerciseCard({
   const imageUri = getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri;
   const set = (field, value) => onChange(field, value);
 
-  const card = (
-    <View
-      className={`mb-2.5 border border-ui-input-border rounded-xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark ${
-        isActive ? "shadow-lg" : ""
-      }`}
-    >
+  const disabledColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
+
+  return (
+    <View className="mb-2.5 border border-ui-input-border rounded-xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark">
       {/* ── Header (always visible) ── */}
       <Pressable
         onPress={() => {
@@ -88,19 +82,32 @@ export default function RoutineExerciseCard({
         }}
         className="flex-row items-center p-3 active:opacity-70"
       >
-        {drag && (
+        <View className="pr-2 -ml-1 justify-center">
           <Pressable
-            onLongPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              drag();
-            }}
-            disabled={isActive}
-            hitSlop={8}
-            className="pr-2 -ml-1 active:opacity-50"
+            onPress={onMoveUp}
+            disabled={!canMoveUp}
+            hitSlop={6}
+            className="active:opacity-50"
           >
-            <GripVertical size={16} color={mutedColor} />
+            <ChevronRight
+              size={14}
+              color={canMoveUp ? mutedColor : disabledColor}
+              style={{ transform: [{ rotate: "-90deg" }] }}
+            />
           </Pressable>
-        )}
+          <Pressable
+            onPress={onMoveDown}
+            disabled={!canMoveDown}
+            hitSlop={6}
+            className="active:opacity-50"
+          >
+            <ChevronRight
+              size={14}
+              color={canMoveDown ? mutedColor : disabledColor}
+              style={{ transform: [{ rotate: "90deg" }] }}
+            />
+          </Pressable>
+        </View>
 
         {imageUri ? (
           <Image
@@ -296,6 +303,4 @@ export default function RoutineExerciseCard({
       )}
     </View>
   );
-
-  return drag ? <ScaleDecorator>{card}</ScaleDecorator> : card;
 }
