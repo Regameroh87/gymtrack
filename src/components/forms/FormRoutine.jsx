@@ -1,3 +1,4 @@
+// React Native
 import {
   View,
   Text,
@@ -7,27 +8,39 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+
+// Librerías externas
 import { useQuery } from "@tanstack/react-query";
+import { useColorScheme } from "nativewind";
 import { z } from "zod";
-import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
+import * as Haptics from "expo-haptics";
+
+// Base de datos
 import { database } from "../../database";
 import { exercises_base } from "../../database/schemas";
+
+// Hooks
 import useAsyncStorage from "../../hooks/useAsyncStorage";
+
+// Constantes
 import {
   ROUTINE_OBJECTIVES,
   ROUTINE_LEVELS,
   ROUTINE_STATUSES,
 } from "../../constants/routineOptions";
+
+// Componentes
 import CustomSelect from "../CustomSelect";
 import FormField from "./FormField";
-import StyledTextInput from "./StyledTextInput";
 import ImagePickerCard from "./ImagePickerCard";
-import SubmitButton from "./SubmitButton";
 import RoutineExerciseCard from "./RoutineExerciseCard";
+import StyledTextInput from "./StyledTextInput";
+import SubmitButton from "./SubmitButton";
+
+// Tema y assets
 import { ui } from "../../theme/colors";
 import { Plus } from "../../../assets/icons";
-import { useColorScheme } from "nativewind";
 
 // ── Segmented control used for status ────────────────────────────────────────
 function SegmentedControl({ options, value, onChange }) {

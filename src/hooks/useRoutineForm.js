@@ -1,18 +1,27 @@
+// Librerías externas
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+
+// Base de datos
 import { database } from "../database";
 import { routines, routine_exercises } from "../database/schemas";
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
-const parseIntOrNull = (v) =>
-  v !== "" && v != null ? parseInt(v, 10) || null : null;
+const parseIntOrNull = (v) => {
+  if (v === "" || v == null) return null;
+  const n = parseInt(v, 10);
+  return isNaN(n) ? null : n;
+};
 
-const parseFloatOrNull = (v) =>
-  v !== "" && v != null ? parseFloat(v) || null : null;
+const parseFloatOrNull = (v) => {
+  if (v === "" || v == null) return null;
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+};
 
 export const useRoutineForm = ({ onSuccess, initialValues = {} } = {}) => {
   const queryClient = useQueryClient();
@@ -33,7 +42,9 @@ export const useRoutineForm = ({ onSuccess, initialValues = {} } = {}) => {
         const routineId = Crypto.randomUUID();
         const now = new Date().toISOString();
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const userId = session?.user?.id ?? null;
 
         await database.insert(routines).values({
