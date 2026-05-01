@@ -100,10 +100,7 @@ export default function FormRoutine({ form, routine }) {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
-      <ScrollView
-        className="flex-1"
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* ── Header ── */}
         <View className="px-4 pt-6 pb-2">
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
