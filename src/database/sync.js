@@ -398,16 +398,24 @@ export async function pushRoutinesChanges() {
       )
     );
   if (localChanges.length === 0) return;
-  console.log(`⬆️  [PUSH] routines: ${localChanges.length} cambio(s) pendiente(s)`);
+  console.log(
+    `⬆️  [PUSH] routines: ${localChanges.length} cambio(s) pendiente(s)`
+  );
 
   for (let row of localChanges) {
     if (row.sync_status === "deleted") {
-      const { error } = await supabase.from("routines").delete().eq("id", row.id);
+      const { error } = await supabase
+        .from("routines")
+        .delete()
+        .eq("id", row.id);
       if (!error) {
         await database.delete(routines).where(eq(routines.id, row.id));
         console.log(`✅ [PUSH] Rutina "${row.name}" eliminada`);
       } else {
-        console.error(`❌ [PUSH] Error eliminando rutina "${row.name}":`, error.message);
+        console.error(
+          `❌ [PUSH] Error eliminando rutina "${row.name}":`,
+          error.message
+        );
       }
       continue;
     }
@@ -429,17 +437,28 @@ export async function pushRoutinesChanges() {
             .where(eq(routines.id, row.id));
         }
       } catch (err) {
-        console.error(`❌ [PUSH] Error subiendo imagen de rutina "${row.name}":`, err.message);
+        console.error(
+          `❌ [PUSH] Error subiendo imagen de rutina "${row.name}":`,
+          err.message
+        );
       }
     }
 
     const { sync_status, ...restOfRow } = row;
-    const { error } = await supabase.from("routines").upsert(restOfRow, { onConflict: "id" });
+    const { error } = await supabase
+      .from("routines")
+      .upsert(restOfRow, { onConflict: "id" });
     if (!error) {
-      await database.update(routines).set({ sync_status: "synced" }).where(eq(routines.id, row.id));
+      await database
+        .update(routines)
+        .set({ sync_status: "synced" })
+        .where(eq(routines.id, row.id));
       console.log(`✅ [PUSH] Rutina "${row.name}" sincronizada`);
     } else {
-      console.error(`❌ [PUSH] Error subiendo rutina "${row.name}":`, error.message);
+      console.error(
+        `❌ [PUSH] Error subiendo rutina "${row.name}":`,
+        error.message
+      );
     }
   }
 }
@@ -459,7 +478,9 @@ export async function pushRoutineExercisesChanges() {
       )
     );
   if (localChanges.length === 0) return;
-  console.log(`⬆️  [PUSH] routine_exercises: ${localChanges.length} cambio(s) pendiente(s)`);
+  console.log(
+    `⬆️  [PUSH] routine_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+  );
 
   for (let row of localChanges) {
     if (row.sync_status === "deleted") {
@@ -473,7 +494,10 @@ export async function pushRoutineExercisesChanges() {
           .where(eq(routine_exercises.id, row.id));
         console.log(`✅ [PUSH] routine_exercise (id: ${row.id}) eliminado`);
       } else {
-        console.error(`❌ [PUSH] Error eliminando routine_exercise (id: ${row.id}):`, error.message);
+        console.error(
+          `❌ [PUSH] Error eliminando routine_exercise (id: ${row.id}):`,
+          error.message
+        );
       }
       continue;
     }
@@ -489,7 +513,10 @@ export async function pushRoutineExercisesChanges() {
         .where(eq(routine_exercises.id, row.id));
       console.log(`✅ [PUSH] routine_exercise (id: ${row.id}) sincronizado`);
     } else {
-      console.error(`❌ [PUSH] Error subiendo routine_exercise (id: ${row.id}):`, error.message);
+      console.error(
+        `❌ [PUSH] Error subiendo routine_exercise (id: ${row.id}):`,
+        error.message
+      );
     }
   }
 }
@@ -499,7 +526,13 @@ export async function pushRoutineExercisesChanges() {
  * Permite filtrar qué tablas sincronizar. Por defecto sincroniza todas.
  */
 export async function syncWithSupabase(
-  tablesToSync = ["exercises_base", "equipment", "exercise_equipment"]
+  tablesToSync = [
+    "exercises_base",
+    "equipment",
+    "exercise_equipment",
+    "routines",
+    "routine_exercises",
+  ]
 ) {
   if (isSyncing) {
     console.log(
