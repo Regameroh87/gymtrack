@@ -40,7 +40,6 @@ export const useRoutineForm = ({ onSuccess, initialValues = {} } = {}) => {
     onSubmit: async ({ value }) => {
       try {
         const routineId = Crypto.randomUUID();
-        const now = new Date().toISOString();
 
         const {
           data: { session },
@@ -57,9 +56,6 @@ export const useRoutineForm = ({ onSuccess, initialValues = {} } = {}) => {
           cover_image_uri: value.cover_image_uri || null,
           status: value.status,
           created_by: userId,
-          created_at: now,
-          updated_at: now,
-          sync_status: "pending",
         });
 
         for (const [idx, ex] of value.exercises.entries()) {
@@ -80,9 +76,6 @@ export const useRoutineForm = ({ onSuccess, initialValues = {} } = {}) => {
             rpe: parseFloatOrNull(ex.rpe),
             tempo: ex.tempo?.trim() || null,
             notes: ex.notes?.trim() || null,
-            created_at: now,
-            updated_at: now,
-            sync_status: "pending",
           });
         }
 
