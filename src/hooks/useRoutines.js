@@ -1,6 +1,6 @@
 // Librerías externas
 import { useQuery } from "@tanstack/react-query";
-import { desc, count, eq } from "drizzle-orm";
+import { desc, count, eq, ne } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../database";
@@ -28,6 +28,7 @@ export const useRoutines = () =>
           routine_exercises,
           eq(routines.id, routine_exercises.routine_id)
         )
+        .where(ne(routines.sync_status, "deleted"))
         .groupBy(routines.id)
         .orderBy(desc(routines.created_at)),
   });

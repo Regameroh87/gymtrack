@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 
 // Librerías externas
@@ -30,9 +31,12 @@ import { ROUTINE_LEVELS } from "../../../../src/constants/routineOptions";
 // Utils
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
+// Hooks
+import { useDeleteRoutine } from "../../../../src/hooks/useDeleteRoutine";
+
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
-import { Clock, Barbell, ChartBar, Pencil } from "../../../../assets/icons";
+import { Clock, Barbell, ChartBar, Pencil, Trash } from "../../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
   hipertrofia:       { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1", label: "Hipertrofia" },
@@ -75,6 +79,23 @@ export default function RoutineDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  const { mutate: deleteRoutine, isPending: isDeleting } = useDeleteRoutine();
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Eliminar rutina",
+      `¿Seguro que querés eliminar "${data?.name}"? Esta acción no se puede deshacer.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () => deleteRoutine(id, { onSuccess: () => router.back() }),
+        },
+      ]
+    );
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["routine", id],
@@ -387,8 +408,8 @@ export default function RoutineDetail() {
         )}
       </View>
 
-      {/* ── Acción: editar ── */}
-      <View className="px-5 mt-8">
+      {/* ── Acciones ── */}
+      <View className="px-5 mt-8" style={{ gap: 12 }}>
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -406,6 +427,28 @@ export default function RoutineDetail() {
             <Pencil size={17} color="white" />
             <Text className="text-white font-jakarta-semi">Editar rutina</Text>
           </LinearGradient>
+        </Pressable>
+
+        <Pressable
+          onPress={handleDelete}
+          disabled={isDeleting}
+          className="active:scale-[0.97]"
+          style={{
+            borderWidth: 1,
+            borderColor: "#ef444466",
+            borderRadius: 16,
+            paddingVertical: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            opacity: isDeleting ? 0.5 : 1,
+          }}
+        >
+          <Trash size={17} color="#ef4444" />
+          <Text style={{ color: "#ef4444", fontFamily: "PlusJakartaSans_600SemiBold", fontSize: 15 }}>
+            {isDeleting ? "Eliminando…" : "Eliminar rutina"}
+          </Text>
         </Pressable>
       </View>
     </ScrollView>
