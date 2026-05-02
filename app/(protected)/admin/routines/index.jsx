@@ -1,16 +1,38 @@
-import React from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+// React Native
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+
+// Librerías externas
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+
+// Hooks
+import { useRoutines } from "../../../../src/hooks/useRoutines";
+
+// Componentes
 import Screen from "../../../../src/components/Screen";
+import RoutineCard from "../../../../src/components/cards/RoutineCard";
+
+// Tema / assets
+import { brandPrimary } from "../../../../src/theme/colors";
 import { ClipboardList, Plus } from "../../../../assets/icons";
-import { brandPrimary, ui } from "../../../../src/theme/colors";
 
 export default function RoutinesList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { data: routines = [], isLoading } = useRoutines();
+
+  const handleNew = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push("/admin/routines/builder");
+  };
 
   return (
     <Screen>
@@ -22,61 +44,75 @@ export default function RoutinesList() {
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View className="px-6 mb-8">
-          <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
-            Gestión de Entrenamientos
-          </Text>
-          <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-            Rutinas
-          </Text>
-        </View>
-
-        {/* Empty State */}
-        <View className="mx-5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
-          <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
-            <ClipboardList size={32} color={brandPrimary[600]} />
+        <View className="px-6 mb-8 flex-row items-end justify-between">
+          <View>
+            <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
+              Gestión de Entrenamientos
+            </Text>
+            <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
+              Rutinas
+            </Text>
           </View>
 
-          <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
-            Construye planes de entrenamiento
-          </Text>
-          <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
-            Crea rutinas personalizadas combinando ejercicios del catálogo con
-            series y repeticiones.
-          </Text>
-
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              router.push("/admin/routines/builder");
-            }}
-            className="w-full active:scale-[0.98]"
-          >
+          <Pressable onPress={handleNew} className="active:scale-[0.95]">
             <LinearGradient
               colors={[brandPrimary[600], brandPrimary[500]]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              className="py-3.5 rounded-xl items-center flex-row justify-center"
+              className="w-10 h-10 rounded-xl items-center justify-center"
             >
               <Plus size={18} color="white" />
-              <Text className="text-white font-jakarta-semi text-sm ml-2">
-                Nueva Rutina
-              </Text>
             </LinearGradient>
           </Pressable>
         </View>
 
-        {/* Recently Created */}
-        <View className="mt-10 px-6">
-          <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mb-4 ml-1">
-            Recientemente creadas
-          </Text>
-          <View className="items-center py-8">
-            <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
-              No hay rutinas guardadas todavía.
-            </Text>
+        {isLoading ? (
+          <View className="items-center py-16">
+            <ActivityIndicator color={brandPrimary[500]} />
           </View>
-        </View>
+        ) : routines.length === 0 ? (
+          <View className="mx-5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
+            <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
+              <ClipboardList size={32} color={brandPrimary[600]} />
+            </View>
+            <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
+              Construye planes de entrenamiento
+            </Text>
+            <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
+              Crea rutinas personalizadas combinando ejercicios del catálogo con
+              series y repeticiones.
+            </Text>
+            <Pressable
+              onPress={handleNew}
+              className="w-full active:scale-[0.98]"
+            >
+              <LinearGradient
+                colors={[brandPrimary[600], brandPrimary[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="py-3.5 rounded-xl items-center flex-row justify-center"
+              >
+                <Plus size={18} color="white" />
+                <Text className="text-white font-jakarta-semi text-sm ml-2">
+                  Nueva Rutina
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        ) : (
+          <View className="px-5 gap-5">
+            <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mb-1 ml-1">
+              {routines.length} {routines.length === 1 ? "rutina" : "rutinas"}
+            </Text>
+            {routines.map((routine) => (
+              <RoutineCard
+                key={routine.id}
+                routine={routine}
+                onPress={() => {}}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </Screen>
   );
