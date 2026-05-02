@@ -9,12 +9,29 @@ import {
   routine_exercises,
 } from "./schemas";
 import { supabase } from "../database/supabase";
-import { eq, or, notInArray, and } from "drizzle-orm";
+import { eq, or, inArray } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
+import { queryClient } from "../lib/queryClient";
 
 const LAST_SYNC_KEY = "last_sync_at";
 let isSyncing = false;
+
+const TABLE_QUERY_KEYS = {
+  routines: [["routines"], ["routine"]],
+  routine_exercises: [["routines"], ["routine"]],
+  exercises_base: [["exercises"], ["exercise"]],
+  equipment: [["equipments"], ["equipment"]],
+  exercise_equipment: [["exercises"], ["exercise"], ["exercise_equipment_detail"]],
+};
+
+function invalidateQueriesForTable(tableName) {
+  const keys = TABLE_QUERY_KEYS[tableName];
+  if (!keys) return;
+  for (const queryKey of keys) {
+    queryClient.invalidateQueries({ queryKey });
+  }
+}
 
 /**
  * PULL: Descarga cambios de Supabase hacia SQLite de forma genérica
@@ -30,8 +47,10 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
 
   if (error) {
     console.error(`❌ [PULL] Error descargando "${tableName}":`, error.message);
-    return false;
+    return { success: false, changed: false };
   }
+
+  let changed = false;
 
   if (data && data.length > 0) {
     for (const remoteRow of data) {
@@ -41,6 +60,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
         set: remoteRow,
       });
     }
+    changed = true;
     console.log(
       `⬇️  [PULL] "${tableName}": ${data.length} registro(s) descargado(s)`
     );
@@ -53,28 +73,27 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     .select("id");
 
   if (!idsError && remoteIds) {
-    const remoteIdList = remoteIds.map((r) => r.id);
-    if (remoteIdList.length > 0) {
+    const remoteIdSet = new Set(remoteIds.map((r) => r.id));
+    const localSynced = await database
+      .select({ id: schemaTable.id })
+      .from(schemaTable)
+      .where(eq(schemaTable.sync_status, "synced"));
+    const idsToDelete = localSynced
+      .map((r) => r.id)
+      .filter((id) => !remoteIdSet.has(id));
+
+    if (idsToDelete.length > 0) {
       await database
         .delete(schemaTable)
-        .where(
-          and(
-            eq(schemaTable.sync_status, "synced"),
-            notInArray(schemaTable.id, remoteIdList)
-          )
-        );
-    } else {
-      // Tabla vacía en Supabase: borrar todos los registros synced locales
-      await database
-        .delete(schemaTable)
-        .where(eq(schemaTable.sync_status, "synced"));
+        .where(inArray(schemaTable.id, idsToDelete));
+      changed = true;
+      console.log(
+        `🗑️  [PULL] "${tableName}": ${idsToDelete.length} eliminado(s) localmente`
+      );
     }
-    console.log(
-      `🗑️  [PULL] "${tableName}": reconciliación de borrados completada`
-    );
   }
 
-  return true;
+  return { success: true, changed };
 }
 
 /**
@@ -560,11 +579,16 @@ export async function syncWithSupabase(
       else if (table === "routine_exercises") schemaTable = routine_exercises;
 
       if (schemaTable) {
-        const success = await pullTableChanges(table, schemaTable, lastSync);
+        const { success, changed } = await pullTableChanges(
+          table,
+          schemaTable,
+          lastSync
+        );
         if (success) {
           // Guardamos el timestamp solo si el pull fue exitoso
           // Nota: El push se hace después, pero el timestamp de pull es el que manda para futuros deltas
           await AsyncStorage.setItem(syncKey, syncTime);
+          if (changed) invalidateQueriesForTable(table);
         }
       }
     }

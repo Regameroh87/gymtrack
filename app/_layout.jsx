@@ -20,7 +20,8 @@ import {
 } from "@expo-google-fonts/manrope";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "../src/lib/queryClient";
 import { useInitDatabase } from "../src/database";
 import { syncWithSupabase, startSyncListener } from "../src/database/sync";
 import { View, Text } from "react-native";
@@ -32,8 +33,6 @@ import {
   DarkTheme,
 } from "@react-navigation/native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-
-const queryClient = new QueryClient();
 
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
