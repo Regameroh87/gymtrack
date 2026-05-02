@@ -17,12 +17,12 @@ import { brandPrimary } from "../../theme/colors";
 import { Clock, Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
-  hipertrofia:       { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1" },
-  fuerza:            { gradient: ["#7f1d1d", "#ef4444"], accent: "#ef4444" },
-  perdida_grasa:     { gradient: ["#052e16", "#22c55e"], accent: "#22c55e" },
-  resistencia:       { gradient: ["#0c4a6e", "#38bdf8"], accent: "#38bdf8" },
+  hipertrofia: { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1" },
+  fuerza: { gradient: ["#7f1d1d", "#ef4444"], accent: "#ef4444" },
+  perdida_grasa: { gradient: ["#052e16", "#22c55e"], accent: "#22c55e" },
+  resistencia: { gradient: ["#0c4a6e", "#38bdf8"], accent: "#38bdf8" },
   acondicionamiento: { gradient: ["#78350f", "#f59e0b"], accent: "#f59e0b" },
-  rehabilitacion:    { gradient: ["#3b0764", "#a855f7"], accent: "#a855f7" },
+  rehabilitacion: { gradient: ["#3b0764", "#a855f7"], accent: "#a855f7" },
 };
 
 const OBJECTIVE_LABELS = {
@@ -35,17 +35,20 @@ const OBJECTIVE_LABELS = {
 };
 
 const STATUS_CONFIG = {
-  activa:    { color: "#4ade80", label: "● Activa" },
-  borrador:  { color: "rgba(255,255,255,0.5)", label: "◌ Borrador" },
+  activa: { color: "#4ade80", label: "● Activa" },
+  borrador: { color: "rgba(255,255,255,0.5)", label: "◌ Borrador" },
   archivada: { color: "#fbbf24", label: "◆ Archivada" },
 };
 
 const CARD_HEIGHT = 210;
 
 const RoutineCard = ({ routine, onPress }) => {
-  const config = OBJECTIVE_CONFIG[routine.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
+  const config =
+    OBJECTIVE_CONFIG[routine.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const status = STATUS_CONFIG[routine.status] ?? STATUS_CONFIG.borrador;
-  const levelLabel = ROUTINE_LEVELS.find((l) => l.value === routine.level)?.label;
+  const levelLabel = ROUTINE_LEVELS.find(
+    (l) => l.value === routine.level
+  )?.label;
   const objectiveLabel = OBJECTIVE_LABELS[routine.objective];
 
   const imageUri = routine.cover_image_uri
@@ -162,7 +165,11 @@ const RoutineCard = ({ routine, onPress }) => {
               }}
             >
               <Text
-                style={{ color: status.color, fontSize: 11, fontFamily: "Manrope_600SemiBold" }}
+                style={{
+                  color: status.color,
+                  fontSize: 11,
+                  fontFamily: "Manrope_600SemiBold",
+                }}
               >
                 {status.label}
               </Text>
@@ -183,7 +190,11 @@ const RoutineCard = ({ routine, onPress }) => {
                 }}
               >
                 <Text
-                  style={{ color: config.accent, fontSize: 11, fontFamily: "Manrope_600SemiBold" }}
+                  style={{
+                    color: config.accent,
+                    fontSize: 11,
+                    fontFamily: "Manrope_600SemiBold",
+                  }}
                 >
                   {objectiveLabel}
                 </Text>
@@ -203,7 +214,12 @@ const RoutineCard = ({ routine, onPress }) => {
             }}
           >
             <Text
-              style={{ color: "white", fontSize: 21, fontFamily: "PlusJakartaSans_700Bold", lineHeight: 26 }}
+              style={{
+                color: "white",
+                fontSize: 21,
+                fontFamily: "PlusJakartaSans_700Bold",
+                lineHeight: 26,
+              }}
               numberOfLines={2}
             >
               {routine.name}
@@ -227,8 +243,12 @@ const RoutineCard = ({ routine, onPress }) => {
           {/* Stats: dos filas */}
           <View style={{ flex: 1, minWidth: 0, gap: 7, marginRight: 12 }}>
             {/* Fila 1: duración + ejercicios */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 14 }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              >
                 <Clock size={13} color="rgba(196,190,230,0.55)" />
                 <Text
                   numberOfLines={1}
@@ -241,9 +261,23 @@ const RoutineCard = ({ routine, onPress }) => {
                 </Text>
               </View>
 
-              <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: "rgba(196,190,230,0.3)" }} />
+              <View
+                style={{
+                  width: 3,
+                  height: 3,
+                  borderRadius: 1.5,
+                  backgroundColor: "rgba(196,190,230,0.3)",
+                }}
+              />
 
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5, flexShrink: 1 }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                  flexShrink: 1,
+                }}
+              >
                 <Barbell size={13} color="rgba(196,190,230,0.55)" />
                 <Text
                   numberOfLines={1}
@@ -258,7 +292,9 @@ const RoutineCard = ({ routine, onPress }) => {
             </View>
 
             {/* Fila 2: nivel */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+            >
               <ChartBar size={13} color="rgba(196,190,230,0.55)" />
               <Text
                 numberOfLines={1}
