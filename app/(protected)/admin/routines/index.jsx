@@ -108,7 +108,7 @@ export default function RoutinesList() {
               <RoutineCard
                 key={routine.id}
                 routine={routine}
-                onPress={() => {}}
+                onPress={(r) => router.push(`/admin/routines/${r.id}`)}
               />
             ))}
           </View>

@@ -71,6 +71,12 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
+        name="routines/[id]"
+        options={{
+          title: "Detalle de Rutina",
+        }}
+      />
+      <Stack.Screen
         name="routines/builder"
         options={{
           title: "Armar Rutina",
