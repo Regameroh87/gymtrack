@@ -13,6 +13,7 @@ import { ROUTINE_LEVELS } from "../../constants/routineOptions";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // Tema / assets
+import { brandPrimary } from "../../theme/colors";
 import { Clock, Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
@@ -59,15 +60,15 @@ const RoutineCard = ({ routine, onPress }) => {
   return (
     <Pressable onPress={handlePress} className="active:scale-[0.985]">
       <View
-        className="rounded-3xl overflow-hidden"
+        className="rounded-2xl overflow-hidden"
         style={{
           borderWidth: 1,
-          borderColor: config.accent + "20",
-          shadowColor: config.gradient[1],
-          shadowOpacity: 0.4,
-          shadowRadius: 20,
+          borderColor: brandPrimary[700] + "1A",
+          shadowColor: brandPrimary[700],
+          shadowOpacity: 0.18,
+          shadowRadius: 18,
           shadowOffset: { width: 0, height: 8 },
-          elevation: 8,
+          elevation: 6,
         }}
       >
         {/* ── Área visual principal ── */}
