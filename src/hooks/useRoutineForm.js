@@ -80,10 +80,7 @@ export const useRoutineForm = ({ onSuccess, initialValues = {} } = {}) => {
         }
 
         queryClient.invalidateQueries({ queryKey: ["routines"] });
-
-        checkNetInfoAndSync(["routines", "routine_exercises"]).catch((err) =>
-          console.error("Sync failed", err)
-        );
+        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
