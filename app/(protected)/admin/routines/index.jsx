@@ -3,15 +3,22 @@ import {
   View,
   Text,
   Pressable,
-  ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { useCallback } from "react";
 
 // Librerías externas
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from "react-native-reanimated";
 
 // Hooks
 import { useRoutines } from "../../../../src/hooks/useRoutines";
@@ -24,10 +31,52 @@ import RoutineCard from "../../../../src/components/cards/RoutineCard";
 import { brandPrimary } from "../../../../src/theme/colors";
 import { ClipboardList, Plus } from "../../../../assets/icons";
 
+
+function AnimatedCard({ routine, onPress, scrollY, containerY }) {
+  const cardY = useSharedValue(0);
+  const cardHeight = useSharedValue(1);
+
+  const onLayout = useCallback(
+    (e) => {
+      cardY.value = e.nativeEvent.layout.y;
+      cardHeight.value = e.nativeEvent.layout.height;
+    },
+    [cardY, cardHeight]
+  );
+
+  const animatedStyle = useAnimatedStyle(() => {
+    const absoluteY = containerY.value + cardY.value;
+    const cardTop = absoluteY - scrollY.value;
+    // fade from opacity 1 (top tocando el header) a 0 (bottom cruzando el header)
+    const opacity = interpolate(
+      cardTop,
+      [-cardHeight.value, 0],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return { opacity };
+  });
+
+  return (
+    <Animated.View style={animatedStyle} onLayout={onLayout}>
+      <RoutineCard
+        routine={routine}
+        onPress={onPress}
+      />
+    </Animated.View>
+  );
+}
+
 export default function RoutinesList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: routines = [], isLoading } = useRoutines();
+  const scrollY = useSharedValue(0);
+  const containerY = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
 
   const handleNew = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -45,6 +94,11 @@ export default function RoutinesList() {
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
             Rutinas
           </Text>
+          {routines.length > 0 && (
+            <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mt-1">
+              {routines.length} {routines.length === 1 ? "rutina" : "rutinas"}
+            </Text>
+          )}
         </View>
 
         <Pressable onPress={handleNew} className="active:scale-[0.95]">
@@ -59,11 +113,14 @@ export default function RoutinesList() {
         </Pressable>
       </View>
 
-      <ScrollView
+      <Animated.ScrollView
         contentContainerStyle={{
+          paddingTop: 8,
           paddingBottom: insets.bottom + 32,
         }}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         {isLoading ? (
           <View className="items-center py-16">
@@ -99,20 +156,22 @@ export default function RoutinesList() {
             </Pressable>
           </View>
         ) : (
-          <View className="px-5 gap-5">
-            <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mb-1 ml-1">
-              {routines.length} {routines.length === 1 ? "rutina" : "rutinas"}
-            </Text>
+          <View
+            className="px-5 gap-5"
+            onLayout={(e) => { containerY.value = e.nativeEvent.layout.y; }}
+          >
             {routines.map((routine) => (
-              <RoutineCard
+              <AnimatedCard
                 key={routine.id}
                 routine={routine}
+                scrollY={scrollY}
+                containerY={containerY}
                 onPress={(r) => router.push(`/admin/routines/${r.id}`)}
               />
             ))}
           </View>
         )}
-      </ScrollView>
+      </Animated.ScrollView>
     </Screen>
   );
 }
