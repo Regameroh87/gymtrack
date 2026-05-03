@@ -1,10 +1,5 @@
 // React Native
-import {
-  View,
-  Text,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
 import { useCallback } from "react";
 
 // Librerías externas
@@ -30,7 +25,6 @@ import RoutineCard from "../../../../src/components/cards/RoutineCard";
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
 import { ClipboardList, Plus } from "../../../../assets/icons";
-
 
 function AnimatedCard({ routine, onPress, scrollY, containerY }) {
   const cardY = useSharedValue(0);
@@ -59,10 +53,7 @@ function AnimatedCard({ routine, onPress, scrollY, containerY }) {
 
   return (
     <Animated.View style={animatedStyle} onLayout={onLayout}>
-      <RoutineCard
-        routine={routine}
-        onPress={onPress}
-      />
+      <RoutineCard routine={routine} onPress={onPress} />
     </Animated.View>
   );
 }
@@ -158,7 +149,9 @@ export default function RoutinesList() {
         ) : (
           <View
             className="px-5 gap-5"
-            onLayout={(e) => { containerY.value = e.nativeEvent.layout.y; }}
+            onLayout={(e) => {
+              containerY.value = e.nativeEvent.layout.y;
+            }}
           >
             {routines.map((routine) => (
               <AnimatedCard
