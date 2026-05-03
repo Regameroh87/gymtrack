@@ -36,36 +36,35 @@ export default function RoutinesList() {
 
   return (
     <Screen>
+      {/* Header sticky */}
+      <View className="px-6 pt-4 pb-5 flex-row items-end justify-between">
+        <View>
+          <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
+            Gestión de Entrenamientos
+          </Text>
+          <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
+            Rutinas
+          </Text>
+        </View>
+
+        <Pressable onPress={handleNew} className="active:scale-[0.95]">
+          <LinearGradient
+            colors={[brandPrimary[600], brandPrimary[500]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="w-10 h-10 rounded-xl items-center justify-center"
+          >
+            <Plus size={18} color="white" />
+          </LinearGradient>
+        </Pressable>
+      </View>
+
       <ScrollView
         contentContainerStyle={{
-          paddingTop: 16,
           paddingBottom: insets.bottom + 32,
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View className="px-6 mb-8 flex-row items-end justify-between">
-          <View>
-            <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
-              Gestión de Entrenamientos
-            </Text>
-            <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-              Rutinas
-            </Text>
-          </View>
-
-          <Pressable onPress={handleNew} className="active:scale-[0.95]">
-            <LinearGradient
-              colors={[brandPrimary[600], brandPrimary[500]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="w-10 h-10 rounded-xl items-center justify-center"
-            >
-              <Plus size={18} color="white" />
-            </LinearGradient>
-          </Pressable>
-        </View>
-
         {isLoading ? (
           <View className="items-center py-16">
             <ActivityIndicator color={brandPrimary[500]} />
