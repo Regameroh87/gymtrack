@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 // Base de datos
 import { database } from "../database";
 import { routines, routine_exercises } from "../database/schemas";
+import { checkNetInfoAndSync } from "../database/sync";
 
 export const useDeleteRoutine = () => {
   const queryClient = useQueryClient();
@@ -22,9 +23,10 @@ export const useDeleteRoutine = () => {
           .where(eq(routines.id, id));
       });
     },
-    onSuccess: (_, id) => {
+    onSuccess: async (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["routines"] });
       queryClient.removeQueries({ queryKey: ["routine", id] });
+      await checkNetInfoAndSync();
     },
   });
 };
