@@ -2,7 +2,6 @@
 import {
   View,
   Text,
-  Pressable,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -27,7 +26,6 @@ import useAsyncStorage from "../../hooks/useAsyncStorage";
 import {
   ROUTINE_OBJECTIVES,
   ROUTINE_LEVELS,
-  ROUTINE_STATUSES,
 } from "../../constants/routineOptions";
 
 // Componentes
@@ -41,33 +39,6 @@ import SubmitButton from "./SubmitButton";
 // Tema y assets
 import { ui } from "../../theme/colors";
 import { Plus } from "../../../assets/icons";
-
-// ── Segmented control used for status ────────────────────────────────────────
-function SegmentedControl({ options, value, onChange }) {
-  return (
-    <View className="flex-row bg-ui-input-light dark:bg-ui-input-dark rounded-xl p-1 gap-1">
-      {options.map((opt) => (
-        <Pressable
-          key={opt.value}
-          onPress={() => onChange(opt.value)}
-          className={`flex-1 items-center py-2 rounded-lg ${
-            value === opt.value ? "bg-brandPrimary-600" : ""
-          }`}
-        >
-          <Text
-            className={`text-xs font-manrope-semi ${
-              value === opt.value
-                ? "text-white"
-                : "text-ui-text-muted dark:text-ui-text-mutedDark"
-            }`}
-          >
-            {opt.label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
 
 // ── Section header ────────────────────────────────────────────────────────────
 function SectionLabel({ children }) {
@@ -255,19 +226,6 @@ export default function FormRoutine({ form, routine }) {
                     placeholderTextColor={mutedColor}
                     keyboardType="number-pad"
                     error={field.state.meta.errors?.length > 0}
-                  />
-                </FormField>
-              )}
-            </form.Field>
-
-            {/* Estado */}
-            <form.Field name="status">
-              {(field) => (
-                <FormField label="ESTADO">
-                  <SegmentedControl
-                    options={ROUTINE_STATUSES}
-                    value={field.state.value}
-                    onChange={field.handleChange}
                   />
                 </FormField>
               )}

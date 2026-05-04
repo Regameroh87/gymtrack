@@ -9,6 +9,7 @@ import m0004 from './0004_closed_khan.sql';
 import m0005 from './0005_nosy_darkhawk.sql';
 import m0006 from './0006_messy_expediter.sql';
 import m0007 from './0007_equal_microchip.sql';
+import m0008 from './0008_neat_wraith.sql';
 
   export default {
     journal,
@@ -20,7 +21,8 @@ m0003,
 m0004,
 m0005,
 m0006,
-m0007
+m0007,
+m0008
     }
   }
   

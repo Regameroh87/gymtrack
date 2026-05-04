@@ -59,7 +59,6 @@ export const routines = sqliteTable("routines", {
   level: text("level"),
   estimated_duration_min: integer("estimated_duration_min"),
   cover_image_uri: text("cover_image_uri"),
-  status: text("status").notNull().default("borrador"),
   created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()

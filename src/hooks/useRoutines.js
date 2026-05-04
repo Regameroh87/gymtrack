@@ -19,7 +19,6 @@ export const useRoutines = () =>
           level: routines.level,
           estimated_duration_min: routines.estimated_duration_min,
           cover_image_uri: routines.cover_image_uri,
-          status: routines.status,
           created_at: routines.created_at,
           exercise_count: count(routine_exercises.id),
         })

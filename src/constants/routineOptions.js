@@ -13,8 +13,3 @@ export const ROUTINE_LEVELS = [
   { label: "Avanzado", value: "avanzado" },
 ];
 
-export const ROUTINE_STATUSES = [
-  { label: "Borrador", value: "borrador" },
-  { label: "Activa", value: "activa" },
-  { label: "Archivada", value: "archivada" },
-];

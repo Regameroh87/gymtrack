@@ -34,18 +34,11 @@ const OBJECTIVE_LABELS = {
   rehabilitacion: "Rehabilitación",
 };
 
-const STATUS_CONFIG = {
-  activa: { color: "#4ade80", label: "● Activa" },
-  borrador: { color: "rgba(255,255,255,0.5)", label: "◌ Borrador" },
-  archivada: { color: "#fbbf24", label: "◆ Archivada" },
-};
-
 const CARD_HEIGHT = 210;
 
 const RoutineCard = ({ routine, onPress }) => {
   const config =
     OBJECTIVE_CONFIG[routine.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
-  const status = STATUS_CONFIG[routine.status] ?? STATUS_CONFIG.borrador;
   const levelLabel = ROUTINE_LEVELS.find(
     (l) => l.value === routine.level
   )?.label;
@@ -151,30 +144,6 @@ const RoutineCard = ({ routine, onPress }) => {
               height: CARD_HEIGHT * 0.75,
             }}
           />
-
-          {/* Status badge — glass top right */}
-          <View style={{ position: "absolute", top: 14, right: 14 }}>
-            <View
-              style={{
-                backgroundColor: "rgba(0,0,0,0.38)",
-                borderWidth: 0.5,
-                borderColor: "rgba(255,255,255,0.25)",
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 20,
-              }}
-            >
-              <Text
-                style={{
-                  color: status.color,
-                  fontSize: 11,
-                  fontFamily: "Manrope_600SemiBold",
-                }}
-              >
-                {status.label}
-              </Text>
-            </View>
-          </View>
 
           {/* Objetivo tag — top left */}
           {objectiveLabel && (

@@ -57,6 +57,13 @@
       "when": 1777456196325,
       "tag": "0007_equal_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1777903784596,
+      "tag": "0008_neat_wraith",
+      "breakpoints": true
     }
   ]
 }

@@ -44,7 +44,6 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
       level: "",
       estimated_duration_min: "",
       cover_image_uri: "",
-      status: "borrador",
       exercises: [],
     },
     onSubmit: async ({ value }) => {
@@ -67,7 +66,6 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
                 value.estimated_duration_min
               ),
               cover_image_uri: value.cover_image_uri || null,
-              status: value.status,
               updated_at: new Date().toISOString(),
               sync_status: "pending",
             })
@@ -114,7 +112,6 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
               value.estimated_duration_min
             ),
             cover_image_uri: value.cover_image_uri || null,
-            status: value.status,
             created_by: userId,
           });
 
@@ -149,7 +146,7 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
         Toast.show({
           type: "success",
           text1: id ? "¡Rutina actualizada!" : "¡Rutina guardada!",
-          text2: `"${value.name}" fue guardada como ${value.status}.`,
+          text2: `"${value.name}" fue guardada correctamente.`,
           position: "bottom",
         });
 
@@ -214,7 +211,6 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
         level: routine.level ?? "",
         estimated_duration_min: str(routine.estimated_duration_min),
         cover_image_uri: routine.cover_image_uri ?? "",
-        status: routine.status ?? "borrador",
         exercises: exercises.map((ex) => ({
           id: ex.id,
           exercise_id: ex.exercise_id,
@@ -252,7 +248,6 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
     form.setFieldValue("cover_image_uri", editData.cover_image_uri, {
       touch: false,
     });
-    form.setFieldValue("status", editData.status, { touch: false });
     form.setFieldValue("exercises", editData.exercises, { touch: false });
   }, [editData, form]);
 
