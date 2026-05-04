@@ -117,10 +117,12 @@ export default function FormRoutine({ form, routine }) {
         {/* ── Header ── */}
         <View className="px-4 pt-6 pb-2">
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-            Armar Rutina
+            {routine ? "Editar Rutina" : "Armar Rutina"}
           </Text>
           <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
-            Creá una plantilla de entrenamiento reutilizable.
+            {routine
+              ? "Modificá los campos que quieras y guardá los cambios."
+              : "Creá una plantilla de entrenamiento reutilizable."}
           </Text>
         </View>
 
