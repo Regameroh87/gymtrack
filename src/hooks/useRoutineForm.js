@@ -12,8 +12,8 @@ import Toast from "react-native-toast-message";
 // Base de datos
 import { database } from "../database";
 import {
-  routines,
-  routine_exercises,
+  sessions,
+  session_exercises,
   exercises_base,
 } from "../database/schemas";
 import { supabase } from "../database/supabase";
@@ -56,7 +56,7 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
         if (id) {
           // ── EDICIÓN ──
           await database
-            .update(routines)
+            .update(sessions)
             .set({
               name: value.name.trim(),
               description: value.description?.trim() || null,
@@ -69,16 +69,16 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
               updated_at: new Date().toISOString(),
               sync_status: "pending",
             })
-            .where(eq(routines.id, id));
+            .where(eq(sessions.id, id));
 
           await database
-            .delete(routine_exercises)
-            .where(eq(routine_exercises.routine_id, id));
+            .delete(session_exercises)
+            .where(eq(session_exercises.session_id, id));
 
           for (const [idx, ex] of value.exercises.entries()) {
-            await database.insert(routine_exercises).values({
+            await database.insert(session_exercises).values({
               id: Crypto.randomUUID(),
-              routine_id: id,
+              session_id: id,
               exercise_id: ex.exercise_id,
               position: idx,
               sets: parseIntOrNull(ex.sets) ?? 3,
@@ -96,14 +96,14 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
             });
           }
 
-          queryClient.invalidateQueries({ queryKey: ["routines"] });
-          queryClient.invalidateQueries({ queryKey: ["routine", id] });
+          queryClient.invalidateQueries({ queryKey: ["sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["session", id] });
         } else {
           // ── CREACIÓN ──
-          const routineId = Crypto.randomUUID();
+          const sessionId = Crypto.randomUUID();
 
-          await database.insert(routines).values({
-            id: routineId,
+          await database.insert(sessions).values({
+            id: sessionId,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             objective: value.objective || null,
@@ -116,9 +116,9 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
           });
 
           for (const [idx, ex] of value.exercises.entries()) {
-            await database.insert(routine_exercises).values({
+            await database.insert(session_exercises).values({
               id: Crypto.randomUUID(),
-              routine_id: routineId,
+              session_id: sessionId,
               exercise_id: ex.exercise_id,
               position: idx,
               sets: parseIntOrNull(ex.sets) ?? 3,
@@ -136,7 +136,7 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
             });
           }
 
-          queryClient.invalidateQueries({ queryKey: ["routines"] });
+          queryClient.invalidateQueries({ queryKey: ["sessions"] });
           form.reset();
         }
 
@@ -145,14 +145,14 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
-          text1: id ? "¡Rutina actualizada!" : "¡Rutina guardada!",
+          text1: id ? "¡Sesión actualizada!" : "¡Sesión guardada!",
           text2: `"${value.name}" fue guardada correctamente.`,
           position: "bottom",
         });
 
         if (onSuccess) onSuccess();
       } catch (error) {
-        console.error("Error al guardar rutina:", error);
+        console.error("Error al guardar sesión:", error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         Toast.show({
           type: "error",
@@ -166,51 +166,51 @@ export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
   });
 
   const { data: editData, isLoading } = useQuery({
-    queryKey: ["routine", id],
+    queryKey: ["session", id],
     enabled: !!id,
     queryFn: async () => {
-      const [routine] = await database
+      const [session] = await database
         .select()
-        .from(routines)
-        .where(eq(routines.id, id));
+        .from(sessions)
+        .where(eq(sessions.id, id));
 
-      if (!routine) return null;
+      if (!session) return null;
 
       const exercises = await database
         .select({
-          id: routine_exercises.id,
-          exercise_id: routine_exercises.exercise_id,
-          sets: routine_exercises.sets,
-          prescription_mode: routine_exercises.prescription_mode,
-          reps_min: routine_exercises.reps_min,
-          reps_max: routine_exercises.reps_max,
-          duration_seconds: routine_exercises.duration_seconds,
-          weight_kg: routine_exercises.weight_kg,
-          rest_seconds: routine_exercises.rest_seconds,
-          intensity_mode: routine_exercises.intensity_mode,
-          rir: routine_exercises.rir,
-          rpe: routine_exercises.rpe,
-          tempo: routine_exercises.tempo,
-          notes: routine_exercises.notes,
+          id: session_exercises.id,
+          exercise_id: session_exercises.exercise_id,
+          sets: session_exercises.sets,
+          prescription_mode: session_exercises.prescription_mode,
+          reps_min: session_exercises.reps_min,
+          reps_max: session_exercises.reps_max,
+          duration_seconds: session_exercises.duration_seconds,
+          weight_kg: session_exercises.weight_kg,
+          rest_seconds: session_exercises.rest_seconds,
+          intensity_mode: session_exercises.intensity_mode,
+          rir: session_exercises.rir,
+          rpe: session_exercises.rpe,
+          tempo: session_exercises.tempo,
+          notes: session_exercises.notes,
           name: exercises_base.name,
           muscle_group: exercises_base.muscle_group,
           image_uri: exercises_base.image_uri,
         })
-        .from(routine_exercises)
+        .from(session_exercises)
         .innerJoin(
           exercises_base,
-          eq(routine_exercises.exercise_id, exercises_base.id)
+          eq(session_exercises.exercise_id, exercises_base.id)
         )
-        .where(eq(routine_exercises.routine_id, id))
-        .orderBy(asc(routine_exercises.position));
+        .where(eq(session_exercises.session_id, id))
+        .orderBy(asc(session_exercises.position));
 
       return {
-        name: routine.name ?? "",
-        description: routine.description ?? "",
-        objective: routine.objective ?? "",
-        level: routine.level ?? "",
-        estimated_duration_min: str(routine.estimated_duration_min),
-        cover_image_uri: routine.cover_image_uri ?? "",
+        name: session.name ?? "",
+        description: session.description ?? "",
+        objective: session.objective ?? "",
+        level: session.level ?? "",
+        estimated_duration_min: str(session.estimated_duration_min),
+        cover_image_uri: session.cover_image_uri ?? "",
         exercises: exercises.map((ex) => ({
           id: ex.id,
           exercise_id: ex.exercise_id,

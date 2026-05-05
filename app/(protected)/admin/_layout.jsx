@@ -71,13 +71,13 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
-        name="routines/[id]"
+        name="sessions/[id]"
         options={{
           title: "Detalle de Rutina",
         }}
       />
       <Stack.Screen
-        name="routines/builder"
+        name="sessions/builder"
         options={{
           title: "Armar Rutina",
         }}

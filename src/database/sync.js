@@ -422,7 +422,7 @@ export async function pushSessionsChanges() {
     );
   if (localChanges.length === 0) return;
   console.log(
-    `⬆️  [PUSH] routines: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] sessions: ${localChanges.length} cambio(s) pendiente(s)`
   );
 
   for (let row of localChanges) {
@@ -502,7 +502,7 @@ export async function pushSessionExercisesChanges() {
     );
   if (localChanges.length === 0) return;
   console.log(
-    `⬆️  [PUSH] routine_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] session_exercises: ${localChanges.length} cambio(s) pendiente(s)`
   );
 
   for (let row of localChanges) {
@@ -515,7 +515,7 @@ export async function pushSessionExercisesChanges() {
         await database
           .delete(session_exercises)
           .where(eq(session_exercises.id, row.id));
-        console.log(`✅ [PUSH] routine_exercise (id: ${row.id}) eliminado`);
+        console.log(`✅ [PUSH] session_exercise (id: ${row.id}) eliminado`);
       } else {
         console.error(
           `❌ [PUSH] Error eliminando routine_exercise (id: ${row.id}):`,
@@ -527,14 +527,14 @@ export async function pushSessionExercisesChanges() {
 
     const { sync_status, ...restOfRow } = row;
     const { error } = await supabase
-      .from("routine_exercises")
+      .from("session_exercises")
       .upsert(restOfRow, { onConflict: "id" });
     if (!error) {
       await database
         .update(session_exercises)
         .set({ sync_status: "synced" })
         .where(eq(session_exercises.id, row.id));
-      console.log(`✅ [PUSH] routine_exercise (id: ${row.id}) sincronizado`);
+      console.log(`✅ [PUSH] session_exercise (id: ${row.id}) sincronizado`);
     } else {
       console.error(
         `❌ [PUSH] Error subiendo routine_exercise (id: ${row.id}):`,

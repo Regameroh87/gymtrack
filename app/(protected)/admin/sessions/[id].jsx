@@ -565,7 +565,7 @@ export default function RoutineDetail() {
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push(`/admin/routines/builder?id=${id}`);
+            router.push(`/admin/sessions/builder?id=${id}`);
           }}
           className="active:scale-[0.97]"
         >
