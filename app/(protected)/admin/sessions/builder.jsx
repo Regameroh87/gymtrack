@@ -2,7 +2,7 @@
 import { View, ActivityIndicator } from "react-native";
 
 // Librerías externas
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 // Hooks
 import { useSessionForm } from "../../../../src/hooks/useSessionForm";
@@ -15,7 +15,14 @@ import { brandPrimary } from "../../../../src/theme/colors";
 
 export default function SessionBuilder() {
   const { id } = useLocalSearchParams();
-  const { form, isLoading } = useSessionForm({ id: id ?? null });
+  const router = useRouter();
+
+  const { form, isLoading } = useSessionForm({
+    id: id ?? null,
+    onSuccess: () => {
+      router.push("/admin/sessions");
+    },
+  });
 
   if (isLoading) {
     return (
