@@ -99,7 +99,7 @@ function intensityLabel(ex) {
   return null;
 }
 
-export default function RoutineDetail() {
+export default function SessionDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
