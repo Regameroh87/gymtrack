@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, real, unique } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  unique,
+} from "drizzle-orm/sqlite-core";
 
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id").primaryKey(),
@@ -51,7 +57,7 @@ export const exercise_equipment = sqliteTable("exercise_equipment", {
   sync_status: text("sync_status").notNull().default("pending"),
 });
 
-export const routines = sqliteTable("routines", {
+export const sessions = sqliteTable("routines", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
@@ -69,11 +75,11 @@ export const routines = sqliteTable("routines", {
   sync_status: text("sync_status").notNull().default("pending"),
 });
 
-export const routine_exercises = sqliteTable("routine_exercises", {
+export const session_exercises = sqliteTable("session_exercises", {
   id: text("id").primaryKey(),
-  routine_id: text("routine_id")
+  session_id: text("session_id")
     .notNull()
-    .references(() => routines.id),
+    .references(() => sessions.id),
   exercise_id: text("exercise_id")
     .notNull()
     .references(() => exercises_base.id),
@@ -99,7 +105,7 @@ export const routine_exercises = sqliteTable("routine_exercises", {
   sync_status: text("sync_status").notNull().default("pending"),
 });
 
-export const training_plans = sqliteTable("training_plans", {
+/* export const routines = sqliteTable("routines", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
@@ -117,19 +123,19 @@ export const training_plans = sqliteTable("training_plans", {
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
   sync_status: text("sync_status").notNull().default("pending"),
-});
+}); */
 
-export const training_plan_days = sqliteTable(
-  "training_plan_days",
+/* export const routine_sessions = sqliteTable(
+  "routine_sessions",
   {
     id: text("id").primaryKey(),
-    plan_id: text("plan_id")
-      .notNull()
-      .references(() => training_plans.id),
-    day_number: integer("day_number").notNull(),
-    routine_id: text("routine_id")
+    routine_id: text("plan_id")
       .notNull()
       .references(() => routines.id),
+    day_number: integer("day_number").notNull(),
+    routine_id: text("session_id")
+      .notNull()
+      .references(() => sessions.id),
     created_at: text("created_at")
       .notNull()
       .$defaultFn(() => new Date().toISOString()),
@@ -139,9 +145,9 @@ export const training_plan_days = sqliteTable(
     sync_status: text("sync_status").notNull().default("pending"),
   },
   (t) => [unique().on(t.plan_id, t.day_number)]
-);
+); */
 
-export const plan_assignments = sqliteTable(
+/* export const plan_assignments = sqliteTable(
   "plan_assignments",
   {
     id: text("id").primaryKey(),
@@ -159,4 +165,4 @@ export const plan_assignments = sqliteTable(
     sync_status: text("sync_status").notNull().default("pending"),
   },
   (t) => [unique().on(t.plan_id, t.user_id)]
-);
+); */

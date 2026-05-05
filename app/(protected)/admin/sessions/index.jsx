@@ -20,7 +20,7 @@ import { useRoutines } from "../../../../src/hooks/useRoutines";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
-import RoutineCard from "../../../../src/components/cards/RoutineCard";
+import SessionCard from "../../../../src/components/cards/SessionCard";
 
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
@@ -53,15 +53,15 @@ function AnimatedCard({ routine, onPress, scrollY, containerY }) {
 
   return (
     <Animated.View style={animatedStyle} onLayout={onLayout}>
-      <RoutineCard routine={routine} onPress={onPress} />
+      <SessionCard session={session} onPress={onPress} />
     </Animated.View>
   );
 }
 
-export default function RoutinesList() {
+export default function SessionsList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data: routines = [], isLoading } = useRoutines();
+  const { data: sessions = [], isLoading } = useRoutines();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);
 

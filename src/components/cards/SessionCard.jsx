@@ -33,21 +33,21 @@ const OBJECTIVE_LABELS = {
   rehabilitacion: "Rehabilitación",
 };
 
-const RoutineCard = ({ routine, onPress }) => {
+const SessionCard = ({ session, onPress }) => {
   const config =
-    OBJECTIVE_CONFIG[routine.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
+    OBJECTIVE_CONFIG[session.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const levelLabel = ROUTINE_LEVELS.find(
-    (l) => l.value === routine.level
+    (l) => l.value === session.level
   )?.label;
-  const objectiveLabel = OBJECTIVE_LABELS[routine.objective];
+  const objectiveLabel = OBJECTIVE_LABELS[session.objective];
 
-  const imageUri = routine.cover_image_uri
-    ? (getCloudinaryUrl(routine.cover_image_uri) ?? routine.cover_image_uri)
+  const imageUri = session.cover_image_uri
+    ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
     : null;
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress?.(routine);
+    onPress?.(session);
   };
 
   return (
@@ -117,7 +117,7 @@ const RoutineCard = ({ routine, onPress }) => {
               className="font-jakarta-bold text-[21px] leading-[26px] text-white"
               numberOfLines={2}
             >
-              {routine.name}
+              {session.name}
             </Text>
           </View>
         </View>
@@ -134,8 +134,8 @@ const RoutineCard = ({ routine, onPress }) => {
                   numberOfLines={1}
                   className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                 >
-                  {routine.estimated_duration_min != null
-                    ? `${routine.estimated_duration_min} min`
+                  {session.estimated_duration_min != null
+                    ? `${session.estimated_duration_min} min`
                     : "—"}
                 </Text>
               </View>
@@ -148,8 +148,8 @@ const RoutineCard = ({ routine, onPress }) => {
                   numberOfLines={1}
                   className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                 >
-                  {routine.exercise_count > 0
-                    ? `${routine.exercise_count} ejercicios`
+                  {session.exercise_count > 0
+                    ? `${session.exercise_count} ejercicios`
                     : "Sin ejercicios"}
                 </Text>
               </View>
@@ -183,4 +183,4 @@ const RoutineCard = ({ routine, onPress }) => {
   );
 };
 
-export default RoutineCard;
+export default SessionCard;

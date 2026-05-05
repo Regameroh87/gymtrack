@@ -4,11 +4,11 @@ import { desc, count, eq, ne } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../database";
-import { routines, routine_exercises } from "../database/schemas";
+import { sessions, session_exercises } from "../database/schemas";
 
-export const useRoutines = () =>
+export const useSessions = () =>
   useQuery({
-    queryKey: ["routines"],
+    queryKey: ["sessions"],
     queryFn: () =>
       database
         .select({
