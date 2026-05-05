@@ -232,18 +232,7 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
   useEffect(() => {
     if (!editData) return;
-    form.setFieldValue("name", editData.name, { touch: false });
-    form.setFieldValue("description", editData.description, { touch: false });
-    form.setFieldValue("level", editData.level, { touch: false });
-    form.setFieldValue(
-      "estimated_duration_min",
-      editData.estimated_duration_min,
-      { touch: false }
-    );
-    form.setFieldValue("cover_image_uri", editData.cover_image_uri, {
-      touch: false,
-    });
-    form.setFieldValue("exercises", editData.exercises, { touch: false });
+    form.reset(editData);
   }, [editData, form]);
 
   return { form, isLoading: !!id && isLoading };

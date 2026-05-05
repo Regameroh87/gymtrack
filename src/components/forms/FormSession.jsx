@@ -321,11 +321,21 @@ export default function FormSession({ form, session }) {
           </form.Field>
 
           {/* ─────────────── SUBMIT ─────────────── */}
-          <SubmitButton
-            onPress={() => form.handleSubmit()}
-            label="Guardar Sesión"
-            isLoading={form.state.isSubmitting}
-          />
+          <form.Subscribe
+            selector={(s) => ({
+              isDirty: s.isDirty,
+              isSubmitting: s.isSubmitting,
+            })}
+          >
+            {({ isDirty, isSubmitting }) => (
+              <SubmitButton
+                onPress={() => form.handleSubmit()}
+                label={session ? "Editar Sesión" : "Guardar Sesión"}
+                isLoading={isSubmitting}
+                disabled={!!session && !isDirty}
+              />
+            )}
+          </form.Subscribe>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

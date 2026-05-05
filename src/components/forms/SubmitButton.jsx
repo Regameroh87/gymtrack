@@ -8,12 +8,14 @@ export default function SubmitButton({
   onPress,
   label = "Guardar Ejercicio",
   isLoading = false,
+  disabled = false,
 }) {
+  const isDisabled = isLoading || disabled;
   return (
     <Pressable
-      onPress={isLoading ? null : onPress}
-      disabled={isLoading}
-      className={`mt-8 rounded-xl overflow-hidden ${isLoading ? "opacity-80" : "active:scale-[0.97]"}`}
+      onPress={isDisabled ? null : onPress}
+      disabled={isDisabled}
+      className={`mt-8 rounded-xl overflow-hidden ${isDisabled ? "opacity-40" : "active:scale-[0.97]"}`}
     >
       <LinearGradient
         colors={["#3023cd", "#4a44e4"]}
