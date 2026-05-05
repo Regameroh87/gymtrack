@@ -7,7 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
 // Constantes
-import { ROUTINE_LEVELS } from "../../constants/routineOptions";
+import { SESSION_LEVELS } from "../../constants/sessionOptions";
 
 // Base de datos / utils
 import { getCloudinaryUrl } from "../../utils/cloudinary";
@@ -36,7 +36,7 @@ const OBJECTIVE_LABELS = {
 const SessionCard = ({ session, onPress }) => {
   const config =
     OBJECTIVE_CONFIG[session.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
-  const levelLabel = ROUTINE_LEVELS.find(
+  const levelLabel = SESSION_LEVELS.find(
     (l) => l.value === session.level
   )?.label;
   const objectiveLabel = OBJECTIVE_LABELS[session.objective];

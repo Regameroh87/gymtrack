@@ -26,7 +26,7 @@ import {
 } from "../../../../src/database/schemas";
 
 // Constantes
-import { ROUTINE_LEVELS } from "../../../../src/constants/routineOptions";
+import { SESSION_LEVELS } from "../../../../src/constants/sessionOptions";
 
 // Utils
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
@@ -180,7 +180,7 @@ export default function SessionDetail() {
 
   const config =
     OBJECTIVE_CONFIG[data.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
-  const levelLabel = ROUTINE_LEVELS.find((l) => l.value === data.level)?.label;
+  const levelLabel = SESSION_LEVELS.find((l) => l.value === data.level)?.label;
 
   const imageUri = data.cover_image_uri
     ? (getCloudinaryUrl(data.cover_image_uri) ?? data.cover_image_uri)

@@ -5,17 +5,17 @@ import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 // Hooks
-import { useRoutineForm } from "../../../../src/hooks/useRoutineForm";
+import { useSessionForm } from "../../../../src/hooks/useSessionForm";
 
 // Componentes
-import FormRoutine from "../../../../src/components/forms/FormRoutine";
+import FormSession from "../../../../src/components/forms/FormSession";
 
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
 
-export default function RoutineBuilder() {
+export default function SessionBuilder() {
   const { id } = useLocalSearchParams();
-  const { form, isLoading } = useRoutineForm({ id: id ?? null });
+  const { form, isLoading } = useSessionForm({ id: id ?? null });
 
   if (isLoading) {
     return (
@@ -25,5 +25,5 @@ export default function RoutineBuilder() {
     );
   }
 
-  return <FormRoutine form={form} routine={id ?? null} />;
+  return <FormSession form={form} session={id ?? null} />;
 }
