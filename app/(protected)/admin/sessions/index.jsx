@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 // Hooks
-import { useRoutines } from "../../../../src/hooks/useRoutines";
+import { useSessions } from "../../../../src/hooks/useSessions";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
@@ -61,7 +61,7 @@ function AnimatedCard({ routine, onPress, scrollY, containerY }) {
 export default function SessionsList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data: sessions = [], isLoading } = useRoutines();
+  const { data: sessions = [], isLoading } = useSessions();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);
 
@@ -85,9 +85,9 @@ export default function SessionsList() {
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
             Rutinas
           </Text>
-          {routines.length > 0 && (
+          {sessions.length > 0 && (
             <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mt-1">
-              {routines.length} {routines.length === 1 ? "rutina" : "rutinas"}
+              {sessions.length} {sessions.length === 1 ? "sesión" : "sesiones"}
             </Text>
           )}
         </View>
@@ -117,7 +117,7 @@ export default function SessionsList() {
           <View className="items-center py-16">
             <ActivityIndicator color={brandPrimary[500]} />
           </View>
-        ) : routines.length === 0 ? (
+        ) : sessions.length === 0 ? (
           <View className="mx-5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
             <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
               <ClipboardList size={32} color={brandPrimary[600]} />
@@ -153,10 +153,10 @@ export default function SessionsList() {
               containerY.value = e.nativeEvent.layout.y;
             }}
           >
-            {routines.map((routine) => (
+            {sessions.map((session) => (
               <AnimatedCard
-                key={routine.id}
-                routine={routine}
+                key={session.id}
+                session={session}
                 scrollY={scrollY}
                 containerY={containerY}
                 onPress={(r) => router.push(`/admin/routines/${r.id}`)}
