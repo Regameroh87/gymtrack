@@ -7,7 +7,7 @@ import { database } from "../database";
 import { sessions, session_exercises } from "../database/schemas";
 import { checkNetInfoAndSync } from "../database/sync";
 
-export const useDeleteRoutine = () => {
+export const useDeleteSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
