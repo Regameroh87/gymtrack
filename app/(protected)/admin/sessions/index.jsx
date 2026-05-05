@@ -123,7 +123,7 @@ export default function SessionsList() {
               <ClipboardList size={32} color={brandPrimary[600]} />
             </View>
             <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
-              Construye planes de entrenamiento
+              Crea tu día de entrenamiento
             </Text>
             <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
               Crea sesiones personalizadas combinando ejercicios del catálogo
