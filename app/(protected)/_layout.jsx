@@ -7,6 +7,7 @@ import {
   ShieldHalf,
 } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
+import { useUserRole } from "../../src/hooks/useUserRole";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
 import { ui, brandPrimary } from "../../src/theme/colors";
@@ -14,6 +15,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
+  const { isAdmin } = useUserRole();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   //console.log("colorScheme", colorScheme);
 
@@ -84,9 +86,10 @@ export default function ProtectedLayout() {
           }}
         />
         <Tabs.Screen
-          name="rutinas/index"
+          name="rutinas"
           options={{
             title: "Rutinas",
+            headerShown: false,
             tabBarIcon: ({ color }) => (
               <Barbell color={color} width={24} height={24} />
             ),
@@ -104,7 +107,7 @@ export default function ProtectedLayout() {
           options={{
             title: "Admin",
             headerShown: false,
-
+            href: isAdmin ? undefined : null,
             tabBarIcon: ({ color }) => (
               <ShieldHalf color={color} width={24} height={24} />
             ),

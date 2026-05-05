@@ -5,8 +5,11 @@ import {
   exercises_base,
   equipment,
   exercise_equipment,
-  routines,
+  plan_assignments,
   routine_exercises,
+  routines,
+  training_plan_days,
+  training_plans,
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or, inArray } from "drizzle-orm";
@@ -23,6 +26,9 @@ const TABLE_QUERY_KEYS = {
   exercises_base: [["exercises"], ["exercise"]],
   equipment: [["equipments"], ["equipment"]],
   exercise_equipment: [["exercises"], ["exercise"], ["exercise_equipment_detail"]],
+  training_plans: [["training_plans"], ["training_plan"]],
+  training_plan_days: [["training_plans"], ["training_plan"]],
+  plan_assignments: [["plan_assignments"]],
 };
 
 function invalidateQueriesForTable(tableName) {
@@ -541,6 +547,203 @@ export async function pushRoutineExercisesChanges() {
 }
 
 /**
+ * PUSH: Sube cambios locales de Planes de Entrenamiento
+ */
+export async function pushTrainingPlansChanges() {
+  const localChanges = await database
+    .select()
+    .from(training_plans)
+    .where(
+      or(
+        eq(training_plans.sync_status, "pending"),
+        eq(training_plans.sync_status, "dirty"),
+        eq(training_plans.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] training_plans: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("training_plans")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(training_plans)
+          .where(eq(training_plans.id, row.id));
+        console.log(`✅ [PUSH] Plan "${row.name}" eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando plan "${row.name}":`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.cover_image_uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.cover_image_uri);
+          row.cover_image_uri = public_id;
+          await database
+            .update(training_plans)
+            .set({ cover_image_uri: public_id })
+            .where(eq(training_plans.id, row.id));
+        }
+      } catch (err) {
+        console.error(
+          `❌ [PUSH] Error subiendo imagen de plan "${row.name}":`,
+          err.message
+        );
+      }
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("training_plans")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(training_plans)
+        .set({ sync_status: "synced" })
+        .where(eq(training_plans.id, row.id));
+      console.log(`✅ [PUSH] Plan "${row.name}" sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo plan "${row.name}":`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Días de Plan
+ */
+export async function pushTrainingPlanDaysChanges() {
+  const localChanges = await database
+    .select()
+    .from(training_plan_days)
+    .where(
+      or(
+        eq(training_plan_days.sync_status, "pending"),
+        eq(training_plan_days.sync_status, "dirty"),
+        eq(training_plan_days.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] training_plan_days: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (const row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("training_plan_days")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(training_plan_days)
+          .where(eq(training_plan_days.id, row.id));
+        console.log(`✅ [PUSH] training_plan_day (id: ${row.id}) eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando training_plan_day (id: ${row.id}):`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("training_plan_days")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(training_plan_days)
+        .set({ sync_status: "synced" })
+        .where(eq(training_plan_days.id, row.id));
+      console.log(`✅ [PUSH] training_plan_day (id: ${row.id}) sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo training_plan_day (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Asignaciones de Plan
+ */
+export async function pushPlanAssignmentsChanges() {
+  const localChanges = await database
+    .select()
+    .from(plan_assignments)
+    .where(
+      or(
+        eq(plan_assignments.sync_status, "pending"),
+        eq(plan_assignments.sync_status, "dirty"),
+        eq(plan_assignments.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] plan_assignments: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (const row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("plan_assignments")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(plan_assignments)
+          .where(eq(plan_assignments.id, row.id));
+        console.log(`✅ [PUSH] plan_assignment (id: ${row.id}) eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando plan_assignment (id: ${row.id}):`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("plan_assignments")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(plan_assignments)
+        .set({ sync_status: "synced" })
+        .where(eq(plan_assignments.id, row.id));
+      console.log(`✅ [PUSH] plan_assignment (id: ${row.id}) sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo plan_assignment (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
  * Función Principal de Sincronización
  * Permite filtrar qué tablas sincronizar. Por defecto sincroniza todas.
  */
@@ -551,6 +754,9 @@ export async function syncWithSupabase(
     "exercise_equipment",
     "routines",
     "routine_exercises",
+    "training_plans",
+    "training_plan_days",
+    "plan_assignments",
   ]
 ) {
   if (isSyncing) {
@@ -577,6 +783,9 @@ export async function syncWithSupabase(
       else if (table === "exercise_equipment") schemaTable = exercise_equipment;
       else if (table === "routines") schemaTable = routines;
       else if (table === "routine_exercises") schemaTable = routine_exercises;
+      else if (table === "training_plans") schemaTable = training_plans;
+      else if (table === "training_plan_days") schemaTable = training_plan_days;
+      else if (table === "plan_assignments") schemaTable = plan_assignments;
 
       if (schemaTable) {
         const { success, changed } = await pullTableChanges(
@@ -608,6 +817,15 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("routine_exercises")) {
       await pushRoutineExercisesChanges();
+    }
+    if (tablesToSync.includes("training_plans")) {
+      await pushTrainingPlansChanges();
+    }
+    if (tablesToSync.includes("training_plan_days")) {
+      await pushTrainingPlanDaysChanges();
+    }
+    if (tablesToSync.includes("plan_assignments")) {
+      await pushPlanAssignmentsChanges();
     }
 
     console.log(`✅ [SYNC] Sincronización completada`);

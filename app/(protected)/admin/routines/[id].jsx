@@ -36,21 +36,45 @@ import { useDeleteRoutine } from "../../../../src/hooks/useDeleteRoutine";
 
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
-import { Clock, Barbell, ChartBar, Pencil, Trash } from "../../../../assets/icons";
+import {
+  Clock,
+  Barbell,
+  ChartBar,
+  Pencil,
+  Trash,
+} from "../../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
-  hipertrofia:       { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1", label: "Hipertrofia" },
-  fuerza:            { gradient: ["#7f1d1d", "#ef4444"], accent: "#ef4444", label: "Fuerza" },
-  perdida_grasa:     { gradient: ["#052e16", "#22c55e"], accent: "#22c55e", label: "Pérdida de grasa" },
-  resistencia:       { gradient: ["#0c4a6e", "#38bdf8"], accent: "#38bdf8", label: "Resistencia" },
-  acondicionamiento: { gradient: ["#78350f", "#f59e0b"], accent: "#f59e0b", label: "Acondicionamiento" },
-  rehabilitacion:    { gradient: ["#3b0764", "#a855f7"], accent: "#a855f7", label: "Rehabilitación" },
-};
-
-const STATUS_CONFIG = {
-  activa:    { color: "#4ade80", label: "● Activa" },
-  borrador:  { color: "rgba(255,255,255,0.5)", label: "◌ Borrador" },
-  archivada: { color: "#fbbf24", label: "◆ Archivada" },
+  hipertrofia: {
+    gradient: ["#1e1580", "#6366f1"],
+    accent: "#6366f1",
+    label: "Hipertrofia",
+  },
+  fuerza: {
+    gradient: ["#7f1d1d", "#ef4444"],
+    accent: "#ef4444",
+    label: "Fuerza",
+  },
+  perdida_grasa: {
+    gradient: ["#052e16", "#22c55e"],
+    accent: "#22c55e",
+    label: "Pérdida de grasa",
+  },
+  resistencia: {
+    gradient: ["#0c4a6e", "#38bdf8"],
+    accent: "#38bdf8",
+    label: "Resistencia",
+  },
+  acondicionamiento: {
+    gradient: ["#78350f", "#f59e0b"],
+    accent: "#f59e0b",
+    label: "Acondicionamiento",
+  },
+  rehabilitacion: {
+    gradient: ["#3b0764", "#a855f7"],
+    accent: "#a855f7",
+    label: "Rehabilitación",
+  },
 };
 
 const HERO_HEIGHT = 280;
@@ -154,8 +178,8 @@ export default function RoutineDetail() {
     );
   }
 
-  const config = OBJECTIVE_CONFIG[data.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
-  const status = STATUS_CONFIG[data.status] ?? STATUS_CONFIG.borrador;
+  const config =
+    OBJECTIVE_CONFIG[data.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const levelLabel = ROUTINE_LEVELS.find((l) => l.value === data.level)?.label;
 
   const imageUri = data.cover_image_uri
@@ -183,10 +207,48 @@ export default function RoutineDetail() {
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
           >
-            <View style={{ position: "absolute", top: -60, right: -60, width: 280, height: 280, borderRadius: 140, backgroundColor: "rgba(255,255,255,0.07)" }} />
-            <View style={{ position: "absolute", top: 50, right: 80, width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(255,255,255,0.05)" }} />
-            <View style={{ position: "absolute", bottom: -30, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(0,0,0,0.15)" }} />
-            <View style={{ position: "absolute", right: 24, top: 30, opacity: 0.12, transform: [{ rotate: "-12deg" }] }}>
+            <View
+              style={{
+                position: "absolute",
+                top: -60,
+                right: -60,
+                width: 280,
+                height: 280,
+                borderRadius: 140,
+                backgroundColor: "rgba(255,255,255,0.07)",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute",
+                top: 50,
+                right: 80,
+                width: 150,
+                height: 150,
+                borderRadius: 75,
+                backgroundColor: "rgba(255,255,255,0.05)",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute",
+                bottom: -30,
+                left: -40,
+                width: 200,
+                height: 200,
+                borderRadius: 100,
+                backgroundColor: "rgba(0,0,0,0.15)",
+              }}
+            />
+            <View
+              style={{
+                position: "absolute",
+                right: 24,
+                top: 30,
+                opacity: 0.12,
+                transform: [{ rotate: "-12deg" }],
+              }}
+            >
               <Barbell size={96} color="white" />
             </View>
           </LinearGradient>
@@ -197,23 +259,35 @@ export default function RoutineDetail() {
           colors={["transparent", "rgba(0,0,0,0.85)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: HERO_HEIGHT * 0.7 }}
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: HERO_HEIGHT * 0.7,
+          }}
         />
-
-        {/* Status badge — top right */}
-        <View style={{ position: "absolute", top: 14, right: 14 }}>
-          <View style={{ backgroundColor: "rgba(0,0,0,0.38)", borderWidth: 0.5, borderColor: "rgba(255,255,255,0.25)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-            <Text style={{ color: status.color, fontSize: 11, fontFamily: "Manrope_600SemiBold" }}>
-              {status.label}
-            </Text>
-          </View>
-        </View>
 
         {/* Objetivo tag — top left */}
         {config.label && (
           <View style={{ position: "absolute", top: 14, left: 14 }}>
-            <View style={{ backgroundColor: config.accent + "33", borderWidth: 0.5, borderColor: config.accent + "66", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 }}>
-              <Text style={{ color: config.accent, fontSize: 11, fontFamily: "Manrope_600SemiBold" }}>
+            <View
+              style={{
+                backgroundColor: config.accent + "33",
+                borderWidth: 0.5,
+                borderColor: config.accent + "66",
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 20,
+              }}
+            >
+              <Text
+                style={{
+                  color: config.accent,
+                  fontSize: 11,
+                  fontFamily: "Manrope_600SemiBold",
+                }}
+              >
                 {config.label}
               </Text>
             </View>
@@ -221,14 +295,37 @@ export default function RoutineDetail() {
         )}
 
         {/* Nombre + nivel — bottom overlay */}
-        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingBottom: 20 }}>
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingHorizontal: 20,
+            paddingBottom: 20,
+          }}
+        >
           {levelLabel && (
-            <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "Manrope_600SemiBold", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 4 }}>
+            <Text
+              style={{
+                color: "rgba(255,255,255,0.6)",
+                fontSize: 11,
+                fontFamily: "Manrope_600SemiBold",
+                letterSpacing: 1.2,
+                textTransform: "uppercase",
+                marginBottom: 4,
+              }}
+            >
               {levelLabel}
             </Text>
           )}
           <Text
-            style={{ color: "white", fontSize: 26, fontFamily: "PlusJakartaSans_700Bold", lineHeight: 32 }}
+            style={{
+              color: "white",
+              fontSize: 26,
+              fontFamily: "PlusJakartaSans_700Bold",
+              lineHeight: 32,
+            }}
             numberOfLines={2}
           >
             {data.name}
@@ -276,8 +373,12 @@ export default function RoutineDetail() {
 
         {levelLabel && (
           <>
-            <View style={{ width: 1, backgroundColor: "rgba(196,190,230,0.2)" }} />
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              style={{ width: 1, backgroundColor: "rgba(196,190,230,0.2)" }}
+            />
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
               <ChartBar size={14} color="rgba(196,190,230,0.55)" />
               <Text
                 className="text-ui-text-main dark:text-ui-text-mainDark"
@@ -349,7 +450,13 @@ export default function RoutineDetail() {
                       flexShrink: 0,
                     }}
                   >
-                    <Text style={{ color: config.accent, fontSize: 13, fontFamily: "Manrope_700Bold" }}>
+                    <Text
+                      style={{
+                        color: config.accent,
+                        fontSize: 13,
+                        fontFamily: "Manrope_700Bold",
+                      }}
+                    >
                       {idx + 1}
                     </Text>
                   </View>
@@ -359,22 +466,49 @@ export default function RoutineDetail() {
                     <Text
                       numberOfLines={1}
                       className="text-ui-text-main dark:text-ui-text-mainDark"
-                      style={{ fontSize: 14, fontFamily: "PlusJakartaSans_700Bold", marginBottom: 3 }}
+                      style={{
+                        fontSize: 14,
+                        fontFamily: "PlusJakartaSans_700Bold",
+                        marginBottom: 3,
+                      }}
                     >
                       {ex.exercise_name}
                     </Text>
 
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
-                      <Text style={{ color: config.accent, fontSize: 12, fontFamily: "Manrope_700Bold" }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 5,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: config.accent,
+                          fontSize: 12,
+                          fontFamily: "Manrope_700Bold",
+                        }}
+                      >
                         {prescriptionLabel(ex)}
                       </Text>
 
                       {ex.rest_seconds != null && (
                         <>
-                          <Text style={{ color: "rgba(196,190,230,0.35)", fontSize: 10 }}>·</Text>
+                          <Text
+                            style={{
+                              color: "rgba(196,190,230,0.35)",
+                              fontSize: 10,
+                            }}
+                          >
+                            ·
+                          </Text>
                           <Text
                             className="text-ui-text-muted dark:text-ui-text-mutedDark"
-                            style={{ fontSize: 12, fontFamily: "Manrope_600SemiBold" }}
+                            style={{
+                              fontSize: 12,
+                              fontFamily: "Manrope_600SemiBold",
+                            }}
                           >
                             {ex.rest_seconds}s descanso
                           </Text>
@@ -383,8 +517,22 @@ export default function RoutineDetail() {
 
                       {intensity && (
                         <>
-                          <Text style={{ color: "rgba(196,190,230,0.35)", fontSize: 10 }}>·</Text>
-                          <Text style={{ color: config.accent, fontSize: 12, fontFamily: "Manrope_600SemiBold", opacity: 0.75 }}>
+                          <Text
+                            style={{
+                              color: "rgba(196,190,230,0.35)",
+                              fontSize: 10,
+                            }}
+                          >
+                            ·
+                          </Text>
+                          <Text
+                            style={{
+                              color: config.accent,
+                              fontSize: 12,
+                              fontFamily: "Manrope_600SemiBold",
+                              opacity: 0.75,
+                            }}
+                          >
                             {intensity}
                           </Text>
                         </>
@@ -395,7 +543,11 @@ export default function RoutineDetail() {
                       <Text
                         numberOfLines={1}
                         className="text-ui-text-muted dark:text-ui-text-mutedDark"
-                        style={{ fontSize: 11, fontFamily: "Manrope_400Regular", marginTop: 3 }}
+                        style={{
+                          fontSize: 11,
+                          fontFamily: "Manrope_400Regular",
+                          marginTop: 3,
+                        }}
                       >
                         {ex.notes}
                       </Text>
@@ -446,7 +598,13 @@ export default function RoutineDetail() {
           }}
         >
           <Trash size={17} color="#ef4444" />
-          <Text style={{ color: "#ef4444", fontFamily: "PlusJakartaSans_600SemiBold", fontSize: 15 }}>
+          <Text
+            style={{
+              color: "#ef4444",
+              fontFamily: "PlusJakartaSans_600SemiBold",
+              fontSize: 15,
+            }}
+          >
             {isDeleting ? "Eliminando…" : "Eliminar rutina"}
           </Text>
         </Pressable>

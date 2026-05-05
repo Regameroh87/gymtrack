@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, unique } from "drizzle-orm/sqlite-core";
 
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id").primaryKey(),
@@ -98,3 +98,65 @@ export const routine_exercises = sqliteTable("routine_exercises", {
     .$defaultFn(() => new Date().toISOString()),
   sync_status: text("sync_status").notNull().default("pending"),
 });
+
+export const training_plans = sqliteTable("training_plans", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  objective: text("objective"),
+  level: text("level"),
+  cover_image_uri: text("cover_image_uri"),
+  kind: text("kind").notNull().default("template"),
+  owner_user_id: text("owner_user_id"),
+  created_by: text("created_by"),
+  status: text("status").notNull().default("draft"),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  sync_status: text("sync_status").notNull().default("pending"),
+});
+
+export const training_plan_days = sqliteTable(
+  "training_plan_days",
+  {
+    id: text("id").primaryKey(),
+    plan_id: text("plan_id")
+      .notNull()
+      .references(() => training_plans.id),
+    day_number: integer("day_number").notNull(),
+    routine_id: text("routine_id")
+      .notNull()
+      .references(() => routines.id),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.plan_id, t.day_number)]
+);
+
+export const plan_assignments = sqliteTable(
+  "plan_assignments",
+  {
+    id: text("id").primaryKey(),
+    plan_id: text("plan_id")
+      .notNull()
+      .references(() => training_plans.id),
+    user_id: text("user_id").notNull(),
+    assigned_by: text("assigned_by"),
+    assigned_at: text("assigned_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.plan_id, t.user_id)]
+);

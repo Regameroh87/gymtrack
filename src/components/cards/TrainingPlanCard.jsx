@@ -1,5 +1,5 @@
 // React Native
-import { View, Text, Pressable } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 // Librerías externas
 import { Image } from "expo-image";
@@ -7,13 +7,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
 // Constantes
-import { ROUTINE_LEVELS } from "../../constants/routineOptions";
+import { PLAN_LEVELS } from "../../constants/planOptions";
 
-// Base de datos / utils
+// Utilidades
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // Tema / assets
-import { Clock, Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
+import {
+  Calendar,
+  ChartBar,
+  ChevronRight,
+  ClipboardList,
+} from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
   hipertrofia: { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1" },
@@ -33,21 +38,26 @@ const OBJECTIVE_LABELS = {
   rehabilitacion: "Rehabilitación",
 };
 
-const RoutineCard = ({ routine, onPress }) => {
-  const config =
-    OBJECTIVE_CONFIG[routine.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
-  const levelLabel = ROUTINE_LEVELS.find(
-    (l) => l.value === routine.level
-  )?.label;
-  const objectiveLabel = OBJECTIVE_LABELS[routine.objective];
+const STATUS_LABELS = {
+  draft: "Borrador",
+  active: "Activo",
+  archived: "Archivado",
+};
 
-  const imageUri = routine.cover_image_uri
-    ? (getCloudinaryUrl(routine.cover_image_uri) ?? routine.cover_image_uri)
+const TrainingPlanCard = ({ plan, onPress }) => {
+  const config =
+    OBJECTIVE_CONFIG[plan.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
+  const levelLabel = PLAN_LEVELS.find((l) => l.value === plan.level)?.label;
+  const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
+  const statusLabel = STATUS_LABELS[plan.status];
+
+  const imageUri = plan.cover_image_uri
+    ? (getCloudinaryUrl(plan.cover_image_uri) ?? plan.cover_image_uri)
     : null;
 
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress?.(routine);
+    onPress?.(plan);
   };
 
   return (
@@ -61,8 +71,7 @@ const RoutineCard = ({ routine, onPress }) => {
           {imageUri ? (
             <Image
               source={{ uri: imageUri }}
-              width={"100%"}
-              height={210}
+              className="w-full h-full"
               contentFit="cover"
             />
           ) : (
@@ -72,18 +81,15 @@ const RoutineCard = ({ routine, onPress }) => {
               end={{ x: 1, y: 1 }}
               className="flex-1"
             >
-              {/* Círculos decorativos */}
               <View className="absolute -top-[50px] -right-[50px] w-[220px] h-[220px] rounded-full bg-[rgba(255,255,255,0.07)]" />
               <View className="absolute top-[30px] right-[60px] w-[120px] h-[120px] rounded-full bg-[rgba(255,255,255,0.05)]" />
               <View className="absolute -bottom-[20px] -left-[30px] w-[150px] h-[150px] rounded-full bg-[rgba(0,0,0,0.15)]" />
-              {/* Ícono watermark */}
               <View className="absolute right-5 top-6 opacity-[0.12] -rotate-12">
-                <Barbell size={72} color="white" />
+                <ClipboardList size={72} color="white" />
               </View>
             </LinearGradient>
           )}
 
-          {/* Overlay oscuro inferior */}
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.82)"]}
             start={{ x: 0, y: 0 }}
@@ -111,63 +117,58 @@ const RoutineCard = ({ routine, onPress }) => {
             </View>
           )}
 
-          {/* Nombre sobre imagen */}
+          {/* Status tag — top right (solo si no es activo) */}
+          {plan.status && plan.status !== "active" && (
+            <View className="absolute top-[14px] right-[14px]">
+              <View className="rounded-full bg-black/40 border border-white/20 px-2.5 py-1.5">
+                <Text className="font-manrope-semi text-[11px] text-white/80">
+                  {statusLabel}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Nombre */}
           <View className="absolute bottom-0 left-0 right-0 px-4 pb-4">
             <Text
               className="font-jakarta-bold text-[21px] leading-[26px] text-white"
               numberOfLines={2}
             >
-              {routine.name}
+              {plan.name}
             </Text>
           </View>
         </View>
 
-        {/* ── Footer: stats + CTA ── */}
+        {/* ── Footer ── */}
         <View className="flex-row items-center border-t-[0.5px] border-t-[rgba(196,190,230,0.15)] bg-ui-surface-light py-[13px] pl-4 pr-[14px] dark:bg-ui-surface-dark">
-          {/* Stats: dos filas */}
           <View className="mr-3 flex-1 min-w-0 gap-[7px]">
-            {/* Fila 1: duración + ejercicios */}
             <View className="flex-row items-center gap-[14px]">
               <View className="flex-row items-center gap-1.5">
-                <Clock size={13} color="rgba(196,190,230,0.55)" />
+                <Calendar size={13} color="rgba(196,190,230,0.55)" />
                 <Text
                   numberOfLines={1}
                   className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                 >
-                  {routine.estimated_duration_min != null
-                    ? `${routine.estimated_duration_min} min`
-                    : "—"}
+                  {plan.day_count > 0
+                    ? `${plan.day_count} ${plan.day_count === 1 ? "día" : "días"}`
+                    : "Sin días"}
                 </Text>
               </View>
 
               <View className="h-[3px] w-[3px] rounded-full bg-[rgba(196,190,230,0.3)]" />
 
               <View className="flex-row items-center gap-1.5 shrink">
-                <Barbell size={13} color="rgba(196,190,230,0.55)" />
+                <ChartBar size={13} color="rgba(196,190,230,0.55)" />
                 <Text
                   numberOfLines={1}
                   className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                 >
-                  {routine.exercise_count > 0
-                    ? `${routine.exercise_count} ejercicios`
-                    : "Sin ejercicios"}
+                  {levelLabel ?? "Sin nivel"}
                 </Text>
               </View>
             </View>
-
-            {/* Fila 2: nivel */}
-            <View className="flex-row items-center gap-1.5">
-              <ChartBar size={13} color="rgba(196,190,230,0.55)" />
-              <Text
-                numberOfLines={1}
-                className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
-              >
-                {levelLabel ?? "Sin nivel"}
-              </Text>
-            </View>
           </View>
 
-          {/* CTA */}
           <View
             className="h-9 w-9 shrink-0 items-center justify-center rounded-full border-[1px]"
             style={{
@@ -183,4 +184,4 @@ const RoutineCard = ({ routine, onPress }) => {
   );
 };
 
-export default RoutineCard;
+export default TrainingPlanCard;

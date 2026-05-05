@@ -1,0 +1,1 @@
+ALTER TABLE `plan_assignments` ADD `updated_at` text NOT NULL;

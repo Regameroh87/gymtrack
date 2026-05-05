@@ -82,6 +82,11 @@ export default function AdminLayout() {
           title: "Armar Rutina",
         }}
       />
+      {/* Planes */}
+      <Stack.Screen name="plans/index" options={{ title: "Planes" }} />
+      <Stack.Screen name="plans/builder" options={{ title: "Armar Plan" }} />
+      <Stack.Screen name="plans/[id]/index" options={{ title: "Detalle de Plan" }} />
+      <Stack.Screen name="plans/[id]/assign" options={{ title: "Asignar a Alumnos" }} />
       {/* Placeholders */}
       <Stack.Screen name="billing/index" options={{ title: "Contabilidad" }} />
       <Stack.Screen
