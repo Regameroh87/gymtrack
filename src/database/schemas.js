@@ -51,7 +51,7 @@ export const exercise_equipment = sqliteTable("exercise_equipment", {
   sync_status: text("sync_status").notNull().default("pending"),
 });
 
-export const sessions = sqliteTable("routines", {
+export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
