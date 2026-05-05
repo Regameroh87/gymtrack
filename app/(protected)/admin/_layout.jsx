@@ -67,7 +67,7 @@ export default function AdminLayout() {
       <Stack.Screen
         name="sessions/index"
         options={{
-          title: "Rutinas",
+          title: "Sesiones",
         }}
       />
       <Stack.Screen
@@ -79,7 +79,7 @@ export default function AdminLayout() {
       <Stack.Screen
         name="sessions/builder"
         options={{
-          title: "Armar Rutina",
+          title: "Armar Sesion",
         }}
       />
       {/* Planes */}
