@@ -575,11 +575,8 @@ export async function syncWithSupabase(
       if (table === "exercises_base") schemaTable = exercises_base;
       else if (table === "equipment") schemaTable = equipment;
       else if (table === "exercise_equipment") schemaTable = exercise_equipment;
-      else if (table === "routines") schemaTable = routines;
-      else if (table === "routine_exercises") schemaTable = routine_exercises;
-      else if (table === "training_plans") schemaTable = training_plans;
-      else if (table === "training_plan_days") schemaTable = training_plan_days;
-      else if (table === "plan_assignments") schemaTable = plan_assignments;
+      else if (table === "sessions") schemaTable = sessions;
+      else if (table === "session_exercises") schemaTable = session_exercises;
 
       if (schemaTable) {
         const { success, changed } = await pullTableChanges(
