@@ -13,6 +13,8 @@ import m0008 from './0008_neat_wraith.sql';
 import m0009 from './0009_many_tyrannus.sql';
 import m0010 from './0010_bent_xorn.sql';
 import m0011 from './0011_powerful_vulture.sql';
+import m0012 from './0012_remove_objective_from_routines.sql';
+import m0013 from './0013_dashing_paibok.sql';
 
   export default {
     journal,
@@ -28,7 +30,9 @@ m0007,
 m0008,
 m0009,
 m0010,
-m0011
+m0011,
+m0012,
+m0013
     }
   }
   
