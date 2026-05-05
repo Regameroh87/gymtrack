@@ -1,8 +1,8 @@
-// ROUTINE_OBJECTIVES y ROUTINE_LEVELS se reexportan para no duplicar enums
+// SESSION_OBJECTIVES y SESSION_LEVELS se reexportan para no duplicar enums
 export {
-  ROUTINE_OBJECTIVES as PLAN_OBJECTIVES,
-  ROUTINE_LEVELS as PLAN_LEVELS,
-} from "./routineOptions";
+  SESSION_OBJECTIVES as PLAN_OBJECTIVES,
+  SESSION_LEVELS as PLAN_LEVELS,
+} from "./sessionOptions";
 
 export const PLAN_STATUSES = [
   { label: "Borrador", value: "draft" },
