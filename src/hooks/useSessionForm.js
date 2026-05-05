@@ -33,7 +33,7 @@ const parseFloatOrNull = (v) => {
 
 const str = (v) => (v === null || v === undefined ? "" : String(v));
 
-export const useRoutineForm = ({ id = null, onSuccess } = {}) => {
+export const useSessionForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
 
   const form = useForm({
