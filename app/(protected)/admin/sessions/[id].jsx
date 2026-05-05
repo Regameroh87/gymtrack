@@ -32,7 +32,7 @@ import { ROUTINE_LEVELS } from "../../../../src/constants/routineOptions";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
 // Hooks
-import { useDeleteRoutine } from "../../../../src/hooks/useDeleteRoutine";
+import { useDeleteSession } from "../../../../src/hooks/useDeleteSession";
 
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
@@ -104,7 +104,7 @@ export default function RoutineDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { mutate: deleteSession, isPending: isDeleting } = useDeleteRoutine();
+  const { mutate: deleteSession, isPending: isDeleting } = useDeleteSession();
 
   const handleDelete = () => {
     Alert.alert(

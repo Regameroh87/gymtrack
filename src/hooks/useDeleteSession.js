@@ -4,23 +4,23 @@ import { eq } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../database";
-import { routines, routine_exercises } from "../database/schemas";
+import { sessions, session_exercises } from "../database/schemas";
 import { checkNetInfoAndSync } from "../database/sync";
 
-export const useDeleteRoutine = () => {
+export const useDeleteSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id) => {
       await database.transaction(async (tx) => {
         await tx
-          .update(routine_exercises)
+          .update(session_exercises)
           .set({ sync_status: "deleted" })
-          .where(eq(routine_exercises.routine_id, id));
+          .where(eq(session_exercises.routine_id, id));
         await tx
-          .update(routines)
+          .update(sessions)
           .set({ sync_status: "deleted" })
-          .where(eq(routines.id, id));
+          .where(eq(sessions.id, id));
       });
     },
     onSuccess: async (_, id) => {
