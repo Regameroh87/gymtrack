@@ -7,7 +7,7 @@ import { database } from "../database";
 import { sessions, session_exercises } from "../database/schemas";
 import { checkNetInfoAndSync } from "../database/sync";
 
-export const useDeleteSession = () => {
+export const useDeleteRoutine = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -16,7 +16,7 @@ export const useDeleteSession = () => {
         await tx
           .update(session_exercises)
           .set({ sync_status: "deleted" })
-          .where(eq(session_exercises.routine_id, id));
+          .where(eq(session_exercises.session_id, id));
         await tx
           .update(sessions)
           .set({ sync_status: "deleted" })
