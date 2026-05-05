@@ -21,7 +21,11 @@ import { database } from "../../database";
 import { sessions } from "../../database/schemas";
 
 // Constantes
-import { PLAN_LEVELS, PLAN_OBJECTIVES, PLAN_STATUSES } from "../../constants/planOptions";
+import {
+  PLAN_LEVELS,
+  PLAN_OBJECTIVES,
+  PLAN_STATUSES,
+} from "../../constants/planOptions";
 
 // Componentes
 import CustomSelect from "../CustomSelect";
@@ -119,7 +123,10 @@ export default function FormTrainingPlan({ form, plan }) {
               validators={{
                 onChange: ({ value }) => {
                   if (!value) return undefined;
-                  const r = z.string().min(3, "Mínimo 3 caracteres").safeParse(value);
+                  const r = z
+                    .string()
+                    .min(3, "Mínimo 3 caracteres")
+                    .safeParse(value);
                   return r.success ? undefined : r.error.errors[0].message;
                 },
                 onSubmit: ({ value }) => {
@@ -270,12 +277,18 @@ export default function FormTrainingPlan({ form, plan }) {
                   {/* Selector de rutina para agregar día */}
                   <CustomSelect
                     placeholder="Agregar día → buscar rutina..."
-                    options={dbRoutines.map((r) => ({ label: r.name, value: r.id, meta: r }))}
+                    options={dbRoutines.map((r) => ({
+                      label: r.name,
+                      value: r.id,
+                      meta: r,
+                    }))}
                     value=""
                     searchable
                     onChange={(routineId) => {
                       if (!routineId) return;
-                      const routine = dbRoutines.find((r) => r.id === routineId);
+                      const routine = dbRoutines.find(
+                        (r) => r.id === routineId
+                      );
                       if (!routine) return;
                       const newDay = {
                         id: Crypto.randomUUID(),
