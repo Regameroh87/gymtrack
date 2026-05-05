@@ -26,7 +26,7 @@ import SessionCard from "../../../../src/components/cards/SessionCard";
 import { brandPrimary } from "../../../../src/theme/colors";
 import { ClipboardList, Plus } from "../../../../assets/icons";
 
-function AnimatedCard({ routine, onPress, scrollY, containerY }) {
+function AnimatedCard({ session, onPress, scrollY, containerY }) {
   const cardY = useSharedValue(0);
   const cardHeight = useSharedValue(1);
 
@@ -83,7 +83,7 @@ export default function SessionsList() {
             Gestión de Entrenamientos
           </Text>
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-            Rutinas
+            Sesiones
           </Text>
           {sessions.length > 0 && (
             <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mt-1">
@@ -126,8 +126,8 @@ export default function SessionsList() {
               Construye planes de entrenamiento
             </Text>
             <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
-              Crea rutinas personalizadas combinando ejercicios del catálogo con
-              series y repeticiones.
+              Crea sesiones personalizadas combinando ejercicios del catálogo
+              con series y repeticiones.
             </Text>
             <Pressable
               onPress={handleNew}
@@ -141,7 +141,7 @@ export default function SessionsList() {
               >
                 <Plus size={18} color="white" />
                 <Text className="text-white font-jakarta-semi text-sm ml-2">
-                  Nueva Rutina
+                  Nueva Sesión
                 </Text>
               </LinearGradient>
             </Pressable>
