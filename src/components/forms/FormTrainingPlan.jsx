@@ -18,7 +18,7 @@ import { z } from "zod";
 
 // Base de datos
 import { database } from "../../database";
-import { routines } from "../../database/schemas";
+import { sessions } from "../../database/schemas";
 
 // Constantes
 import { PLAN_LEVELS, PLAN_OBJECTIVES, PLAN_STATUSES } from "../../constants/planOptions";
@@ -34,15 +34,6 @@ import TrainingPlanDayCard from "./TrainingPlanDayCard";
 // Tema y assets
 import { Plus } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
-
-const OBJECTIVE_ACCENT = {
-  hipertrofia: "#6366f1",
-  fuerza: "#ef4444",
-  perdida_grasa: "#22c55e",
-  resistencia: "#38bdf8",
-  acondicionamiento: "#f59e0b",
-  rehabilitacion: "#a855f7",
-};
 
 function SectionLabel({ children }) {
   return (
@@ -88,13 +79,12 @@ export default function FormTrainingPlan({ form, plan }) {
     queryFn: async () => {
       const results = await database
         .select({
-          id: routines.id,
-          name: routines.name,
-          objective: routines.objective,
-          sync_status: routines.sync_status,
+          id: sessions.id,
+          name: sessions.name,
+          sync_status: sessions.sync_status,
         })
-        .from(routines)
-        .orderBy(routines.name);
+        .from(sessions)
+        .orderBy(sessions.name);
       return (results || []).filter((r) => r.sync_status !== "deleted");
     },
     staleTime: Infinity,
@@ -261,7 +251,6 @@ export default function FormTrainingPlan({ form, plan }) {
                   frequencyCounts[day.routine_id] = {
                     name: day.routine_name,
                     count: 0,
-                    objective: day.routine_objective,
                   };
                 }
                 frequencyCounts[day.routine_id].count++;
@@ -292,7 +281,6 @@ export default function FormTrainingPlan({ form, plan }) {
                         id: Crypto.randomUUID(),
                         routine_id: routine.id,
                         routine_name: routine.name,
-                        routine_objective: routine.objective,
                       };
                       field.handleChange([...days, newDay]);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -340,24 +328,21 @@ export default function FormTrainingPlan({ form, plan }) {
                         Frecuencia
                       </Text>
                       <View className="flex-row flex-wrap gap-2">
-                        {frequencySummary.map((item) => {
-                          const accent = OBJECTIVE_ACCENT[item.objective] ?? "#6366f1";
-                          return (
-                            <View
-                              key={item.name}
-                              className="flex-row items-center rounded-full px-3 py-1"
-                              style={{ backgroundColor: accent + "22" }}
+                        {frequencySummary.map((item) => (
+                          <View
+                            key={item.name}
+                            className="flex-row items-center rounded-full px-3 py-1"
+                            style={{ backgroundColor: "#4A44E422" }}
+                          >
+                            <Text
+                              className="text-[11px] font-manrope-semi"
+                              style={{ color: "#4A44E4" }}
                             >
-                              <Text
-                                className="text-[11px] font-manrope-semi"
-                                style={{ color: accent }}
-                              >
-                                {item.name}
-                                {item.count > 1 ? ` ×${item.count}` : ""}
-                              </Text>
-                            </View>
-                          );
-                        })}
+                              {item.name}
+                              {item.count > 1 ? ` ×${item.count}` : ""}
+                            </Text>
+                          </View>
+                        ))}
                       </View>
                     </View>
                   )}

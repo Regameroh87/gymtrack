@@ -61,7 +61,6 @@ export const sessions = sqliteTable("routines", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  objective: text("objective"),
   level: text("level"),
   estimated_duration_min: integer("estimated_duration_min"),
   cover_image_uri: text("cover_image_uri"),

@@ -23,10 +23,7 @@ import { exercises_base } from "../../database/schemas";
 import useAsyncStorage from "../../hooks/useAsyncStorage";
 
 // Constantes
-import {
-  SESSION_OBJECTIVES,
-  SESSION_LEVELS,
-} from "../../constants/sessionOptions";
+import { SESSION_LEVELS } from "../../constants/sessionOptions";
 
 // Componentes
 import CustomSelect from "../CustomSelect";
@@ -154,28 +151,6 @@ export default function FormSession({ form, session }) {
                     style={{ minHeight: 90 }}
                   />
                 </FormField>
-              )}
-            </form.Field>
-
-            {/* Objetivo */}
-            <form.Field
-              name="objective"
-              validators={{
-                onSubmit: ({ value }) =>
-                  !value ? "Seleccioná un objetivo" : undefined,
-              }}
-            >
-              {(field) => (
-                <CustomSelect
-                  label="OBJETIVO"
-                  options={SESSION_OBJECTIVES}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  placeholder="Seleccionar objetivo..."
-                  error={field.state.meta.errors?.[0]}
-                  searchable={false}
-                  snapPoints={["50%"]}
-                />
               )}
             </form.Field>
 

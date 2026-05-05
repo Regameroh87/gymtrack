@@ -40,7 +40,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
     defaultValues: {
       name: "",
       description: "",
-      objective: "",
       level: "",
       estimated_duration_min: "",
       cover_image_uri: "",
@@ -60,7 +59,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
             .set({
               name: value.name.trim(),
               description: value.description?.trim() || null,
-              objective: value.objective || null,
               level: value.level || null,
               estimated_duration_min: parseIntOrNull(
                 value.estimated_duration_min
@@ -106,7 +104,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
             id: sessionId,
             name: value.name.trim(),
             description: value.description?.trim() || null,
-            objective: value.objective || null,
             level: value.level || null,
             estimated_duration_min: parseIntOrNull(
               value.estimated_duration_min
@@ -207,7 +204,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
       return {
         name: session.name ?? "",
         description: session.description ?? "",
-        objective: session.objective ?? "",
         level: session.level ?? "",
         estimated_duration_min: str(session.estimated_duration_min),
         cover_image_uri: session.cover_image_uri ?? "",
@@ -238,7 +234,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
     if (!editData) return;
     form.setFieldValue("name", editData.name, { touch: false });
     form.setFieldValue("description", editData.description, { touch: false });
-    form.setFieldValue("objective", editData.objective, { touch: false });
     form.setFieldValue("level", editData.level, { touch: false });
     form.setFieldValue(
       "estimated_duration_min",

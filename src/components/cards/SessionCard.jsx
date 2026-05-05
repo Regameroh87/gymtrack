@@ -15,31 +15,15 @@ import { getCloudinaryUrl } from "../../utils/cloudinary";
 // Tema / assets
 import { Clock, Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
 
-const OBJECTIVE_CONFIG = {
-  hipertrofia: { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1" },
-  fuerza: { gradient: ["#7f1d1d", "#ef4444"], accent: "#ef4444" },
-  perdida_grasa: { gradient: ["#052e16", "#22c55e"], accent: "#22c55e" },
-  resistencia: { gradient: ["#0c4a6e", "#38bdf8"], accent: "#38bdf8" },
-  acondicionamiento: { gradient: ["#78350f", "#f59e0b"], accent: "#f59e0b" },
-  rehabilitacion: { gradient: ["#3b0764", "#a855f7"], accent: "#a855f7" },
-};
-
-const OBJECTIVE_LABELS = {
-  hipertrofia: "Hipertrofia",
-  fuerza: "Fuerza",
-  perdida_grasa: "Pérdida de grasa",
-  resistencia: "Resistencia",
-  acondicionamiento: "Acondicionamiento",
-  rehabilitacion: "Rehabilitación",
+const DEFAULT_CONFIG = {
+  gradient: ["#1e1580", "#4A44E4"],
+  accent: "#4A44E4",
 };
 
 const SessionCard = ({ session, onPress }) => {
-  const config =
-    OBJECTIVE_CONFIG[session.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const levelLabel = SESSION_LEVELS.find(
     (l) => l.value === session.level
   )?.label;
-  const objectiveLabel = OBJECTIVE_LABELS[session.objective];
 
   const imageUri = session.cover_image_uri
     ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
@@ -67,7 +51,7 @@ const SessionCard = ({ session, onPress }) => {
             />
           ) : (
             <LinearGradient
-              colors={config.gradient}
+              colors={DEFAULT_CONFIG.gradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               className="flex-1"
@@ -90,26 +74,6 @@ const SessionCard = ({ session, onPress }) => {
             end={{ x: 0, y: 1 }}
             className="absolute bottom-0 left-0 right-0 h-[157.5px]"
           />
-
-          {/* Objetivo tag — top left */}
-          {objectiveLabel && (
-            <View className="absolute top-[14px] left-[14px]">
-              <View
-                className="rounded-full border-[0.5px] px-2.5 py-1.5"
-                style={{
-                  backgroundColor: config.accent + "33",
-                  borderColor: config.accent + "66",
-                }}
-              >
-                <Text
-                  className="font-manrope-semi text-[11px]"
-                  style={{ color: config.accent }}
-                >
-                  {objectiveLabel}
-                </Text>
-              </View>
-            </View>
-          )}
 
           {/* Nombre sobre imagen */}
           <View className="absolute bottom-0 left-0 right-0 px-4 pb-4">
@@ -171,11 +135,11 @@ const SessionCard = ({ session, onPress }) => {
           <View
             className="h-9 w-9 shrink-0 items-center justify-center rounded-full border-[1px]"
             style={{
-              backgroundColor: config.accent + "26",
-              borderColor: config.accent + "55",
+              backgroundColor: DEFAULT_CONFIG.accent + "26",
+              borderColor: DEFAULT_CONFIG.accent + "55",
             }}
           >
-            <ChevronRight size={15} color={config.accent} />
+            <ChevronRight size={15} color={DEFAULT_CONFIG.accent} />
           </View>
         </View>
       </View>
