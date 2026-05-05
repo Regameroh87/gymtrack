@@ -20,8 +20,8 @@ import * as Haptics from "expo-haptics";
 // Base de datos
 import { database } from "../../../../src/database";
 import {
-  routines,
-  routine_exercises,
+  sessions,
+  session_exercises,
   exercises_base,
 } from "../../../../src/database/schemas";
 
@@ -104,18 +104,18 @@ export default function RoutineDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const { mutate: deleteRoutine, isPending: isDeleting } = useDeleteRoutine();
+  const { mutate: deleteSession, isPending: isDeleting } = useDeleteRoutine();
 
   const handleDelete = () => {
     Alert.alert(
-      "Eliminar rutina",
+      "Eliminar sesión",
       `¿Seguro que querés eliminar "${data?.name}"? Esta acción no se puede deshacer.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
-          onPress: () => deleteRoutine(id, { onSuccess: () => router.back() }),
+          onPress: () => deleteSession(id, { onSuccess: () => router.back() }),
         },
       ]
     );
@@ -126,35 +126,35 @@ export default function RoutineDetail() {
     queryFn: async () => {
       const [routine] = await database
         .select()
-        .from(routines)
-        .where(eq(routines.id, id));
+        .from(sessions)
+        .where(eq(sessions.id, id));
 
       if (!routine) return null;
 
       const exercises = await database
         .select({
-          id: routine_exercises.id,
-          position: routine_exercises.position,
-          sets: routine_exercises.sets,
-          prescription_mode: routine_exercises.prescription_mode,
-          reps_min: routine_exercises.reps_min,
-          reps_max: routine_exercises.reps_max,
-          duration_seconds: routine_exercises.duration_seconds,
-          rest_seconds: routine_exercises.rest_seconds,
-          intensity_mode: routine_exercises.intensity_mode,
-          rir: routine_exercises.rir,
-          rpe: routine_exercises.rpe,
-          notes: routine_exercises.notes,
+          id: session_exercises.id,
+          position: session_exercises.position,
+          sets: session_exercises.sets,
+          prescription_mode: session_exercises.prescription_mode,
+          reps_min: session_exercises.reps_min,
+          reps_max: session_exercises.reps_max,
+          duration_seconds: session_exercises.duration_seconds,
+          rest_seconds: session_exercises.rest_seconds,
+          intensity_mode: session_exercises.intensity_mode,
+          rir: session_exercises.rir,
+          rpe: session_exercises.rpe,
+          notes: session_exercises.notes,
           exercise_name: exercises_base.name,
           exercise_muscle: exercises_base.muscle_group,
         })
-        .from(routine_exercises)
+        .from(session_exercises)
         .innerJoin(
           exercises_base,
-          eq(routine_exercises.exercise_id, exercises_base.id)
+          eq(session_exercises.exercise_id, exercises_base.id)
         )
-        .where(eq(routine_exercises.routine_id, id))
-        .orderBy(asc(routine_exercises.position));
+        .where(eq(session_exercises.session_id, id))
+        .orderBy(asc(session_exercises.position));
 
       return { ...routine, exercises };
     },
