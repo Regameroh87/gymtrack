@@ -71,7 +71,7 @@ export default function SessionsList() {
 
   const handleNew = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push("/admin/routines/builder");
+    router.push("/admin/sessions/builder");
   };
 
   return (
@@ -159,7 +159,7 @@ export default function SessionsList() {
                 session={session}
                 scrollY={scrollY}
                 containerY={containerY}
-                onPress={(r) => router.push(`/admin/routines/${r.id}`)}
+                onPress={(r) => router.push(`/admin/sessions/${r.id}`)}
               />
             ))}
           </View>
