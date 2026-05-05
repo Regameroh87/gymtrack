@@ -33,6 +33,7 @@ import {
   DarkTheme,
 } from "@react-navigation/native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
@@ -122,22 +123,24 @@ export default function RootLayout() {
             <ThemeProvider
               value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
             >
-              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-              <Screen>
-                <Stack>
-                  <Stack.Screen
-                    name="(auth)"
-                    options={{ headerShown: false }}
-                  />
-                  <Stack.Screen
-                    name="(protected)"
-                    options={{
-                      headerShown: false,
-                    }}
-                  />
-                </Stack>
-                <Toast config={toastConfig} />
-              </Screen>
+              <BottomSheetModalProvider>
+                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+                <Screen>
+                  <Stack>
+                    <Stack.Screen
+                      name="(auth)"
+                      options={{ headerShown: false }}
+                    />
+                    <Stack.Screen
+                      name="(protected)"
+                      options={{
+                        headerShown: false,
+                      }}
+                    />
+                  </Stack>
+                  <Toast config={toastConfig} />
+                </Screen>
+              </BottomSheetModalProvider>
             </ThemeProvider>
           </QueryClientProvider>
         </KeyboardProvider>

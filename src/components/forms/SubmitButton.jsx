@@ -15,14 +15,25 @@ export default function SubmitButton({
     <Pressable
       onPress={isDisabled ? null : onPress}
       disabled={isDisabled}
-      className={`mt-8 rounded-xl overflow-hidden ${isDisabled ? "opacity-40" : "active:scale-[0.97]"}`}
+      style={({ pressed }) => ({
+        marginTop: 32,
+        borderRadius: 12,
+        overflow: "hidden",
+        opacity: isDisabled ? 0.4 : 1,
+        transform: [{ scale: pressed && !isDisabled ? 0.97 : 1 }],
+      })}
     >
       <LinearGradient
         colors={["#3023cd", "#4a44e4"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="py-5 px-8 items-center flex-row justify-center gap-3"
         style={{
+          paddingVertical: 20,
+          paddingHorizontal: 32,
+          alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "center",
+          gap: 12,
           shadowColor: "#312e81",
           shadowOffset: { width: 0, height: 20 },
           shadowOpacity: 0.4,
@@ -31,7 +42,7 @@ export default function SubmitButton({
         }}
       >
         {isLoading && <ActivityIndicator size="small" color="#ffffff" />}
-        <Text className="font-jakarta-bold text-white text-lg">
+        <Text style={{ fontFamily: "PlusJakartaSans_700Bold", color: "white", fontSize: 18 }}>
           {isLoading ? "Guardando..." : label}
         </Text>
       </LinearGradient>
