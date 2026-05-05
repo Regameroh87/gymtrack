@@ -87,10 +87,10 @@ export default function AdminDashboard() {
             />
             <AdminModuleCard
               icon={ClipboardList}
-              title="Rutinas"
+              title="Sesiones"
               subtitle="Armador técnico"
               accentColor={["#a78bfa", "#7c3aed"]}
-              onPress={() => nav("routines")}
+              onPress={() => nav("sessions")}
             />
             <AdminModuleCard
               icon={ClipboardList}
