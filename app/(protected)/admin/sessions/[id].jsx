@@ -416,7 +416,7 @@ export default function SessionDetail() {
           >
             <Barbell size={28} color="rgba(196,190,230,0.4)" />
             <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-3 text-center">
-              Esta rutina no tiene ejercicios asignados.
+              Esta sesión no tiene ejercicios asignados.
             </Text>
           </View>
         ) : (
@@ -577,7 +577,7 @@ export default function SessionDetail() {
             style={{ gap: 8 }}
           >
             <Pencil size={17} color="white" />
-            <Text className="text-white font-jakarta-semi">Editar rutina</Text>
+            <Text className="text-white font-jakarta-semi">Editar sesión</Text>
           </LinearGradient>
         </Pressable>
 
@@ -605,7 +605,7 @@ export default function SessionDetail() {
               fontSize: 15,
             }}
           >
-            {isDeleting ? "Eliminando…" : "Eliminar rutina"}
+            {isDeleting ? "Eliminando…" : "Eliminar sesión"}
           </Text>
         </Pressable>
       </View>
