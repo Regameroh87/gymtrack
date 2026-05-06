@@ -12,10 +12,11 @@ export default function PreviewVideo({ videoUrl, children }) {
 
   const isDark = colorScheme === "dark";
   const URL = getCloudinaryUrl(videoUrl) ?? videoUrl;
-  const player = useVideoPlayer(URL, (p) => {
+  const videoSource = !isYoutube && videoUrl ? URL : null;
+  const player = useVideoPlayer(videoSource, (p) => {
     p.loop = true;
     p.muted = true;
-    p.play();
+    if (videoSource) p.play();
   });
 
   return (
