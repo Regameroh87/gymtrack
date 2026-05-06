@@ -36,7 +36,7 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { useDeleteSession } from "../../../../src/hooks/useDeleteSession";
 
 // Tema / assets
-import { brandPrimary } from "../../../../src/theme/colors";
+import { brandPrimary, gradient } from "../../../../src/theme/colors";
 import {
   Clock,
   Barbell,
@@ -44,39 +44,6 @@ import {
   Pencil,
   Trash,
 } from "../../../../assets/icons";
-
-const OBJECTIVE_CONFIG = {
-  hipertrofia: {
-    gradient: ["#1e1580", "#6366f1"],
-    accent: "#6366f1",
-    label: "Hipertrofia",
-  },
-  fuerza: {
-    gradient: ["#7f1d1d", "#ef4444"],
-    accent: "#ef4444",
-    label: "Fuerza",
-  },
-  perdida_grasa: {
-    gradient: ["#052e16", "#22c55e"],
-    accent: "#22c55e",
-    label: "Pérdida de grasa",
-  },
-  resistencia: {
-    gradient: ["#0c4a6e", "#38bdf8"],
-    accent: "#38bdf8",
-    label: "Resistencia",
-  },
-  acondicionamiento: {
-    gradient: ["#78350f", "#f59e0b"],
-    accent: "#f59e0b",
-    label: "Acondicionamiento",
-  },
-  rehabilitacion: {
-    gradient: ["#3b0764", "#a855f7"],
-    accent: "#a855f7",
-    label: "Rehabilitación",
-  },
-};
 
 const HERO_HEIGHT = 280;
 
@@ -193,8 +160,6 @@ export default function SessionDetail() {
     );
   }
 
-  const config =
-    OBJECTIVE_CONFIG[data.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const levelLabel = SESSION_LEVELS.find((l) => l.value === data.level)?.label;
 
   const imageUri = data.cover_image_uri
@@ -217,7 +182,7 @@ export default function SessionDetail() {
           />
         ) : (
           <LinearGradient
-            colors={config.gradient}
+            colors={gradient.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
@@ -282,32 +247,6 @@ export default function SessionDetail() {
             height: HERO_HEIGHT * 0.7,
           }}
         />
-
-        {/* Objetivo tag — top left */}
-        {config.label && (
-          <View style={{ position: "absolute", top: 14, left: 14 }}>
-            <View
-              style={{
-                backgroundColor: config.accent + "33",
-                borderWidth: 0.5,
-                borderColor: config.accent + "66",
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 20,
-              }}
-            >
-              <Text
-                style={{
-                  color: config.accent,
-                  fontSize: 11,
-                  fontFamily: "Manrope_600SemiBold",
-                }}
-              >
-                {config.label}
-              </Text>
-            </View>
-          </View>
-        )}
 
         {/* Nombre + nivel — bottom overlay */}
         <View
@@ -457,9 +396,9 @@ export default function SessionDetail() {
                       width: 32,
                       height: 32,
                       borderRadius: 16,
-                      backgroundColor: config.accent + "22",
+                      backgroundColor: brandPrimary[500] + "22",
                       borderWidth: 1,
-                      borderColor: config.accent + "44",
+                      borderColor: brandPrimary[500] + "44",
                       alignItems: "center",
                       justifyContent: "center",
                       flexShrink: 0,
@@ -467,7 +406,7 @@ export default function SessionDetail() {
                   >
                     <Text
                       style={{
-                        color: config.accent,
+                        color: brandPrimary[500],
                         fontSize: 13,
                         fontFamily: "Manrope_700Bold",
                       }}
@@ -500,7 +439,7 @@ export default function SessionDetail() {
                     >
                       <Text
                         style={{
-                          color: config.accent,
+                          color: brandPrimary[500],
                           fontSize: 12,
                           fontFamily: "Manrope_700Bold",
                         }}
@@ -542,7 +481,7 @@ export default function SessionDetail() {
                           </Text>
                           <Text
                             style={{
-                              color: config.accent,
+                              color: brandPrimary[500],
                               fontSize: 12,
                               fontFamily: "Manrope_600SemiBold",
                               opacity: 0.75,
