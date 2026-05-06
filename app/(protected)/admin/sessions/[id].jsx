@@ -128,7 +128,7 @@ export default function SessionDetail() {
                   text2: `"${data?.name}" fue eliminada correctamente.`,
                   position: "bottom",
                 });
-                router.back();
+                router.replace("/admin/sessions");
               },
             }),
         },
