@@ -122,14 +122,14 @@ export default function SessionDetail() {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["routine", id],
+    queryKey: ["session", id],
     queryFn: async () => {
-      const [routine] = await database
+      const [session] = await database
         .select()
         .from(sessions)
         .where(eq(sessions.id, id));
 
-      if (!routine) return null;
+      if (!session) return null;
 
       const exercises = await database
         .select({
@@ -156,7 +156,7 @@ export default function SessionDetail() {
         .where(eq(session_exercises.session_id, id))
         .orderBy(asc(session_exercises.position));
 
-      return { ...routine, exercises };
+      return { ...session, exercises };
     },
   });
 
@@ -172,7 +172,7 @@ export default function SessionDetail() {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope">
-          Rutina no encontrada
+          Sesión no encontrada
         </Text>
       </View>
     );
