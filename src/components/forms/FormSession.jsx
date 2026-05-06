@@ -86,7 +86,7 @@ export default function FormSession({ form, session }) {
     >
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* ── Header ── */}
-        <View className="px-4 pt-6 pb-2">
+        <View className="px-4 pt-2 pb-2">
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
             {session ? "Editar Sesión" : "Armar Sesión"}
           </Text>

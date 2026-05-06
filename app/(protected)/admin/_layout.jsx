@@ -67,19 +67,22 @@ export default function AdminLayout() {
       <Stack.Screen
         name="sessions/index"
         options={{
-          title: "Sesiones",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
         name="sessions/[id]"
         options={{
-          title: "Detalle de Rutina",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
         name="sessions/builder"
         options={{
-          title: "Armar Sesion",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       {/* Planes */}
