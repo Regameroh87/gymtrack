@@ -112,6 +112,12 @@ export default function ProtectedLayout() {
               <ShieldHalf color={color} width={24} height={24} />
             ),
           }}
+          listeners={({ navigation }) => ({
+            tabPress: (e) => {
+              e.preventDefault();
+              navigation.navigate("admin", { screen: "index" });
+            },
+          })}
         />
       </Tabs>
     </BottomSheetModalProvider>
