@@ -23,10 +23,10 @@ export const useDeleteSession = () => {
           .where(eq(sessions.id, id));
       });
     },
-    onSuccess: async (_, id) => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.removeQueries({ queryKey: ["session", id] });
-      await checkNetInfoAndSync();
+      checkNetInfoAndSync();
     },
   });
 };

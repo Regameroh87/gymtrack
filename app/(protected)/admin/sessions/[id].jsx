@@ -609,10 +609,14 @@ export default function SessionDetail() {
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            opacity: isDeleting ? 0.5 : 1,
+            opacity: isDeleting ? 0.6 : 1,
           }}
         >
-          <Trash size={17} color="#ef4444" />
+          {isDeleting ? (
+            <ActivityIndicator size="small" color="#ef4444" />
+          ) : (
+            <Trash size={17} color="#ef4444" />
+          )}
           <Text
             style={{
               color: "#ef4444",
