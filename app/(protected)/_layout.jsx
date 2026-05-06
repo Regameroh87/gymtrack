@@ -108,16 +108,11 @@ export default function ProtectedLayout() {
             title: "Admin",
             headerShown: false,
             href: isAdmin ? undefined : null,
+            unmountOnBlur: true,
             tabBarIcon: ({ color }) => (
               <ShieldHalf color={color} width={24} height={24} />
             ),
           }}
-          listeners={({ navigation }) => ({
-            tabPress: (e) => {
-              e.preventDefault();
-              navigation.navigate("admin", { screen: "index" });
-            },
-          })}
         />
       </Tabs>
     </BottomSheetModalProvider>
