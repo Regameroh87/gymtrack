@@ -20,7 +20,7 @@ export default function SessionBuilder() {
   const { form, isLoading } = useSessionForm({
     id: id ?? null,
     onSuccess: () => {
-      router.push("/admin/sessions");
+      router.back();
     },
   });
 
