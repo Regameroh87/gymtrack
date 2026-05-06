@@ -16,6 +16,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
 
 // Base de datos
 import { database } from "../../../../src/database";
@@ -115,7 +116,21 @@ export default function SessionDetail() {
         {
           text: "Eliminar",
           style: "destructive",
-          onPress: () => deleteSession(id, { onSuccess: () => router.back() }),
+          onPress: () =>
+            deleteSession(id, {
+              onSuccess: () => {
+                Haptics.notificationAsync(
+                  Haptics.NotificationFeedbackType.Success
+                );
+                Toast.show({
+                  type: "success",
+                  text1: "Sesión eliminada",
+                  text2: `"${data?.name}" fue eliminada correctamente.`,
+                  position: "bottom",
+                });
+                router.back();
+              },
+            }),
         },
       ]
     );
