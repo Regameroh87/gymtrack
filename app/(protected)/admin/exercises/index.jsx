@@ -1,5 +1,5 @@
 // React
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 
 // React Native
 import {
@@ -54,7 +54,6 @@ export default function ExercisesList() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("Todos");
   const [selectedExercise, setSelectedExercise] = useState(null);
   const detailSheetRef = useRef(null);
 
@@ -71,13 +70,15 @@ export default function ExercisesList() {
     return filtered;
   };
 
-  const filteredExercises = searchByQuery({
-    query: search,
-    options: exercises,
-    tag: "name",
-  });
-
-  console.log("filteredExercises", filteredExercises);
+  const filteredExercises = useMemo(
+    () =>
+      searchByQuery({
+        query: search,
+        options: exercises,
+        tag: "name",
+      }),
+    [search, exercises]
+  );
 
   const handleDelete = (item) => {
     Alert.alert(
@@ -195,22 +196,17 @@ export default function ExercisesList() {
                 Ejercicios
               </Text>
             </View>
-            <TextInput
+            {/*    <TextInput
               className="mx-6 mb-4 border border-gray-300 rounded-lg p-2 text-white"
               placeholder="Buscar ejercicio..."
               value={search}
               onChangeText={setSearch}
-            />
-            {/*    <SearchBar
+            /> */}
+            <SearchBar
               value={search}
               onChangeText={setSearch}
               placeholder="Buscar ejercicio..."
             />
-            <FilterChips
-              options={EXERCISE_CATEGORY_FILTERS}
-              selected={filter}
-              onSelect={setFilter}
-            /> */}
           </>
         }
         ListEmptyComponent={
