@@ -462,7 +462,7 @@ const FormExercise = forwardRef(function FormExercise({
         <SubmitButton
           onPress={() => form.handleSubmit()}
           isLoading={form.state.isSubmitting}
-          title="Guardar Ejercicio"
+          label="Guardar ejercicio"
         />
       </View>
     </KeyboardAwareScrollView>

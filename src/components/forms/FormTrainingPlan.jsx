@@ -367,8 +367,8 @@ export default function FormTrainingPlan({ form, plan }) {
           {/* ─────────────── SUBMIT ─────────────── */}
           <SubmitButton
             onPress={() => form.handleSubmit()}
-            label="Guardar Plan"
             isLoading={form.state.isSubmitting}
+            label={plan ? "Editar plan" : "Guardar plan"}
           />
         </View>
       </ScrollView>

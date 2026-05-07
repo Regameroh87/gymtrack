@@ -60,7 +60,9 @@ function AnimatedCard({ plan, onPress, scrollY, containerY }) {
 export default function PlansList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data: plans = [], isLoading } = useTrainingPlans({ kind: "template" });
+  const { data: plans = [], isLoading } = useTrainingPlans({
+    kind: "template",
+  });
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);
 
@@ -122,13 +124,15 @@ export default function PlansList() {
               <ClipboardList size={32} color={brandPrimary[600]} />
             </View>
             <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
-              Armá plantillas de entrenamiento
+              No hay planes creados
             </Text>
             <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
-              Creá planes con días numerados y rutinas asignadas, y luego
-              asignalos a tus alumnos.
+              Creá planes con días numerados y rutinas asignadas.
             </Text>
-            <Pressable onPress={handleNew} className="w-full active:scale-[0.98]">
+            <Pressable
+              onPress={handleNew}
+              className="w-full active:scale-[0.98]"
+            >
               <LinearGradient
                 colors={[brandPrimary[600], brandPrimary[500]]}
                 start={{ x: 0, y: 0 }}
@@ -137,7 +141,7 @@ export default function PlansList() {
               >
                 <Plus size={18} color="white" />
                 <Text className="text-white font-jakarta-semi text-sm ml-2">
-                  Nueva Plantilla
+                  Nuevo Plan
                 </Text>
               </LinearGradient>
             </Pressable>

@@ -6,8 +6,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Pressable,
-  ActivityIndicator,
 } from "react-native";
 
 // Librerías externas
@@ -16,7 +14,6 @@ import { useColorScheme } from "nativewind";
 import { z } from "zod";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 
 // Base de datos
 import { database } from "../../database";
@@ -37,7 +34,7 @@ import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
 
 // Tema y assets
-import { ui, brandPrimary } from "../../theme/colors";
+import { ui } from "../../theme/colors";
 import { Plus, Pencil } from "../../../assets/icons";
 
 // ── Section header ────────────────────────────────────────────────────────────
@@ -331,38 +328,13 @@ export default function FormSession({ form, session }) {
             })}
           >
             {({ isDirty, isSubmitting }) => (
-              <Pressable
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  form.handleSubmit();
-                }}
-                disabled={isSubmitting || (!!session && !isDirty)}
-                className="active:scale-[0.97] mt-8"
-                style={{
-                  opacity: isSubmitting || (!!session && !isDirty) ? 0.5 : 1,
-                }}
-              >
-                <LinearGradient
-                  colors={[brandPrimary[600], brandPrimary[500]]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="py-4 rounded-2xl items-center flex-row justify-center"
-                  style={{ gap: 8 }}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                  ) : session ? (
-                    <Pencil size={17} color="white" />
-                  ) : null}
-                  <Text className="text-white font-jakarta-semi">
-                    {isSubmitting
-                      ? "Guardando..."
-                      : session
-                        ? "Editar sesión"
-                        : "Guardar sesión"}
-                  </Text>
-                </LinearGradient>
-              </Pressable>
+              <SubmitButton
+                onPress={() => form.handleSubmit()}
+                isLoading={isSubmitting}
+                disabled={!!session && !isDirty}
+                label={session ? "Editar sesión" : "Guardar sesión"}
+                icon={session ? Pencil : null}
+              />
             )}
           </form.Subscribe>
         </View>
