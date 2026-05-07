@@ -33,7 +33,7 @@ import { PLAN_OBJECTIVES } from "../../constants/planOptions";
 // Componentes
 import CustomSelect from "../CustomSelect";
 import FormField from "./FormField";
-import SectionHeader from "../SectionHeader";
+import FormsHeader from "../FormsHeader";
 import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
 
@@ -246,7 +246,7 @@ export default function FormTrainingPlan({ form, plan }) {
     >
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* Header */}
-        <SectionHeader
+        <FormsHeader
           title={plan ? "Editar Plan" : "Nuevo Plan"}
           subtitle={
             plan

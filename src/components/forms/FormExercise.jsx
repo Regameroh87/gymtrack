@@ -23,7 +23,7 @@ import {
 // Shared components
 import CustomSelect from "../CustomSelect";
 import InputUploadVideo from "../videos/InputUploadVideo";
-import SectionHeader from "../SectionHeader";
+import FormsHeader from "../FormsHeader";
 import FormEquipment from "./FormEquipment";
 
 // Form-specific sub-components
@@ -153,16 +153,10 @@ const FormExercise = forwardRef(function FormExercise({
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
       {/* ── Header ── */}
-      <View className="px-4 pt-6 pb-2">
-        <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-          {headerTitle ? headerTitle : "Nuevo Ejercicio"}
-        </Text>
-        <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
-          {headerDescription
-            ? headerDescription
-            : "Completá los datos para agregar un ejercicio al catálogo."}
-        </Text>
-      </View>
+      <FormsHeader
+        title={headerTitle ?? "Nuevo Ejercicio"}
+        subtitle={headerDescription ?? "Completá los datos para agregar un ejercicio al catálogo."}
+      />
 
       {/* ── Form ── */}
       <View className="px-4 pt-4 pb-8">

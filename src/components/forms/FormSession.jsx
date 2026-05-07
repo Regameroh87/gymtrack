@@ -29,7 +29,7 @@ import { SESSION_LEVELS } from "../../constants/sessionOptions";
 import CustomSelect from "../CustomSelect";
 import FormField from "./FormField";
 import ImagePickerCard from "./ImagePickerCard";
-import SectionHeader from "../SectionHeader";
+import FormsHeader from "../FormsHeader";
 import SessionExerciseCard from "./SessionExerciseCard";
 import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
@@ -84,16 +84,14 @@ export default function FormSession({ form, session }) {
     >
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* ── Header ── */}
-        <View className="px-4 pt-2 pb-2">
-          <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-            {session ? "Editar Sesión" : "Armar Sesión"}
-          </Text>
-          <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
-            {session
+        <FormsHeader
+          title={session ? "Editar Sesión" : "Armar Sesión"}
+          subtitle={
+            session
               ? "Modificá los campos que quieras y guardá los cambios."
-              : "Creá una plantilla de entrenamiento reutilizable."}
-          </Text>
-        </View>
+              : "Creá una plantilla de entrenamiento reutilizable."
+          }
+        />
 
         <View className="px-4 pt-4 pb-10">
           {/* ─────────────── SECCIÓN A: INFORMACIÓN GENERAL ─────────────── */}
