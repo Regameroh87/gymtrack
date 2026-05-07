@@ -47,6 +47,7 @@ import { Barbell, ChevronRight } from "../../../../assets/icons";
 // Tema y utilidades
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+import { searchByQuery } from "../../../../src/utils/searchByQuery";
 import { TextInput } from "react-native-gesture-handler";
 
 export default function ExercisesList() {
@@ -58,17 +59,6 @@ export default function ExercisesList() {
   const detailSheetRef = useRef(null);
 
   const { data: exercises, isLoading } = useExercises();
-
-  const searchByQuery = ({ query, options, tag }) => {
-    if (!options || !tag) return;
-    if (!query) return options;
-    const filtered = options.filter((opt) =>
-      tag
-        ? opt[tag].toLowerCase().includes(query.toLowerCase())
-        : opt.toLowerCase().includes(query.toLowerCase())
-    );
-    return filtered;
-  };
 
   const filteredExercises = useMemo(
     () =>
