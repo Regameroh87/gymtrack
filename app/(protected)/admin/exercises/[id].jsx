@@ -1,20 +1,20 @@
 import { View, ActivityIndicator } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { database } from "../../../../../src/database";
+import { database } from "../../../../src/database";
 import {
   exercises_base,
   equipment,
   exercise_equipment,
-} from "../../../../../src/database/schemas";
+} from "../../../../src/database/schemas";
 import { eq } from "drizzle-orm";
 import { useForm } from "@tanstack/react-form";
 import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
 import Toast from "react-native-toast-message";
 import { useQueryClient } from "@tanstack/react-query";
-import { checkNetInfoAndSync } from "../../../../../src/database/sync";
-import FormExercise from "../../../../../src/components/forms/FormExercise";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
+import FormExercise from "../../../../src/components/forms/FormExercise";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();

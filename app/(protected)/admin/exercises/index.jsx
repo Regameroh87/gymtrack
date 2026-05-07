@@ -31,13 +31,9 @@ import { checkNetInfoAndSync } from "../../../../src/database/sync";
 // Hooks
 import { useExercises } from "../../../../src/hooks/useExercises";
 
-// Constantes
-import { EXERCISE_CATEGORY_FILTERS } from "../../../../src/constants/exerciseOptions";
-
 // Componentes
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
-import FilterChips from "../../../../src/components/FilterChips";
 import ExerciseDetailSheet from "../../../../src/components/sheets/ExerciseDetailSheet";
 import ButtonAdd from "../../../../src/components/buttons/ButtonAdd";
 
