@@ -186,12 +186,6 @@ export default function ExercisesList() {
                 Ejercicios
               </Text>
             </View>
-            {/*    <TextInput
-              className="mx-6 mb-4 border border-gray-300 rounded-lg p-2 text-white"
-              placeholder="Buscar ejercicio..."
-              value={search}
-              onChangeText={setSearch}
-            /> */}
             <SearchBar
               value={search}
               onChangeText={setSearch}
