@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const nav = (path) => router.push(`/admin/${path}`);
 
   return (
-    <Screen>
+    <Screen safe>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
