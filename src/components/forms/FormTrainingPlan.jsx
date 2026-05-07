@@ -68,7 +68,7 @@ function DayStepper({ value, onChange }) {
           {value}
         </Text>
         <Text className="text-[10px] font-manrope-semi uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark">
-          {value === 1 ? "día" : "días"}
+          "días"
         </Text>
       </View>
 
