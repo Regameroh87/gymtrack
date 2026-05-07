@@ -41,14 +41,6 @@ import SubmitButton from "./SubmitButton";
 import { brandPrimary, ui } from "../../theme/colors";
 import { ChevronRight, X } from "../../../assets/icons";
 
-function SectionLabel({ children }) {
-  return (
-    <Text className="text-[10px] font-jakarta-semi uppercase tracking-widest mb-4 text-brandPrimary-500 dark:text-brandPrimary-400">
-      {children}
-    </Text>
-  );
-}
-
 function DayStepper({ value, onChange }) {
   const canDecrease = value > 2;
   const canIncrease = value < 7;
