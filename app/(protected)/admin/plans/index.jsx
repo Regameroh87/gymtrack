@@ -88,7 +88,7 @@ export default function PlansList() {
           </Text>
           {plans.length > 0 && (
             <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mt-1">
-              {plans.length} {plans.length === 1 ? "plantilla" : "plantillas"}
+              {plans.length} {plans.length === 1 ? "plan" : "planes"}
             </Text>
           )}
         </View>
