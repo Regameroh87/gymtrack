@@ -6,9 +6,6 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
-// Constantes
-import { PLAN_LEVELS } from "../../constants/planOptions";
-
 // Utilidades
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
@@ -56,27 +53,19 @@ const TrainingPlanCard = ({ plan, onPress }) => {
       >
         {/* ── Área visual principal ── */}
         <View className="h-[210px]">
-          {imageUri ? (
-            <Image
-              source={{ uri: imageUri }}
-              className="w-full h-full"
-              contentFit="cover"
-            />
-          ) : (
-            <LinearGradient
-              colors={config.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="flex-1"
-            >
-              <View className="absolute -top-[50px] -right-[50px] w-[220px] h-[220px] rounded-full bg-[rgba(255,255,255,0.07)]" />
-              <View className="absolute top-[30px] right-[60px] w-[120px] h-[120px] rounded-full bg-[rgba(255,255,255,0.05)]" />
-              <View className="absolute -bottom-[20px] -left-[30px] w-[150px] h-[150px] rounded-full bg-[rgba(0,0,0,0.15)]" />
-              <View className="absolute right-5 top-6 opacity-[0.12] -rotate-12">
-                <ClipboardList size={72} color="white" />
-              </View>
-            </LinearGradient>
-          )}
+          <LinearGradient
+            colors={config.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="flex-1"
+          >
+            <View className="absolute -top-[50px] -right-[50px] w-[220px] h-[220px] rounded-full bg-[rgba(255,255,255,0.07)]" />
+            <View className="absolute top-[30px] right-[60px] w-[120px] h-[120px] rounded-full bg-[rgba(255,255,255,0.05)]" />
+            <View className="absolute -bottom-[20px] -left-[30px] w-[150px] h-[150px] rounded-full bg-[rgba(0,0,0,0.15)]" />
+            <View className="absolute right-5 top-6 opacity-[0.12] -rotate-12">
+              <ClipboardList size={72} color="white" />
+            </View>
+          </LinearGradient>
 
           <LinearGradient
             colors={["transparent", "rgba(0,0,0,0.82)"]}
