@@ -15,7 +15,6 @@ export const useTrainingPlans = () =>
           id: training_plans.id,
           name: training_plans.name,
           objective: training_plans.objective,
-          status: training_plans.status,
           created_at: training_plans.created_at,
           day_count: count(training_plan_days.id),
         })
