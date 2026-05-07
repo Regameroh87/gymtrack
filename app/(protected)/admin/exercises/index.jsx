@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,6 +18,8 @@ import {
   exercises_base,
   exercise_equipment,
 } from "../../../../src/database/schemas";
+import { useExercises } from "../../../../src/hooks/useExercises";
+import { EXERCISE_CATEGORY_FILTERS } from "../../../../src/constants/exerciseOptions";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
@@ -30,14 +32,6 @@ import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import Toast from "react-native-toast-message";
 import { eq } from "drizzle-orm";
 
-const CATEGORY_FILTERS = [
-  "Todos",
-  "Fuerza",
-  "Cardio",
-  "Flexibilidad",
-  "Potencia",
-];
-
 export default function ExercisesList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -46,16 +40,6 @@ export default function ExercisesList() {
   const [filter, setFilter] = useState("Todos");
   const [selectedExercise, setSelectedExercise] = useState(null);
   const detailSheetRef = useRef(null);
-
-  function useExercises() {
-    return useQuery({
-      queryKey: ["exercises"],
-      queryFn: async () => {
-        const results = await database.select().from(exercises_base).execute();
-        return results.filter((ex) => ex.sync_status !== "deleted");
-      },
-    });
-  }
 
   const { data: exercises, isLoading } = useExercises();
 
@@ -181,7 +165,7 @@ export default function ExercisesList() {
               placeholder="Buscar ejercicio..."
             />
             <FilterChips
-              options={CATEGORY_FILTERS}
+              options={EXERCISE_CATEGORY_FILTERS}
               selected={filter}
               onSelect={setFilter}
             />

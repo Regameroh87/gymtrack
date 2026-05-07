@@ -5,6 +5,11 @@ export const EXERCISE_CATEGORIES = [
   { label: "Potencia", value: "potencia" },
 ];
 
+export const EXERCISE_CATEGORY_FILTERS = [
+  "Todos",
+  ...EXERCISE_CATEGORIES.map((c) => c.label),
+];
+
 export const MUSCLE_GROUPS = [
   { label: "Pecho", value: "pecho" },
   { label: "Espalda", value: "espalda" },
