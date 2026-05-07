@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, real, unique } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  unique,
+} from "drizzle-orm/sqlite-core";
 
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id").primaryKey(),
@@ -103,7 +109,6 @@ export const training_plans = sqliteTable("training_plans", {
   name: text("name").notNull(),
   objective: text("objective"),
   weekly_days: integer("weekly_days").notNull().default(3),
-  status: text("status").notNull().default("draft"),
   created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()
