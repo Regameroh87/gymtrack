@@ -16,16 +16,7 @@ import Screen from "../../../src/components/Screen";
 
 // Tema / assets
 import { brandPrimary } from "../../../src/theme/colors";
-import { Barbell, ClipboardList, Plus } from "../../../assets/icons";
-
-const OBJECTIVE_ACCENT = {
-  hipertrofia: "#6366f1",
-  fuerza: "#ef4444",
-  perdida_grasa: "#22c55e",
-  resistencia: "#38bdf8",
-  acondicionamiento: "#f59e0b",
-  rehabilitacion: "#a855f7",
-};
+import { ClipboardList, Plus } from "../../../assets/icons";
 
 export default function RutinasTab() {
   const router = useRouter();
