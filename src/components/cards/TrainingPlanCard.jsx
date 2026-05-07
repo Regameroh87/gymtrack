@@ -13,12 +13,7 @@ import { PLAN_LEVELS } from "../../constants/planOptions";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // Tema / assets
-import {
-  Calendar,
-  ChartBar,
-  ChevronRight,
-  ClipboardList,
-} from "../../../assets/icons";
+import { Calendar, ChevronRight, ClipboardList } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
   hipertrofia: { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1" },
@@ -41,7 +36,7 @@ const OBJECTIVE_LABELS = {
 const TrainingPlanCard = ({ plan, onPress }) => {
   const config =
     OBJECTIVE_CONFIG[plan.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
-  const levelLabel = PLAN_LEVELS.find((l) => l.value === plan.level)?.label;
+
   const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
 
   const imageUri = plan.cover_image_uri
@@ -131,7 +126,7 @@ const TrainingPlanCard = ({ plan, onPress }) => {
                   numberOfLines={1}
                   className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                 >
-                  {plan.day_count} "días"
+                  {plan.day_count} días
                 </Text>
               </View>
             </View>
