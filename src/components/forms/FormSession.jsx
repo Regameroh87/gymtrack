@@ -29,6 +29,7 @@ import { SESSION_LEVELS } from "../../constants/sessionOptions";
 import CustomSelect from "../CustomSelect";
 import FormField from "./FormField";
 import ImagePickerCard from "./ImagePickerCard";
+import SectionHeader from "../SectionHeader";
 import SessionExerciseCard from "./SessionExerciseCard";
 import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";

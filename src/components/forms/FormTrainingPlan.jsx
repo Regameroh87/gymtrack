@@ -33,6 +33,7 @@ import { PLAN_OBJECTIVES } from "../../constants/planOptions";
 // Componentes
 import CustomSelect from "../CustomSelect";
 import FormField from "./FormField";
+import SectionHeader from "../SectionHeader";
 import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
 
@@ -245,16 +246,14 @@ export default function FormTrainingPlan({ form, plan }) {
     >
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
         {/* Header */}
-        <View className="px-4 pt-6 pb-2">
-          <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-            {plan ? "Editar Plan" : "Nuevo Plan"}
-          </Text>
-          <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
-            {plan
+        <SectionHeader
+          title={plan ? "Editar Plan" : "Nuevo Plan"}
+          subtitle={
+            plan
               ? "Modificá el plan y guardá los cambios."
-              : "Definí el objetivo, la frecuencia y las sesiones de cada día."}
-          </Text>
-        </View>
+              : "Definí el objetivo, la frecuencia y las sesiones de cada día."
+          }
+        />
 
         <View className="px-4 pt-4 pb-10">
           {/* ─── NOMBRE ─── */}

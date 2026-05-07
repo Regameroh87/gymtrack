@@ -23,6 +23,7 @@ import {
 // Shared components
 import CustomSelect from "../CustomSelect";
 import InputUploadVideo from "../videos/InputUploadVideo";
+import SectionHeader from "../SectionHeader";
 import FormEquipment from "./FormEquipment";
 
 // Form-specific sub-components
