@@ -22,12 +22,10 @@ import {
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
-import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
-// Base de datos
-import { database } from "../../database";
-import { sessions } from "../../database/schemas";
+// Hooks
+import { useSessions } from "../../hooks/useSessions";
 
 // Constantes
 import { PLAN_OBJECTIVES } from "../../constants/planOptions";
@@ -100,7 +98,14 @@ function DayStepper({ value, onChange }) {
   );
 }
 
-function DaySlot({ slot, dayNumber, frequencyCount, onPress, onClear, mutedColor }) {
+function DaySlot({
+  slot,
+  dayNumber,
+  frequencyCount,
+  onPress,
+  onClear,
+  mutedColor,
+}) {
   const hasSession = !!slot.session_id;
 
   return (
@@ -169,17 +174,7 @@ export default function FormTrainingPlan({ form, plan }) {
   const [activeSlotIdx, setActiveSlotIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: availableSessions = [] } = useQuery({
-    queryKey: ["sessions"],
-    queryFn: async () => {
-      const results = await database
-        .select({ id: sessions.id, name: sessions.name, sync_status: sessions.sync_status })
-        .from(sessions)
-        .orderBy(sessions.name);
-      return (results || []).filter((s) => s.sync_status !== "deleted");
-    },
-    staleTime: Infinity,
-  });
+  const { data: availableSessions = [] } = useSessions();
 
   const filteredSessions = useMemo(() => {
     if (!searchQuery.trim()) return availableSessions;
@@ -189,7 +184,11 @@ export default function FormTrainingPlan({ form, plan }) {
 
   const renderBackdrop = useCallback(
     (props) => (
-      <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
     ),
     []
   );
@@ -226,7 +225,11 @@ export default function FormTrainingPlan({ form, plan }) {
     let newDays = [...current];
     if (newCount > current.length) {
       for (let i = current.length; i < newCount; i++) {
-        newDays.push({ id: Crypto.randomUUID(), session_id: null, session_name: null });
+        newDays.push({
+          id: Crypto.randomUUID(),
+          session_id: null,
+          session_name: null,
+        });
       }
     } else {
       newDays = newDays.slice(0, newCount);
@@ -260,7 +263,10 @@ export default function FormTrainingPlan({ form, plan }) {
             validators={{
               onChange: ({ value }) => {
                 if (!value) return undefined;
-                const r = z.string().min(3, "Mínimo 3 caracteres").safeParse(value);
+                const r = z
+                  .string()
+                  .min(3, "Mínimo 3 caracteres")
+                  .safeParse(value);
                 return r.success ? undefined : r.error.errors[0].message;
               },
               onSubmit: ({ value }) => {
@@ -288,7 +294,8 @@ export default function FormTrainingPlan({ form, plan }) {
           <form.Field
             name="objective"
             validators={{
-              onSubmit: ({ value }) => (!value ? "Seleccioná un objetivo" : undefined),
+              onSubmit: ({ value }) =>
+                !value ? "Seleccioná un objetivo" : undefined,
             }}
           >
             {(field) => (
@@ -332,7 +339,8 @@ export default function FormTrainingPlan({ form, plan }) {
               const days = field.state.value;
               const freqMap = {};
               for (const d of days) {
-                if (d.session_id) freqMap[d.session_id] = (freqMap[d.session_id] ?? 0) + 1;
+                if (d.session_id)
+                  freqMap[d.session_id] = (freqMap[d.session_id] ?? 0) + 1;
               }
 
               return (
@@ -360,7 +368,10 @@ export default function FormTrainingPlan({ form, plan }) {
 
           {/* ─── SUBMIT ─── */}
           <form.Subscribe
-            selector={(s) => ({ isDirty: s.isDirty, isSubmitting: s.isSubmitting })}
+            selector={(s) => ({
+              isDirty: s.isDirty,
+              isSubmitting: s.isSubmitting,
+            })}
           >
             {({ isDirty, isSubmitting }) => (
               <SubmitButton
@@ -388,7 +399,9 @@ export default function FormTrainingPlan({ form, plan }) {
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+          backgroundColor: isDark
+            ? ui.surfaceSecondary.dark
+            : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -400,7 +413,8 @@ export default function FormTrainingPlan({ form, plan }) {
       >
         <View className="px-6 pt-4 pb-2">
           <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark mb-4">
-            Elegir sesión{activeSlotIdx !== null ? ` · Día ${activeSlotIdx + 1}` : ""}
+            Elegir sesión
+            {activeSlotIdx !== null ? ` · Día ${activeSlotIdx + 1}` : ""}
           </Text>
           <BottomSheetTextInput
             value={searchQuery}
@@ -408,13 +422,17 @@ export default function FormTrainingPlan({ form, plan }) {
             placeholder="Buscar sesión..."
             placeholderTextColor={mutedColor}
             style={{
-              backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+              backgroundColor: isDark
+                ? ui.surfaceSecondary.dark
+                : ui.surfaceSecondary.light,
               color: isDark ? ui.text.mainDark : ui.text.main,
               padding: 14,
               borderRadius: 12,
               fontFamily: "Manrope_400Regular",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+              borderColor: isDark
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(0,0,0,0.05)",
             }}
           />
         </View>
@@ -423,7 +441,11 @@ export default function FormTrainingPlan({ form, plan }) {
           data={filteredSessions}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100, paddingTop: 8 }}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingBottom: 100,
+            paddingTop: 8,
+          }}
           ListEmptyComponent={() => (
             <View className="items-center justify-center p-6 mt-4">
               <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-center font-manrope">
@@ -442,7 +464,9 @@ export default function FormTrainingPlan({ form, plan }) {
               <Pressable
                 onPress={() => handleSessionSelect(session)}
                 className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${
-                  isSelected ? "border-brandPrimary-500/20" : "border-transparent"
+                  isSelected
+                    ? "border-brandPrimary-500/20"
+                    : "border-transparent"
                 }`}
                 style={{
                   backgroundColor: isSelected
@@ -462,7 +486,9 @@ export default function FormTrainingPlan({ form, plan }) {
                   {session.name}
                 </Text>
                 {isSelected && (
-                  <Text className="text-brandPrimary-600 font-manrope-bold">✓</Text>
+                  <Text className="text-brandPrimary-600 font-manrope-bold">
+                    ✓
+                  </Text>
                 )}
               </Pressable>
             );
