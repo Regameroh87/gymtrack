@@ -24,8 +24,6 @@ export default function RutinasLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="select" options={{ title: "Mis planes" }} />
-      <Stack.Screen name="builder" options={{ title: "Armar mi plan" }} />
     </Stack>
   );
 }
