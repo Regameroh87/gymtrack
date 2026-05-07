@@ -2,10 +2,7 @@ import { View, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Plus } from "../../../assets/icons";
-import {
-  brandPrimary,
-  brandSecondary,
-} from "../../../src/theme/colors";
+import { brandPrimary, brandSecondary } from "../../../src/theme/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 

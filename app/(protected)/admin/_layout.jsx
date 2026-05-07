@@ -23,45 +23,49 @@ export default function AdminLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "Admin",
           headerShown: false,
-          unmountOnBlur: true,
         }}
       />
       <Stack.Screen
         name="users/index"
         options={{
-          title: "Usuarios",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
         name="users/register"
         options={{
-          title: "Nuevo Socio",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
         name="exercises/index"
         options={{
-          title: "Ejercicios",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
-        name="exercises/add"
+        name="exercises/builder"
         options={{
-          title: "Nuevo Ejercicio",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
         name="equipments/index"
         options={{
-          title: "Inventario",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen
         name="equipments/add"
         options={{
-          title: "Nueva Máquina",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
         }}
       />
       <Stack.Screen

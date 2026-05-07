@@ -1,14 +1,14 @@
-import FormExercise from "../../../../../src/components/forms/FormExercise";
+import FormExercise from "../../../../src/components/forms/FormExercise";
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
-import { database } from "../../../../../src/database";
+import { database } from "../../../../src/database";
 import {
   exercises_base,
   exercise_equipment,
-} from "../../../../../src/database/schemas";
+} from "../../../../src/database/schemas";
 import * as Crypto from "expo-crypto";
 import { useQueryClient } from "@tanstack/react-query";
-import { checkNetInfoAndSync } from "../../../../../src/database/sync";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 

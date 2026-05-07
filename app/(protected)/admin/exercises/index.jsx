@@ -48,7 +48,6 @@ import { Barbell, ChevronRight } from "../../../../assets/icons";
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { searchByQuery } from "../../../../src/utils/searchByQuery";
-import { TextInput } from "react-native-gesture-handler";
 
 export default function ExercisesList() {
   const router = useRouter();
@@ -213,12 +212,12 @@ export default function ExercisesList() {
         </View>
       )}
 
-      <ButtonAdd route="/admin/exercises/add" />
+      <ButtonAdd route="/admin/exercises/builder" />
 
       <ExerciseDetailSheet
         sheetRef={detailSheetRef}
         exercise={selectedExercise}
-        onEdit={(item) => router.push(`/admin/exercises/edit/${item.id}`)}
+        onEdit={(item) => router.push(`/admin/exercises/builder/${item.id}`)}
         onDelete={handleDelete}
       />
     </Screen>

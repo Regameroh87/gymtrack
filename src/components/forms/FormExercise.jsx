@@ -39,12 +39,10 @@ import { ui } from "../../theme/colors";
 import { Trash } from "../../../assets/icons";
 import { Image } from "expo-image";
 
-const FormExercise = forwardRef(function FormExercise({
-  exercise,
-  headerTitle,
-  headerDescription,
-  form,
-}, ref) {
+const FormExercise = forwardRef(function FormExercise(
+  { exercise, headerTitle, headerDescription, form },
+  ref
+) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
 
   const equipmentForm = useEquipmentForm({
@@ -155,7 +153,10 @@ const FormExercise = forwardRef(function FormExercise({
       {/* ── Header ── */}
       <FormsHeader
         title={headerTitle ?? "Nuevo Ejercicio"}
-        subtitle={headerDescription ?? "Completá los datos para agregar un ejercicio al catálogo."}
+        subtitle={
+          headerDescription ??
+          "Completá los datos para agregar un ejercicio al catálogo."
+        }
       />
 
       {/* ── Form ── */}
