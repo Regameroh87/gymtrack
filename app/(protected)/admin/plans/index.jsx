@@ -21,6 +21,7 @@ import { useTrainingPlans } from "../../../../src/hooks/useTrainingPlans";
 // Componentes
 import Screen from "../../../../src/components/Screen";
 import TrainingPlanCard from "../../../../src/components/cards/TrainingPlanCard";
+import ButtonAddPill from "../../../../src/components/buttons/ButtonAddPill";
 
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
@@ -91,16 +92,7 @@ export default function PlansList() {
           )}
         </View>
 
-        <Pressable onPress={handleNew} className="active:scale-[0.95]">
-          <LinearGradient
-            colors={[brandPrimary[600], brandPrimary[500]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="w-10 h-10 rounded-xl items-center justify-center"
-          >
-            <Plus size={18} color="white" />
-          </LinearGradient>
-        </Pressable>
+        <ButtonAddPill onPress={handleNew} />
       </View>
 
       <Animated.ScrollView

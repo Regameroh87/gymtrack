@@ -11,13 +11,13 @@ import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../../../src/database/supabase";
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
-import { Plus, ChevronRight, Mail } from "../../../../assets/icons";
-import { brandPrimary, ui, gradient } from "../../../../src/theme/colors";
+import ButtonAdd from "../../../../src/components/buttons/ButtonAdd";
+import { ChevronRight, Mail } from "../../../../assets/icons";
+import { brandPrimary, ui } from "../../../../src/theme/colors";
 
 const FILTER_OPTIONS = ["Todos", "Administradores", "Socios"];
 
@@ -155,26 +155,7 @@ export default function UsersList() {
         </View>
       )}
 
-      {/* FAB */}
-      <View
-        className="absolute bottom-0 right-0 pr-5"
-        style={{ paddingBottom: insets.bottom + 20 }}
-      >
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            router.push("/admin/users/register");
-          }}
-          className="active:scale-95"
-        >
-          <LinearGradient
-            colors={gradient.primary}
-            className="w-14 h-14 rounded-2xl items-center justify-center shadow-xl shadow-brandPrimary-600/30"
-          >
-            <Plus size={28} color="#ffffff" />
-          </LinearGradient>
-        </Pressable>
-      </View>
+      <ButtonAdd route="/admin/users/register" color="primary" />
     </Screen>
   );
 }

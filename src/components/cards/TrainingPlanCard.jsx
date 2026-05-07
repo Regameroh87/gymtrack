@@ -38,18 +38,11 @@ const OBJECTIVE_LABELS = {
   rehabilitacion: "Rehabilitación",
 };
 
-const STATUS_LABELS = {
-  draft: "Borrador",
-  active: "Activo",
-  archived: "Archivado",
-};
-
 const TrainingPlanCard = ({ plan, onPress }) => {
   const config =
     OBJECTIVE_CONFIG[plan.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const levelLabel = PLAN_LEVELS.find((l) => l.value === plan.level)?.label;
   const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
-  const statusLabel = STATUS_LABELS[plan.status];
 
   const imageUri = plan.cover_image_uri
     ? (getCloudinaryUrl(plan.cover_image_uri) ?? plan.cover_image_uri)
@@ -117,17 +110,6 @@ const TrainingPlanCard = ({ plan, onPress }) => {
             </View>
           )}
 
-          {/* Status tag — top right (solo si no es activo) */}
-          {plan.status && plan.status !== "active" && (
-            <View className="absolute top-[14px] right-[14px]">
-              <View className="rounded-full bg-black/40 border border-white/20 px-2.5 py-1.5">
-                <Text className="font-manrope-semi text-[11px] text-white/80">
-                  {statusLabel}
-                </Text>
-              </View>
-            </View>
-          )}
-
           {/* Nombre */}
           <View className="absolute bottom-0 left-0 right-0 px-4 pb-4">
             <Text
@@ -149,21 +131,7 @@ const TrainingPlanCard = ({ plan, onPress }) => {
                   numberOfLines={1}
                   className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                 >
-                  {plan.day_count > 0
-                    ? `${plan.day_count} ${plan.day_count === 1 ? "día" : "días"}`
-                    : "Sin días"}
-                </Text>
-              </View>
-
-              <View className="h-[3px] w-[3px] rounded-full bg-[rgba(196,190,230,0.3)]" />
-
-              <View className="flex-row items-center gap-1.5 shrink">
-                <ChartBar size={13} color="rgba(196,190,230,0.55)" />
-                <Text
-                  numberOfLines={1}
-                  className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
-                >
-                  {levelLabel ?? "Sin nivel"}
+                  {plan.day_count} "días"
                 </Text>
               </View>
             </View>

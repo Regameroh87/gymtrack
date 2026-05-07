@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, Pressable, FlatList } from "react-native";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pencil, Trash, Plus } from "../../assets/icons";
+import { Pencil, Trash } from "../../assets/icons";
+import ButtonAdd from "../../src/components/buttons/ButtonAdd";
 
 // Datos de la Biblioteca de Ejercicios
 const EJERCICIOS = [
@@ -122,22 +122,7 @@ export default function EjerciciosScreen() {
         )}
       />
 
-      {/* Floating Action Button */}
-      <View
-        className="absolute bottom-0 w-full px-5 items-end pointer-events-none"
-        style={{ paddingBottom: insets.bottom + 24 }}
-      >
-        <Pressable className="pointer-events-auto active:scale-95 transition-all shadow-lg shadow-indigo-500/30">
-          <LinearGradient
-            colors={["#4a44e4", "#3023cd"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            className="w-16 h-16 rounded-[22px] items-center justify-center"
-          >
-            <Plus size={32} color="#ffffff" strokeWidth={2.5} />
-          </LinearGradient>
-        </Pressable>
-      </View>
+      <ButtonAdd color="primary" />
     </View>
   );
 }
