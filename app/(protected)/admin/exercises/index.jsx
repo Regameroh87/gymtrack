@@ -1,4 +1,7 @@
+// React
 import React, { useState, useRef } from "react";
+
+// React Native
 import {
   View,
   Text,
@@ -7,30 +10,43 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+
+// Librerías externas
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
+import { eq } from "drizzle-orm";
 
+// Base de datos
 import { database } from "../../../../src/database";
 import {
   exercises_base,
   exercise_equipment,
 } from "../../../../src/database/schemas";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
+
+// Hooks
 import { useExercises } from "../../../../src/hooks/useExercises";
+
+// Constantes
 import { EXERCISE_CATEGORY_FILTERS } from "../../../../src/constants/exerciseOptions";
+
+// Componentes
 import Screen from "../../../../src/components/Screen";
 import SearchBar from "../../../../src/components/SearchBar";
 import FilterChips from "../../../../src/components/FilterChips";
 import ExerciseDetailSheet from "../../../../src/components/sheets/ExerciseDetailSheet";
 import ButtonAdd from "../../../../src/components/buttons/ButtonAdd";
+
+// Assets e iconos
 import { Barbell, ChevronRight } from "../../../../assets/icons";
+
+// Tema y utilidades
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
-import { checkNetInfoAndSync } from "../../../../src/database/sync";
-import Toast from "react-native-toast-message";
-import { eq } from "drizzle-orm";
 
 export default function ExercisesList() {
   const router = useRouter();
