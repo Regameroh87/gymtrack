@@ -213,7 +213,7 @@ export default function ExercisesList() {
       <ExerciseDetailSheet
         sheetRef={detailSheetRef}
         exercise={selectedExercise}
-        onEdit={(item) => router.push(`/admin/exercises/builder/${item.id}`)}
+        onEdit={(item) => router.push(`/admin/exercises/${item.id}`)}
         onDelete={handleDelete}
       />
     </Screen>

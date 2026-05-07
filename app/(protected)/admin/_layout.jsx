@@ -55,6 +55,13 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
+        name="exercises/[id]"
+        options={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
         name="equipments/index"
         options={{
           headerTitle: "",
