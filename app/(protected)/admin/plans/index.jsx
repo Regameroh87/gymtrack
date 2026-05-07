@@ -60,9 +60,7 @@ function AnimatedCard({ plan, onPress, scrollY, containerY }) {
 export default function PlansList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { data: plans = [], isLoading } = useTrainingPlans({
-    kind: "template",
-  });
+  const { data: plans = [], isLoading } = useTrainingPlans();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);
 

@@ -69,7 +69,6 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           name: value.name.trim(),
           objective: value.objective || null,
           weekly_days: value.weekly_days,
-          kind: "template",
           status: "draft",
           created_by: userId,
           created_at: now,
