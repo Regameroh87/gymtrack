@@ -47,6 +47,7 @@ import { Barbell, ChevronRight } from "../../../../assets/icons";
 // Tema y utilidades
 import { brandPrimary, brandSecondary, ui } from "../../../../src/theme/colors";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+import { TextInput } from "react-native-gesture-handler";
 
 export default function ExercisesList() {
   const router = useRouter();
@@ -58,6 +59,23 @@ export default function ExercisesList() {
   const detailSheetRef = useRef(null);
 
   const { data: exercises, isLoading } = useExercises();
+
+  const searchByQuery = ({ query, options, tag }) => {
+    if (!options || !tag) return;
+    if (!query) return options;
+    const filtered = options.filter((opt) =>
+      opt[tag].toLowerCase().includes(query.toLowerCase())
+    );
+    return filtered;
+  };
+
+  const filteredExercises = searchByQuery({
+    query: search,
+    options: exercises,
+    tag: "name",
+  });
+
+  console.log("filteredExercises", filteredExercises);
 
   const handleDelete = (item) => {
     Alert.alert(
@@ -157,7 +175,7 @@ export default function ExercisesList() {
   return (
     <Screen>
       <FlatList
-        data={exercises}
+        data={filteredExercises}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{
@@ -175,7 +193,13 @@ export default function ExercisesList() {
                 Ejercicios
               </Text>
             </View>
-            <SearchBar
+            <TextInput
+              className="mx-6 mb-4 border border-gray-300 rounded-lg p-2 text-white"
+              placeholder="Buscar ejercicio..."
+              value={search}
+              onChangeText={setSearch}
+            />
+            {/*    <SearchBar
               value={search}
               onChangeText={setSearch}
               placeholder="Buscar ejercicio..."
@@ -184,7 +208,7 @@ export default function ExercisesList() {
               options={EXERCISE_CATEGORY_FILTERS}
               selected={filter}
               onSelect={setFilter}
-            />
+            /> */}
           </>
         }
         ListEmptyComponent={
