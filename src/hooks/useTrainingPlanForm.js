@@ -9,7 +9,7 @@ import Toast from "react-native-toast-message";
 // Base de datos
 import { database } from "../database";
 import { training_plan_days, training_plans } from "../database/schemas";
-import { supabase } from "../supabase/client";
+import { supabase } from "../database/supabase";
 
 const makeEmptySlot = () => ({
   id: Crypto.randomUUID(),
@@ -69,7 +69,6 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           name: value.name.trim(),
           objective: value.objective || null,
           weekly_days: value.weekly_days,
-          status: "draft",
           created_by: userId,
           created_at: now,
           updated_at: now,

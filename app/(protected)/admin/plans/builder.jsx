@@ -19,7 +19,6 @@ export default function PlanBuilder() {
 
   const { form, isLoading } = useTrainingPlanForm({
     id: id ?? null,
-    kind: "template",
     onSuccess: () => router.back(),
   });
 
