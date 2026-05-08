@@ -7,6 +7,8 @@ import {
   exercise_equipment,
   session_exercises,
   sessions,
+  training_plans,
+  training_plan_days,
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or, inArray } from "drizzle-orm";
@@ -27,6 +29,8 @@ const TABLE_QUERY_KEYS = {
     ["exercise"],
     ["exercise_equipment_detail"],
   ],
+  training_plans: [["training_plans"], ["training_plan"]],
+  training_plan_days: [["training_plans"], ["training_plan"]],
 };
 
 function invalidateQueriesForTable(tableName) {
@@ -544,6 +548,148 @@ export async function pushSessionExercisesChanges() {
   }
 }
 
+/**
+ * PUSH: Sube cambios locales de Planes de Entrenamiento
+ */
+export async function pushTrainingPlansChanges() {
+  const localChanges = await database
+    .select()
+    .from(training_plans)
+    .where(
+      or(
+        eq(training_plans.sync_status, "pending"),
+        eq(training_plans.sync_status, "dirty"),
+        eq(training_plans.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] training_plans: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("training_plans")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(training_plans)
+          .where(eq(training_plans.id, row.id));
+        console.log(`✅ [PUSH] Plan "${row.name}" eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando plan "${row.name}":`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    const { sync_status, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("training_plans")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(training_plans)
+        .set({ sync_status: "synced" })
+        .where(eq(training_plans.id, row.id));
+      console.log(`✅ [PUSH] Plan "${row.name}" sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo plan "${row.name}":`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Días de Plan de Entrenamiento
+ *
+ * Al editar un plan los días locales se reemplazan por completo (delete + reinsert),
+ * por eso primero se borran todos los días remotos del plan antes de hacer upsert.
+ */
+export async function pushTrainingPlanDaysChanges() {
+  const localChanges = await database
+    .select()
+    .from(training_plan_days)
+    .where(
+      or(
+        eq(training_plan_days.sync_status, "pending"),
+        eq(training_plan_days.sync_status, "dirty"),
+        eq(training_plan_days.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] training_plan_days: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const deletedRows = localChanges.filter((r) => r.sync_status === "deleted");
+  const pendingRows = localChanges.filter((r) => r.sync_status !== "deleted");
+
+  for (const row of deletedRows) {
+    const { error } = await supabase
+      .from("training_plan_days")
+      .delete()
+      .eq("id", row.id);
+    if (!error) {
+      await database
+        .delete(training_plan_days)
+        .where(eq(training_plan_days.id, row.id));
+      console.log(`✅ [PUSH] Día de plan (id: ${row.id}) eliminado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error eliminando día de plan (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+
+  // Agrupar por plan_id: borrar remotos primero, luego upsert del set completo
+  const byPlan = {};
+  for (const row of pendingRows) {
+    if (!byPlan[row.plan_id]) byPlan[row.plan_id] = [];
+    byPlan[row.plan_id].push(row);
+  }
+
+  for (const [plan_id, rows] of Object.entries(byPlan)) {
+    const { error: deleteError } = await supabase
+      .from("training_plan_days")
+      .delete()
+      .eq("plan_id", plan_id);
+    if (deleteError) {
+      console.error(
+        `❌ [PUSH] Error limpiando días remotos del plan (plan_id: ${plan_id}):`,
+        deleteError.message
+      );
+      continue;
+    }
+
+    const rowsToUpsert = rows.map(({ sync_status, ...rest }) => rest);
+    const { error } = await supabase
+      .from("training_plan_days")
+      .upsert(rowsToUpsert, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(training_plan_days)
+        .set({ sync_status: "synced" })
+        .where(eq(training_plan_days.plan_id, plan_id));
+      console.log(
+        `✅ [PUSH] Días del plan (plan_id: ${plan_id}) sincronizados (${rows.length})`
+      );
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo días del plan (plan_id: ${plan_id}):`,
+        error.message
+      );
+    }
+  }
+}
+
 export async function syncWithSupabase(
   tablesToSync = [
     "exercises_base",
@@ -551,6 +697,8 @@ export async function syncWithSupabase(
     "exercise_equipment",
     "sessions",
     "session_exercises",
+    "training_plans",
+    "training_plan_days",
   ]
 ) {
   if (isSyncing) {
@@ -577,6 +725,8 @@ export async function syncWithSupabase(
       else if (table === "exercise_equipment") schemaTable = exercise_equipment;
       else if (table === "sessions") schemaTable = sessions;
       else if (table === "session_exercises") schemaTable = session_exercises;
+      else if (table === "training_plans") schemaTable = training_plans;
+      else if (table === "training_plan_days") schemaTable = training_plan_days;
 
       if (schemaTable) {
         const { success, changed } = await pullTableChanges(
@@ -608,6 +758,12 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("session_exercises")) {
       await pushSessionExercisesChanges();
+    }
+    if (tablesToSync.includes("training_plans")) {
+      await pushTrainingPlansChanges();
+    }
+    if (tablesToSync.includes("training_plan_days")) {
+      await pushTrainingPlanDaysChanges();
     }
     console.log(`✅ [SYNC] Sincronización completada`);
     return { success: true };

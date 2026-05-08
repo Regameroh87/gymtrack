@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 import { database } from "../database";
 import { training_plan_days, training_plans } from "../database/schemas";
 import { supabase } from "../database/supabase";
+import { checkNetInfoAndSync } from "../database/sync";
 
 const makeEmptySlot = () => ({
   id: Crypto.randomUUID(),
@@ -97,6 +98,8 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         text2: `"${value.name}" fue guardado correctamente.`,
         position: "bottom",
       });
+
+      checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
 
       if (onSuccess) onSuccess();
     },
