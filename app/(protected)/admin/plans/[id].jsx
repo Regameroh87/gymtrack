@@ -29,6 +29,9 @@ import { useRecordById } from "../../../../src/hooks/useRecordById";
 // Componentes
 import Screen from "../../../../src/components/Screen";
 
+// Constantes
+import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
+
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
 import { Pencil, Trash, Users } from "../../../../assets/icons";
@@ -41,6 +44,10 @@ const OBJECTIVE_ACCENT = {
   acondicionamiento: "#f59e0b",
   rehabilitacion: "#a855f7",
 };
+
+const OBJECTIVE_LABELS = Object.fromEntries(
+  SESSION_OBJECTIVES.map((o) => [o.value, o.label])
+);
 
 export default function PlanDetail() {
   const { id } = useLocalSearchParams();
@@ -113,8 +120,30 @@ export default function PlanDetail() {
             <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
               {plan.name}
             </Text>
+            {OBJECTIVE_LABELS[plan.objective] ? (
+              <View className="mt-2 self-start">
+                <View
+                  className="rounded-full border-[0.5px] px-2.5 py-1"
+                  style={{
+                    backgroundColor:
+                      (OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1") + "22",
+                    borderColor:
+                      (OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1") + "55",
+                  }}
+                >
+                  <Text
+                    className="font-manrope-semi text-[11px]"
+                    style={{
+                      color: OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1",
+                    }}
+                  >
+                    {OBJECTIVE_LABELS[plan.objective]}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
             {plan.description ? (
-              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1 leading-5">
+              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 leading-5">
                 {plan.description}
               </Text>
             ) : null}
