@@ -19,7 +19,7 @@ import { queryClient } from "../lib/queryClient";
 // v2: el watermark ahora es un updated_at del servidor (no reloj local).
 // El bump de versión invalida claves viejas y fuerza un pull completo único
 // por dispositivo para resincronizar lo que el filtro anterior haya perdido.
-const LAST_SYNC_KEY = "last_sync_at_v2";
+const LAST_SYNC_KEY = "last_sync_at";
 let isSyncing = false;
 
 const TABLE_QUERY_KEYS = {
