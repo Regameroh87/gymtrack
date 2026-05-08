@@ -8,10 +8,7 @@ export function useRecordById(queryKey, table, id, options = {}) {
     queryKey: [queryKey, id],
     enabled: !!id,
     queryFn: async () => {
-      const [row] = await database
-        .select()
-        .from(table)
-        .where(eq(table.id, id));
+      const [row] = await database.select().from(table).where(eq(table.id, id));
       return row ?? null;
     },
     ...options,
