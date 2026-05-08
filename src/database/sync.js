@@ -48,8 +48,6 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     .order("updated_at", { ascending: true });
 
   if (lastSync) {
-    // gte (no gt) para no perder filas que compartan el timestamp del watermark.
-    // El upsert local es idempotente, así que reprocesar la última fila es barato.
     query = query.gte("updated_at", lastSync);
   }
 
