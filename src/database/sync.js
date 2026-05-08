@@ -16,7 +16,10 @@ import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "../lib/queryClient";
 
-const LAST_SYNC_KEY = "last_sync_at";
+// v2: el watermark ahora es un updated_at del servidor (no reloj local).
+// El bump de versión invalida claves viejas y fuerza un pull completo único
+// por dispositivo para resincronizar lo que el filtro anterior haya perdido.
+const LAST_SYNC_KEY = "last_sync_at_v2";
 let isSyncing = false;
 
 const TABLE_QUERY_KEYS = {
@@ -42,23 +45,33 @@ function invalidateQueriesForTable(tableName) {
 }
 
 /**
- * PULL: Descarga cambios de Supabase hacia SQLite de forma genérica
+ * PULL: Descarga cambios de Supabase hacia SQLite de forma genérica.
+ *
+ * Devuelve `newLastSync` = max(updated_at) de la respuesta para que el watermark
+ * sea siempre un timestamp del servidor y no quede afectado por clock-skew entre
+ * dispositivos.
  */
 async function pullTableChanges(tableName, schemaTable, lastSync) {
-  let query = supabase.from(tableName).select("*");
+  let query = supabase
+    .from(tableName)
+    .select("*")
+    .order("updated_at", { ascending: true });
 
   if (lastSync) {
-    query = query.gt("updated_at", lastSync);
+    // gte (no gt) para no perder filas que compartan el timestamp del watermark.
+    // El upsert local es idempotente, así que reprocesar la última fila es barato.
+    query = query.gte("updated_at", lastSync);
   }
 
   const { data, error } = await query;
 
   if (error) {
     console.error(`❌ [PULL] Error descargando "${tableName}":`, error.message);
-    return { success: false, changed: false };
+    return { success: false, changed: false, newLastSync: null };
   }
 
   let changed = false;
+  let newLastSync = null;
 
   if (data && data.length > 0) {
     for (const remoteRow of data) {
@@ -69,6 +82,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
       });
     }
     changed = true;
+    newLastSync = data[data.length - 1].updated_at;
     console.log(
       `⬇️  [PULL] "${tableName}": ${data.length} registro(s) descargado(s)`
     );
@@ -101,7 +115,7 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
     }
   }
 
-  return { success: true, changed };
+  return { success: true, changed, newLastSync };
 }
 
 /**
@@ -729,15 +743,19 @@ export async function syncWithSupabase(
       else if (table === "training_plan_days") schemaTable = training_plan_days;
 
       if (schemaTable) {
-        const { success, changed } = await pullTableChanges(
+        const { success, changed, newLastSync } = await pullTableChanges(
           table,
           schemaTable,
           lastSync
         );
         if (success) {
-          // Guardamos el timestamp solo si el pull fue exitoso
-          // Nota: El push se hace después, pero el timestamp de pull es el que manda para futuros deltas
-          await AsyncStorage.setItem(syncKey, syncTime);
+          // Solo avanzamos el watermark si el servidor devolvió filas nuevas.
+          // Usamos su updated_at (no el reloj local) para evitar clock-skew
+          // entre dispositivos: un push tardío con updated_at viejo nunca
+          // quedará por debajo de un lastSync seteado con reloj de otro device.
+          if (newLastSync) {
+            await AsyncStorage.setItem(syncKey, newLastSync);
+          }
           if (changed) invalidateQueriesForTable(table);
         }
       }
