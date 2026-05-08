@@ -36,6 +36,9 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import { useDeleteSession } from "../../../../src/hooks/useDeleteSession";
 import { useRecordById } from "../../../../src/hooks/useRecordById";
 
+// Componentes
+import SessionExerciseRow from "../../../../src/components/cards/SessionExerciseRow";
+
 // Tema / assets
 import { brandPrimary, gradient } from "../../../../src/theme/colors";
 import {
@@ -47,26 +50,6 @@ import {
 } from "../../../../assets/icons";
 
 const HERO_HEIGHT = 280;
-
-function prescriptionLabel(ex) {
-  const sets = ex.sets ?? 3;
-  if (ex.prescription_mode === "duration" && ex.duration_seconds) {
-    return `${sets} × ${ex.duration_seconds}s`;
-  }
-  const min = ex.reps_min;
-  const max = ex.reps_max;
-  if (min != null && max != null && min !== max) {
-    return `${sets} × ${min}–${max} reps`;
-  }
-  if (min != null) return `${sets} × ${min} reps`;
-  return `${sets} series`;
-}
-
-function intensityLabel(ex) {
-  if (ex.intensity_mode === "rir" && ex.rir != null) return `RIR ${ex.rir}`;
-  if (ex.intensity_mode === "rpe" && ex.rpe != null) return `RPE ${ex.rpe}`;
-  return null;
-}
 
 export default function SessionDetail() {
   const { id } = useLocalSearchParams();
@@ -375,141 +358,13 @@ export default function SessionDetail() {
           </View>
         ) : (
           <View style={{ gap: 10 }}>
-            {data.exercises.map((ex, idx) => {
-              const intensity = intensityLabel(ex);
-              return (
-                <View
-                  key={ex.id}
-                  className="bg-ui-surface-light dark:bg-ui-surface-dark rounded-2xl"
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: 14,
-                    borderWidth: 0.5,
-                    borderColor: "rgba(196,190,230,0.12)",
-                    gap: 12,
-                  }}
-                >
-                  {/* Número de posición */}
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      backgroundColor: brandPrimary[500] + "22",
-                      borderWidth: 1,
-                      borderColor: brandPrimary[500] + "44",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: brandPrimary[500],
-                        fontSize: 13,
-                        fontFamily: "Manrope_700Bold",
-                      }}
-                    >
-                      {idx + 1}
-                    </Text>
-                  </View>
-
-                  {/* Info */}
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text
-                      numberOfLines={1}
-                      className="text-ui-text-main dark:text-ui-text-mainDark"
-                      style={{
-                        fontSize: 14,
-                        fontFamily: "PlusJakartaSans_700Bold",
-                        marginBottom: 3,
-                      }}
-                    >
-                      {ex.exercise_name}
-                    </Text>
-
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 5,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: brandPrimary[500],
-                          fontSize: 12,
-                          fontFamily: "Manrope_700Bold",
-                        }}
-                      >
-                        {prescriptionLabel(ex)}
-                      </Text>
-
-                      {ex.rest_seconds != null && (
-                        <>
-                          <Text
-                            style={{
-                              color: "rgba(196,190,230,0.35)",
-                              fontSize: 10,
-                            }}
-                          >
-                            ·
-                          </Text>
-                          <Text
-                            className="text-ui-text-muted dark:text-ui-text-mutedDark"
-                            style={{
-                              fontSize: 12,
-                              fontFamily: "Manrope_600SemiBold",
-                            }}
-                          >
-                            {ex.rest_seconds}s descanso
-                          </Text>
-                        </>
-                      )}
-
-                      {intensity && (
-                        <>
-                          <Text
-                            style={{
-                              color: "rgba(196,190,230,0.35)",
-                              fontSize: 10,
-                            }}
-                          >
-                            ·
-                          </Text>
-                          <Text
-                            style={{
-                              color: brandPrimary[500],
-                              fontSize: 12,
-                              fontFamily: "Manrope_600SemiBold",
-                              opacity: 0.75,
-                            }}
-                          >
-                            {intensity}
-                          </Text>
-                        </>
-                      )}
-                    </View>
-
-                    {ex.notes ? (
-                      <Text
-                        numberOfLines={1}
-                        className="text-ui-text-muted dark:text-ui-text-mutedDark"
-                        style={{
-                          fontSize: 11,
-                          fontFamily: "Manrope_400Regular",
-                          marginTop: 3,
-                        }}
-                      >
-                        {ex.notes}
-                      </Text>
-                    ) : null}
-                  </View>
-                </View>
-              );
-            })}
+            {data.exercises.map((ex, idx) => (
+              <SessionExerciseRow
+                key={ex.id}
+                exercise={ex}
+                position={idx + 1}
+              />
+            ))}
           </View>
         )}
       </View>

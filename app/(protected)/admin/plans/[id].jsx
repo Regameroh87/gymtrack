@@ -1,4 +1,5 @@
 // React Native
+import { useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -18,6 +19,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Base de datos
 import { database } from "../../../../src/database";
 import {
+  exercises_base,
+  session_exercises,
   sessions,
   training_plan_days,
   training_plans,
@@ -28,6 +31,7 @@ import { useRecordById } from "../../../../src/hooks/useRecordById";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
+import SessionExerciseRow from "../../../../src/components/cards/SessionExerciseRow";
 
 // Constantes
 import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
@@ -76,6 +80,54 @@ export default function PlanDetail() {
         .innerJoin(sessions, eq(training_plan_days.session_id, sessions.id))
         .where(eq(training_plan_days.plan_id, id))
         .orderBy(asc(training_plan_days.day_number)),
+  });
+
+  const sessionIds = useMemo(
+    () => Array.from(new Set(days.map((d) => d.session_id))),
+    [days]
+  );
+
+  const { data: exercisesBySession = {} } = useQuery({
+    queryKey: ["training_plan", id, "session_exercises", sessionIds],
+    enabled: sessionIds.length > 0,
+    queryFn: async () => {
+      const rows = await database
+        .select({
+          id: session_exercises.id,
+          session_id: session_exercises.session_id,
+          position: session_exercises.position,
+          sets: session_exercises.sets,
+          prescription_mode: session_exercises.prescription_mode,
+          reps_min: session_exercises.reps_min,
+          reps_max: session_exercises.reps_max,
+          duration_seconds: session_exercises.duration_seconds,
+          rest_seconds: session_exercises.rest_seconds,
+          intensity_mode: session_exercises.intensity_mode,
+          rir: session_exercises.rir,
+          rpe: session_exercises.rpe,
+          notes: session_exercises.notes,
+          exercise_name: exercises_base.name,
+        })
+        .from(session_exercises)
+        .innerJoin(
+          exercises_base,
+          eq(session_exercises.exercise_id, exercises_base.id)
+        )
+        .innerJoin(sessions, eq(session_exercises.session_id, sessions.id))
+        .innerJoin(
+          training_plan_days,
+          eq(training_plan_days.session_id, sessions.id)
+        )
+        .where(eq(training_plan_days.plan_id, id))
+        .orderBy(asc(session_exercises.position));
+
+      const grouped = {};
+      for (const row of rows) {
+        if (!grouped[row.session_id]) grouped[row.session_id] = [];
+        grouped[row.session_id].push(row);
+      }
+      return grouped;
+    },
   });
 
   const handleDelete = () => {
@@ -180,34 +232,62 @@ export default function PlanDetail() {
           ) : (
             days.map((day) => {
               const dayAccent = OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1";
+              const dayExercises = exercisesBySession[day.session_id] ?? [];
               return (
                 <View
                   key={day.id}
-                  className="mb-2.5 flex-row items-center p-3 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark"
+                  className="mb-3 p-3 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark"
                 >
-                  <View
-                    className="w-10 h-10 rounded-lg items-center justify-center mr-3"
-                    style={{ backgroundColor: dayAccent + "22" }}
-                  >
-                    <Text
-                      className="text-[10px] font-manrope-semi"
-                      style={{ color: dayAccent }}
+                  <View className="flex-row items-center">
+                    <View
+                      className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+                      style={{ backgroundColor: dayAccent + "22" }}
                     >
-                      Día
-                    </Text>
-                    <Text
-                      className="text-[13px] font-jakarta-bold leading-tight"
-                      style={{ color: dayAccent }}
-                    >
-                      {day.day_number}
-                    </Text>
+                      <Text
+                        className="text-[10px] font-manrope-semi"
+                        style={{ color: dayAccent }}
+                      >
+                        Día
+                      </Text>
+                      <Text
+                        className="text-[13px] font-jakarta-bold leading-tight"
+                        style={{ color: dayAccent }}
+                      >
+                        {day.day_number}
+                      </Text>
+                    </View>
+                    <View className="flex-1">
+                      <Text
+                        className="font-jakarta-semi text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
+                        numberOfLines={1}
+                      >
+                        {day.session_name}
+                      </Text>
+                      <Text
+                        className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
+                        numberOfLines={1}
+                      >
+                        {dayExercises.length > 0
+                          ? `${dayExercises.length} ejercicios`
+                          : "Sin ejercicios"}
+                      </Text>
+                    </View>
                   </View>
-                  <Text
-                    className="flex-1 font-jakarta-semi text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
-                    numberOfLines={1}
-                  >
-                    {day.session_name}
-                  </Text>
+
+                  {dayExercises.length > 0 && (
+                    <View className="mt-3" style={{ gap: 6 }}>
+                      {dayExercises.map((ex, idx) => (
+                        <SessionExerciseRow
+                          key={ex.id}
+                          exercise={ex}
+                          position={idx + 1}
+                          accent={dayAccent}
+                          compact
+                          showNotes={false}
+                        />
+                      ))}
+                    </View>
+                  )}
                 </View>
               );
             })
