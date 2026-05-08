@@ -34,6 +34,7 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
 // Hooks
 import { useDeleteSession } from "../../../../src/hooks/useDeleteSession";
+import { useRecordById } from "../../../../src/hooks/useRecordById";
 
 // Tema / assets
 import { brandPrimary, gradient } from "../../../../src/theme/colors";
@@ -103,17 +104,17 @@ export default function SessionDetail() {
     );
   };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["session", id],
-    queryFn: async () => {
-      const [session] = await database
-        .select()
-        .from(sessions)
-        .where(eq(sessions.id, id));
+  const { data: session, isLoading } = useRecordById(
+    "session",
+    sessions,
+    id
+  );
 
-      if (!session) return null;
-
-      const exercises = await database
+  const { data: sessionExercises = [] } = useQuery({
+    queryKey: ["session", id, "exercises"],
+    enabled: !!id,
+    queryFn: () =>
+      database
         .select({
           id: session_exercises.id,
           position: session_exercises.position,
@@ -136,11 +137,10 @@ export default function SessionDetail() {
           eq(session_exercises.exercise_id, exercises_base.id)
         )
         .where(eq(session_exercises.session_id, id))
-        .orderBy(asc(session_exercises.position));
-
-      return { ...session, exercises };
-    },
+        .orderBy(asc(session_exercises.position)),
   });
+
+  const data = session ? { ...session, exercises: sessionExercises } : null;
 
   if (isLoading) {
     return (

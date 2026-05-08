@@ -21,25 +21,26 @@ import {
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
+// Hooks
+import { useRecordById } from "../../../../src/hooks/useRecordById";
+
 // Componentes
 import FormExercise from "../../../../src/components/forms/FormExercise";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["exercise", id],
+  const { data: exerciseRecord, isLoading } = useRecordById(
+    "exercise",
+    exercises_base,
+    id
+  );
+
+  const { data: exerciseEquipments = [] } = useQuery({
+    queryKey: ["exercise", id, "equipments"],
+    enabled: !!id,
     queryFn: async () => {
-      const result = await database
-        .select()
-        .from(exercises_base)
-        .where(eq(exercises_base.id, id));
-
-      if (result.length === 0) return null;
-
-      const exerciseData = result[0];
-
-      const equipmentsForExercise = await database
+      const rows = await database
         .select({
           id: equipment.id,
           name: equipment.name,
@@ -48,16 +49,13 @@ export default function EditExercise() {
         .from(exercise_equipment)
         .innerJoin(equipment, eq(exercise_equipment.equipment_id, equipment.id))
         .where(eq(exercise_equipment.exercise_id, id));
-
-      return {
-        ...exerciseData,
-        equipments: equipmentsForExercise.map((item) => ({
-          ...item,
-          isNew: false,
-        })),
-      };
+      return rows.map((item) => ({ ...item, isNew: false }));
     },
   });
+
+  const data = exerciseRecord
+    ? { ...exerciseRecord, equipments: exerciseEquipments }
+    : null;
 
   const queryClient = useQueryClient();
 

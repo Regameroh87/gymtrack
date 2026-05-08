@@ -11,24 +11,15 @@ import { checkNetInfoAndSync } from "../../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { eq } from "drizzle-orm";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRecordById } from "../../../../../src/hooks/useRecordById";
 
 export default function EditEquipmentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const { data: item, isLoading } = useQuery({
-    queryKey: ["equipment", id],
-    queryFn: async () => {
-      const results = await database
-        .select()
-        .from(equipment)
-        .where(eq(equipment.id, id))
-        .execute();
-      return results[0];
-    },
-  });
+  const { data: item, isLoading } = useRecordById("equipment", equipment, id);
   const formEditEquipment = useForm({
     defaultValues: {
       name: item?.name || "",

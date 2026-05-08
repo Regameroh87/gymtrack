@@ -24,6 +24,9 @@ import {
 } from "../../../../src/database/schemas";
 import { supabase } from "../../../../src/database/supabase";
 
+// Hooks
+import { useRecordById } from "../../../../src/hooks/useRecordById";
+
 // Componentes
 import Screen from "../../../../src/components/Screen";
 
@@ -46,18 +49,17 @@ export default function PlanDetail() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["training_plan", id],
+  const { data: plan, isLoading } = useRecordById(
+    "training_plan",
+    training_plans,
+    id
+  );
+
+  const { data: days = [] } = useQuery({
+    queryKey: ["training_plan", id, "days"],
     enabled: !!id,
-    queryFn: async () => {
-      const [plan] = await database
-        .select()
-        .from(training_plans)
-        .where(eq(training_plans.id, id));
-
-      if (!plan) return null;
-
-      const days = await database
+    queryFn: () =>
+      database
         .select({
           id: training_plan_days.id,
           day_number: training_plan_days.day_number,
@@ -68,10 +70,7 @@ export default function PlanDetail() {
         .from(training_plan_days)
         .innerJoin(sessions, eq(training_plan_days.session_id, sessions.id))
         .where(eq(training_plan_days.plan_id, id))
-        .orderBy(asc(training_plan_days.day_number));
-
-      return { plan, days };
-    },
+        .orderBy(asc(training_plan_days.day_number)),
   });
 
   const { data: assignments = [] } = useQuery({
@@ -109,7 +108,7 @@ export default function PlanDetail() {
     );
   };
 
-  if (isLoading || !data) {
+  if (isLoading || !plan) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <ActivityIndicator size="large" color={brandPrimary[500]} />
@@ -117,7 +116,6 @@ export default function PlanDetail() {
     );
   }
 
-  const { plan, days } = data;
   const accent = OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1";
 
   return (
