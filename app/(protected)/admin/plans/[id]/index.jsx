@@ -17,7 +17,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Base de datos
 import { database } from "../../../../../src/database";
-import { routines, training_plan_days, training_plans } from "../../../../../src/database/schemas";
+import {
+  sessions,
+  training_plan_days,
+  training_plans,
+} from "../../../../../src/database/schemas";
 import { supabase } from "../../../../../src/database/supabase";
 
 // Componentes
@@ -57,12 +61,12 @@ export default function PlanDetail() {
         .select({
           id: training_plan_days.id,
           day_number: training_plan_days.day_number,
-          routine_id: training_plan_days.routine_id,
-          routine_name: routines.name,
-          routine_objective: routines.objective,
+          session_id: training_plan_days.session_id,
+          session_name: sessions.name,
+          session_objective: sessions.objective,
         })
         .from(training_plan_days)
-        .innerJoin(routines, eq(training_plan_days.routine_id, routines.id))
+        .innerJoin(sessions, eq(training_plan_days.session_id, sessions.id))
         .where(eq(training_plan_days.plan_id, id))
         .orderBy(asc(training_plan_days.day_number));
 
@@ -165,7 +169,8 @@ export default function PlanDetail() {
             </Text>
           ) : (
             days.map((day) => {
-              const dayAccent = OBJECTIVE_ACCENT[day.routine_objective] ?? "#6366f1";
+              const dayAccent =
+                OBJECTIVE_ACCENT[day.routine_objective] ?? "#6366f1";
               return (
                 <View
                   key={day.id}
@@ -175,10 +180,16 @@ export default function PlanDetail() {
                     className="w-10 h-10 rounded-lg items-center justify-center mr-3"
                     style={{ backgroundColor: dayAccent + "22" }}
                   >
-                    <Text className="text-[10px] font-manrope-semi" style={{ color: dayAccent }}>
+                    <Text
+                      className="text-[10px] font-manrope-semi"
+                      style={{ color: dayAccent }}
+                    >
                       Día
                     </Text>
-                    <Text className="text-[13px] font-jakarta-bold leading-tight" style={{ color: dayAccent }}>
+                    <Text
+                      className="text-[13px] font-jakarta-bold leading-tight"
+                      style={{ color: dayAccent }}
+                    >
                       {day.day_number}
                     </Text>
                   </View>
@@ -228,7 +239,10 @@ export default function PlanDetail() {
                   className="w-8 h-8 rounded-full items-center justify-center mr-3"
                   style={{ backgroundColor: accent + "22" }}
                 >
-                  <Text className="font-jakarta-bold text-[13px]" style={{ color: accent }}>
+                  <Text
+                    className="font-jakarta-bold text-[13px]"
+                    style={{ color: accent }}
+                  >
                     {a.profiles?.name?.[0]?.toUpperCase() ?? "?"}
                   </Text>
                 </View>
