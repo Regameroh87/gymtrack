@@ -199,7 +199,7 @@ export async function pushEquipmentChanges() {
     }
 
     // 2. Push a Supabase
-    const { sync_status, ...restOfRow } = row;
+    const { sync_status, updated_at, ...restOfRow } = row;
     const { error } = await supabase
       .from("equipment")
       .upsert(restOfRow, { onConflict: "id" });
