@@ -11,17 +11,17 @@
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
-as $$
+as $func$
 begin
   new.updated_at = now();
   return new;
 end;
-$$;
+$func$;
 
 -- 2) Por cada tabla:
 --    - Asegurar default now() en updated_at (cubre INSERTs sin el campo).
 --    - Recrear el trigger before update para que pise el valor del cliente.
-do $$
+do $do$
 declare
   t text;
   tables text[] := array[
@@ -50,4 +50,4 @@ begin
     );
   end loop;
 end;
-$$;
+$do$;
