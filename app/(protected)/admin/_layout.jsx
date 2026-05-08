@@ -97,15 +97,26 @@ export default function AdminLayout() {
         }}
       />
       {/* Planes */}
-      <Stack.Screen name="plans/index" options={{ title: "Planes" }} />
-      <Stack.Screen name="plans/builder" options={{ title: "Armar Plan" }} />
       <Stack.Screen
-        name="plans/[id]/index"
-        options={{ title: "Detalle de Plan" }}
+        name="plans/index"
+        options={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
       />
       <Stack.Screen
-        name="plans/[id]/assign"
-        options={{ title: "Asignar a Alumnos" }}
+        name="plans/builder"
+        options={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
+        name="plans/[id]"
+        options={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
       />
       {/* Placeholders */}
       <Stack.Screen name="billing/index" options={{ title: "Contabilidad" }} />
