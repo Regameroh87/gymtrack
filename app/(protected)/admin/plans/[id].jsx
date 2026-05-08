@@ -16,20 +16,20 @@ import { asc, eq } from "drizzle-orm";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Base de datos
-import { database } from "../../../../../src/database";
+import { database } from "../../../../src/database";
 import {
   sessions,
   training_plan_days,
   training_plans,
-} from "../../../../../src/database/schemas";
-import { supabase } from "../../../../../src/database/supabase";
+} from "../../../../src/database/schemas";
+import { supabase } from "../../../../src/database/supabase";
 
 // Componentes
-import Screen from "../../../../../src/components/Screen";
+import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary } from "../../../../../src/theme/colors";
-import { Pencil, Trash, Users } from "../../../../../assets/icons";
+import { brandPrimary } from "../../../../src/theme/colors";
+import { Pencil, Trash, Users } from "../../../../assets/icons";
 
 const OBJECTIVE_ACCENT = {
   hipertrofia: "#6366f1",
