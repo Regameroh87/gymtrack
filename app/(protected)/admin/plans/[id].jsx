@@ -72,6 +72,8 @@ export default function PlanDetail() {
         .orderBy(asc(training_plan_days.day_number)),
   });
 
+  console.log("days", days);
+
   const handleDelete = () => {
     Alert.alert(
       "Eliminar plantilla",
@@ -101,8 +103,6 @@ export default function PlanDetail() {
       </View>
     );
   }
-
-  const accent = OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1";
 
   return (
     <Screen>
