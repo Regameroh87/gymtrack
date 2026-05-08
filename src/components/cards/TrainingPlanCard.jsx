@@ -36,10 +36,6 @@ const TrainingPlanCard = ({ plan, onPress }) => {
 
   const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
 
-  const imageUri = plan.cover_image_uri
-    ? (getCloudinaryUrl(plan.cover_image_uri) ?? plan.cover_image_uri)
-    : null;
-
   const handlePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress?.(plan);
