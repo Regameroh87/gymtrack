@@ -116,12 +116,7 @@ export default function PlanDetail() {
           exercises_base,
           eq(session_exercises.exercise_id, exercises_base.id)
         )
-        .innerJoin(sessions, eq(session_exercises.session_id, sessions.id))
-        .innerJoin(
-          training_plan_days,
-          eq(training_plan_days.session_id, sessions.id)
-        )
-        .where(eq(training_plan_days.plan_id, id))
+        .where(inArray(session_exercises.session_id, sessionIds))
         .orderBy(asc(session_exercises.position));
 
       const grouped = {};
