@@ -16,9 +16,6 @@ import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "../lib/queryClient";
 
-// v2: el watermark ahora es un updated_at del servidor (no reloj local).
-// El bump de versión invalida claves viejas y fuerza un pull completo único
-// por dispositivo para resincronizar lo que el filtro anterior haya perdido.
 const LAST_SYNC_KEY = "last_sync_at";
 let isSyncing = false;
 
@@ -44,13 +41,6 @@ function invalidateQueriesForTable(tableName) {
   }
 }
 
-/**
- * PULL: Descarga cambios de Supabase hacia SQLite de forma genérica.
- *
- * Devuelve `newLastSync` = max(updated_at) de la respuesta para que el watermark
- * sea siempre un timestamp del servidor y no quede afectado por clock-skew entre
- * dispositivos.
- */
 async function pullTableChanges(tableName, schemaTable, lastSync) {
   let query = supabase
     .from(tableName)
