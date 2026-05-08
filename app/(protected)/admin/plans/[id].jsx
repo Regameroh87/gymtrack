@@ -107,6 +107,9 @@ export default function PlanDetail() {
           rpe: session_exercises.rpe,
           notes: session_exercises.notes,
           exercise_name: exercises_base.name,
+          image_uri: exercises_base.image_uri,
+          video_uri: exercises_base.video_uri,
+          youtube_video_url: exercises_base.youtube_video_url,
         })
         .from(session_exercises)
         .innerJoin(

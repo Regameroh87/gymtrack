@@ -113,6 +113,9 @@ export default function SessionDetail() {
           notes: session_exercises.notes,
           exercise_name: exercises_base.name,
           exercise_muscle: exercises_base.muscle_group,
+          image_uri: exercises_base.image_uri,
+          video_uri: exercises_base.video_uri,
+          youtube_video_url: exercises_base.youtube_video_url,
         })
         .from(session_exercises)
         .innerJoin(
