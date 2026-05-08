@@ -22,7 +22,6 @@ import {
   training_plan_days,
   training_plans,
 } from "../../../../src/database/schemas";
-import { supabase } from "../../../../src/database/supabase";
 
 // Hooks
 import { useRecordById } from "../../../../src/hooks/useRecordById";
@@ -71,19 +70,6 @@ export default function PlanDetail() {
         .innerJoin(sessions, eq(training_plan_days.session_id, sessions.id))
         .where(eq(training_plan_days.plan_id, id))
         .orderBy(asc(training_plan_days.day_number)),
-  });
-
-  const { data: assignments = [] } = useQuery({
-    queryKey: ["plan_assignments", id],
-    enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("plan_assignments")
-        .select("*, profiles(id, name, last_name, email)")
-        .eq("plan_id", id);
-      if (error) throw error;
-      return data ?? [];
-    },
   });
 
   const handleDelete = () => {
@@ -200,60 +186,6 @@ export default function PlanDetail() {
                 </View>
               );
             })
-          )}
-        </View>
-
-        {/* ── Alumnos asignados ── */}
-        <View className="px-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-[10px] font-jakarta-semi uppercase tracking-widest text-brandPrimary-500 dark:text-brandPrimary-400">
-              Alumnos asignados · {assignments.length}
-            </Text>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push(`/admin/plans/${id}/assign`);
-              }}
-              className="flex-row items-center gap-1.5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border px-3 py-2 rounded-xl active:opacity-70"
-            >
-              <Users size={14} color={brandPrimary[500]} />
-              <Text className="text-xs font-manrope-semi text-brandPrimary-500 dark:text-brandPrimary-400">
-                Gestionar
-              </Text>
-            </Pressable>
-          </View>
-
-          {assignments.length === 0 ? (
-            <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark italic">
-              Ningún alumno tiene asignada esta plantilla aún.
-            </Text>
-          ) : (
-            assignments.map((a) => (
-              <View
-                key={a.id}
-                className="mb-2 flex-row items-center p-3 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark"
-              >
-                <View
-                  className="w-8 h-8 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: accent + "22" }}
-                >
-                  <Text
-                    className="font-jakarta-bold text-[13px]"
-                    style={{ color: accent }}
-                  >
-                    {a.profiles?.name?.[0]?.toUpperCase() ?? "?"}
-                  </Text>
-                </View>
-                <View>
-                  <Text className="font-manrope-semi text-[13px] text-ui-text-main dark:text-ui-text-mainDark">
-                    {a.profiles?.name ?? ""} {a.profiles?.last_name ?? ""}
-                  </Text>
-                  <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
-                    {a.profiles?.email ?? ""}
-                  </Text>
-                </View>
-              </View>
-            ))
           )}
         </View>
       </ScrollView>
