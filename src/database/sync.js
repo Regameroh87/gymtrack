@@ -326,7 +326,10 @@ export async function pushExercisesChanges() {
     console.log(
       `⬆️  [PUSH] Subiendo ejercicio "${row.name}" (id: ${row.id})...`
     );
-    const { sync_status, ...restOfRow } = row;
+    // Stripeamos updated_at: que lo escriba Postgres (default now() + trigger).
+    // Así un push tardío de una fila creada offline tiene updated_at = momento del push,
+    // no del reloj local de hace horas — y otros devices no pierden la fila por watermark.
+    const { sync_status, updated_at, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercises_base")
       .upsert(restOfRow, { onConflict: "id" });
@@ -402,7 +405,10 @@ export async function pushExerciseEquipmentChanges() {
       continue;
     }
 
-    const { sync_status, ...restOfRow } = row;
+    // Stripeamos updated_at: que lo escriba Postgres (default now() + trigger).
+    // Así un push tardío de una fila creada offline tiene updated_at = momento del push,
+    // no del reloj local de hace horas — y otros devices no pierden la fila por watermark.
+    const { sync_status, updated_at, ...restOfRow } = row;
     const { error } = await supabase
       .from("exercise_equipment")
       .upsert(restOfRow, { onConflict: "id" });
@@ -485,7 +491,10 @@ export async function pushSessionsChanges() {
       }
     }
 
-    const { sync_status, ...restOfRow } = row;
+    // Stripeamos updated_at: que lo escriba Postgres (default now() + trigger).
+    // Así un push tardío de una fila creada offline tiene updated_at = momento del push,
+    // no del reloj local de hace horas — y otros devices no pierden la fila por watermark.
+    const { sync_status, updated_at, ...restOfRow } = row;
     const { error } = await supabase
       .from("sessions")
       .upsert(restOfRow, { onConflict: "id" });
@@ -543,7 +552,10 @@ export async function pushSessionExercisesChanges() {
       continue;
     }
 
-    const { sync_status, ...restOfRow } = row;
+    // Stripeamos updated_at: que lo escriba Postgres (default now() + trigger).
+    // Así un push tardío de una fila creada offline tiene updated_at = momento del push,
+    // no del reloj local de hace horas — y otros devices no pierden la fila por watermark.
+    const { sync_status, updated_at, ...restOfRow } = row;
     const { error } = await supabase
       .from("session_exercises")
       .upsert(restOfRow, { onConflict: "id" });
@@ -601,7 +613,10 @@ export async function pushTrainingPlansChanges() {
       continue;
     }
 
-    const { sync_status, ...restOfRow } = row;
+    // Stripeamos updated_at: que lo escriba Postgres (default now() + trigger).
+    // Así un push tardío de una fila creada offline tiene updated_at = momento del push,
+    // no del reloj local de hace horas — y otros devices no pierden la fila por watermark.
+    const { sync_status, updated_at, ...restOfRow } = row;
     const { error } = await supabase
       .from("training_plans")
       .upsert(restOfRow, { onConflict: "id" });
@@ -683,7 +698,11 @@ export async function pushTrainingPlanDaysChanges() {
       continue;
     }
 
-    const rowsToUpsert = rows.map(({ sync_status, ...rest }) => rest);
+    // Stripeamos updated_at por la misma razón que en los demás push:
+    // que lo escriba Postgres en el momento del upsert.
+    const rowsToUpsert = rows.map(
+      ({ sync_status, updated_at, ...rest }) => rest
+    );
     const { error } = await supabase
       .from("training_plan_days")
       .upsert(rowsToUpsert, { onConflict: "id" });
