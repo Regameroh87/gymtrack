@@ -64,15 +64,12 @@ export default function PlanDetail() {
           day_number: training_plan_days.day_number,
           session_id: training_plan_days.session_id,
           session_name: sessions.name,
-          session_objective: sessions.objective,
         })
         .from(training_plan_days)
         .innerJoin(sessions, eq(training_plan_days.session_id, sessions.id))
         .where(eq(training_plan_days.plan_id, id))
         .orderBy(asc(training_plan_days.day_number)),
   });
-
-  console.log("days", days);
 
   const handleDelete = () => {
     Alert.alert(
@@ -153,8 +150,7 @@ export default function PlanDetail() {
             </Text>
           ) : (
             days.map((day) => {
-              const dayAccent =
-                OBJECTIVE_ACCENT[day.routine_objective] ?? "#6366f1";
+              const dayAccent = OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1";
               return (
                 <View
                   key={day.id}
@@ -181,7 +177,7 @@ export default function PlanDetail() {
                     className="flex-1 font-jakarta-semi text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
                     numberOfLines={1}
                   >
-                    {day.routine_name}
+                    {day.session_name}
                   </Text>
                 </View>
               );
