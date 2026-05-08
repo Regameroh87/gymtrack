@@ -18,9 +18,6 @@ begin
 end;
 $func$;
 
--- 2) Por cada tabla:
---    - Asegurar default now() en updated_at (cubre INSERTs sin el campo).
---    - Recrear el trigger before update para que pise el valor del cliente.
 do $do$
 declare
   t text;
