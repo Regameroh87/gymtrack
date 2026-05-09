@@ -107,8 +107,12 @@ export const session_exercises = sqliteTable("session_exercises", {
 export const training_plans = sqliteTable("training_plans", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  description: text("description"),
   objective: text("objective"),
+  level: text("level"),
   weekly_days: integer("weekly_days").notNull().default(3),
+  duration_weeks: integer("duration_weeks").notNull().default(8),
+  cover_image_uri: text("cover_image_uri"),
   created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()

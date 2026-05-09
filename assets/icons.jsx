@@ -65,6 +65,25 @@ export const Mail = ({ size = 24, className, ...props }) => (
   </Svg>
 );
 
+export const ArrowLeft = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-left ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M19 12H5M9 8l-4 4M9 16l-4-4" />
+  </Svg>
+);
+
 export const ArrowRight = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"

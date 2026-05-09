@@ -106,6 +106,27 @@
       "when": 1778400000000,
       "tag": "0014_careful_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1746720000000,
+      "tag": "0015_plan_duration_weeks",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1746720060000,
+      "tag": "0016_drop_kind_from_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1746720120000,
+      "tag": "0017_drop_status_from_plans",
+      "breakpoints": true
     }
   ]
 }

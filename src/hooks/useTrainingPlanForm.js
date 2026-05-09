@@ -24,7 +24,11 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const form = useForm({
     defaultValues: {
       name: "",
+      description: "",
       objective: "",
+      level: "",
+      duration_weeks: 8,
+      cover_image_uri: "",
       weekly_days: 3,
       days: [makeEmptySlot(), makeEmptySlot(), makeEmptySlot()],
     },
@@ -41,7 +45,11 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           .update(training_plans)
           .set({
             name: value.name.trim(),
+            description: value.description?.trim() || null,
             objective: value.objective || null,
+            level: value.level || null,
+            duration_weeks: value.duration_weeks,
+            cover_image_uri: value.cover_image_uri || null,
             weekly_days: value.weekly_days,
             updated_at: now,
             sync_status: "pending",
@@ -68,7 +76,11 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         await database.insert(training_plans).values({
           id: planId,
           name: value.name.trim(),
+          description: value.description?.trim() || null,
           objective: value.objective || null,
+          level: value.level || null,
+          duration_weeks: value.duration_weeks,
+          cover_image_uri: value.cover_image_uri || null,
           weekly_days: value.weekly_days,
           created_by: userId,
           created_at: now,

@@ -15,7 +15,14 @@ import { ui } from "../../theme/colors";
 import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(
-  { value, onChange, onFocus, error },
+  {
+    value,
+    onChange,
+    onFocus,
+    error,
+    title = "Imagen de Referencia",
+    hint = "Referencia visual clara para asegurar la técnica correcta.",
+  },
   ref
 ) {
   const { isDark } = useTheme();
@@ -48,7 +55,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
             size={18}
           />
         }
-        title="Imagen de Referencia"
+        title={title}
       />
 
       {/* Preview */}
@@ -119,9 +126,11 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
           </View>
         )}
       </View>
-      <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
-        Referencia visual clara para asegurar la técnica correcta.
-      </Text>
+      {hint ? (
+        <Text className="font-manrope mt-3 text-center text-ui-text-muted text-tiny">
+          {hint}
+        </Text>
+      ) : null}
     </View>
   );
 });

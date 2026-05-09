@@ -16,6 +16,9 @@ import m0011 from './0011_powerful_vulture.sql';
 import m0012 from './0012_remove_objective_from_routines.sql';
 import m0013 from './0013_dashing_paibok.sql';
 import m0014 from './0014_careful_magma.sql';
+import m0015 from './0015_plan_duration_weeks.sql';
+import m0016 from './0016_drop_kind_from_plans.sql';
+import m0017 from './0017_drop_status_from_plans.sql';
 
   export default {
     journal,
@@ -34,7 +37,10 @@ m0010,
 m0011,
 m0012,
 m0013,
-m0014
+m0014,
+m0015,
+m0016,
+m0017
     }
   }
   
