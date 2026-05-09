@@ -31,15 +31,43 @@ import { brandPrimary } from "../../../src/theme/colors";
 import { Calendar, ClipboardList, Plus, Barbell } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
-  hipertrofia: { gradient: ["#1e1580", "#6366f1"], accent: "#6366f1", label: "Hipertrofia" },
-  fuerza: { gradient: ["#7f1d1d", "#ef4444"], accent: "#ef4444", label: "Fuerza" },
-  perdida_grasa: { gradient: ["#052e16", "#22c55e"], accent: "#22c55e", label: "Pérdida de grasa" },
-  resistencia: { gradient: ["#0c4a6e", "#38bdf8"], accent: "#38bdf8", label: "Resistencia" },
-  acondicionamiento: { gradient: ["#78350f", "#f59e0b"], accent: "#f59e0b", label: "Acondicionamiento" },
-  rehabilitacion: { gradient: ["#3b0764", "#a855f7"], accent: "#a855f7", label: "Rehabilitación" },
+  hipertrofia: {
+    gradient: ["#1e1580", "#6366f1"],
+    accent: "#6366f1",
+    label: "Hipertrofia",
+  },
+  fuerza: {
+    gradient: ["#7f1d1d", "#ef4444"],
+    accent: "#ef4444",
+    label: "Fuerza",
+  },
+  perdida_grasa: {
+    gradient: ["#052e16", "#22c55e"],
+    accent: "#22c55e",
+    label: "Pérdida de grasa",
+  },
+  resistencia: {
+    gradient: ["#0c4a6e", "#38bdf8"],
+    accent: "#38bdf8",
+    label: "Resistencia",
+  },
+  acondicionamiento: {
+    gradient: ["#78350f", "#f59e0b"],
+    accent: "#f59e0b",
+    label: "Acondicionamiento",
+  },
+  rehabilitacion: {
+    gradient: ["#3b0764", "#a855f7"],
+    accent: "#a855f7",
+    label: "Rehabilitación",
+  },
 };
 
-const DEFAULT_CONFIG = { gradient: ["#1e1580", "#4A44E4"], accent: "#4A44E4", label: null };
+const DEFAULT_CONFIG = {
+  gradient: ["#1e1580", "#4A44E4"],
+  accent: "#4A44E4",
+  label: null,
+};
 
 const LEVEL_FILTERS = [
   { key: null, label: "Todos" },
@@ -61,7 +89,10 @@ export default function RutinasTab() {
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
 
   const filteredSessions = useMemo(
-    () => (activeLevel === null ? sessions : sessions.filter((s) => s.level === activeLevel)),
+    () =>
+      activeLevel === null
+        ? sessions
+        : sessions.filter((s) => s.level === activeLevel),
     [sessions, activeLevel]
   );
 
@@ -140,7 +171,11 @@ export default function RutinasTab() {
                 {count > 0 && (
                   <Text
                     className="font-manrope-bold text-[11px]"
-                    style={{ color: isActive ? brandPrimary[500] : "rgba(110,107,138,0.5)" }}
+                    style={{
+                      color: isActive
+                        ? brandPrimary[500]
+                        : "rgba(110,107,138,0.5)",
+                    }}
                   >
                     {count}
                   </Text>
@@ -186,7 +221,12 @@ export default function RutinasTab() {
           insets={insets}
         />
       ) : (
-        <PlanesContent plans={plans} totalDays={totalDays} router={router} insets={insets} />
+        <PlanesContent
+          plans={plans}
+          totalDays={totalDays}
+          router={router}
+          insets={insets}
+        />
       )}
     </Screen>
   );
@@ -225,7 +265,11 @@ function PlanesContent({ plans, totalDays, router, insets }) {
           label={plans.length === 1 ? "Plan disponible" : "Planes disponibles"}
           accent={brandPrimary[500]}
         />
-        <StatTile value={totalDays} label="Días de entrenamiento" accent="#10b981" />
+        <StatTile
+          value={totalDays}
+          label="Días de entrenamiento"
+          accent="#10b981"
+        />
       </View>
 
       {/* Grid 2 columnas */}
@@ -286,7 +330,11 @@ function SesionesContent({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 20 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 16,
+          paddingBottom: 20,
+        }}
       >
         <View className="flex-row gap-2">
           {levelFilters.map((filter) => {
@@ -330,7 +378,10 @@ function SesionesContent({
       ) : (
         <View className="px-6 gap-4">
           {sessions.map((session, i) => (
-            <Animated.View key={session.id} entering={FadeInDown.delay(i * 70).springify()}>
+            <Animated.View
+              key={session.id}
+              entering={FadeInDown.delay(i * 70).springify()}
+            >
               <SessionCard
                 session={session}
                 onPress={(s) => router.push(`/rutinas/sesion/${s.id}`)}
@@ -411,7 +462,10 @@ function PlanTile({ plan, onPress }) {
         {/* Días */}
         <View className="flex-row items-center gap-1.5 mt-3">
           <Calendar size={11} color="rgba(255,255,255,0.6)" />
-          <Text className="text-[11px] font-manrope-semi" style={{ color: "rgba(255,255,255,0.65)" }}>
+          <Text
+            className="text-[11px] font-manrope-semi"
+            style={{ color: "rgba(255,255,255,0.65)" }}
+          >
             {plan.day_count} {plan.day_count === 1 ? "día" : "días"}
           </Text>
         </View>
@@ -434,7 +488,10 @@ function StatTile({ value, label, accent }) {
           opacity: 0.1,
         }}
       />
-      <Text className="font-jakarta-bold text-[26px] leading-[30px]" style={{ color: accent }}>
+      <Text
+        className="font-jakarta-bold text-[26px] leading-[30px]"
+        style={{ color: accent }}
+      >
         {value}
       </Text>
       <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
@@ -459,7 +516,10 @@ function EmptyPlanes({ router }) {
         Elegí una plantilla de tu entrenador o creá el tuyo propio.
       </Text>
       <View className="w-full gap-3">
-        <Pressable onPress={() => router.push("/rutinas/select")} className="w-full active:scale-[0.98]">
+        <Pressable
+          onPress={() => router.push("/rutinas/select")}
+          className="w-full active:scale-[0.98]"
+        >
           <LinearGradient
             colors={[brandPrimary[600], brandPrimary[500]]}
             start={{ x: 0, y: 0 }}
@@ -467,7 +527,9 @@ function EmptyPlanes({ router }) {
             className="py-3.5 rounded-xl items-center flex-row justify-center"
           >
             <ClipboardList size={18} color="white" />
-            <Text className="text-white font-jakarta-semi text-sm ml-2">Elegir un plan</Text>
+            <Text className="text-white font-jakarta-semi text-sm ml-2">
+              Elegir un plan
+            </Text>
           </LinearGradient>
         </Pressable>
         <Pressable
