@@ -45,9 +45,10 @@ import { ArrowLeft, ChevronRight, X } from "../../../assets/icons";
 
 // ─── Stepper genérico ───────────────────────────────────────────────────────
 
-function Stepper({ value, onChange, min, max, unit }) {
+function Stepper({ value, onChange, min, max, unit, zeroLabel }) {
   const canDecrease = value > min;
-  const canIncrease = value < max;
+  const canIncrease = max == null || value < max;
+  const showZeroLabel = zeroLabel && value === 0;
 
   return (
     <View className="flex-row items-center bg-ui-input-light dark:bg-ui-input-dark rounded-xl border border-ui-input-border overflow-hidden">
@@ -68,12 +69,20 @@ function Stepper({ value, onChange, min, max, unit }) {
       </Pressable>
 
       <View className="flex-1 items-center py-2 border-x border-ui-input-border">
-        <Text className="text-3xl font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark leading-tight">
-          {value}
-        </Text>
-        <Text className="text-[10px] font-manrope-semi uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark">
-          {unit}
-        </Text>
+        {showZeroLabel ? (
+          <Text className="text-base font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark leading-tight py-2">
+            {zeroLabel}
+          </Text>
+        ) : (
+          <>
+            <Text className="text-3xl font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark leading-tight">
+              {value}
+            </Text>
+            <Text className="text-[10px] font-manrope-semi uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark">
+              {unit}
+            </Text>
+          </>
+        )}
       </View>
 
       <Pressable
@@ -108,9 +117,7 @@ function StepIndicator({ current, total }) {
             width: i + 1 === current ? 24 : 8,
             height: 8,
             backgroundColor:
-              i + 1 <= current
-                ? brandPrimary[500]
-                : brandPrimary[100],
+              i + 1 <= current ? brandPrimary[500] : brandPrimary[100],
           }}
         />
       ))}
@@ -120,7 +127,14 @@ function StepIndicator({ current, total }) {
 
 // ─── Slot de día ─────────────────────────────────────────────────────────────
 
-function DaySlot({ slot, dayNumber, frequencyCount, onPress, onClear, mutedColor }) {
+function DaySlot({
+  slot,
+  dayNumber,
+  frequencyCount,
+  onPress,
+  onClear,
+  mutedColor,
+}) {
   const hasSession = !!slot.session_id;
 
   return (
@@ -371,12 +385,16 @@ export default function FormTrainingPlan({ form, plan }) {
         {(field) => (
           <FormField label="DURACIÓN DEL PLAN">
             <Stepper
-              value={field.state.value}
+              value={field.state.value ?? 0}
               onChange={field.handleChange}
-              min={4}
-              max={24}
+              min={0}
+              max={null}
               unit="semanas"
+              zeroLabel="Indefinido"
             />
+            <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 ml-1 italic">
+              Llevalo a 0 para dejar el plan por tiempo indeterminado.
+            </Text>
           </FormField>
         )}
       </form.Field>
