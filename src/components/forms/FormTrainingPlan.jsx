@@ -448,7 +448,7 @@ export default function FormTrainingPlan({ form, plan }) {
         {(field) => (
           <FormField label="DÍAS DE ENTRENAMIENTO POR SEMANA">
             <Stepper
-              value={field.state.value}
+              value={field.state.value ?? 3}
               onChange={handleWeeklyDaysChange}
               min={2}
               max={7}
@@ -470,7 +470,7 @@ export default function FormTrainingPlan({ form, plan }) {
         }}
       >
         {(field) => {
-          const days = field.state.value;
+          const days = field.state.value ?? [];
           const freqMap = {};
           for (const d of days) {
             if (d.session_id)
