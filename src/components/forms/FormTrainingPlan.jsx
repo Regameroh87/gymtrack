@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -22,7 +23,6 @@ import {
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
-import Toast from "react-native-toast-message";
 import { z } from "zod";
 
 // Hooks
@@ -41,7 +41,7 @@ import SubmitButton from "./SubmitButton";
 
 // Tema y assets
 import { brandPrimary, ui } from "../../theme/colors";
-import { ArrowLeft, ChevronRight, X } from "../../../assets/icons";
+import { ChevronRight, X } from "../../../assets/icons";
 
 // ─── Stepper genérico ───────────────────────────────────────────────────────
 
@@ -100,27 +100,6 @@ function Stepper({ value, onChange, min, max, unit, zeroLabel }) {
           +
         </Text>
       </Pressable>
-    </View>
-  );
-}
-
-// ─── Indicador de pasos ──────────────────────────────────────────────────────
-
-function StepIndicator({ current, total }) {
-  return (
-    <View className="flex-row items-center justify-center gap-x-2 mb-6 mt-2">
-      {Array.from({ length: total }).map((_, i) => (
-        <View
-          key={i}
-          className="rounded-full"
-          style={{
-            width: i + 1 === current ? 24 : 8,
-            height: 8,
-            backgroundColor:
-              i + 1 <= current ? brandPrimary[500] : brandPrimary[100],
-          }}
-        />
-      ))}
     </View>
   );
 }
@@ -201,8 +180,6 @@ export default function FormTrainingPlan({ form, plan }) {
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
 
-  const [step, setStep] = useState(1);
-
   const pickerRef = useRef(null);
   const [activeSlotIdx, setActiveSlotIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -254,7 +231,7 @@ export default function FormTrainingPlan({ form, plan }) {
   };
 
   const handleWeeklyDaysChange = (newCount) => {
-    const current = form.state.values.days;
+    const current = form.state.values.days ?? [];
     let newDays = [...current];
     if (newCount > current.length) {
       for (let i = current.length; i < newCount; i++) {
@@ -271,280 +248,232 @@ export default function FormTrainingPlan({ form, plan }) {
     form.setFieldValue("days", newDays);
   };
 
-  const goToStep2 = () => {
-    const { name, objective } = form.state.values;
-    if (!name?.trim() || name.trim().length < 3) {
-      Toast.show({
-        type: "error",
-        text1: "Nombre requerido",
-        text2: "El nombre del plan debe tener al menos 3 caracteres.",
-        position: "bottom",
-      });
-      return;
-    }
-    if (!objective) {
-      Toast.show({
-        type: "error",
-        text1: "Objetivo requerido",
-        text2: "Seleccioná un objetivo para continuar.",
-        position: "bottom",
-      });
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setStep(2);
-  };
-
-  // ─── Paso 1: info del plan ─────────────────────────────────────────────────
-
-  const renderStep1 = () => (
-    <View className="px-4 pt-4 pb-10">
-      {/* ─── PORTADA ─── */}
-      <form.Field name="cover_image_uri">
-        {(field) => (
-          <ImagePickerCard
-            value={field.state.value}
-            onChange={field.handleChange}
-            onFocus={field.handleBlur}
-            title="Imagen de portada"
-            hint="Una buena portada ayuda a identificar el plan rápidamente."
-          />
-        )}
-      </form.Field>
-
-      {/* ─── NOMBRE ─── */}
-      <form.Field
-        name="name"
-        validators={{
-          onChange: ({ value }) => {
-            if (!value) return undefined;
-            const r = z.string().min(3, "Mínimo 3 caracteres").safeParse(value);
-            return r.success ? undefined : r.error.errors[0].message;
-          },
-          onSubmit: ({ value }) => {
-            if (!value?.trim()) return "El nombre es requerido";
-            if (value.trim().length < 3) return "Mínimo 3 caracteres";
-            return undefined;
-          },
-        }}
-      >
-        {(field) => (
-          <FormField label="NOMBRE" error={field.state.meta.errors?.[0]}>
-            <StyledTextInput
-              value={field.state.value}
-              onChangeText={field.handleChange}
-              placeholder="Ej: PPL · Frecuencia 2"
-              placeholderTextColor={mutedColor}
-              error={field.state.meta.errors?.length > 0}
-              returnKeyType="next"
-            />
-          </FormField>
-        )}
-      </form.Field>
-
-      {/* ─── OBJETIVO ─── */}
-      <form.Field
-        name="objective"
-        validators={{
-          onSubmit: ({ value }) =>
-            !value ? "Seleccioná un objetivo" : undefined,
-        }}
-      >
-        {(field) => (
-          <CustomSelect
-            label="OBJETIVO"
-            options={PLAN_OBJECTIVES}
-            value={field.state.value}
-            onChange={field.handleChange}
-            placeholder="Seleccionar objetivo..."
-            error={field.state.meta.errors?.[0]}
-            searchable={false}
-            snapPoints={["50%"]}
-          />
-        )}
-      </form.Field>
-
-      {/* ─── NIVEL ─── */}
-      <form.Field name="level">
-        {(field) => (
-          <CustomSelect
-            label="NIVEL"
-            options={PLAN_LEVELS}
-            value={field.state.value}
-            onChange={field.handleChange}
-            placeholder="Seleccionar nivel..."
-            error={field.state.meta.errors?.[0]}
-            searchable={false}
-            snapPoints={["40%"]}
-          />
-        )}
-      </form.Field>
-
-      {/* ─── DURACIÓN ─── */}
-      <form.Field name="duration_weeks">
-        {(field) => (
-          <FormField label="DURACIÓN DEL PLAN">
-            <Stepper
-              value={field.state.value ?? 0}
-              onChange={field.handleChange}
-              min={0}
-              max={null}
-              unit="semanas"
-              zeroLabel="Indefinido"
-            />
-            <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 ml-1 italic">
-              Llevalo a 0 para dejar el plan por tiempo indeterminado.
-            </Text>
-          </FormField>
-        )}
-      </form.Field>
-
-      {/* ─── DESCRIPCIÓN ─── */}
-      <form.Field name="description">
-        {(field) => (
-          <FormField label="DESCRIPCIÓN (opcional)">
-            <StyledTextInput
-              value={field.state.value}
-              onChangeText={field.handleChange}
-              placeholder="Enfoque del plan, a quién está dirigido, metodología..."
-              placeholderTextColor={mutedColor}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              style={{ minHeight: 100 }}
-            />
-          </FormField>
-        )}
-      </form.Field>
-
-      {/* ─── SIGUIENTE ─── */}
-      <SubmitButton
-        onPress={goToStep2}
-        label="Siguiente · Estructura semanal"
-      />
-    </View>
-  );
-
-  // ─── Paso 2: estructura semanal ────────────────────────────────────────────
-
-  const renderStep2 = () => (
-    <View className="px-4 pt-4 pb-10">
-      {/* ─── VOLVER ─── */}
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          setStep(1);
-        }}
-        className="flex-row items-center gap-x-1.5 mb-5 self-start active:opacity-60"
-      >
-        <ArrowLeft size={16} color={brandPrimary[500]} />
-        <Text className="text-sm font-manrope-semi text-brandPrimary-500">
-          Volver a info del plan
-        </Text>
-      </Pressable>
-
-      {/* ─── DÍAS SEMANALES ─── */}
-      <form.Field name="weekly_days">
-        {(field) => (
-          <FormField label="DÍAS DE ENTRENAMIENTO POR SEMANA">
-            <Stepper
-              value={field.state.value ?? 3}
-              onChange={handleWeeklyDaysChange}
-              min={2}
-              max={7}
-              unit="días"
-            />
-          </FormField>
-        )}
-      </form.Field>
-
-      {/* ─── SLOTS ─── */}
-      <form.Field
-        name="days"
-        validators={{
-          onSubmit: ({ value }) => {
-            if (value.some((d) => !d.session_id))
-              return "Asigná una sesión a cada día";
-            return undefined;
-          },
-        }}
-      >
-        {(field) => {
-          const days = field.state.value ?? [];
-          const freqMap = {};
-          for (const d of days) {
-            if (d.session_id)
-              freqMap[d.session_id] = (freqMap[d.session_id] ?? 0) + 1;
-          }
-
-          return (
-            <View className="mt-2">
-              {field.state.meta.errors?.[0] && (
-                <Text className="text-red-500 dark:text-red-400 text-[11px] mb-3 font-manrope-semi italic">
-                  {field.state.meta.errors[0]}
-                </Text>
-              )}
-              {days.map((slot, idx) => (
-                <DaySlot
-                  key={slot.id}
-                  slot={slot}
-                  dayNumber={idx + 1}
-                  frequencyCount={freqMap[slot.session_id] ?? 1}
-                  onPress={() => openPickerForSlot(idx)}
-                  onClear={() => handleClearSlot(idx)}
-                  mutedColor={mutedColor}
-                />
-              ))}
-            </View>
-          );
-        }}
-      </form.Field>
-
-      {/* ─── SUBMIT ─── */}
-      <form.Subscribe
-        selector={(s) => ({
-          isDirty: s.isDirty,
-          isSubmitting: s.isSubmitting,
-        })}
-      >
-        {({ isDirty, isSubmitting }) => (
-          <SubmitButton
-            onPress={() => form.handleSubmit()}
-            isLoading={isSubmitting}
-            disabled={!!plan && !isDirty}
-            label={plan ? "Guardar cambios" : "Crear plan"}
-          />
-        )}
-      </form.Subscribe>
-    </View>
-  );
-
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 24}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
-        <FormsHeader
-          title={
-            step === 1
-              ? plan
-                ? "Editar Plan"
-                : "Nuevo Plan"
-              : "Estructura semanal"
-          }
-          subtitle={
-            step === 1
-              ? "Definí el objetivo, duración y nivel del plan."
-              : "Asigná una sesión a cada día de entrenamiento."
-          }
-        />
+      <ScrollView
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View>
+            <FormsHeader
+              title={plan ? "Editar Plan" : "Nuevo Plan"}
+              subtitle="Definí los datos del plan y asigná sesiones a cada día."
+            />
 
-        <StepIndicator current={step} total={2} />
+            <View className="px-4 pt-4">
+              {/* ─── PORTADA ─── */}
+              <form.Field name="cover_image_uri">
+                {(field) => (
+                  <ImagePickerCard
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    onFocus={field.handleBlur}
+                    title="Imagen de portada"
+                    hint="Una buena portada ayuda a identificar el plan rápidamente."
+                  />
+                )}
+              </form.Field>
 
-        {step === 1 ? renderStep1() : renderStep2()}
+              {/* ─── NOMBRE ─── */}
+              <form.Field
+                name="name"
+                validators={{
+                  onChange: ({ value }) => {
+                    if (!value) return undefined;
+                    const r = z
+                      .string()
+                      .min(3, "Mínimo 3 caracteres")
+                      .safeParse(value);
+                    return r.success ? undefined : r.error.errors[0].message;
+                  },
+                  onSubmit: ({ value }) => {
+                    if (!value?.trim()) return "El nombre es requerido";
+                    if (value.trim().length < 3) return "Mínimo 3 caracteres";
+                    return undefined;
+                  },
+                }}
+              >
+                {(field) => (
+                  <FormField
+                    label="NOMBRE"
+                    error={field.state.meta.errors?.[0]}
+                  >
+                    <StyledTextInput
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      placeholder="Ej: PPL · Frecuencia 2"
+                      placeholderTextColor={mutedColor}
+                      error={field.state.meta.errors?.length > 0}
+                      returnKeyType="next"
+                    />
+                  </FormField>
+                )}
+              </form.Field>
+
+              {/* ─── OBJETIVO ─── */}
+              <form.Field
+                name="objective"
+                validators={{
+                  onSubmit: ({ value }) =>
+                    !value ? "Seleccioná un objetivo" : undefined,
+                }}
+              >
+                {(field) => (
+                  <CustomSelect
+                    label="OBJETIVO"
+                    options={PLAN_OBJECTIVES}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    placeholder="Seleccionar objetivo..."
+                    error={field.state.meta.errors?.[0]}
+                    searchable={false}
+                    snapPoints={["50%"]}
+                  />
+                )}
+              </form.Field>
+
+              {/* ─── NIVEL ─── */}
+              <form.Field name="level">
+                {(field) => (
+                  <CustomSelect
+                    label="NIVEL"
+                    options={PLAN_LEVELS}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    placeholder="Seleccionar nivel..."
+                    error={field.state.meta.errors?.[0]}
+                    searchable={false}
+                    snapPoints={["40%"]}
+                  />
+                )}
+              </form.Field>
+
+              {/* ─── DURACIÓN ─── */}
+              <form.Field name="duration_weeks">
+                {(field) => (
+                  <FormField label="DURACIÓN DEL PLAN">
+                    <Stepper
+                      value={field.state.value ?? 0}
+                      onChange={field.handleChange}
+                      min={0}
+                      max={null}
+                      unit="semanas"
+                      zeroLabel="Indefinido"
+                    />
+                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 ml-1 italic">
+                      Llevalo a 0 para dejar el plan por tiempo indeterminado.
+                    </Text>
+                  </FormField>
+                )}
+              </form.Field>
+
+              {/* ─── DESCRIPCIÓN ─── */}
+              <form.Field name="description">
+                {(field) => (
+                  <FormField label="DESCRIPCIÓN (opcional)">
+                    <StyledTextInput
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      placeholder="Enfoque del plan, a quién está dirigido, metodología..."
+                      placeholderTextColor={mutedColor}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                      style={{ minHeight: 100 }}
+                    />
+                  </FormField>
+                )}
+              </form.Field>
+
+              {/* ─── DÍAS SEMANALES ─── */}
+              <form.Field name="weekly_days">
+                {(field) => (
+                  <FormField label="DÍAS DE ENTRENAMIENTO POR SEMANA">
+                    <Stepper
+                      value={field.state.value ?? 3}
+                      onChange={handleWeeklyDaysChange}
+                      min={2}
+                      max={7}
+                      unit="días"
+                    />
+                  </FormField>
+                )}
+              </form.Field>
+
+              {/* ─── SLOTS ─── */}
+              <form.Field
+                name="days"
+                validators={{
+                  onSubmit: ({ value }) => {
+                    if (!value?.length) return "Asigná una sesión a cada día";
+                    if (value.some((d) => !d.session_id))
+                      return "Asigná una sesión a cada día";
+                    return undefined;
+                  },
+                }}
+              >
+                {(field) => {
+                  const days = field.state.value ?? [];
+                  const freqMap = {};
+                  for (const d of days) {
+                    if (d.session_id)
+                      freqMap[d.session_id] = (freqMap[d.session_id] ?? 0) + 1;
+                  }
+
+                  return (
+                    <View className="mb-5">
+                      <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
+                        SESIONES POR DÍA
+                      </Text>
+                      {field.state.meta.errors?.[0] && (
+                        <Text className="text-red-500 dark:text-red-400 text-[11px] mb-3 font-manrope-semi italic">
+                          {field.state.meta.errors[0]}
+                        </Text>
+                      )}
+                      {days.map((slot, idx) => (
+                        <DaySlot
+                          key={slot.id}
+                          slot={slot}
+                          dayNumber={idx + 1}
+                          frequencyCount={freqMap[slot.session_id] ?? 1}
+                          onPress={() => openPickerForSlot(idx)}
+                          onClear={() => handleClearSlot(idx)}
+                          mutedColor={mutedColor}
+                        />
+                      ))}
+                    </View>
+                  );
+                }}
+              </form.Field>
+
+              {/* ─── SUBMIT ─── */}
+              <form.Subscribe
+                selector={(s) => ({
+                  isDirty: s.isDirty,
+                  isSubmitting: s.isSubmitting,
+                })}
+              >
+                {({ isDirty, isSubmitting }) => (
+                  <SubmitButton
+                    onPress={() => form.handleSubmit()}
+                    isLoading={isSubmitting}
+                    disabled={!!plan && !isDirty}
+                    label={plan ? "Guardar cambios" : "Crear plan"}
+                  />
+                )}
+              </form.Subscribe>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
       </ScrollView>
 
       {/* ─── PICKER DE SESIONES ─── */}
