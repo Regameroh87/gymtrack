@@ -175,36 +175,6 @@ export default function FormSession({ form, session }) {
               )}
             </form.Field>
 
-            {/* Duración estimada */}
-            <form.Field
-              name="estimated_duration_min"
-              validators={{
-                onChange: ({ value }) => {
-                  if (!value) return undefined;
-                  const n = Number(value);
-                  if (isNaN(n) || n < 10 || n > 180)
-                    return "Ingresá entre 10 y 180 minutos";
-                  return undefined;
-                },
-              }}
-            >
-              {(field) => (
-                <FormField
-                  label="DURACIÓN ESTIMADA POR SESIÓN (MIN)"
-                  error={field.state.meta.errors?.[0]}
-                >
-                  <StyledTextInput
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="60"
-                    placeholderTextColor={mutedColor}
-                    keyboardType="number-pad"
-                    error={field.state.meta.errors?.length > 0}
-                  />
-                </FormField>
-              )}
-            </form.Field>
-
             {/* Imagen de portada */}
             <form.Field name="cover_image_uri">
               {(field) => (

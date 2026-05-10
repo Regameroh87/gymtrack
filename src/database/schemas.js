@@ -56,7 +56,6 @@ export const sessions = sqliteTable("sessions", {
   name: text("name").notNull(),
   description: text("description"),
   level: text("level"),
-  estimated_duration_min: integer("estimated_duration_min"),
   cover_image_uri: text("cover_image_uri"),
   created_by: text("created_by"),
   created_at: text("created_at")

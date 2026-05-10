@@ -42,7 +42,6 @@ import SessionExerciseRow from "../../../../src/components/cards/SessionExercise
 // Tema / assets
 import { brandPrimary, gradient } from "../../../../src/theme/colors";
 import {
-  Clock,
   Barbell,
   ChartBar,
   Pencil,
@@ -275,20 +274,6 @@ export default function SessionDetail() {
           borderBottomColor: "rgba(196,190,230,0.15)",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Clock size={14} color="rgba(196,190,230,0.55)" />
-          <Text
-            className="text-ui-text-main dark:text-ui-text-mainDark"
-            style={{ fontSize: 13, fontFamily: "Manrope_700Bold" }}
-          >
-            {data.estimated_duration_min != null
-              ? `${data.estimated_duration_min} min`
-              : "—"}
-          </Text>
-        </View>
-
-        <View style={{ width: 1, backgroundColor: "rgba(196,190,230,0.2)" }} />
-
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Barbell size={14} color="rgba(196,190,230,0.55)" />
           <Text

@@ -19,12 +19,6 @@ import {
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
-const parseIntOrNull = (v) => {
-  if (v === "" || v == null) return null;
-  const n = parseInt(v, 10);
-  return isNaN(n) ? null : n;
-};
-
 const str = (v) => (v === null || v === undefined ? "" : String(v));
 
 export const useSessionForm = ({ id = null, onSuccess } = {}) => {
@@ -35,7 +29,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
       name: "",
       description: "",
       level: "",
-      estimated_duration_min: "",
       cover_image_uri: "",
       exercises: [],
     },
@@ -54,14 +47,12 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
               name: value.name.trim(),
               description: value.description?.trim() || null,
               level: value.level || null,
-              estimated_duration_min: parseIntOrNull(
-                value.estimated_duration_min
-              ),
               cover_image_uri: value.cover_image_uri || null,
               updated_at: new Date().toISOString(),
               sync_status: "pending",
             })
             .where(eq(sessions.id, id));
+
 
           await database
             .delete(session_exercises)
@@ -87,9 +78,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
             name: value.name.trim(),
             description: value.description?.trim() || null,
             level: value.level || null,
-            estimated_duration_min: parseIntOrNull(
-              value.estimated_duration_min
-            ),
             cover_image_uri: value.cover_image_uri || null,
             created_by: userId,
           });
@@ -163,7 +151,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
         name: session.name ?? "",
         description: session.description ?? "",
         level: session.level ?? "",
-        estimated_duration_min: str(session.estimated_duration_min),
         cover_image_uri: session.cover_image_uri ?? "",
         exercises: exercises.map((ex) => ({
           id: ex.id,

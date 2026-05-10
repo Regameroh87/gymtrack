@@ -13,7 +13,7 @@ import { SESSION_LEVELS } from "../../constants/sessionOptions";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // Tema / assets
-import { Clock, Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
+import { Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
 
 const DEFAULT_CONFIG = {
   gradient: ["#1e1580", "#4A44E4"],
@@ -90,22 +90,8 @@ const SessionCard = ({ session, onPress }) => {
         <View className="flex-row items-center border-t-[0.5px] border-t-[rgba(196,190,230,0.15)] bg-ui-surface-light py-[13px] pl-4 pr-[14px] dark:bg-ui-surface-dark">
           {/* Stats: dos filas */}
           <View className="mr-3 flex-1 min-w-0 gap-[7px]">
-            {/* Fila 1: duración + ejercicios */}
+            {/* Fila 1: ejercicios */}
             <View className="flex-row items-center gap-[14px]">
-              <View className="flex-row items-center gap-1.5">
-                <Clock size={13} color="rgba(196,190,230,0.55)" />
-                <Text
-                  numberOfLines={1}
-                  className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
-                >
-                  {session.estimated_duration_min != null
-                    ? `${session.estimated_duration_min} min`
-                    : "—"}
-                </Text>
-              </View>
-
-              <View className="h-[3px] w-[3px] rounded-full bg-[rgba(196,190,230,0.3)]" />
-
               <View className="flex-row items-center gap-1.5 shrink">
                 <Barbell size={13} color="rgba(196,190,230,0.55)" />
                 <Text
