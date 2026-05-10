@@ -1,5 +1,5 @@
 // React
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Librerías externas
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -30,8 +30,8 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   // Edit mode skips draft entirely; new plan waits for AsyncStorage check
   const [isDraftLoaded, setIsDraftLoaded] = useState(!!id);
 
-  const form = useForm({
-    defaultValues: {
+  const defaultValues = useMemo(
+    () => ({
       name: "",
       description: "",
       objective: "",
@@ -40,7 +40,12 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       cover_image_uri: "",
       weekly_days: 3,
       days: [makeEmptySlot(), makeEmptySlot(), makeEmptySlot()],
-    },
+    }),
+    []
+  );
+
+  const form = useForm({
+    defaultValues,
     onSubmit: async ({ value }) => {
       const {
         data: { session },
