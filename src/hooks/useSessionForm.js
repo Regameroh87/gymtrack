@@ -25,12 +25,6 @@ const parseIntOrNull = (v) => {
   return isNaN(n) ? null : n;
 };
 
-const parseFloatOrNull = (v) => {
-  if (v === "" || v == null) return null;
-  const n = parseFloat(v);
-  return isNaN(n) ? null : n;
-};
-
 const str = (v) => (v === null || v === undefined ? "" : String(v));
 
 export const useSessionForm = ({ id = null, onSuccess } = {}) => {
@@ -79,18 +73,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
               session_id: id,
               exercise_id: ex.exercise_id,
               position: idx,
-              sets: parseIntOrNull(ex.sets) ?? 3,
-              prescription_mode: ex.prescription_mode,
-              reps_min: parseIntOrNull(ex.reps_min),
-              reps_max: parseIntOrNull(ex.reps_max),
-              duration_seconds: parseIntOrNull(ex.duration_seconds),
-              weight_kg: parseFloatOrNull(ex.weight_kg),
-              rest_seconds: parseIntOrNull(ex.rest_seconds),
-              intensity_mode: ex.intensity_mode,
-              rir: parseIntOrNull(ex.rir),
-              rpe: parseFloatOrNull(ex.rpe),
-              tempo: ex.tempo?.trim() || null,
-              notes: ex.notes?.trim() || null,
             });
           }
 
@@ -118,18 +100,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
               session_id: sessionId,
               exercise_id: ex.exercise_id,
               position: idx,
-              sets: parseIntOrNull(ex.sets) ?? 3,
-              prescription_mode: ex.prescription_mode,
-              reps_min: parseIntOrNull(ex.reps_min),
-              reps_max: parseIntOrNull(ex.reps_max),
-              duration_seconds: parseIntOrNull(ex.duration_seconds),
-              weight_kg: parseFloatOrNull(ex.weight_kg),
-              rest_seconds: parseIntOrNull(ex.rest_seconds),
-              intensity_mode: ex.intensity_mode,
-              rir: parseIntOrNull(ex.rir),
-              rpe: parseFloatOrNull(ex.rpe),
-              tempo: ex.tempo?.trim() || null,
-              notes: ex.notes?.trim() || null,
             });
           }
 
@@ -177,18 +147,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
         .select({
           id: session_exercises.id,
           exercise_id: session_exercises.exercise_id,
-          sets: session_exercises.sets,
-          prescription_mode: session_exercises.prescription_mode,
-          reps_min: session_exercises.reps_min,
-          reps_max: session_exercises.reps_max,
-          duration_seconds: session_exercises.duration_seconds,
-          weight_kg: session_exercises.weight_kg,
-          rest_seconds: session_exercises.rest_seconds,
-          intensity_mode: session_exercises.intensity_mode,
-          rir: session_exercises.rir,
-          rpe: session_exercises.rpe,
-          tempo: session_exercises.tempo,
-          notes: session_exercises.notes,
           name: exercises_base.name,
           muscle_group: exercises_base.muscle_group,
           image_uri: exercises_base.image_uri,
@@ -213,18 +171,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
           name: ex.name,
           muscle_group: ex.muscle_group,
           image_uri: ex.image_uri,
-          sets: str(ex.sets),
-          prescription_mode: ex.prescription_mode ?? "reps",
-          reps_min: str(ex.reps_min),
-          reps_max: str(ex.reps_max),
-          duration_seconds: str(ex.duration_seconds),
-          weight_kg: str(ex.weight_kg),
-          rest_seconds: str(ex.rest_seconds),
-          intensity_mode: ex.intensity_mode ?? "none",
-          rir: str(ex.rir),
-          rpe: str(ex.rpe),
-          tempo: ex.tempo ?? "",
-          notes: ex.notes ?? "",
         })),
       };
     },

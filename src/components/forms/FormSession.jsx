@@ -257,18 +257,6 @@ export default function FormSession({ form, session }) {
                       muscle_group: ex.muscle_group,
                       image_uri: ex.image_uri,
                       position: field.state.value.length,
-                      sets: "3",
-                      prescription_mode: "reps",
-                      reps_min: "8",
-                      reps_max: "12",
-                      duration_seconds: "",
-                      weight_kg: "",
-                      rest_seconds: "60",
-                      intensity_mode: "none",
-                      rir: "",
-                      rpe: "",
-                      tempo: "",
-                      notes: "",
                     };
                     field.handleChange([...field.state.value, newEntry]);
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -292,11 +280,6 @@ export default function FormSession({ form, session }) {
                       [list[idx + 1], list[idx]] = [list[idx], list[idx + 1]];
                       field.handleChange(list);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    }}
-                    onChange={(fieldName, value) => {
-                      const list = [...field.state.value];
-                      list[idx] = { ...list[idx], [fieldName]: value };
-                      field.handleChange(list);
                     }}
                     onDelete={() => {
                       field.handleChange(
