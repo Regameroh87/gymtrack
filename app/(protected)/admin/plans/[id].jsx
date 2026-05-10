@@ -96,16 +96,6 @@ export default function PlanDetail() {
           id: session_exercises.id,
           session_id: session_exercises.session_id,
           position: session_exercises.position,
-          sets: session_exercises.sets,
-          prescription_mode: session_exercises.prescription_mode,
-          reps_min: session_exercises.reps_min,
-          reps_max: session_exercises.reps_max,
-          duration_seconds: session_exercises.duration_seconds,
-          rest_seconds: session_exercises.rest_seconds,
-          intensity_mode: session_exercises.intensity_mode,
-          rir: session_exercises.rir,
-          rpe: session_exercises.rpe,
-          notes: session_exercises.notes,
           exercise_name: exercises_base.name,
           image_uri: exercises_base.image_uri,
           video_uri: exercises_base.video_uri,
@@ -281,7 +271,6 @@ export default function PlanDetail() {
                           position={idx + 1}
                           accent={dayAccent}
                           compact
-                          showNotes={false}
                         />
                       ))}
                     </View>
