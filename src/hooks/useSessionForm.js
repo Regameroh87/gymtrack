@@ -133,7 +133,7 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
   });
 
   const { data: editData, isLoading } = useQuery({
-    queryKey: ["session", id],
+    queryKey: ["session-edit", id],
     enabled: !!id,
     queryFn: async () => {
       const [session] = await database
@@ -178,7 +178,7 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
   useEffect(() => {
     if (!editData) return;
-    form.reset(editData);
+    form.reset({ ...editData, exercises: editData.exercises ?? [] });
   }, [editData, form]);
 
   return { form, isLoading: !!id && isLoading };
