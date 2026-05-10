@@ -110,21 +110,21 @@
     {
       "idx": 15,
       "version": "6",
-      "when": 1746720000000,
+      "when": 1778500000000,
       "tag": "0015_plan_duration_weeks",
       "breakpoints": true
     },
     {
       "idx": 16,
       "version": "6",
-      "when": 1746720060000,
+      "when": 1778600000000,
       "tag": "0016_drop_kind_from_plans",
       "breakpoints": true
     },
     {
       "idx": 17,
       "version": "6",
-      "when": 1746720120000,
+      "when": 1778700000000,
       "tag": "0017_drop_status_from_plans",
       "breakpoints": true
     }

@@ -1,5 +1,9 @@
+// React
+import { useEffect, useRef, useState } from "react";
+
 // Librerías externas
-import { useForm } from "@tanstack/react-form";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useForm, useStore } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
@@ -12,6 +16,8 @@ import { training_plan_days, training_plans } from "../database/schemas";
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
+const DRAFT_KEY = "training_plan_form_draft";
+
 const makeEmptySlot = () => ({
   id: Crypto.randomUUID(),
   session_id: null,
@@ -20,6 +26,9 @@ const makeEmptySlot = () => ({
 
 export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
+  const saveTimerRef = useRef(null);
+  // Edit mode skips draft entirely; new plan waits for AsyncStorage check
+  const [isDraftLoaded, setIsDraftLoaded] = useState(!!id);
 
   const form = useForm({
     defaultValues: {
@@ -97,8 +106,9 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           updated_at: now,
           sync_status: "pending",
         }));
-
         await database.insert(training_plan_days).values(dayRows);
+
+        await AsyncStorage.removeItem(DRAFT_KEY);
       }
 
       queryClient.invalidateQueries({ queryKey: ["training_plans"] });
@@ -117,5 +127,29 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     },
   });
 
-  return { form, isLoading: false };
+  // Load draft on mount (new plans only)
+  useEffect(() => {
+    if (id) return;
+    AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
+      if (raw) {
+        try {
+          form.reset(JSON.parse(raw));
+        } catch {}
+      }
+      setIsDraftLoaded(true);
+    });
+  }, []);
+
+  // Save draft on value changes, debounced (new plans only)
+  const values = useStore(form.store, (state) => state.values);
+  useEffect(() => {
+    if (!isDraftLoaded || id) return;
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(values));
+    }, 800);
+    return () => clearTimeout(saveTimerRef.current);
+  }, [values, isDraftLoaded]);
+
+  return { form, isLoading: !isDraftLoaded };
 };
