@@ -357,6 +357,24 @@ export default function FormTrainingPlan({ form, plan }) {
                 )}
               </form.Field>
 
+              {/* ─── DESCRIPCIÓN ─── */}
+              <form.Field name="description">
+                {(field) => (
+                  <FormField label="DESCRIPCIÓN (opcional)">
+                    <StyledTextInput
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      placeholder="Enfoque del plan, a quién está dirigido, metodología..."
+                      placeholderTextColor={mutedColor}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                      style={{ minHeight: 100 }}
+                    />
+                  </FormField>
+                )}
+              </form.Field>
+
               {/* ─── DURACIÓN ─── */}
               <form.Field name="duration_weeks">
                 {(field) => (
@@ -372,24 +390,6 @@ export default function FormTrainingPlan({ form, plan }) {
                     <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 ml-1 italic">
                       Llevalo a 0 para dejar el plan por tiempo indeterminado.
                     </Text>
-                  </FormField>
-                )}
-              </form.Field>
-
-              {/* ─── DESCRIPCIÓN ─── */}
-              <form.Field name="description">
-                {(field) => (
-                  <FormField label="DESCRIPCIÓN (opcional)">
-                    <StyledTextInput
-                      value={field.state.value}
-                      onChangeText={field.handleChange}
-                      placeholder="Enfoque del plan, a quién está dirigido, metodología..."
-                      placeholderTextColor={mutedColor}
-                      multiline
-                      numberOfLines={4}
-                      textAlignVertical="top"
-                      style={{ minHeight: 100 }}
-                    />
                   </FormField>
                 )}
               </form.Field>
