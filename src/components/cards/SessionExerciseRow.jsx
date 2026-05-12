@@ -1,5 +1,5 @@
 // React Native
-import { Linking, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 // Librerías externas
 import { Image } from "expo-image";
@@ -27,6 +27,7 @@ export default function SessionExerciseRow({
   position,
   accent = brandPrimary[500],
   compact = false,
+  onVideoPress,
 }) {
   const imageUri = exercise.image_uri
     ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
@@ -36,11 +37,14 @@ export default function SessionExerciseRow({
   const thumbSize = compact ? 36 : 48;
   const positionBadge = compact ? 16 : 18;
 
-  const handleOpenVideo = async () => {
+  const handleOpenVideo = () => {
     if (!videoLink) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const supported = await Linking.canOpenURL(videoLink.url);
-    if (supported) Linking.openURL(videoLink.url);
+    onVideoPress?.({
+      url: videoLink.url,
+      kind: videoLink.kind,
+      title: exercise.exercise_name,
+    });
   };
 
   return (
