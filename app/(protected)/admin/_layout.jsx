@@ -107,8 +107,7 @@ export default function AdminLayout() {
       <Stack.Screen
         name="plans/builder"
         options={{
-          headerTitle: "",
-          headerBackButtonDisplayMode: "minimal",
+          headerShown: false,
         }}
       />
       <Stack.Screen

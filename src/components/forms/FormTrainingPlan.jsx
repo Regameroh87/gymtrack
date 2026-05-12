@@ -10,26 +10,20 @@ import {
   View,
 } from "react-native";
 
-// React
-import { useCallback, useMemo, useRef, useState } from "react";
-
 // Librerías externas
-import {
-  BottomSheetBackdrop,
-  BottomSheetFlatList,
-  BottomSheetModal,
-  BottomSheetTextInput,
-} from "@gorhom/bottom-sheet";
-import * as Crypto from "expo-crypto";
+import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { z } from "zod";
 
-// Hooks
-import { useSessions } from "../../hooks/useSessions";
-
 // Constantes
 import { PLAN_LEVELS, PLAN_OBJECTIVES } from "../../constants/planOptions";
+
+// Hooks
+import {
+  resizeWeeksByDuration,
+  resizeWeeksByWeeklyDays,
+} from "../../hooks/useTrainingPlanForm";
 
 // Componentes
 import CustomSelect from "../CustomSelect";
@@ -40,8 +34,8 @@ import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
 
 // Tema y assets
-import { brandPrimary, ui } from "../../theme/colors";
-import { ChevronRight, X } from "../../../assets/icons";
+import { ui } from "../../theme/colors";
+import { ChevronRight } from "../../../assets/icons";
 
 // ─── Stepper genérico ───────────────────────────────────────────────────────
 
@@ -104,71 +98,45 @@ function Stepper({ value, onChange, min, max, unit, zeroLabel }) {
   );
 }
 
-// ─── Slot de día ─────────────────────────────────────────────────────────────
+// ─── Tarjeta de semana ──────────────────────────────────────────────────────
 
-function DaySlot({
-  slot,
-  dayNumber,
-  frequencyCount,
-  onPress,
-  onClear,
-  mutedColor,
-}) {
-  const hasSession = !!slot.session_id;
+function getWeekSummary(week) {
+  if (!week || !week.days?.length) return "Sin definir · Tocá para armar";
+  const assigned = week.days.filter((d) => d.session_id).length;
+  const total = week.days.length;
+  if (assigned === 0) return "Sin definir · Tocá para armar";
+  if (assigned < total) return `${assigned}/${total} días asignados`;
+  return `${total} días asignados`;
+}
 
+function WeekCard({ weekNumber, summary, onPress, mutedColor }) {
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center px-3.5 py-3 mb-2 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:scale-[0.98]"
+      className="flex-row items-center px-4 py-3.5 mb-2 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:scale-[0.98]"
     >
-      <View className="w-10 h-10 rounded-lg items-center justify-center mr-3.5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
+      <View className="w-11 h-11 rounded-lg items-center justify-center mr-3.5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
         <Text className="text-[9px] font-manrope-semi uppercase text-brandPrimary-500 dark:text-brandPrimary-400">
-          Día
+          Sem
         </Text>
         <Text className="text-sm font-jakarta-bold leading-tight text-brandPrimary-600 dark:text-brandPrimary-400">
-          {dayNumber}
+          {weekNumber}
         </Text>
       </View>
 
-      <Text
-        className={`flex-1 text-sm font-manrope ${
-          hasSession
-            ? "text-ui-text-main dark:text-ui-text-mainDark"
-            : "text-ui-text-muted dark:text-ui-text-mutedDark"
-        }`}
-        numberOfLines={1}
-      >
-        {hasSession ? slot.session_name : "Elegir sesión..."}
-      </Text>
-
-      {frequencyCount > 1 && (
-        <View
-          className="mr-2.5 rounded-full px-2 py-0.5"
-          style={{ backgroundColor: brandPrimary[500] + "22" }}
+      <View className="flex-1">
+        <Text className="text-sm font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark">
+          Semana {weekNumber}
+        </Text>
+        <Text
+          className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
+          numberOfLines={1}
         >
-          <Text
-            className="text-[11px] font-manrope-semi"
-            style={{ color: brandPrimary[500] }}
-          >
-            ×{frequencyCount}
-          </Text>
-        </View>
-      )}
+          {summary}
+        </Text>
+      </View>
 
-      {hasSession ? (
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onClear();
-          }}
-          hitSlop={10}
-          className="active:opacity-50 p-0.5"
-        >
-          <X size={14} color={mutedColor} />
-        </Pressable>
-      ) : (
-        <ChevronRight size={14} color={mutedColor} />
-      )}
+      <ChevronRight size={14} color={mutedColor} />
     </Pressable>
   );
 }
@@ -176,76 +144,36 @@ function DaySlot({
 // ─── Componente principal ────────────────────────────────────────────────────
 
 export default function FormTrainingPlan({ form, plan }) {
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
 
-  const pickerRef = useRef(null);
-  const [activeSlotIdx, setActiveSlotIdx] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const { data: availableSessions = [] } = useSessions();
-
-  const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) return availableSessions;
-    const q = searchQuery.toLowerCase();
-    return availableSessions.filter((s) => s.name.toLowerCase().includes(q));
-  }, [availableSessions, searchQuery]);
-
-  const renderBackdrop = useCallback(
-    (props) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-      />
-    ),
-    []
-  );
-
-  const openPickerForSlot = (idx) => {
-    setActiveSlotIdx(idx);
-    setSearchQuery("");
-    Keyboard.dismiss();
-    pickerRef.current?.present();
-  };
-
-  const handleSessionSelect = (session) => {
-    if (activeSlotIdx === null) return;
-    const newDays = form.state.values.days.map((d, i) =>
-      i === activeSlotIdx
-        ? { ...d, session_id: session.id, session_name: session.name }
-        : d
+  const handleDurationChange = (newDuration) => {
+    const currentWeeks = form.state.values.weeks ?? [];
+    const weeklyDays = form.state.values.weekly_days ?? 3;
+    const newWeeks = resizeWeeksByDuration(
+      currentWeeks,
+      newDuration,
+      weeklyDays
     );
-    form.setFieldValue("days", newDays);
-    pickerRef.current?.dismiss();
-    setActiveSlotIdx(null);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  const handleClearSlot = (idx) => {
-    const newDays = form.state.values.days.map((d, i) =>
-      i === idx ? { ...d, session_id: null, session_name: null } : d
-    );
-    form.setFieldValue("days", newDays);
+    form.setFieldValue("duration_weeks", newDuration);
+    form.setFieldValue("weeks", newWeeks);
   };
 
   const handleWeeklyDaysChange = (newCount) => {
-    const current = form.state.values.days ?? [];
-    let newDays = [...current];
-    if (newCount > current.length) {
-      for (let i = current.length; i < newCount; i++) {
-        newDays.push({
-          id: Crypto.randomUUID(),
-          session_id: null,
-          session_name: null,
-        });
-      }
-    } else {
-      newDays = newDays.slice(0, newCount);
-    }
+    const currentWeeks = form.state.values.weeks ?? [];
+    const newWeeks = resizeWeeksByWeeklyDays(currentWeeks, newCount);
     form.setFieldValue("weekly_days", newCount);
-    form.setFieldValue("days", newDays);
+    form.setFieldValue("weeks", newWeeks);
+  };
+
+  const handleWeekPress = (weekNumber) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push({
+      pathname: "/admin/plans/builder/[week]",
+      params: { week: String(weekNumber), id: plan ?? "" },
+    });
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -266,7 +194,7 @@ export default function FormTrainingPlan({ form, plan }) {
           <View>
             <FormsHeader
               title={plan ? "Editar Plan" : "Nuevo Plan"}
-              subtitle="Definí los datos del plan y asigná sesiones a cada día."
+              subtitle="Definí los datos del plan y la rutina de cada semana."
             />
 
             <View className="px-4 pt-4">
@@ -341,22 +269,6 @@ export default function FormTrainingPlan({ form, plan }) {
                 )}
               </form.Field>
 
-              {/* ─── NIVEL ─── */}
-              <form.Field name="level">
-                {(field) => (
-                  <CustomSelect
-                    label="NIVEL"
-                    options={PLAN_LEVELS}
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    placeholder="Seleccionar nivel..."
-                    error={field.state.meta.errors?.[0]}
-                    searchable={false}
-                    snapPoints={["40%"]}
-                  />
-                )}
-              </form.Field>
-
               {/* ─── DESCRIPCIÓN ─── */}
               <form.Field name="description">
                 {(field) => (
@@ -381,15 +293,11 @@ export default function FormTrainingPlan({ form, plan }) {
                   <FormField label="DURACIÓN DEL PLAN">
                     <Stepper
                       value={field.state.value ?? 0}
-                      onChange={field.handleChange}
-                      min={0}
+                      onChange={handleDurationChange}
+                      min={1}
                       max={null}
                       unit="semanas"
-                      zeroLabel="Indefinido"
                     />
-                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 ml-1 italic">
-                      Llevalo a 0 para dejar el plan por tiempo indeterminado.
-                    </Text>
                   </FormField>
                 )}
               </form.Field>
@@ -409,51 +317,49 @@ export default function FormTrainingPlan({ form, plan }) {
                 )}
               </form.Field>
 
-              {/* ─── SLOTS ─── */}
-              <form.Field
-                name="days"
-                validators={{
-                  onSubmit: ({ value }) => {
-                    if (!value?.length) return "Asigná una sesión a cada día";
-                    if (value.some((d) => !d.session_id))
-                      return "Asigná una sesión a cada día";
-                    return undefined;
-                  },
-                }}
-              >
-                {(field) => {
-                  const days = field.state.value ?? [];
-                  const freqMap = {};
-                  for (const d of days) {
-                    if (d.session_id)
-                      freqMap[d.session_id] = (freqMap[d.session_id] ?? 0) + 1;
-                  }
+              {/* ─── NIVEL ─── */}
+              <form.Field name="level">
+                {(field) => (
+                  <CustomSelect
+                    label="NIVEL"
+                    options={PLAN_LEVELS}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    placeholder="Seleccionar nivel..."
+                    error={field.state.meta.errors?.[0]}
+                    searchable={false}
+                    snapPoints={["40%"]}
+                  />
+                )}
+              </form.Field>
 
-                  return (
-                    <View className="mb-5">
-                      <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
-                        SESIONES POR DÍA
-                      </Text>
-                      {field.state.meta.errors?.[0] && (
-                        <Text className="text-red-500 dark:text-red-400 text-[11px] mb-3 font-manrope-semi italic">
-                          {field.state.meta.errors[0]}
-                        </Text>
-                      )}
-                      {days.map((slot, idx) => (
-                        <DaySlot
-                          key={slot.id}
-                          slot={slot}
-                          dayNumber={idx + 1}
-                          frequencyCount={freqMap[slot.session_id] ?? 1}
-                          onPress={() => openPickerForSlot(idx)}
-                          onClear={() => handleClearSlot(idx)}
+              {/* ─── SEMANAS ─── */}
+              <form.Subscribe selector={(s) => s.values.weeks ?? []}>
+                {(weeks) => (
+                  <View className="mb-5 mt-2">
+                    <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
+                      RUTINA POR SEMANA
+                    </Text>
+                    {weeks.length > 0 ? (
+                      weeks.map((week) => (
+                        <WeekCard
+                          key={week.id}
+                          weekNumber={week.week_number}
+                          summary={getWeekSummary(week)}
+                          onPress={() => handleWeekPress(week.week_number)}
                           mutedColor={mutedColor}
                         />
-                      ))}
-                    </View>
-                  );
-                }}
-              </form.Field>
+                      ))
+                    ) : (
+                      <View className="px-4 py-6 rounded-xl border border-dashed border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark items-center">
+                        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
+                          Definí la duración del plan para armar las semanas.
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </form.Subscribe>
 
               {/* ─── SUBMIT ─── */}
               <form.Subscribe
@@ -475,117 +381,6 @@ export default function FormTrainingPlan({ form, plan }) {
           </View>
         </TouchableWithoutFeedback>
       </ScrollView>
-
-      {/* ─── PICKER DE SESIONES ─── */}
-      <BottomSheetModal
-        ref={pickerRef}
-        index={1}
-        snapPoints={["50%", "90%"]}
-        backdropComponent={renderBackdrop}
-        keyboardBehavior="extend"
-        android_keyboardInputMode="adjustResize"
-        backgroundStyle={{
-          backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: isDark
-            ? ui.surfaceSecondary.dark
-            : ui.surfaceSecondary.light,
-          width: 40,
-          height: 4,
-          borderRadius: 2,
-        }}
-        onDismiss={() => {
-          setSearchQuery("");
-          setActiveSlotIdx(null);
-        }}
-      >
-        <View className="px-6 pt-4 pb-2">
-          <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark mb-4">
-            Elegir sesión
-            {activeSlotIdx !== null ? ` · Día ${activeSlotIdx + 1}` : ""}
-          </Text>
-          <BottomSheetTextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Buscar sesión..."
-            placeholderTextColor={mutedColor}
-            style={{
-              backgroundColor: isDark
-                ? ui.surfaceSecondary.dark
-                : ui.surfaceSecondary.light,
-              color: isDark ? ui.text.mainDark : ui.text.main,
-              padding: 14,
-              borderRadius: 12,
-              fontFamily: "Manrope_400Regular",
-              borderWidth: 1,
-              borderColor: isDark
-                ? "rgba(255,255,255,0.05)"
-                : "rgba(0,0,0,0.05)",
-            }}
-          />
-        </View>
-
-        <BottomSheetFlatList
-          data={filteredSessions}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            paddingHorizontal: 24,
-            paddingBottom: 100,
-            paddingTop: 8,
-          }}
-          ListEmptyComponent={() => (
-            <View className="items-center justify-center p-6 mt-4">
-              <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-center font-manrope">
-                {searchQuery
-                  ? `Sin resultados para "${searchQuery}"`
-                  : "No hay sesiones creadas aún"}
-              </Text>
-            </View>
-          )}
-          renderItem={({ item: session }) => {
-            const isSelected =
-              activeSlotIdx !== null &&
-              form.state.values.days[activeSlotIdx]?.session_id === session.id;
-
-            return (
-              <Pressable
-                onPress={() => handleSessionSelect(session)}
-                className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${
-                  isSelected
-                    ? "border-brandPrimary-500/20"
-                    : "border-transparent"
-                }`}
-                style={{
-                  backgroundColor: isSelected
-                    ? "rgba(74,68,228,0.08)"
-                    : isDark
-                      ? ui.surfaceSecondary.dark
-                      : ui.surfaceSecondary.light,
-                }}
-              >
-                <Text
-                  className={`text-base font-manrope ${
-                    isSelected
-                      ? "text-brandPrimary-600 font-manrope-bold"
-                      : "text-ui-text-main dark:text-ui-text-mainDark"
-                  }`}
-                >
-                  {session.name}
-                </Text>
-                {isSelected && (
-                  <Text className="text-brandPrimary-600 font-manrope-bold">
-                    ✓
-                  </Text>
-                )}
-              </Pressable>
-            );
-          }}
-        />
-      </BottomSheetModal>
     </KeyboardAvoidingView>
   );
 }

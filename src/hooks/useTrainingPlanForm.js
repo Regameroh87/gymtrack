@@ -12,22 +12,65 @@ import Toast from "react-native-toast-message";
 
 // Base de datos
 import { database } from "../database";
-import { training_plan_days, training_plans } from "../database/schemas";
+import { training_plans } from "../database/schemas";
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
 const DRAFT_KEY = "training_plan_form_draft";
 
-const makeEmptySlot = () => ({
+const DEFAULT_DURATION_WEEKS = 8;
+const DEFAULT_WEEKLY_DAYS = 3;
+
+const makeEmptyDay = (dayNumber) => ({
   id: Crypto.randomUUID(),
+  day_number: dayNumber,
   session_id: null,
   session_name: null,
 });
 
+const makeEmptyWeek = (weekNumber, weeklyDays) => ({
+  id: Crypto.randomUUID(),
+  week_number: weekNumber,
+  days: Array.from({ length: weeklyDays }, (_, i) => makeEmptyDay(i + 1)),
+});
+
+export const buildEmptyWeeks = (durationWeeks, weeklyDays) =>
+  Array.from({ length: durationWeeks }, (_, i) =>
+    makeEmptyWeek(i + 1, weeklyDays)
+  );
+
+export const resizeWeeksByDuration = (
+  currentWeeks,
+  newDuration,
+  weeklyDays
+) => {
+  if (newDuration === currentWeeks.length) return currentWeeks;
+  if (newDuration > currentWeeks.length) {
+    const extras = Array.from(
+      { length: newDuration - currentWeeks.length },
+      (_, i) => makeEmptyWeek(currentWeeks.length + i + 1, weeklyDays)
+    );
+    return [...currentWeeks, ...extras];
+  }
+  return currentWeeks.slice(0, newDuration);
+};
+
+export const resizeWeeksByWeeklyDays = (currentWeeks, newWeeklyDays) =>
+  currentWeeks.map((week) => {
+    if (week.days.length === newWeeklyDays) return week;
+    if (newWeeklyDays > week.days.length) {
+      const extras = Array.from(
+        { length: newWeeklyDays - week.days.length },
+        (_, i) => makeEmptyDay(week.days.length + i + 1)
+      );
+      return { ...week, days: [...week.days, ...extras] };
+    }
+    return { ...week, days: week.days.slice(0, newWeeklyDays) };
+  });
+
 export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
   const saveTimerRef = useRef(null);
-  // Edit mode skips draft entirely; new plan waits for AsyncStorage check
   const [isDraftLoaded, setIsDraftLoaded] = useState(!!id);
 
   const defaultValues = useMemo(
@@ -36,10 +79,10 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       description: "",
       objective: "",
       level: "",
-      duration_weeks: 8,
+      duration_weeks: DEFAULT_DURATION_WEEKS,
       cover_image_uri: "",
-      weekly_days: 3,
-      days: [makeEmptySlot(), makeEmptySlot(), makeEmptySlot()],
+      weekly_days: DEFAULT_WEEKLY_DAYS,
+      weeks: buildEmptyWeeks(DEFAULT_DURATION_WEEKS, DEFAULT_WEEKLY_DAYS),
     }),
     []
   );
@@ -70,20 +113,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           })
           .where(eq(training_plans.id, id));
 
-        await database
-          .delete(training_plan_days)
-          .where(eq(training_plan_days.plan_id, id));
-
-        const editedDayRows = value.days.map((slot, idx) => ({
-          id: slot.id,
-          plan_id: id,
-          day_number: idx + 1,
-          session_id: slot.session_id,
-          created_at: now,
-          updated_at: now,
-          sync_status: "pending",
-        }));
-        await database.insert(training_plan_days).values(editedDayRows);
+        // TODO: persistir value.weeks → training_plan_days + training_plan_day_exercises
       } else {
         const planId = Crypto.randomUUID();
 
@@ -102,16 +132,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           sync_status: "pending",
         });
 
-        const dayRows = value.days.map((slot, idx) => ({
-          id: slot.id,
-          plan_id: planId,
-          day_number: idx + 1,
-          session_id: slot.session_id,
-          created_at: now,
-          updated_at: now,
-          sync_status: "pending",
-        }));
-        await database.insert(training_plan_days).values(dayRows);
+        // TODO: persistir value.weeks → training_plan_days + training_plan_day_exercises
 
         await AsyncStorage.removeItem(DRAFT_KEY);
       }
@@ -132,7 +153,6 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     },
   });
 
-  // Load draft on mount (new plans only)
   useEffect(() => {
     if (id) return;
     AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
@@ -145,7 +165,6 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     });
   }, []);
 
-  // Save draft on value changes, debounced (new plans only)
   const values = useStore(form.store, (state) => state.values);
   useEffect(() => {
     if (!isDraftLoaded || id) return;
