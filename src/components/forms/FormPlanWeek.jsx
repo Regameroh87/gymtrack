@@ -17,26 +17,32 @@ import {
   BottomSheetBackdrop,
   BottomSheetFlatList,
   BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
+import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
+import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-form";
 
-// Hooks
+// Base de datos / hooks
 import { useSessions } from "../../hooks/useSessions";
+import { fetchSessionExercises } from "../../hooks/useSessionExercises";
 
 // Componentes
 import FormsHeader from "../FormsHeader";
+import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
 // Tema y assets
 import { ui } from "../../theme/colors";
 import { ChevronRight, X } from "../../../assets/icons";
 
-// ─── Tarjeta de día ─────────────────────────────────────────────────────────
+// ─── Tarjeta de día ──────────────────────────────────────────────────────────
 
 function DayCard({ day, onPress, onClear, mutedColor }) {
   const hasSession = !!day.session_id;
+  const exerciseCount = day.exercises?.length ?? 0;
 
   return (
     <Pressable
@@ -52,16 +58,28 @@ function DayCard({ day, onPress, onClear, mutedColor }) {
         </Text>
       </View>
 
-      <Text
-        className={`flex-1 text-sm font-manrope ${
-          hasSession
-            ? "text-ui-text-main dark:text-ui-text-mainDark"
-            : "text-ui-text-muted dark:text-ui-text-mutedDark"
-        }`}
-        numberOfLines={1}
-      >
-        {hasSession ? day.session_name : "Asignar sesión..."}
-      </Text>
+      <View className="flex-1 mr-2">
+        <Text
+          className={`text-sm font-manrope ${
+            hasSession
+              ? "text-ui-text-main dark:text-ui-text-mainDark"
+              : "text-ui-text-muted dark:text-ui-text-mutedDark"
+          }`}
+          numberOfLines={1}
+        >
+          {hasSession ? day.session_name : "Asignar sesión..."}
+        </Text>
+        {hasSession && (
+          <Text
+            className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
+            numberOfLines={1}
+          >
+            {exerciseCount > 0
+              ? `${exerciseCount} ejercicio${exerciseCount !== 1 ? "s" : ""} · Tocá para editar`
+              : "Tocá para editar prescripción"}
+          </Text>
+        )}
+      </View>
 
       {hasSession ? (
         <Pressable
@@ -81,21 +99,25 @@ function DayCard({ day, onPress, onClear, mutedColor }) {
   );
 }
 
-// ─── Componente principal ───────────────────────────────────────────────────
+// ─── Componente principal ────────────────────────────────────────────────────
 
 export default function FormPlanWeek({ form, weekNumber }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
 
+  const queryClient = useQueryClient();
+
   const sessionPickerRef = useRef(null);
   const copyPickerRef = useRef(null);
+  const prescriptionSheetRef = useRef(null);
+
   const [activeDayIdx, setActiveDayIdx] = useState(null);
+  const [prescriptionDayIdx, setPrescriptionDayIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: availableSessions = [] } = useSessions();
 
-  // Datos del form
   const weeks = useStore(form.store, (s) => s.values.weeks ?? []);
   const planName = useStore(form.store, (s) => s.values.name ?? "");
   const weekIndex = weekNumber - 1;
@@ -133,11 +155,30 @@ export default function FormPlanWeek({ form, weekNumber }) {
     );
   }
 
-  // Helpers para mutar el form
+  // ─── Helpers de mutación ────────────────────────────────────────────────────
+
   const updateWeek = (mutator) => {
     const newWeeks = weeks.map((w, i) => (i === weekIndex ? mutator(w) : w));
     form.setFieldValue("weeks", newWeeks);
   };
+
+  const handleUpdateExercise = (dayIdx, exIdx, updates) => {
+    updateWeek((w) => ({
+      ...w,
+      days: w.days.map((d, j) =>
+        j !== dayIdx
+          ? d
+          : {
+              ...d,
+              exercises: d.exercises.map((ex, k) =>
+                k !== exIdx ? ex : { ...ex, ...updates }
+              ),
+            }
+      ),
+    }));
+  };
+
+  // ─── Session picker ─────────────────────────────────────────────────────────
 
   const openSessionPicker = (dayIdx) => {
     setActiveDayIdx(dayIdx);
@@ -146,26 +187,78 @@ export default function FormPlanWeek({ form, weekNumber }) {
     sessionPickerRef.current?.present();
   };
 
-  const handleSessionSelect = (session) => {
-    if (activeDayIdx === null) return;
+  const handleSessionSelect = async (session) => {
+    const dayIdx = activeDayIdx;
+    if (dayIdx === null) return;
+
+    sessionPickerRef.current?.dismiss();
+    setActiveDayIdx(null);
+    setSearchQuery("");
+
+    let rawExercises = [];
+    try {
+      rawExercises = await queryClient.fetchQuery({
+        queryKey: ["session_exercises", session.id],
+        queryFn: () => fetchSessionExercises(session.id),
+      });
+    } catch {
+      rawExercises = [];
+    }
+
+    const exercises = rawExercises.map((se) => ({
+      id: Crypto.randomUUID(),
+      session_exercise_id: se.id,
+      exercise_id: se.exercise_id,
+      exercise_name: se.name,
+      exercise_muscle_group: se.muscle_group ?? "",
+      position: se.position,
+      sets: 4,
+      prescription_mode: "reps",
+      reps_min: 8,
+      reps_max: 12,
+      duration_seconds: null,
+      weight_kg: null,
+      rest_seconds: 90,
+      intensity_mode: "none",
+      rir: null,
+      rpe: null,
+      tempo: "",
+      notes: "",
+    }));
+
     updateWeek((w) => ({
       ...w,
       days: w.days.map((d, i) =>
-        i === activeDayIdx
-          ? { ...d, session_id: session.id, session_name: session.name }
-          : d
+        i !== dayIdx
+          ? d
+          : { ...d, session_id: session.id, session_name: session.name, exercises }
       ),
     }));
-    sessionPickerRef.current?.dismiss();
-    setActiveDayIdx(null);
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    setTimeout(() => {
+      setPrescriptionDayIdx(dayIdx);
+      prescriptionSheetRef.current?.present();
+    }, 350);
   };
+
+  // ─── Prescription sheet ─────────────────────────────────────────────────────
+
+  const openPrescriptionSheet = (dayIdx) => {
+    setPrescriptionDayIdx(dayIdx);
+    prescriptionSheetRef.current?.present();
+  };
+
+  // ─── Clear / Copy ───────────────────────────────────────────────────────────
 
   const handleClearDay = (dayIdx) => {
     updateWeek((w) => ({
       ...w,
       days: w.days.map((d, i) =>
-        i === dayIdx ? { ...d, session_id: null, session_name: null } : d
+        i === dayIdx
+          ? { ...d, session_id: null, session_name: null, exercises: [] }
+          : d
       ),
     }));
   };
@@ -180,12 +273,21 @@ export default function FormPlanWeek({ form, weekNumber }) {
           ...d,
           session_id: src.session_id,
           session_name: src.session_name,
+          exercises: (src.exercises ?? []).map((ex) => ({
+            ...ex,
+            id: Crypto.randomUUID(),
+          })),
         };
       }),
     }));
     copyPickerRef.current?.dismiss();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
+  const prescriptionDay =
+    prescriptionDayIdx !== null ? week.days[prescriptionDayIdx] : null;
 
   return (
     <KeyboardAvoidingView
@@ -208,7 +310,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
         />
 
         <View className="px-4 pt-4">
-          {/* ─── COPIAR DE OTRA SEMANA ─── */}
+          {/* COPIAR DE OTRA SEMANA */}
           {otherWeeks.length > 0 && (
             <Pressable
               onPress={() => {
@@ -224,7 +326,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
             </Pressable>
           )}
 
-          {/* ─── DÍAS ─── */}
+          {/* DÍAS */}
           <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
             SESIONES POR DÍA
           </Text>
@@ -232,7 +334,11 @@ export default function FormPlanWeek({ form, weekNumber }) {
             <DayCard
               key={day.id}
               day={day}
-              onPress={() => openSessionPicker(idx)}
+              onPress={() =>
+                day.session_id
+                  ? openPrescriptionSheet(idx)
+                  : openSessionPicker(idx)
+              }
               onClear={() => handleClearDay(idx)}
               mutedColor={mutedColor}
             />
@@ -240,7 +346,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
         </View>
       </ScrollView>
 
-      {/* ─── PICKER DE SESIONES ─── */}
+      {/* ─── PICKER DE SESIONES ────────────────────────────────────────────── */}
       <BottomSheetModal
         ref={sessionPickerRef}
         index={1}
@@ -254,9 +360,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark
-            ? ui.surfaceSecondary.dark
-            : ui.surfaceSecondary.light,
+          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -277,17 +381,13 @@ export default function FormPlanWeek({ form, weekNumber }) {
             placeholder="Buscar sesión..."
             placeholderTextColor={mutedColor}
             style={{
-              backgroundColor: isDark
-                ? ui.surfaceSecondary.dark
-                : ui.surfaceSecondary.light,
+              backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
               color: isDark ? ui.text.mainDark : ui.text.main,
               padding: 14,
               borderRadius: 12,
               fontFamily: "Manrope_400Regular",
               borderWidth: 1,
-              borderColor: isDark
-                ? "rgba(255,255,255,0.05)"
-                : "rgba(0,0,0,0.05)",
+              borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
             }}
           />
         </View>
@@ -319,9 +419,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
               <Pressable
                 onPress={() => handleSessionSelect(session)}
                 className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${
-                  isSelected
-                    ? "border-brandPrimary-500/20"
-                    : "border-transparent"
+                  isSelected ? "border-brandPrimary-500/20" : "border-transparent"
                 }`}
                 style={{
                   backgroundColor: isSelected
@@ -341,9 +439,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
                   {session.name}
                 </Text>
                 {isSelected && (
-                  <Text className="text-brandPrimary-600 font-manrope-bold">
-                    ✓
-                  </Text>
+                  <Text className="text-brandPrimary-600 font-manrope-bold">✓</Text>
                 )}
               </Pressable>
             );
@@ -351,7 +447,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
         />
       </BottomSheetModal>
 
-      {/* ─── PICKER DE SEMANA A COPIAR ─── */}
+      {/* ─── PICKER DE SEMANA A COPIAR ──────────────────────────────────────── */}
       <BottomSheetModal
         ref={copyPickerRef}
         index={0}
@@ -363,9 +459,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark
-            ? ui.surfaceSecondary.dark
-            : ui.surfaceSecondary.light,
+          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -420,6 +514,71 @@ export default function FormPlanWeek({ form, weekNumber }) {
             );
           }}
         />
+      </BottomSheetModal>
+
+      {/* ─── SHEET DE PRESCRIPCIÓN ──────────────────────────────────────────── */}
+      <BottomSheetModal
+        ref={prescriptionSheetRef}
+        index={0}
+        snapPoints={["95%"]}
+        backdropComponent={renderBackdrop}
+        keyboardBehavior="extend"
+        android_keyboardInputMode="adjustResize"
+        backgroundStyle={{
+          backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
+        }}
+        handleIndicatorStyle={{
+          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+          width: 40,
+          height: 4,
+          borderRadius: 2,
+        }}
+        onDismiss={() => setPrescriptionDayIdx(null)}
+      >
+        {prescriptionDay ? (
+          <>
+            <View
+              className="px-6 pt-4 pb-3"
+              style={{ borderBottomWidth: 1, borderBottomColor: ui.input.border }}
+            >
+              <Text className="text-xs font-manrope-semi uppercase tracking-label text-ui-text-muted dark:text-ui-text-mutedDark">
+                Día {prescriptionDay.day_number} · Semana {weekNumber}
+              </Text>
+              <Text className="text-xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark mt-0.5">
+                {prescriptionDay.session_name}
+              </Text>
+            </View>
+
+            <BottomSheetScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingTop: 16,
+                paddingBottom: 100,
+              }}
+            >
+              {prescriptionDay.exercises.length === 0 ? (
+                <View className="items-center justify-center py-16">
+                  <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
+                    Esta sesión no tiene ejercicios cargados.
+                  </Text>
+                </View>
+              ) : (
+                prescriptionDay.exercises.map((ex, exIdx) => (
+                  <PlanDayExerciseCard
+                    key={ex.id}
+                    exercise={ex}
+                    onChange={(updates) =>
+                      handleUpdateExercise(prescriptionDayIdx, exIdx, updates)
+                    }
+                  />
+                ))
+              )}
+            </BottomSheetScrollView>
+          </>
+        ) : null}
       </BottomSheetModal>
     </KeyboardAvoidingView>
   );

@@ -18,7 +18,7 @@ import { checkNetInfoAndSync } from "../database/sync";
 
 const DRAFT_KEY = "training_plan_form_draft";
 
-const DEFAULT_DURATION_WEEKS = 8;
+const DEFAULT_DURATION_WEEKS = 4;
 const DEFAULT_WEEKLY_DAYS = 3;
 
 const makeEmptyDay = (dayNumber) => ({
@@ -26,6 +26,7 @@ const makeEmptyDay = (dayNumber) => ({
   day_number: dayNumber,
   session_id: null,
   session_name: null,
+  exercises: [],
 });
 
 const makeEmptyWeek = (weekNumber, weeklyDays) => ({
