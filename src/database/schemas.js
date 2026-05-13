@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, unique } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  unique,
+} from "drizzle-orm/sqlite-core";
 
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id").primaryKey(),
@@ -124,4 +130,95 @@ export const training_plan_days = sqliteTable(
     sync_status: text("sync_status").notNull().default("pending"),
   },
   (t) => [unique().on(t.plan_id, t.day_number)]
+);
+
+export const plan_weeks = sqliteTable(
+  "plan_weeks",
+  {
+    id: text("id").primaryKey(),
+    plan_id: text("plan_id")
+      .notNull()
+      .references(() => training_plans.id),
+    week_number: integer("week_number").notNull(),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.plan_id, t.week_number)]
+);
+
+export const plan_week_days = sqliteTable(
+  "plan_week_days",
+  {
+    id: text("id").primaryKey(),
+    week_id: text("week_id")
+      .notNull()
+      .references(() => plan_weeks.id),
+    day_number: integer("day_number").notNull(),
+    session_id: text("session_id").references(() => sessions.id),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.week_id, t.day_number)]
+);
+
+export const plan_week_day_exercises = sqliteTable(
+  "plan_week_day_exercises",
+  {
+    id: text("id").primaryKey(),
+    week_day_id: text("week_day_id")
+      .notNull()
+      .references(() => plan_week_days.id),
+    session_exercise_id: text("session_exercise_id")
+      .notNull()
+      .references(() => session_exercises.id),
+    position: integer("position").notNull().default(0),
+    prescription_mode: text("prescription_mode").notNull().default("reps"),
+    rest_seconds: integer("rest_seconds").default(90),
+    intensity_mode: text("intensity_mode").default("none"),
+    tempo: text("tempo"),
+    notes: text("notes"),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.week_day_id, t.session_exercise_id)]
+);
+
+export const plan_week_day_exercise_sets = sqliteTable(
+  "plan_week_day_exercise_sets",
+  {
+    id: text("id").primaryKey(),
+    exercise_id: text("exercise_id")
+      .notNull()
+      .references(() => plan_week_day_exercises.id),
+    set_number: integer("set_number").notNull(),
+    reps_min: integer("reps_min"),
+    reps_max: integer("reps_max"),
+    weight_kg: real("weight_kg"),
+    duration_seconds: integer("duration_seconds"),
+    rir: real("rir"),
+    rpe: real("rpe"),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.exercise_id, t.set_number)]
 );
