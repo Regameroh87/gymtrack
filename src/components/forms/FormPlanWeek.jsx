@@ -212,18 +212,19 @@ export default function FormPlanWeek({ form, weekNumber }) {
       exercise_name: se.name,
       exercise_muscle_group: se.muscle_group ?? "",
       position: se.position,
-      sets: 4,
       prescription_mode: "reps",
-      reps_min: 8,
-      reps_max: 12,
-      duration_seconds: null,
-      weight_kg: null,
-      rest_seconds: 90,
       intensity_mode: "none",
       rir: null,
       rpe: null,
       tempo: "",
       notes: "",
+      set_configs: Array.from({ length: 4 }, () => ({
+        reps_min: 8,
+        reps_max: 12,
+        duration_seconds: null,
+        weight_kg: null,
+        rest_seconds: 90,
+      })),
     }));
 
     updateWeek((w) => ({

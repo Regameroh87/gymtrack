@@ -5,10 +5,13 @@ import {
   exercises_base,
   equipment,
   exercise_equipment,
+  plan_week_day_exercise_sets,
+  plan_week_day_exercises,
+  plan_week_days,
+  plan_weeks,
   session_exercises,
   sessions,
   training_plans,
-  training_plan_days,
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, or, inArray } from "drizzle-orm";
@@ -30,7 +33,10 @@ const TABLE_QUERY_KEYS = {
     ["exercise_equipment_detail"],
   ],
   training_plans: [["training_plans"], ["training_plan"]],
-  training_plan_days: [["training_plans"], ["training_plan"]],
+  plan_weeks: [["training_plans"], ["training_plan"]],
+  plan_week_days: [["training_plans"], ["training_plan"]],
+  plan_week_day_exercises: [["training_plans"], ["training_plan"]],
+  plan_week_day_exercise_sets: [["training_plans"], ["training_plan"]],
 };
 
 function invalidateQueriesForTable(tableName) {
@@ -624,25 +630,26 @@ export async function pushTrainingPlansChanges() {
 }
 
 /**
- * PUSH: Sube cambios locales de Días de Plan de Entrenamiento
+ * PUSH: Sube cambios locales de Semanas de Plan
  *
- * Al editar un plan los días locales se reemplazan por completo (delete + reinsert),
- * por eso primero se borran todos los días remotos del plan antes de hacer upsert.
+ * Al editar un plan, las semanas locales se reemplazan por completo (delete + reinsert).
+ * Se borran las semanas remotas del plan primero — el CASCADE en Supabase elimina
+ * automáticamente los días, ejercicios y series hijos.
  */
-export async function pushTrainingPlanDaysChanges() {
+export async function pushPlanWeeksChanges() {
   const localChanges = await database
     .select()
-    .from(training_plan_days)
+    .from(plan_weeks)
     .where(
       or(
-        eq(training_plan_days.sync_status, "pending"),
-        eq(training_plan_days.sync_status, "dirty"),
-        eq(training_plan_days.sync_status, "deleted")
+        eq(plan_weeks.sync_status, "pending"),
+        eq(plan_weeks.sync_status, "dirty"),
+        eq(plan_weeks.sync_status, "deleted")
       )
     );
   if (localChanges.length === 0) return;
   console.log(
-    `⬆️  [PUSH] training_plan_days: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] plan_weeks: ${localChanges.length} cambio(s) pendiente(s)`
   );
 
   const deletedRows = localChanges.filter((r) => r.sync_status === "deleted");
@@ -650,23 +657,20 @@ export async function pushTrainingPlanDaysChanges() {
 
   for (const row of deletedRows) {
     const { error } = await supabase
-      .from("training_plan_days")
+      .from("plan_weeks")
       .delete()
       .eq("id", row.id);
     if (!error) {
-      await database
-        .delete(training_plan_days)
-        .where(eq(training_plan_days.id, row.id));
-      console.log(`✅ [PUSH] Día de plan (id: ${row.id}) eliminado`);
+      await database.delete(plan_weeks).where(eq(plan_weeks.id, row.id));
+      console.log(`✅ [PUSH] Semana de plan (id: ${row.id}) eliminada`);
     } else {
       console.error(
-        `❌ [PUSH] Error eliminando día de plan (id: ${row.id}):`,
+        `❌ [PUSH] Error eliminando semana de plan (id: ${row.id}):`,
         error.message
       );
     }
   }
 
-  // Agrupar por plan_id: borrar remotos primero, luego upsert del set completo
   const byPlan = {};
   for (const row of pendingRows) {
     if (!byPlan[row.plan_id]) byPlan[row.plan_id] = [];
@@ -675,39 +679,160 @@ export async function pushTrainingPlanDaysChanges() {
 
   for (const [plan_id, rows] of Object.entries(byPlan)) {
     const { error: deleteError } = await supabase
-      .from("training_plan_days")
+      .from("plan_weeks")
       .delete()
       .eq("plan_id", plan_id);
     if (deleteError) {
       console.error(
-        `❌ [PUSH] Error limpiando días remotos del plan (plan_id: ${plan_id}):`,
+        `❌ [PUSH] Error limpiando semanas remotas del plan (plan_id: ${plan_id}):`,
         deleteError.message
       );
       continue;
     }
 
-    // Stripeamos updated_at por la misma razón que en los demás push:
-    // que lo escriba Postgres en el momento del upsert.
-    const rowsToUpsert = rows.map(
-      ({ sync_status, updated_at, ...rest }) => rest
-    );
+    const rowsToUpsert = rows.map(({ sync_status, updated_at, ...rest }) => rest);
     const { error } = await supabase
-      .from("training_plan_days")
+      .from("plan_weeks")
       .upsert(rowsToUpsert, { onConflict: "id" });
     if (!error) {
       await database
-        .update(training_plan_days)
+        .update(plan_weeks)
         .set({ sync_status: "synced" })
-        .where(eq(training_plan_days.plan_id, plan_id));
+        .where(eq(plan_weeks.plan_id, plan_id));
       console.log(
-        `✅ [PUSH] Días del plan (plan_id: ${plan_id}) sincronizados (${rows.length})`
+        `✅ [PUSH] Semanas del plan (plan_id: ${plan_id}) sincronizadas (${rows.length})`
       );
     } else {
       console.error(
-        `❌ [PUSH] Error subiendo días del plan (plan_id: ${plan_id}):`,
+        `❌ [PUSH] Error subiendo semanas del plan (plan_id: ${plan_id}):`,
         error.message
       );
     }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Días de Semana de Plan
+ *
+ * Las eliminaciones las maneja el CASCADE de plan_weeks en Supabase.
+ */
+export async function pushPlanWeekDaysChanges() {
+  const localChanges = await database
+    .select()
+    .from(plan_week_days)
+    .where(
+      or(
+        eq(plan_week_days.sync_status, "pending"),
+        eq(plan_week_days.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] plan_week_days: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("plan_week_days")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(plan_week_days)
+      .set({ sync_status: "synced" })
+      .where(inArray(plan_week_days.id, localChanges.map((r) => r.id)));
+    console.log(
+      `✅ [PUSH] plan_week_days: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(`❌ [PUSH] Error subiendo plan_week_days:`, error.message);
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Ejercicios de Día de Semana de Plan
+ *
+ * Las eliminaciones las maneja el CASCADE de plan_week_days en Supabase.
+ */
+export async function pushPlanWeekDayExercisesChanges() {
+  const localChanges = await database
+    .select()
+    .from(plan_week_day_exercises)
+    .where(
+      or(
+        eq(plan_week_day_exercises.sync_status, "pending"),
+        eq(plan_week_day_exercises.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] plan_week_day_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("plan_week_day_exercises")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(plan_week_day_exercises)
+      .set({ sync_status: "synced" })
+      .where(inArray(plan_week_day_exercises.id, localChanges.map((r) => r.id)));
+    console.log(
+      `✅ [PUSH] plan_week_day_exercises: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(
+      `❌ [PUSH] Error subiendo plan_week_day_exercises:`,
+      error.message
+    );
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Series de Ejercicio de Plan
+ *
+ * Las eliminaciones las maneja el CASCADE de plan_week_day_exercises en Supabase.
+ */
+export async function pushPlanWeekDayExerciseSetsChanges() {
+  const localChanges = await database
+    .select()
+    .from(plan_week_day_exercise_sets)
+    .where(
+      or(
+        eq(plan_week_day_exercise_sets.sync_status, "pending"),
+        eq(plan_week_day_exercise_sets.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] plan_week_day_exercise_sets: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("plan_week_day_exercise_sets")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(plan_week_day_exercise_sets)
+      .set({ sync_status: "synced" })
+      .where(
+        inArray(plan_week_day_exercise_sets.id, localChanges.map((r) => r.id))
+      );
+    console.log(
+      `✅ [PUSH] plan_week_day_exercise_sets: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(
+      `❌ [PUSH] Error subiendo plan_week_day_exercise_sets:`,
+      error.message
+    );
   }
 }
 
@@ -719,7 +844,10 @@ export async function syncWithSupabase(
     "sessions",
     "session_exercises",
     "training_plans",
-    "training_plan_days",
+    "plan_weeks",
+    "plan_week_days",
+    "plan_week_day_exercises",
+    "plan_week_day_exercise_sets",
   ]
 ) {
   if (isSyncing) {
@@ -747,7 +875,10 @@ export async function syncWithSupabase(
       else if (table === "sessions") schemaTable = sessions;
       else if (table === "session_exercises") schemaTable = session_exercises;
       else if (table === "training_plans") schemaTable = training_plans;
-      else if (table === "training_plan_days") schemaTable = training_plan_days;
+      else if (table === "plan_weeks") schemaTable = plan_weeks;
+      else if (table === "plan_week_days") schemaTable = plan_week_days;
+      else if (table === "plan_week_day_exercises") schemaTable = plan_week_day_exercises;
+      else if (table === "plan_week_day_exercise_sets") schemaTable = plan_week_day_exercise_sets;
 
       if (schemaTable) {
         const { success, changed, newLastSync } = await pullTableChanges(
@@ -787,8 +918,17 @@ export async function syncWithSupabase(
     if (tablesToSync.includes("training_plans")) {
       await pushTrainingPlansChanges();
     }
-    if (tablesToSync.includes("training_plan_days")) {
-      await pushTrainingPlanDaysChanges();
+    if (tablesToSync.includes("plan_weeks")) {
+      await pushPlanWeeksChanges();
+    }
+    if (tablesToSync.includes("plan_week_days")) {
+      await pushPlanWeekDaysChanges();
+    }
+    if (tablesToSync.includes("plan_week_day_exercises")) {
+      await pushPlanWeekDayExercisesChanges();
+    }
+    if (tablesToSync.includes("plan_week_day_exercise_sets")) {
+      await pushPlanWeekDayExerciseSetsChanges();
     }
     console.log(`✅ [SYNC] Sincronización completada`);
     return { success: true };

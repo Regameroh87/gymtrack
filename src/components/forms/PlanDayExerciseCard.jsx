@@ -10,7 +10,15 @@ import { useColorScheme } from "nativewind";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Barbell } from "../../../assets/icons";
 
-// ─── SegmentedControl ────────────────────────────────────────────────────────
+const DEFAULT_SET = {
+  reps_min: 8,
+  reps_max: 12,
+  duration_seconds: null,
+  weight_kg: null,
+  rest_seconds: 90,
+};
+
+// ─── SegmentedControl ─────────────────────────────────────────────────────────
 
 function Seg({ options, value, onChange, isDark }) {
   return (
@@ -46,11 +54,7 @@ function Seg({ options, value, onChange, isDark }) {
               style={{
                 fontSize: 12,
                 fontFamily: "Manrope_600SemiBold",
-                color: isActive
-                  ? "#fff"
-                  : isDark
-                    ? ui.text.mutedDark
-                    : ui.text.muted,
+                color: isActive ? "#fff" : isDark ? ui.text.mutedDark : ui.text.muted,
               }}
             >
               {opt.label}
@@ -62,62 +66,6 @@ function Seg({ options, value, onChange, isDark }) {
   );
 }
 
-// ─── Mini stepper para series ─────────────────────────────────────────────────
-
-function MiniStepper({ value, onChange, isDark }) {
-  const canDecrease = value > 1;
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        borderRadius: 12,
-        overflow: "hidden",
-        backgroundColor: isDark ? ui.input.dark : ui.input.light,
-        borderWidth: 1,
-        borderColor: ui.input.border,
-      }}
-    >
-      <Pressable
-        onPress={() => {
-          if (!canDecrease) return;
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onChange(value - 1);
-        }}
-        disabled={!canDecrease}
-        hitSlop={4}
-        style={{ opacity: canDecrease ? 1 : 0.3, width: 48, height: 44, alignItems: "center", justifyContent: "center" }}
-      >
-        <Text style={{ fontSize: 22, fontFamily: "PlusJakartaSans_400Regular", color: isDark ? ui.text.mainDark : ui.text.main, lineHeight: 26 }}>
-          −
-        </Text>
-      </Pressable>
-
-      <View style={{ flex: 1, alignItems: "center", borderLeftWidth: 1, borderRightWidth: 1, borderColor: ui.input.border, paddingVertical: 8 }}>
-        <Text style={{ fontSize: 20, fontFamily: "PlusJakartaSans_700Bold", color: isDark ? ui.text.mainDark : ui.text.main }}>
-          {value}
-        </Text>
-        <Text style={{ fontSize: 9, fontFamily: "Manrope_600SemiBold", color: isDark ? ui.text.mutedDark : ui.text.muted, textTransform: "uppercase", letterSpacing: 0.8 }}>
-          series
-        </Text>
-      </View>
-
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onChange(value + 1);
-        }}
-        hitSlop={4}
-        style={{ width: 48, height: 44, alignItems: "center", justifyContent: "center" }}
-      >
-        <Text style={{ fontSize: 22, fontFamily: "PlusJakartaSans_400Regular", color: isDark ? ui.text.mainDark : ui.text.main, lineHeight: 26 }}>
-          +
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
 // ─── Input numérico compacto ──────────────────────────────────────────────────
 
 function NumInput({ value, onChange, placeholder = "—", isDark, style }) {
@@ -125,7 +73,10 @@ function NumInput({ value, onChange, placeholder = "—", isDark, style }) {
     <BottomSheetTextInput
       value={value === null || value === undefined ? "" : String(value)}
       onChangeText={(t) => {
-        if (t === "") { onChange(null); return; }
+        if (t === "") {
+          onChange(null);
+          return;
+        }
         const n = parseFloat(t);
         if (!isNaN(n)) onChange(n);
       }}
@@ -135,10 +86,10 @@ function NumInput({ value, onChange, placeholder = "—", isDark, style }) {
       style={{
         backgroundColor: isDark ? ui.input.dark : ui.input.light,
         color: isDark ? ui.text.mainDark : ui.text.main,
-        padding: 10,
-        borderRadius: 10,
+        padding: 8,
+        borderRadius: 8,
         fontFamily: "Manrope_700Bold",
-        fontSize: 16,
+        fontSize: 14,
         borderWidth: 1,
         borderColor: ui.input.border,
         textAlign: "center",
@@ -167,6 +118,123 @@ function FieldLabel({ children, isDark }) {
   );
 }
 
+// ─── Fila de una serie ────────────────────────────────────────────────────────
+
+function SetRow({ index, config, isReps, onChange, onRemove, canRemove, isDark }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+      {/* Número de serie */}
+      <View style={{ width: 22, alignItems: "center" }}>
+        <Text
+          style={{
+            fontSize: 11,
+            fontFamily: "Manrope_700Bold",
+            color: isDark ? ui.text.mutedDark : ui.text.muted,
+          }}
+        >
+          {index + 1}
+        </Text>
+      </View>
+
+      {/* Reps min–max o Duración */}
+      {isReps ? (
+        <View
+          style={{
+            flex: 2,
+            flexDirection: "row",
+            alignItems: "center",
+            marginHorizontal: 4,
+          }}
+        >
+          <NumInput
+            value={config.reps_min}
+            onChange={(v) => onChange({ reps_min: v })}
+            placeholder="8"
+            isDark={isDark}
+            style={{ flex: 1 }}
+          />
+          <Text
+            style={{
+              marginHorizontal: 3,
+              fontFamily: "Manrope_400Regular",
+              color: isDark ? ui.text.mutedDark : ui.text.muted,
+              fontSize: 11,
+            }}
+          >
+            –
+          </Text>
+          <NumInput
+            value={config.reps_max}
+            onChange={(v) => onChange({ reps_max: v })}
+            placeholder="12"
+            isDark={isDark}
+            style={{ flex: 1 }}
+          />
+        </View>
+      ) : (
+        <View style={{ flex: 2, marginHorizontal: 4 }}>
+          <NumInput
+            value={config.duration_seconds}
+            onChange={(v) => onChange({ duration_seconds: v })}
+            placeholder="30"
+            isDark={isDark}
+          />
+        </View>
+      )}
+
+      {/* Peso */}
+      <View style={{ flex: 1, marginHorizontal: 4 }}>
+        <NumInput
+          value={config.weight_kg}
+          onChange={(v) => onChange({ weight_kg: v })}
+          placeholder="—"
+          isDark={isDark}
+        />
+      </View>
+
+      {/* Descanso */}
+      <View style={{ flex: 1, marginLeft: 4 }}>
+        <NumInput
+          value={config.rest_seconds}
+          onChange={(v) => onChange({ rest_seconds: v })}
+          placeholder="90"
+          isDark={isDark}
+        />
+      </View>
+
+      {/* Eliminar serie */}
+      <Pressable
+        onPress={() => {
+          if (!canRemove) return;
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onRemove();
+        }}
+        hitSlop={6}
+        style={{
+          marginLeft: 6,
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: canRemove ? 1 : 0,
+          backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 14,
+            color: isDark ? ui.text.mutedDark : ui.text.muted,
+            lineHeight: 16,
+          }}
+        >
+          ×
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function PlanDayExerciseCard({ exercise, onChange }) {
@@ -174,6 +242,23 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
   const isDark = colorScheme === "dark";
   const isReps = (exercise.prescription_mode ?? "reps") === "reps";
   const hasIntensity = exercise.intensity_mode !== "none";
+  const setConfigs = exercise.set_configs ?? [{ ...DEFAULT_SET }];
+
+  const updateSetConfig = (setIdx, updates) => {
+    onChange({
+      set_configs: setConfigs.map((c, i) => (i === setIdx ? { ...c, ...updates } : c)),
+    });
+  };
+
+  const addSet = () => {
+    const last = setConfigs[setConfigs.length - 1] ?? DEFAULT_SET;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onChange({ set_configs: [...setConfigs, { ...last }] });
+  };
+
+  const removeSet = (setIdx) => {
+    onChange({ set_configs: setConfigs.filter((_, i) => i !== setIdx) });
+  };
 
   return (
     <View
@@ -186,7 +271,7 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
         backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
       }}
     >
-      {/* Header con nombre del ejercicio */}
+      {/* Header con nombre del ejercicio y conteo de series */}
       <View
         style={{
           flexDirection: "row",
@@ -235,20 +320,33 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
             </Text>
           )}
         </View>
+        <View style={{ alignItems: "center", paddingLeft: 12 }}>
+          <Text
+            style={{
+              fontSize: 20,
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: isDark ? ui.text.mainDark : ui.text.main,
+              lineHeight: 22,
+            }}
+          >
+            {setConfigs.length}
+          </Text>
+          <Text
+            style={{
+              fontSize: 9,
+              fontFamily: "Manrope_600SemiBold",
+              color: isDark ? ui.text.mutedDark : ui.text.muted,
+              textTransform: "uppercase",
+              letterSpacing: 0.6,
+            }}
+          >
+            series
+          </Text>
+        </View>
       </View>
 
-      {/* Campos de prescripción */}
+      {/* Cuerpo */}
       <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 }}>
-
-        {/* SERIES */}
-        <View style={{ marginBottom: 14 }}>
-          <FieldLabel isDark={isDark}>Series</FieldLabel>
-          <MiniStepper
-            value={exercise.sets ?? 4}
-            onChange={(v) => onChange({ sets: v })}
-            isDark={isDark}
-          />
-        </View>
 
         {/* TIPO DE PRESCRIPCIÓN */}
         <View style={{ marginBottom: 14 }}>
@@ -264,62 +362,93 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
           />
         </View>
 
-        {/* REPS (min–max) o DURACIÓN */}
-        {isReps ? (
-          <View style={{ marginBottom: 14 }}>
-            <FieldLabel isDark={isDark}>Repeticiones</FieldLabel>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <NumInput
-                value={exercise.reps_min}
-                onChange={(v) => onChange({ reps_min: v })}
-                placeholder="8"
-                isDark={isDark}
-                style={{ flex: 1 }}
-              />
-              <Text style={{ marginHorizontal: 10, fontFamily: "Manrope_400Regular", color: isDark ? ui.text.mutedDark : ui.text.muted }}>
-                —
-              </Text>
-              <NumInput
-                value={exercise.reps_max}
-                onChange={(v) => onChange({ reps_max: v })}
-                placeholder="12"
-                isDark={isDark}
-                style={{ flex: 1 }}
-              />
-            </View>
+        {/* TABLA DE SERIES */}
+        <View style={{ marginBottom: 14 }}>
+          {/* Encabezado de columnas */}
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+            <View style={{ width: 22 }} />
+            <Text
+              style={{
+                flex: 2,
+                fontSize: 9,
+                fontFamily: "Manrope_600SemiBold",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                color: isDark ? ui.text.mutedDark : ui.text.muted,
+                textAlign: "center",
+                marginHorizontal: 4,
+              }}
+            >
+              {isReps ? "REPS" : "SEG"}
+            </Text>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 9,
+                fontFamily: "Manrope_600SemiBold",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                color: isDark ? ui.text.mutedDark : ui.text.muted,
+                textAlign: "center",
+                marginHorizontal: 4,
+              }}
+            >
+              KG
+            </Text>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 9,
+                fontFamily: "Manrope_600SemiBold",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                color: isDark ? ui.text.mutedDark : ui.text.muted,
+                textAlign: "center",
+                marginLeft: 4,
+              }}
+            >
+              DESC (s)
+            </Text>
+            <View style={{ width: 26 }} />
           </View>
-        ) : (
-          <View style={{ marginBottom: 14 }}>
-            <FieldLabel isDark={isDark}>Duración (segundos)</FieldLabel>
-            <NumInput
-              value={exercise.duration_seconds}
-              onChange={(v) => onChange({ duration_seconds: v })}
-              placeholder="30"
-              isDark={isDark}
-            />
-          </View>
-        )}
 
-        {/* PESO + DESCANSO */}
-        <View style={{ flexDirection: "row", marginBottom: 14 }}>
-          <View style={{ flex: 1, marginRight: 8 }}>
-            <FieldLabel isDark={isDark}>Peso (kg)</FieldLabel>
-            <NumInput
-              value={exercise.weight_kg}
-              onChange={(v) => onChange({ weight_kg: v })}
-              placeholder="—"
+          {/* Filas por serie */}
+          {setConfigs.map((config, setIdx) => (
+            <SetRow
+              key={setIdx}
+              index={setIdx}
+              config={config}
+              isReps={isReps}
+              onChange={(updates) => updateSetConfig(setIdx, updates)}
+              onRemove={() => removeSet(setIdx)}
+              canRemove={setConfigs.length > 1}
               isDark={isDark}
             />
-          </View>
-          <View style={{ flex: 1 }}>
-            <FieldLabel isDark={isDark}>Descanso (seg)</FieldLabel>
-            <NumInput
-              value={exercise.rest_seconds}
-              onChange={(v) => onChange({ rest_seconds: v })}
-              placeholder="90"
-              isDark={isDark}
-            />
-          </View>
+          ))}
+
+          {/* Agregar serie */}
+          <Pressable
+            onPress={addSet}
+            style={{
+              marginTop: 8,
+              paddingVertical: 9,
+              borderRadius: 10,
+              alignItems: "center",
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: `${brandPrimary[600]}60`,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontFamily: "Manrope_600SemiBold",
+                color: brandPrimary[600],
+              }}
+            >
+              + Agregar serie
+            </Text>
+          </Pressable>
         </View>
 
         {/* INTENSIDAD */}
