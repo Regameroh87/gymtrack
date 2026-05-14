@@ -89,10 +89,8 @@ const persistWeeks = async (planId, weeks, now) => {
     }
   }
 
-  if (weeksRows.length)
-    await database.insert(plan_weeks).values(weeksRows);
-  if (daysRows.length)
-    await database.insert(plan_week_days).values(daysRows);
+  if (weeksRows.length) await database.insert(plan_weeks).values(weeksRows);
+  if (daysRows.length) await database.insert(plan_week_days).values(daysRows);
   if (exercisesRows.length)
     await database.insert(plan_week_day_exercises).values(exercisesRows);
   if (setsRows.length)
