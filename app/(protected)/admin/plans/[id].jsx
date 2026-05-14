@@ -22,7 +22,6 @@ import {
   exercises_base,
   session_exercises,
   sessions,
-  training_plan_days,
   training_plans,
 } from "../../../../src/database/schemas";
 
@@ -38,7 +37,7 @@ import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
 
 // Tema / assets
 import { brandPrimary } from "../../../../src/theme/colors";
-import { Pencil, Trash, Users } from "../../../../assets/icons";
+import { Pencil, Trash } from "../../../../assets/icons";
 
 const OBJECTIVE_ACCENT = {
   hipertrofia: "#6366f1",
@@ -64,59 +63,6 @@ export default function PlanDetail() {
     training_plans,
     id
   );
-
-  const { data: days = [] } = useQuery({
-    queryKey: ["training_plan", id, "days"],
-    enabled: !!id,
-    queryFn: () =>
-      database
-        .select({
-          id: training_plan_days.id,
-          day_number: training_plan_days.day_number,
-          session_id: training_plan_days.session_id,
-          session_name: sessions.name,
-        })
-        .from(training_plan_days)
-        .innerJoin(sessions, eq(training_plan_days.session_id, sessions.id))
-        .where(eq(training_plan_days.plan_id, id))
-        .orderBy(asc(training_plan_days.day_number)),
-  });
-
-  const sessionIds = useMemo(
-    () => Array.from(new Set(days.map((d) => d.session_id))),
-    [days]
-  );
-
-  const { data: exercisesBySession = {} } = useQuery({
-    queryKey: ["training_plan", id, "session_exercises", sessionIds],
-    enabled: sessionIds.length > 0,
-    queryFn: async () => {
-      const rows = await database
-        .select({
-          id: session_exercises.id,
-          session_id: session_exercises.session_id,
-          position: session_exercises.position,
-          exercise_name: exercises_base.name,
-          image_uri: exercises_base.image_uri,
-          video_uri: exercises_base.video_uri,
-          youtube_video_url: exercises_base.youtube_video_url,
-        })
-        .from(session_exercises)
-        .innerJoin(
-          exercises_base,
-          eq(session_exercises.exercise_id, exercises_base.id)
-        )
-        .where(inArray(session_exercises.session_id, sessionIds))
-        .orderBy(asc(session_exercises.position));
-
-      const grouped = {};
-      for (const row of rows) {
-        if (!grouped[row.session_id]) grouped[row.session_id] = [];
-        grouped[row.session_id].push(row);
-      }
-      return grouped;
-    },
-  });
 
   const handleDelete = () => {
     Alert.alert(
@@ -210,10 +156,10 @@ export default function PlanDetail() {
         {/* ── Días ── */}
         <View className="px-5 mb-8">
           <Text className="text-[10px] font-jakarta-semi uppercase tracking-widest mb-4 text-brandPrimary-500 dark:text-brandPrimary-400">
-            Días del plan · {days.length}
+            Días del plan · {plan.weekly_days}
           </Text>
 
-          {days.length === 0 ? (
+          {/*    {days.length === 0 ? (
             <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark italic">
               Sin días configurados.
             </Text>
@@ -278,7 +224,7 @@ export default function PlanDetail() {
                 </View>
               );
             })
-          )}
+          )} */}
         </View>
       </ScrollView>
     </Screen>

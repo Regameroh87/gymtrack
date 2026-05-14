@@ -51,7 +51,7 @@ export default function PlanBuilderLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="[week]" />
+        <Stack.Screen name="[week]" options={{ headerShown: false }} />
       </Stack>
     </PlanFormProvider>
   );
