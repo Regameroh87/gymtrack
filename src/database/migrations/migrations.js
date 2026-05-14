@@ -19,6 +19,7 @@ import m0014 from './0014_careful_magma.sql';
 import m0015 from './0015_plan_duration_weeks.sql';
 import m0016 from './0016_drop_kind_from_plans.sql';
 import m0017 from './0017_drop_status_from_plans.sql';
+import m0018 from './0018_icy_squadron_supreme.sql';
 
   export default {
     journal,
@@ -40,7 +41,8 @@ m0013,
 m0014,
 m0015,
 m0016,
-m0017
+m0017,
+m0018
     }
   }
   

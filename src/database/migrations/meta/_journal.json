@@ -127,6 +127,13 @@
       "when": 1778700000000,
       "tag": "0017_drop_status_from_plans",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1778720791776,
+      "tag": "0018_icy_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }
