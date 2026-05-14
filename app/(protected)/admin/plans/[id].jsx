@@ -24,6 +24,7 @@ import {
   sessions,
   training_plans,
 } from "../../../../src/database/schemas";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
 // Hooks
 import { useRecordById } from "../../../../src/hooks/useRecordById";
@@ -79,6 +80,7 @@ export default function PlanDetail() {
               .set({ sync_status: "deleted" })
               .where(eq(training_plans.id, id));
             queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+            checkNetInfoAndSync();
             router.back();
           },
         },

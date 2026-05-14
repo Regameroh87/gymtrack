@@ -706,7 +706,9 @@ export async function pushPlanWeeksChanges() {
       continue;
     }
 
-    const rowsToUpsert = rows.map(({ sync_status, updated_at, ...rest }) => rest);
+    const rowsToUpsert = rows.map(
+      ({ sync_status, updated_at, ...rest }) => rest
+    );
     const { error } = await supabase
       .from("plan_weeks")
       .upsert(rowsToUpsert, { onConflict: "id" });
@@ -757,7 +759,12 @@ export async function pushPlanWeekDaysChanges() {
     await database
       .update(plan_week_days)
       .set({ sync_status: "synced" })
-      .where(inArray(plan_week_days.id, localChanges.map((r) => r.id)));
+      .where(
+        inArray(
+          plan_week_days.id,
+          localChanges.map((r) => r.id)
+        )
+      );
     console.log(
       `✅ [PUSH] plan_week_days: ${localChanges.length} registro(s) sincronizado(s)`
     );
@@ -796,7 +803,12 @@ export async function pushPlanWeekDayExercisesChanges() {
     await database
       .update(plan_week_day_exercises)
       .set({ sync_status: "synced" })
-      .where(inArray(plan_week_day_exercises.id, localChanges.map((r) => r.id)));
+      .where(
+        inArray(
+          plan_week_day_exercises.id,
+          localChanges.map((r) => r.id)
+        )
+      );
     console.log(
       `✅ [PUSH] plan_week_day_exercises: ${localChanges.length} registro(s) sincronizado(s)`
     );
@@ -839,7 +851,10 @@ export async function pushPlanWeekDayExerciseSetsChanges() {
       .update(plan_week_day_exercise_sets)
       .set({ sync_status: "synced" })
       .where(
-        inArray(plan_week_day_exercise_sets.id, localChanges.map((r) => r.id))
+        inArray(
+          plan_week_day_exercise_sets.id,
+          localChanges.map((r) => r.id)
+        )
       );
     console.log(
       `✅ [PUSH] plan_week_day_exercise_sets: ${localChanges.length} registro(s) sincronizado(s)`
@@ -893,8 +908,10 @@ export async function syncWithSupabase(
       else if (table === "training_plans") schemaTable = training_plans;
       else if (table === "plan_weeks") schemaTable = plan_weeks;
       else if (table === "plan_week_days") schemaTable = plan_week_days;
-      else if (table === "plan_week_day_exercises") schemaTable = plan_week_day_exercises;
-      else if (table === "plan_week_day_exercise_sets") schemaTable = plan_week_day_exercise_sets;
+      else if (table === "plan_week_day_exercises")
+        schemaTable = plan_week_day_exercises;
+      else if (table === "plan_week_day_exercise_sets")
+        schemaTable = plan_week_day_exercise_sets;
 
       if (schemaTable) {
         const { success, changed, newLastSync } = await pullTableChanges(
