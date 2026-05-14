@@ -12,11 +12,92 @@ import Toast from "react-native-toast-message";
 
 // Base de datos
 import { database } from "../database";
-import { training_plans } from "../database/schemas";
+import {
+  plan_week_day_exercise_sets,
+  plan_week_day_exercises,
+  plan_week_days,
+  plan_weeks,
+  training_plans,
+} from "../database/schemas";
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
 const DRAFT_KEY = "training_plan_form_draft";
+
+const persistWeeks = async (planId, weeks, now) => {
+  const weeksRows = [];
+  const daysRows = [];
+  const exercisesRows = [];
+  const setsRows = [];
+
+  for (const week of weeks) {
+    weeksRows.push({
+      id: week.id,
+      plan_id: planId,
+      week_number: week.week_number,
+      created_at: now,
+      updated_at: now,
+      sync_status: "pending",
+    });
+
+    for (const day of week.days) {
+      if (!day.session_id) continue;
+
+      daysRows.push({
+        id: day.id,
+        week_id: week.id,
+        day_number: day.day_number,
+        session_id: day.session_id,
+        created_at: now,
+        updated_at: now,
+        sync_status: "pending",
+      });
+
+      for (const ex of day.exercises) {
+        exercisesRows.push({
+          id: ex.id,
+          week_day_id: day.id,
+          session_exercise_id: ex.session_exercise_id,
+          position: ex.position,
+          prescription_mode: ex.prescription_mode,
+          rest_seconds: ex.rest_seconds,
+          intensity_mode: ex.intensity_mode,
+          tempo: ex.tempo || null,
+          notes: ex.notes || null,
+          created_at: now,
+          updated_at: now,
+          sync_status: "pending",
+        });
+
+        for (let s = 1; s <= ex.sets; s++) {
+          setsRows.push({
+            id: Crypto.randomUUID(),
+            exercise_id: ex.id,
+            set_number: s,
+            reps_min: ex.reps_min ?? null,
+            reps_max: ex.reps_max ?? null,
+            weight_kg: ex.weight_kg ?? null,
+            duration_seconds: ex.duration_seconds ?? null,
+            rir: ex.rir ?? null,
+            rpe: ex.rpe ?? null,
+            created_at: now,
+            updated_at: now,
+            sync_status: "pending",
+          });
+        }
+      }
+    }
+  }
+
+  if (weeksRows.length)
+    await database.insert(plan_weeks).values(weeksRows);
+  if (daysRows.length)
+    await database.insert(plan_week_days).values(daysRows);
+  if (exercisesRows.length)
+    await database.insert(plan_week_day_exercises).values(exercisesRows);
+  if (setsRows.length)
+    await database.insert(plan_week_day_exercise_sets).values(setsRows);
+};
 
 const DEFAULT_DURATION_WEEKS = 4;
 const DEFAULT_WEEKLY_DAYS = 3;
@@ -114,7 +195,8 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           })
           .where(eq(training_plans.id, id));
 
-        // TODO: persistir value.weeks → training_plan_days + training_plan_day_exercises
+        await database.delete(plan_weeks).where(eq(plan_weeks.plan_id, id));
+        await persistWeeks(id, value.weeks, now);
       } else {
         const planId = Crypto.randomUUID();
 
@@ -133,7 +215,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           sync_status: "pending",
         });
 
-        // TODO: persistir value.weeks → training_plan_days + training_plan_day_exercises
+        await persistWeeks(planId, value.weeks, now);
 
         await AsyncStorage.removeItem(DRAFT_KEY);
       }

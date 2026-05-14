@@ -4,7 +4,7 @@ import { count, desc, eq, ne } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../database";
-import { training_plan_days, training_plans } from "../database/schemas";
+import { training_plans } from "../database/schemas";
 
 export const useTrainingPlans = () =>
   useQuery({
