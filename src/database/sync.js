@@ -14,7 +14,7 @@ import {
   training_plans,
 } from "./schemas";
 import { supabase } from "../database/supabase";
-import { eq, or, inArray } from "drizzle-orm";
+import { eq, ne, or, and, inArray } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "../lib/queryClient";
@@ -68,17 +68,38 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
   let newLastSync = null;
 
   if (data && data.length > 0) {
+    // No pisar filas locales con cambios pendientes (pending/dirty/deleted).
+    // Esas las resuelve el PUSH de este mismo sync; el PULL siguiente ya
+    // las traerá en su estado canónico.
+    const remoteIds = data.map((r) => r.id);
+    const lockedLocal = await database
+      .select({ id: schemaTable.id })
+      .from(schemaTable)
+      .where(
+        and(
+          inArray(schemaTable.id, remoteIds),
+          ne(schemaTable.sync_status, "synced")
+        )
+      );
+    const lockedIds = new Set(lockedLocal.map((r) => r.id));
+
+    let skipped = 0;
     for (const remoteRow of data) {
+      if (lockedIds.has(remoteRow.id)) {
+        skipped++;
+        continue;
+      }
       remoteRow.sync_status = "synced";
       await database.insert(schemaTable).values(remoteRow).onConflictDoUpdate({
         target: schemaTable.id,
         set: remoteRow,
       });
     }
-    changed = true;
+    changed = data.length - skipped > 0;
     newLastSync = data[data.length - 1].updated_at;
     console.log(
-      `⬇️  [PULL] "${tableName}": ${data.length} registro(s) descargado(s)`
+      `⬇️  [PULL] "${tableName}": ${data.length - skipped} aplicado(s)` +
+        (skipped > 0 ? `, ${skipped} omitido(s) por cambios locales` : "")
     );
   }
 
