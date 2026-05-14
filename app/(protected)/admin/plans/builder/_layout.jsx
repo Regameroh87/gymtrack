@@ -50,7 +50,7 @@ export default function PlanBuilderLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       >
-        <Stack.Screen name="index" />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="[week]" />
       </Stack>
     </PlanFormProvider>
