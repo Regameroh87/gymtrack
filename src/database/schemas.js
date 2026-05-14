@@ -110,28 +110,6 @@ export const training_plans = sqliteTable("training_plans", {
   sync_status: text("sync_status").notNull().default("pending"),
 });
 
-export const training_plan_days = sqliteTable(
-  "training_plan_days",
-  {
-    id: text("id").primaryKey(),
-    plan_id: text("plan_id")
-      .notNull()
-      .references(() => training_plans.id),
-    day_number: integer("day_number").notNull(),
-    session_id: text("session_id")
-      .notNull()
-      .references(() => sessions.id),
-    created_at: text("created_at")
-      .notNull()
-      .$defaultFn(() => new Date().toISOString()),
-    updated_at: text("updated_at")
-      .notNull()
-      .$defaultFn(() => new Date().toISOString()),
-    sync_status: text("sync_status").notNull().default("pending"),
-  },
-  (t) => [unique().on(t.plan_id, t.day_number)]
-);
-
 export const plan_weeks = sqliteTable(
   "plan_weeks",
   {
