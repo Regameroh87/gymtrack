@@ -238,6 +238,23 @@ export async function pushExercisesChanges() {
       console.log(
         `🗑️  [PUSH] Eliminando ejercicio "${row.name}" (id: ${row.id})`
       );
+
+      const { count } = await supabase
+        .from("session_exercises")
+        .select("id", { count: "exact", head: true })
+        .eq("exercise_id", row.id);
+
+      if (count > 0) {
+        console.warn(
+          `⚠️  [PUSH] No se puede eliminar "${row.name}": está en uso en ${count} sesión(es). Se restaura localmente.`
+        );
+        await database
+          .update(exercises_base)
+          .set({ sync_status: "synced" })
+          .where(eq(exercises_base.id, row.id));
+        continue;
+      }
+
       const { error } = await supabase
         .from("exercises_base")
         .delete()
@@ -253,7 +270,6 @@ export async function pushExercisesChanges() {
           `❌ [PUSH] Error eliminando ejercicio "${row.name}":`,
           error.message
         );
-        //Deberia guardar el error en un tabla de errores
       }
       continue;
     }
