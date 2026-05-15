@@ -83,41 +83,64 @@ function StatChip({ value, label }) {
 
 // ─── Fila de ejercicio ────────────────────────────────────────────────────────
 
+function SetChip({ set, accent }) {
+  let label;
+  if (set.duration_seconds) {
+    label = `${set.duration_seconds}s`;
+  } else if (set.reps_min != null && set.reps_max != null) {
+    label =
+      set.reps_min === set.reps_max
+        ? `${set.reps_min}`
+        : `${set.reps_min}-${set.reps_max}`;
+  } else {
+    label = "—";
+  }
+  return (
+    <View
+      className="flex-row items-center px-2 py-0.5 rounded-lg mr-1.5 mb-1"
+      style={{ backgroundColor: accent + "14" }}
+    >
+      <Text className="text-[9px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mr-0.5">
+        S{set.set_number}
+      </Text>
+      <Text className="text-[10px] font-manrope-semi" style={{ color: accent }}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 function ExerciseRow({ exercise, index, accent }) {
-  const badge = exercise.set_summary;
+  const sets = exercise.sets ?? [];
 
   return (
-    <View className="flex-row items-center py-2">
-      <View
-        className="w-5 h-5 rounded-md items-center justify-center mr-2.5 shrink-0"
-        style={{ backgroundColor: accent + "18" }}
-      >
-        <Text
-          className="text-[9px] font-jakarta-bold"
-          style={{ color: accent }}
-        >
-          {index + 1}
-        </Text>
-      </View>
-      <Text
-        className="flex-1 text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
-        numberOfLines={1}
-      >
-        {exercise.exercise_name ?? "—"}
-      </Text>
-      {badge ? (
+    <View className="py-2">
+      <View className="flex-row items-center">
         <View
-          className="px-2 py-0.5 rounded-md ml-2 shrink-0"
-          style={{ backgroundColor: accent + "14" }}
+          className="w-5 h-5 rounded-md items-center justify-center mr-2.5 shrink-0"
+          style={{ backgroundColor: accent + "18" }}
         >
           <Text
-            className="text-[10px] font-manrope-semi"
+            className="text-[9px] font-jakarta-bold"
             style={{ color: accent }}
           >
-            {badge}
+            {index + 1}
           </Text>
         </View>
-      ) : null}
+        <Text
+          className="flex-1 text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+          numberOfLines={1}
+        >
+          {exercise.exercise_name ?? "—"}
+        </Text>
+      </View>
+      {sets.length > 0 && (
+        <View className="flex-row flex-wrap ml-7 mt-1">
+          {sets.map((s) => (
+            <SetChip key={s.set_number} set={s} accent={accent} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -340,6 +363,7 @@ export default function PlanDetail() {
           ...ex,
           set_count: sets.length,
           set_summary,
+          sets,
         });
       }
 
