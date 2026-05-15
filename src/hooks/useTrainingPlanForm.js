@@ -243,7 +243,6 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
   useEffect(() => {
     let cancelled = false;
-
     if (id) {
       setIsDraftLoaded(false);
 
@@ -297,7 +296,8 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               .select({
                 id: plan_week_day_exercises.id,
                 week_day_id: plan_week_day_exercises.week_day_id,
-                session_exercise_id: plan_week_day_exercises.session_exercise_id,
+                session_exercise_id:
+                  plan_week_day_exercises.session_exercise_id,
                 exercise_id: session_exercises.exercise_id,
                 exercise_name: exercises_base.name,
                 exercise_muscle_group: exercises_base.muscle_group,

@@ -1,5 +1,5 @@
 // Librerías externas
-import { Stack, useGlobalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 // Hooks
@@ -12,7 +12,7 @@ import { PlanFormProvider } from "../../../../../src/contexts/PlanFormContext";
 import { ui } from "../../../../../src/theme/colors";
 
 export default function PlanBuilderLayout() {
-  const { id } = useGlobalSearchParams();
+  const { id } = useLocalSearchParams();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
