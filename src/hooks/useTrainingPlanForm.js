@@ -259,6 +259,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     if (!id) return;
 
     (async () => {
+      try {
       const [planRow] = await database
         .select()
         .from(training_plans)
@@ -417,6 +418,10 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       });
 
       setIsDraftLoaded(true);
+      } catch (e) {
+        console.error("Error hydrating plan form:", e);
+        setIsDraftLoaded(true);
+      }
     })();
   }, [id]);
 

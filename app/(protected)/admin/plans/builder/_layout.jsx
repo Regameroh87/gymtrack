@@ -2,7 +2,7 @@
 import { ActivityIndicator, Pressable, View } from "react-native";
 
 // Librerías externas
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useGlobalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 // Hooks
@@ -16,7 +16,7 @@ import { brandPrimary, ui } from "../../../../../src/theme/colors";
 import { ArrowLeft } from "../../../../../assets/icons";
 
 export default function PlanBuilderLayout() {
-  const { id } = useLocalSearchParams();
+  const { id } = useGlobalSearchParams();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
