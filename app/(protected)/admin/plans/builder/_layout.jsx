@@ -64,7 +64,7 @@ export default function PlanBuilderLayout() {
             ),
           }}
         />
-        <Stack.Screen name="[week]" />
+        <Stack.Screen name="[week]/index" />
       </Stack>
     </PlanFormProvider>
   );
