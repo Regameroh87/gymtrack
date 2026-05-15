@@ -200,6 +200,41 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           })
           .where(eq(training_plans.id, id));
 
+        const oldWeekRows = await database
+          .select({ id: plan_weeks.id })
+          .from(plan_weeks)
+          .where(eq(plan_weeks.plan_id, id));
+        const oldWeekIds = oldWeekRows.map((w) => w.id);
+
+        if (oldWeekIds.length) {
+          const oldDayRows = await database
+            .select({ id: plan_week_days.id })
+            .from(plan_week_days)
+            .where(inArray(plan_week_days.week_id, oldWeekIds));
+          const oldDayIds = oldDayRows.map((d) => d.id);
+
+          if (oldDayIds.length) {
+            const oldExRows = await database
+              .select({ id: plan_week_day_exercises.id })
+              .from(plan_week_day_exercises)
+              .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
+            const oldExIds = oldExRows.map((e) => e.id);
+
+            if (oldExIds.length) {
+              await database
+                .delete(plan_week_day_exercise_sets)
+                .where(
+                  inArray(plan_week_day_exercise_sets.exercise_id, oldExIds)
+                );
+            }
+            await database
+              .delete(plan_week_day_exercises)
+              .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
+          }
+          await database
+            .delete(plan_week_days)
+            .where(inArray(plan_week_days.week_id, oldWeekIds));
+        }
         await database.delete(plan_weeks).where(eq(plan_weeks.plan_id, id));
         await persistWeeks(id, value.weeks, now);
       } else {
