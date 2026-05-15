@@ -241,193 +241,207 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     },
   });
 
-  // Cargar draft para planes nuevos
   useEffect(() => {
-    if (id) return;
-    AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
-      if (raw) {
+    let cancelled = false;
+
+    if (id) {
+      setIsDraftLoaded(false);
+
+      (async () => {
         try {
-          form.reset(JSON.parse(raw));
-        } catch {}
-      }
-      setIsDraftLoaded(true);
-    });
-  }, []);
-
-  // Hidratar form desde DB al editar un plan existente
-  useEffect(() => {
-    if (!id) return;
-
-    setIsDraftLoaded(false);
-
-    (async () => {
-      try {
-        const [planRow] = await database
-          .select()
-          .from(training_plans)
-          .where(eq(training_plans.id, id));
-
-        if (!planRow) {
-          setIsDraftLoaded(true);
-          return;
-        }
-
-        const weeksRows = await database
-          .select()
-          .from(plan_weeks)
-          .where(eq(plan_weeks.plan_id, id))
-          .orderBy(asc(plan_weeks.week_number));
-
-        const weekIds = weeksRows.map((w) => w.id);
-
-        let daysRows = [];
-        if (weekIds.length) {
-          daysRows = await database
-            .select({
-              id: plan_week_days.id,
-              week_id: plan_week_days.week_id,
-              day_number: plan_week_days.day_number,
-              session_id: plan_week_days.session_id,
-              session_name: sessions.name,
-            })
-            .from(plan_week_days)
-            .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
-            .where(inArray(plan_week_days.week_id, weekIds))
-            .orderBy(asc(plan_week_days.day_number));
-        }
-
-        const dayIds = daysRows.map((d) => d.id);
-
-        let exRows = [];
-        if (dayIds.length) {
-          exRows = await database
-            .select({
-              id: plan_week_day_exercises.id,
-              week_day_id: plan_week_day_exercises.week_day_id,
-              session_exercise_id: plan_week_day_exercises.session_exercise_id,
-              exercise_id: session_exercises.exercise_id,
-              exercise_name: exercises_base.name,
-              exercise_muscle_group: exercises_base.muscle_group,
-              position: plan_week_day_exercises.position,
-              prescription_mode: plan_week_day_exercises.prescription_mode,
-              rest_seconds: plan_week_day_exercises.rest_seconds,
-              intensity_mode: plan_week_day_exercises.intensity_mode,
-              tempo: plan_week_day_exercises.tempo,
-              notes: plan_week_day_exercises.notes,
-            })
-            .from(plan_week_day_exercises)
-            .leftJoin(
-              session_exercises,
-              eq(
-                plan_week_day_exercises.session_exercise_id,
-                session_exercises.id
-              )
-            )
-            .leftJoin(
-              exercises_base,
-              eq(session_exercises.exercise_id, exercises_base.id)
-            )
-            .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
-            .orderBy(asc(plan_week_day_exercises.position));
-        }
-
-        const exIds = exRows.map((e) => e.id);
-
-        let setRows = [];
-        if (exIds.length) {
-          setRows = await database
+          const [planRow] = await database
             .select()
-            .from(plan_week_day_exercise_sets)
-            .where(inArray(plan_week_day_exercise_sets.exercise_id, exIds))
-            .orderBy(asc(plan_week_day_exercise_sets.set_number));
-        }
+            .from(training_plans)
+            .where(eq(training_plans.id, id));
 
-        const setsByExId = {};
-        for (const s of setRows) {
-          if (!setsByExId[s.exercise_id]) setsByExId[s.exercise_id] = [];
-          setsByExId[s.exercise_id].push(s);
-        }
+          if (cancelled) return;
 
-        const exByDayId = {};
-        for (const ex of exRows) {
-          if (!exByDayId[ex.week_day_id]) exByDayId[ex.week_day_id] = [];
-          const rawSets = setsByExId[ex.id] ?? [];
-          const firstSet = rawSets[0];
-          exByDayId[ex.week_day_id].push({
-            id: ex.id,
-            session_exercise_id: ex.session_exercise_id,
-            exercise_id: ex.exercise_id ?? "",
-            exercise_name: ex.exercise_name ?? "",
-            exercise_muscle_group: ex.exercise_muscle_group ?? "",
-            position: ex.position,
-            prescription_mode: ex.prescription_mode ?? "reps",
-            intensity_mode: ex.intensity_mode ?? "none",
-            rir: firstSet?.rir ?? null,
-            rpe: firstSet?.rpe ?? null,
-            tempo: ex.tempo ?? "",
-            notes: ex.notes ?? "",
-            set_configs: rawSets.length
-              ? rawSets.map((s) => ({
-                  reps_min: s.reps_min,
-                  reps_max: s.reps_max,
-                  duration_seconds: s.duration_seconds,
-                  weight_kg: s.weight_kg,
-                  rest_seconds: ex.rest_seconds ?? 90,
-                }))
-              : [
-                  {
-                    reps_min: 8,
-                    reps_max: 12,
-                    duration_seconds: null,
-                    weight_kg: null,
-                    rest_seconds: 90,
-                  },
-                ],
+          if (!planRow) {
+            setIsDraftLoaded(true);
+            return;
+          }
+
+          const weeksRows = await database
+            .select()
+            .from(plan_weeks)
+            .where(eq(plan_weeks.plan_id, id))
+            .orderBy(asc(plan_weeks.week_number));
+
+          if (cancelled) return;
+
+          const weekIds = weeksRows.map((w) => w.id);
+
+          let daysRows = [];
+          if (weekIds.length) {
+            daysRows = await database
+              .select({
+                id: plan_week_days.id,
+                week_id: plan_week_days.week_id,
+                day_number: plan_week_days.day_number,
+                session_id: plan_week_days.session_id,
+                session_name: sessions.name,
+              })
+              .from(plan_week_days)
+              .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
+              .where(inArray(plan_week_days.week_id, weekIds))
+              .orderBy(asc(plan_week_days.day_number));
+          }
+
+          if (cancelled) return;
+
+          const dayIds = daysRows.map((d) => d.id);
+
+          let exRows = [];
+          if (dayIds.length) {
+            exRows = await database
+              .select({
+                id: plan_week_day_exercises.id,
+                week_day_id: plan_week_day_exercises.week_day_id,
+                session_exercise_id: plan_week_day_exercises.session_exercise_id,
+                exercise_id: session_exercises.exercise_id,
+                exercise_name: exercises_base.name,
+                exercise_muscle_group: exercises_base.muscle_group,
+                position: plan_week_day_exercises.position,
+                prescription_mode: plan_week_day_exercises.prescription_mode,
+                rest_seconds: plan_week_day_exercises.rest_seconds,
+                intensity_mode: plan_week_day_exercises.intensity_mode,
+                tempo: plan_week_day_exercises.tempo,
+                notes: plan_week_day_exercises.notes,
+              })
+              .from(plan_week_day_exercises)
+              .leftJoin(
+                session_exercises,
+                eq(
+                  plan_week_day_exercises.session_exercise_id,
+                  session_exercises.id
+                )
+              )
+              .leftJoin(
+                exercises_base,
+                eq(session_exercises.exercise_id, exercises_base.id)
+              )
+              .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
+              .orderBy(asc(plan_week_day_exercises.position));
+          }
+
+          if (cancelled) return;
+
+          const exIds = exRows.map((e) => e.id);
+
+          let setRows = [];
+          if (exIds.length) {
+            setRows = await database
+              .select()
+              .from(plan_week_day_exercise_sets)
+              .where(inArray(plan_week_day_exercise_sets.exercise_id, exIds))
+              .orderBy(asc(plan_week_day_exercise_sets.set_number));
+          }
+
+          if (cancelled) return;
+
+          const setsByExId = {};
+          for (const s of setRows) {
+            if (!setsByExId[s.exercise_id]) setsByExId[s.exercise_id] = [];
+            setsByExId[s.exercise_id].push(s);
+          }
+
+          const exByDayId = {};
+          for (const ex of exRows) {
+            if (!exByDayId[ex.week_day_id]) exByDayId[ex.week_day_id] = [];
+            const rawSets = setsByExId[ex.id] ?? [];
+            const firstSet = rawSets[0];
+            exByDayId[ex.week_day_id].push({
+              id: ex.id,
+              session_exercise_id: ex.session_exercise_id,
+              exercise_id: ex.exercise_id ?? "",
+              exercise_name: ex.exercise_name ?? "",
+              exercise_muscle_group: ex.exercise_muscle_group ?? "",
+              position: ex.position,
+              prescription_mode: ex.prescription_mode ?? "reps",
+              intensity_mode: ex.intensity_mode ?? "none",
+              rir: firstSet?.rir ?? null,
+              rpe: firstSet?.rpe ?? null,
+              tempo: ex.tempo ?? "",
+              notes: ex.notes ?? "",
+              set_configs: rawSets.length
+                ? rawSets.map((s) => ({
+                    reps_min: s.reps_min,
+                    reps_max: s.reps_max,
+                    duration_seconds: s.duration_seconds,
+                    weight_kg: s.weight_kg,
+                    rest_seconds: ex.rest_seconds ?? 90,
+                  }))
+                : [
+                    {
+                      reps_min: 8,
+                      reps_max: 12,
+                      duration_seconds: null,
+                      weight_kg: null,
+                      rest_seconds: 90,
+                    },
+                  ],
+            });
+          }
+
+          const daysByWeekId = {};
+          for (const d of daysRows) {
+            if (!daysByWeekId[d.week_id]) daysByWeekId[d.week_id] = [];
+            daysByWeekId[d.week_id].push({
+              id: d.id,
+              day_number: d.day_number,
+              session_id: d.session_id,
+              session_name: d.session_name ?? null,
+              exercises: exByDayId[d.id] ?? [],
+            });
+          }
+
+          const weeks = weeksRows.map((w) => {
+            const assignedDays = daysByWeekId[w.id] ?? [];
+            const assignedByNum = {};
+            for (const d of assignedDays) assignedByNum[d.day_number] = d;
+
+            const days = Array.from(
+              { length: planRow.weekly_days },
+              (_, i) => assignedByNum[i + 1] ?? makeEmptyDay(i + 1)
+            );
+
+            return { id: w.id, week_number: w.week_number, days };
           });
-        }
 
-        const daysByWeekId = {};
-        for (const d of daysRows) {
-          if (!daysByWeekId[d.week_id]) daysByWeekId[d.week_id] = [];
-          daysByWeekId[d.week_id].push({
-            id: d.id,
-            day_number: d.day_number,
-            session_id: d.session_id,
-            session_name: d.session_name ?? null,
-            exercises: exByDayId[d.id] ?? [],
+          form.reset({
+            name: planRow.name ?? "",
+            description: planRow.description ?? "",
+            objective: planRow.objective ?? "",
+            level: planRow.level ?? "",
+            duration_weeks: planRow.duration_weeks,
+            cover_image_uri: planRow.cover_image_uri ?? "",
+            weekly_days: planRow.weekly_days,
+            weeks,
           });
+
+          setIsDraftLoaded(true);
+        } catch (e) {
+          if (!cancelled) {
+            console.error("Error hydrating plan form:", e);
+            setIsDraftLoaded(true);
+          }
         }
-
-        const weeks = weeksRows.map((w) => {
-          const assignedDays = daysByWeekId[w.id] ?? [];
-          const assignedByNum = {};
-          for (const d of assignedDays) assignedByNum[d.day_number] = d;
-
-          const days = Array.from(
-            { length: planRow.weekly_days },
-            (_, i) => assignedByNum[i + 1] ?? makeEmptyDay(i + 1)
-          );
-
-          return { id: w.id, week_number: w.week_number, days };
-        });
-
-        form.reset({
-          name: planRow.name ?? "",
-          description: planRow.description ?? "",
-          objective: planRow.objective ?? "",
-          level: planRow.level ?? "",
-          duration_weeks: planRow.duration_weeks,
-          cover_image_uri: planRow.cover_image_uri ?? "",
-          weekly_days: planRow.weekly_days,
-          weeks,
-        });
-
+      })();
+    } else {
+      AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
+        if (cancelled) return;
+        if (raw) {
+          try {
+            form.reset(JSON.parse(raw));
+          } catch {}
+        }
         setIsDraftLoaded(true);
-      } catch (e) {
-        console.error("Error hydrating plan form:", e);
-        setIsDraftLoaded(true);
-      }
-    })();
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const values = useStore(form.store, (state) => state.values);
