@@ -84,6 +84,8 @@ function StatChip({ value, label }) {
 // ─── Fila de ejercicio ────────────────────────────────────────────────────────
 
 function ExerciseRow({ exercise, index, accent }) {
+  const badge = exercise.set_summary;
+
   return (
     <View className="flex-row items-center py-2">
       <View
@@ -97,22 +99,25 @@ function ExerciseRow({ exercise, index, accent }) {
           {index + 1}
         </Text>
       </View>
-      <View className="flex-1 min-w-0">
-        <Text
-          className="text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
-          numberOfLines={1}
+      <Text
+        className="flex-1 text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+        numberOfLines={1}
+      >
+        {exercise.exercise_name ?? "—"}
+      </Text>
+      {badge ? (
+        <View
+          className="px-2 py-0.5 rounded-md ml-2 shrink-0"
+          style={{ backgroundColor: accent + "14" }}
         >
-          {exercise.exercise_name ?? "—"}
-        </Text>
-        {exercise.set_summary ? (
           <Text
-            className="text-[10px] font-manrope mt-0.5"
-            style={{ color: accent + "cc" }}
+            className="text-[10px] font-manrope-semi"
+            style={{ color: accent }}
           >
-            {exercise.set_summary}
+            {badge}
           </Text>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -320,13 +325,13 @@ export default function PlanDetail() {
         let set_summary = null;
         if (sets.length > 0) {
           if (first?.duration_seconds) {
-            set_summary = `${sets.length} × ${first.duration_seconds}s`;
+            set_summary = `${sets.length}×${first.duration_seconds}s`;
           } else if (first?.reps_min != null && first?.reps_max != null) {
             const reps =
               first.reps_min === first.reps_max
                 ? `${first.reps_min}`
                 : `${first.reps_min}-${first.reps_max}`;
-            set_summary = `${sets.length} × ${reps} reps`;
+            set_summary = `${sets.length}×${reps}`;
           } else {
             set_summary = `${sets.length} ser.`;
           }
