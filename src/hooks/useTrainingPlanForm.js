@@ -408,16 +408,19 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             return { id: w.id, week_number: w.week_number, days };
           });
 
-          form.reset({
-            name: planRow.name ?? "",
-            description: planRow.description ?? "",
-            objective: planRow.objective ?? "",
-            level: planRow.level ?? "",
-            duration_weeks: planRow.duration_weeks,
-            cover_image_uri: planRow.cover_image_uri ?? "",
-            weekly_days: planRow.weekly_days,
-            weeks,
-          });
+          form.reset(
+            {
+              name: planRow.name ?? "",
+              description: planRow.description ?? "",
+              objective: planRow.objective ?? "",
+              level: planRow.level ?? "",
+              duration_weeks: planRow.duration_weeks,
+              cover_image_uri: planRow.cover_image_uri ?? "",
+              weekly_days: planRow.weekly_days,
+              weeks,
+            },
+            { keepDefaultValues: true }
+          );
 
           setIsDraftLoaded(true);
         } catch (e) {
@@ -432,7 +435,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         if (cancelled) return;
         if (raw) {
           try {
-            form.reset(JSON.parse(raw));
+            form.reset(JSON.parse(raw), { keepDefaultValues: true });
           } catch {}
         }
         setIsDraftLoaded(true);

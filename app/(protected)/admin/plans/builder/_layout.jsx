@@ -13,6 +13,7 @@ import { ui } from "../../../../../src/theme/colors";
 
 export default function PlanBuilderLayout() {
   const { id } = useLocalSearchParams();
+
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
