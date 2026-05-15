@@ -105,7 +105,14 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
-        name="plans/builder"
+        name="plans/builder/index"
+        options={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
+        name="plans/builder/[week]"
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
