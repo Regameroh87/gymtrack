@@ -1,8 +1,9 @@
 // React Native
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 // Librerías externas
-import { Slot, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 
 // Hooks
 import { useTrainingPlanForm } from "../../../../../src/hooks/useTrainingPlanForm";
@@ -10,12 +11,15 @@ import { useTrainingPlanForm } from "../../../../../src/hooks/useTrainingPlanFor
 // Contexto
 import { PlanFormProvider } from "../../../../../src/contexts/PlanFormContext";
 
-// Tema
-import { brandPrimary } from "../../../../../src/theme/colors";
+// Tema y assets
+import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ArrowLeft } from "../../../../../assets/icons";
 
 export default function PlanBuilderLayout() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { form, isLoading } = useTrainingPlanForm({
     id: id ?? null,
@@ -32,7 +36,36 @@ export default function PlanBuilderLayout() {
 
   return (
     <PlanFormProvider value={{ form, planId: id ?? null }}>
-      <Slot />
+      <Stack
+        screenOptions={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+          headerStyle: {
+            backgroundColor: isDark ? ui.background.dark : ui.background.light,
+          },
+          headerShadowVisible: false,
+          headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
+        }}
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            headerLeft: () => (
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={10}
+                className="active:opacity-50"
+              >
+                <ArrowLeft
+                  size={22}
+                  color={isDark ? ui.text.mainDark : ui.text.main}
+                />
+              </Pressable>
+            ),
+          }}
+        />
+        <Stack.Screen name="[week]" />
+      </Stack>
     </PlanFormProvider>
   );
 }
