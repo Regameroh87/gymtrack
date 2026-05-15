@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -13,10 +13,13 @@ import Toast from "react-native-toast-message";
 // Base de datos
 import { database } from "../database";
 import {
+  exercises_base,
   plan_week_day_exercise_sets,
   plan_week_day_exercises,
   plan_week_days,
   plan_weeks,
+  session_exercises,
+  sessions,
   training_plans,
 } from "../database/schemas";
 import { supabase } from "../database/supabase";
@@ -54,13 +57,16 @@ const persistWeeks = async (planId, weeks, now) => {
       });
 
       for (const ex of day.exercises) {
+        const configs = ex.set_configs ?? [];
+        const restSeconds = configs[0]?.rest_seconds ?? ex.rest_seconds ?? 90;
+
         exercisesRows.push({
           id: ex.id,
           week_day_id: day.id,
           session_exercise_id: ex.session_exercise_id,
           position: ex.position,
           prescription_mode: ex.prescription_mode,
-          rest_seconds: ex.rest_seconds,
+          rest_seconds: restSeconds,
           intensity_mode: ex.intensity_mode,
           tempo: ex.tempo || null,
           notes: ex.notes || null,
@@ -69,15 +75,16 @@ const persistWeeks = async (planId, weeks, now) => {
           sync_status: "pending",
         });
 
-        for (let s = 1; s <= ex.sets; s++) {
+        for (let s = 0; s < configs.length; s++) {
+          const cfg = configs[s];
           setsRows.push({
             id: Crypto.randomUUID(),
             exercise_id: ex.id,
-            set_number: s,
-            reps_min: ex.reps_min ?? null,
-            reps_max: ex.reps_max ?? null,
-            weight_kg: ex.weight_kg ?? null,
-            duration_seconds: ex.duration_seconds ?? null,
+            set_number: s + 1,
+            reps_min: cfg.reps_min ?? null,
+            reps_max: cfg.reps_max ?? null,
+            weight_kg: cfg.weight_kg ?? null,
+            duration_seconds: cfg.duration_seconds ?? null,
             rir: ex.rir ?? null,
             rpe: ex.rpe ?? null,
             created_at: now,
@@ -151,7 +158,7 @@ export const resizeWeeksByWeeklyDays = (currentWeeks, newWeeklyDays) =>
 export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
   const saveTimerRef = useRef(null);
-  const [isDraftLoaded, setIsDraftLoaded] = useState(!!id);
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
   const defaultValues = useMemo(
     () => ({
@@ -234,6 +241,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     },
   });
 
+  // Cargar draft para planes nuevos
   useEffect(() => {
     if (id) return;
     AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
@@ -245,6 +253,172 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       setIsDraftLoaded(true);
     });
   }, []);
+
+  // Hidratar form desde DB al editar un plan existente
+  useEffect(() => {
+    if (!id) return;
+
+    (async () => {
+      const [planRow] = await database
+        .select()
+        .from(training_plans)
+        .where(eq(training_plans.id, id));
+
+      if (!planRow) {
+        setIsDraftLoaded(true);
+        return;
+      }
+
+      const weeksRows = await database
+        .select()
+        .from(plan_weeks)
+        .where(eq(plan_weeks.plan_id, id))
+        .orderBy(asc(plan_weeks.week_number));
+
+      const weekIds = weeksRows.map((w) => w.id);
+
+      let daysRows = [];
+      if (weekIds.length) {
+        daysRows = await database
+          .select({
+            id: plan_week_days.id,
+            week_id: plan_week_days.week_id,
+            day_number: plan_week_days.day_number,
+            session_id: plan_week_days.session_id,
+            session_name: sessions.name,
+          })
+          .from(plan_week_days)
+          .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
+          .where(inArray(plan_week_days.week_id, weekIds))
+          .orderBy(asc(plan_week_days.day_number));
+      }
+
+      const dayIds = daysRows.map((d) => d.id);
+
+      let exRows = [];
+      if (dayIds.length) {
+        exRows = await database
+          .select({
+            id: plan_week_day_exercises.id,
+            week_day_id: plan_week_day_exercises.week_day_id,
+            session_exercise_id: plan_week_day_exercises.session_exercise_id,
+            exercise_id: session_exercises.exercise_id,
+            exercise_name: exercises_base.name,
+            exercise_muscle_group: exercises_base.muscle_group,
+            position: plan_week_day_exercises.position,
+            prescription_mode: plan_week_day_exercises.prescription_mode,
+            rest_seconds: plan_week_day_exercises.rest_seconds,
+            intensity_mode: plan_week_day_exercises.intensity_mode,
+            tempo: plan_week_day_exercises.tempo,
+            notes: plan_week_day_exercises.notes,
+          })
+          .from(plan_week_day_exercises)
+          .leftJoin(
+            session_exercises,
+            eq(plan_week_day_exercises.session_exercise_id, session_exercises.id)
+          )
+          .leftJoin(
+            exercises_base,
+            eq(session_exercises.exercise_id, exercises_base.id)
+          )
+          .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
+          .orderBy(asc(plan_week_day_exercises.position));
+      }
+
+      const exIds = exRows.map((e) => e.id);
+
+      let setRows = [];
+      if (exIds.length) {
+        setRows = await database
+          .select()
+          .from(plan_week_day_exercise_sets)
+          .where(inArray(plan_week_day_exercise_sets.exercise_id, exIds))
+          .orderBy(asc(plan_week_day_exercise_sets.set_number));
+      }
+
+      const setsByExId = {};
+      for (const s of setRows) {
+        if (!setsByExId[s.exercise_id]) setsByExId[s.exercise_id] = [];
+        setsByExId[s.exercise_id].push(s);
+      }
+
+      const exByDayId = {};
+      for (const ex of exRows) {
+        if (!exByDayId[ex.week_day_id]) exByDayId[ex.week_day_id] = [];
+        const rawSets = setsByExId[ex.id] ?? [];
+        const firstSet = rawSets[0];
+        exByDayId[ex.week_day_id].push({
+          id: ex.id,
+          session_exercise_id: ex.session_exercise_id,
+          exercise_id: ex.exercise_id ?? "",
+          exercise_name: ex.exercise_name ?? "",
+          exercise_muscle_group: ex.exercise_muscle_group ?? "",
+          position: ex.position,
+          prescription_mode: ex.prescription_mode ?? "reps",
+          intensity_mode: ex.intensity_mode ?? "none",
+          rir: firstSet?.rir ?? null,
+          rpe: firstSet?.rpe ?? null,
+          tempo: ex.tempo ?? "",
+          notes: ex.notes ?? "",
+          set_configs: rawSets.length
+            ? rawSets.map((s) => ({
+                reps_min: s.reps_min,
+                reps_max: s.reps_max,
+                duration_seconds: s.duration_seconds,
+                weight_kg: s.weight_kg,
+                rest_seconds: ex.rest_seconds ?? 90,
+              }))
+            : [
+                {
+                  reps_min: 8,
+                  reps_max: 12,
+                  duration_seconds: null,
+                  weight_kg: null,
+                  rest_seconds: 90,
+                },
+              ],
+        });
+      }
+
+      const daysByWeekId = {};
+      for (const d of daysRows) {
+        if (!daysByWeekId[d.week_id]) daysByWeekId[d.week_id] = [];
+        daysByWeekId[d.week_id].push({
+          id: d.id,
+          day_number: d.day_number,
+          session_id: d.session_id,
+          session_name: d.session_name ?? null,
+          exercises: exByDayId[d.id] ?? [],
+        });
+      }
+
+      const weeks = weeksRows.map((w) => {
+        const assignedDays = daysByWeekId[w.id] ?? [];
+        const assignedByNum = {};
+        for (const d of assignedDays) assignedByNum[d.day_number] = d;
+
+        const days = Array.from(
+          { length: planRow.weekly_days },
+          (_, i) => assignedByNum[i + 1] ?? makeEmptyDay(i + 1)
+        );
+
+        return { id: w.id, week_number: w.week_number, days };
+      });
+
+      form.reset({
+        name: planRow.name ?? "",
+        description: planRow.description ?? "",
+        objective: planRow.objective ?? "",
+        level: planRow.level ?? "",
+        duration_weeks: planRow.duration_weeks,
+        cover_image_uri: planRow.cover_image_uri ?? "",
+        weekly_days: planRow.weekly_days,
+        weeks,
+      });
+
+      setIsDraftLoaded(true);
+    })();
+  }, [id]);
 
   const values = useStore(form.store, (state) => state.values);
   useEffect(() => {

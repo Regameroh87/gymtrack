@@ -1,5 +1,4 @@
 // React Native
-import { useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +11,7 @@ import {
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { useColorScheme } from "nativewind";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { asc, eq, inArray } from "drizzle-orm";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,6 +20,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { database } from "../../../../src/database";
 import {
   exercises_base,
+  plan_week_day_exercise_sets,
+  plan_week_day_exercises,
+  plan_week_days,
+  plan_weeks,
   session_exercises,
   sessions,
   training_plans,
@@ -31,14 +35,18 @@ import { useRecordById } from "../../../../src/hooks/useRecordById";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
-import SessionExerciseRow from "../../../../src/components/cards/SessionExerciseRow";
 
 // Constantes
-import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
+import {
+  SESSION_OBJECTIVES,
+  SESSION_LEVELS,
+} from "../../../../src/constants/sessionOptions";
 
 // Tema / assets
-import { brandPrimary } from "../../../../src/theme/colors";
+import { brandPrimary, ui } from "../../../../src/theme/colors";
 import { Pencil, Trash } from "../../../../assets/icons";
+
+// ─── Constantes de display ────────────────────────────────────────────────────
 
 const OBJECTIVE_ACCENT = {
   hipertrofia: "#6366f1",
@@ -52,12 +60,176 @@ const OBJECTIVE_ACCENT = {
 const OBJECTIVE_LABELS = Object.fromEntries(
   SESSION_OBJECTIVES.map((o) => [o.value, o.label])
 );
+const LEVEL_LABELS = Object.fromEntries(
+  SESSION_LEVELS.map((l) => [l.value, l.label])
+);
+
+// ─── Chip de estadística ──────────────────────────────────────────────────────
+
+function StatChip({ value, label }) {
+  return (
+    <View className="flex-row items-baseline gap-1 px-3 py-2 rounded-xl bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border">
+      {value !== null && value !== undefined && (
+        <Text className="text-sm font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark">
+          {value}
+        </Text>
+      )}
+      <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+        {label}
+      </Text>
+    </View>
+  );
+}
+
+// ─── Fila de ejercicio ────────────────────────────────────────────────────────
+
+function ExerciseRow({ exercise, index, accent }) {
+  return (
+    <View className="flex-row items-center py-2">
+      <View
+        className="w-5 h-5 rounded-md items-center justify-center mr-2.5 shrink-0"
+        style={{ backgroundColor: accent + "18" }}
+      >
+        <Text
+          className="text-[9px] font-jakarta-bold"
+          style={{ color: accent }}
+        >
+          {index + 1}
+        </Text>
+      </View>
+      <View className="flex-1 min-w-0">
+        <Text
+          className="text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+          numberOfLines={1}
+        >
+          {exercise.exercise_name ?? "—"}
+        </Text>
+        {exercise.set_summary ? (
+          <Text
+            className="text-[10px] font-manrope mt-0.5"
+            style={{ color: accent + "cc" }}
+          >
+            {exercise.set_summary}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+// ─── Tarjeta de día ───────────────────────────────────────────────────────────
+
+function DayCard({ day, accent }) {
+  const exCount = day.exercises.length;
+  const hasSession = !!day.session_name;
+
+  return (
+    <View className="mb-2.5 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark overflow-hidden">
+      {/* Encabezado del día */}
+      <View
+        className="flex-row items-center px-4 py-3"
+        style={
+          exCount > 0
+            ? { borderBottomWidth: 1, borderBottomColor: ui.input.border }
+            : null
+        }
+      >
+        <View
+          className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+          style={{ backgroundColor: accent + "18" }}
+        >
+          <Text
+            className="text-[9px] font-manrope-semi uppercase"
+            style={{ color: accent }}
+          >
+            Día
+          </Text>
+          <Text
+            className="text-sm font-jakarta-bold leading-tight"
+            style={{ color: accent }}
+          >
+            {day.day_number}
+          </Text>
+        </View>
+        <View className="flex-1">
+          <Text
+            className={`text-sm font-jakarta-semi ${hasSession ? "text-ui-text-main dark:text-ui-text-mainDark" : "text-ui-text-muted dark:text-ui-text-mutedDark"}`}
+            numberOfLines={1}
+          >
+            {day.session_name ?? "Sin sesión asignada"}
+          </Text>
+          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+            {exCount === 0
+              ? "Sin ejercicios"
+              : `${exCount} ejercicio${exCount !== 1 ? "s" : ""}`}
+          </Text>
+        </View>
+      </View>
+
+      {/* Lista de ejercicios */}
+      {exCount > 0 && (
+        <View className="px-4 pt-1 pb-3">
+          {day.exercises.map((ex, idx) => (
+            <ExerciseRow
+              key={ex.id}
+              exercise={ex}
+              index={idx}
+              accent={accent}
+            />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ─── Sección de semana ────────────────────────────────────────────────────────
+
+function WeekSection({ week, accent }) {
+  return (
+    <View className="mb-6">
+      {/* Header de semana */}
+      <View className="flex-row items-center mb-3">
+        <View
+          className="w-7 h-7 rounded-lg items-center justify-center mr-2"
+          style={{ backgroundColor: accent + "22" }}
+        >
+          <Text className="text-xs font-jakarta-bold" style={{ color: accent }}>
+            {week.week_number}
+          </Text>
+        </View>
+        <Text className="text-xs font-manrope-semi uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark">
+          Semana {week.week_number}
+        </Text>
+        <View
+          className="flex-1 ml-3"
+          style={{ height: 1, backgroundColor: ui.input.border }}
+        />
+      </View>
+
+      {/* Días */}
+      {week.days.length === 0 ? (
+        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark ml-9 italic">
+          Sin días configurados.
+        </Text>
+      ) : (
+        week.days.map((day) => (
+          <DayCard key={day.id} day={day} accent={accent} />
+        ))
+      )}
+    </View>
+  );
+}
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function PlanDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { data: plan, isLoading } = useRecordById(
     "training_plan",
@@ -65,10 +237,127 @@ export default function PlanDetail() {
     id
   );
 
+  const { data: weeks = [], isLoading: isDetailLoading } = useQuery({
+    queryKey: ["plan_detail_weeks", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const weeksRows = await database
+        .select()
+        .from(plan_weeks)
+        .where(eq(plan_weeks.plan_id, id))
+        .orderBy(asc(plan_weeks.week_number));
+
+      if (!weeksRows.length) return [];
+
+      const weekIds = weeksRows.map((w) => w.id);
+
+      const daysRows = await database
+        .select({
+          id: plan_week_days.id,
+          week_id: plan_week_days.week_id,
+          day_number: plan_week_days.day_number,
+          session_id: plan_week_days.session_id,
+          session_name: sessions.name,
+        })
+        .from(plan_week_days)
+        .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
+        .where(inArray(plan_week_days.week_id, weekIds))
+        .orderBy(asc(plan_week_days.day_number));
+
+      const dayIds = daysRows.map((d) => d.id);
+
+      let exRows = [];
+      if (dayIds.length) {
+        exRows = await database
+          .select({
+            id: plan_week_day_exercises.id,
+            week_day_id: plan_week_day_exercises.week_day_id,
+            exercise_name: exercises_base.name,
+            muscle_group: exercises_base.muscle_group,
+            position: plan_week_day_exercises.position,
+          })
+          .from(plan_week_day_exercises)
+          .leftJoin(
+            session_exercises,
+            eq(
+              plan_week_day_exercises.session_exercise_id,
+              session_exercises.id
+            )
+          )
+          .leftJoin(
+            exercises_base,
+            eq(session_exercises.exercise_id, exercises_base.id)
+          )
+          .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
+          .orderBy(asc(plan_week_day_exercises.position));
+      }
+
+      const exIds = exRows.map((e) => e.id);
+      const setDataByEx = {};
+      if (exIds.length) {
+        const setRows = await database
+          .select({
+            exercise_id: plan_week_day_exercise_sets.exercise_id,
+            set_number: plan_week_day_exercise_sets.set_number,
+            reps_min: plan_week_day_exercise_sets.reps_min,
+            reps_max: plan_week_day_exercise_sets.reps_max,
+            duration_seconds: plan_week_day_exercise_sets.duration_seconds,
+          })
+          .from(plan_week_day_exercise_sets)
+          .where(inArray(plan_week_day_exercise_sets.exercise_id, exIds))
+          .orderBy(asc(plan_week_day_exercise_sets.set_number));
+        for (const s of setRows) {
+          if (!setDataByEx[s.exercise_id]) setDataByEx[s.exercise_id] = [];
+          setDataByEx[s.exercise_id].push(s);
+        }
+      }
+
+      const exByDayId = {};
+      for (const ex of exRows) {
+        if (!exByDayId[ex.week_day_id]) exByDayId[ex.week_day_id] = [];
+        const sets = setDataByEx[ex.id] ?? [];
+        const first = sets[0];
+        let set_summary = null;
+        if (sets.length > 0) {
+          if (first?.duration_seconds) {
+            set_summary = `${sets.length} × ${first.duration_seconds}s`;
+          } else if (first?.reps_min != null && first?.reps_max != null) {
+            const reps =
+              first.reps_min === first.reps_max
+                ? `${first.reps_min}`
+                : `${first.reps_min}-${first.reps_max}`;
+            set_summary = `${sets.length} × ${reps} reps`;
+          } else {
+            set_summary = `${sets.length} ser.`;
+          }
+        }
+        exByDayId[ex.week_day_id].push({
+          ...ex,
+          set_count: sets.length,
+          set_summary,
+        });
+      }
+
+      const daysByWeekId = {};
+      for (const d of daysRows) {
+        if (!daysByWeekId[d.week_id]) daysByWeekId[d.week_id] = [];
+        daysByWeekId[d.week_id].push({
+          ...d,
+          exercises: exByDayId[d.id] ?? [],
+        });
+      }
+
+      return weeksRows.map((w) => ({
+        ...w,
+        days: daysByWeekId[w.id] ?? [],
+      }));
+    },
+  });
+
   const handleDelete = () => {
     Alert.alert(
-      "Eliminar plantilla",
-      "¿Estás seguro? Se eliminará el plan y sus días asignados.",
+      "Eliminar plan",
+      "¿Estás seguro? Esta acción no se puede deshacer.",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -91,142 +380,106 @@ export default function PlanDetail() {
   if (isLoading || !plan) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <ActivityIndicator size="large" color={brandPrimary[500]} />
+        <ActivityIndicator size="large" color={brandPrimary[600]} />
       </View>
     );
   }
 
+  const accent = OBJECTIVE_ACCENT[plan.objective] ?? brandPrimary[600];
+
   return (
     <Screen>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View className="px-5 pt-4 pb-5 flex-row items-start justify-between">
-          <View className="flex-1 mr-4">
-            <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
-              {plan.name}
-            </Text>
-            {OBJECTIVE_LABELS[plan.objective] ? (
-              <View className="mt-2 self-start">
+        {/* ── Header ── */}
+        <View className="px-5 pt-5 pb-4">
+          <View className="flex-row items-start justify-between mb-1">
+            <View className="flex-1 mr-3">
+              <Text className="text-2xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark leading-tight">
+                {plan.name}
+              </Text>
+              {OBJECTIVE_LABELS[plan.objective] ? (
                 <View
-                  className="rounded-full border-[0.5px] px-2.5 py-1"
+                  className="mt-2.5 self-start rounded-full px-3 py-1 border"
                   style={{
-                    backgroundColor:
-                      (OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1") + "22",
-                    borderColor:
-                      (OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1") + "55",
+                    backgroundColor: accent + "18",
+                    borderColor: accent + "44",
                   }}
                 >
                   <Text
-                    className="font-manrope-semi text-[11px]"
-                    style={{
-                      color: OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1",
-                    }}
+                    className="text-[11px] font-manrope-semi"
+                    style={{ color: accent }}
                   >
                     {OBJECTIVE_LABELS[plan.objective]}
                   </Text>
                 </View>
-              </View>
-            ) : null}
-            {plan.description ? (
-              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-2 leading-5">
-                {plan.description}
-              </Text>
-            ) : null}
+              ) : null}
+            </View>
+
+            <View className="flex-row gap-2 mt-1">
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/admin/plans/builder?id=${id}`);
+                }}
+                className="w-9 h-9 rounded-xl items-center justify-center bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-60"
+              >
+                <Pencil
+                  size={16}
+                  color={isDark ? ui.text.mainDark : ui.text.main}
+                />
+              </Pressable>
+              <Pressable
+                onPress={handleDelete}
+                className="w-9 h-9 rounded-xl items-center justify-center bg-red-500/10 border border-red-500/20 active:opacity-60"
+              >
+                <Trash size={16} color="#ef4444" />
+              </Pressable>
+            </View>
           </View>
-          <View className="flex-row gap-2">
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push(`/admin/plans/builder?id=${id}`);
-              }}
-              className="p-2.5 rounded-xl bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-70"
-            >
-              <Pencil size={18} color={brandPrimary[500]} />
-            </Pressable>
-            <Pressable
-              onPress={handleDelete}
-              className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 active:opacity-70"
-            >
-              <Trash size={18} color="#ef4444" />
-            </Pressable>
-          </View>
+
+          {plan.description ? (
+            <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark leading-[21px] mt-3">
+              {plan.description}
+            </Text>
+          ) : null}
         </View>
 
-        {/* ── Días ── */}
-        <View className="px-5 mb-8">
-          <Text className="text-[10px] font-jakarta-semi uppercase tracking-widest mb-4 text-brandPrimary-500 dark:text-brandPrimary-400">
-            Días del plan · {plan.weekly_days}
+        {/* ── Stats ── */}
+        <View className="px-5 mb-6 flex-row flex-wrap gap-2">
+          <StatChip value={plan.duration_weeks} label="semanas" />
+          <StatChip value={plan.weekly_days} label="días / sem" />
+          {plan.level ? (
+            <StatChip
+              value={null}
+              label={LEVEL_LABELS[plan.level] ?? plan.level}
+            />
+          ) : null}
+        </View>
+
+        {/* ── Rutina ── */}
+        <View className="px-5">
+          <Text className="text-[10px] font-manrope-semi uppercase tracking-widest text-brandPrimary-500 dark:text-brandPrimary-400 mb-5">
+            Rutina del plan
           </Text>
 
-          {/*    {days.length === 0 ? (
-            <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark italic">
-              Sin días configurados.
-            </Text>
+          {isDetailLoading ? (
+            <View className="py-12 items-center">
+              <ActivityIndicator color={brandPrimary[500]} />
+            </View>
+          ) : weeks.length === 0 ? (
+            <View className="py-10 items-center rounded-2xl border border-dashed border-ui-input-border">
+              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center px-6 leading-6">
+                Este plan aún no tiene semanas configuradas.{"\n"}Tocá el lápiz para armar la rutina.
+              </Text>
+            </View>
           ) : (
-            days.map((day) => {
-              const dayAccent = OBJECTIVE_ACCENT[plan.objective] ?? "#6366f1";
-              const dayExercises = exercisesBySession[day.session_id] ?? [];
-              return (
-                <View
-                  key={day.id}
-                  className="mb-3 p-3 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark"
-                >
-                  <View className="flex-row items-center">
-                    <View
-                      className="w-10 h-10 rounded-lg items-center justify-center mr-3"
-                      style={{ backgroundColor: dayAccent + "22" }}
-                    >
-                      <Text
-                        className="text-[10px] font-manrope-semi"
-                        style={{ color: dayAccent }}
-                      >
-                        Día
-                      </Text>
-                      <Text
-                        className="text-[13px] font-jakarta-bold leading-tight"
-                        style={{ color: dayAccent }}
-                      >
-                        {day.day_number}
-                      </Text>
-                    </View>
-                    <View className="flex-1">
-                      <Text
-                        className="font-jakarta-semi text-[13px] text-ui-text-main dark:text-ui-text-mainDark"
-                        numberOfLines={1}
-                      >
-                        {day.session_name}
-                      </Text>
-                      <Text
-                        className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
-                        numberOfLines={1}
-                      >
-                        {dayExercises.length > 0
-                          ? `${dayExercises.length} ejercicios`
-                          : "Sin ejercicios"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {dayExercises.length > 0 && (
-                    <View className="mt-3" style={{ gap: 6 }}>
-                      {dayExercises.map((ex, idx) => (
-                        <SessionExerciseRow
-                          key={ex.id}
-                          exercise={ex}
-                          position={idx + 1}
-                          accent={dayAccent}
-                          compact
-                        />
-                      ))}
-                    </View>
-                  )}
-                </View>
-              );
-            })
-          )} */}
+            weeks.map((week) => (
+              <WeekSection key={week.id} week={week} accent={accent} />
+            ))
+          )}
         </View>
       </ScrollView>
     </Screen>
