@@ -427,7 +427,7 @@ export default function PlanDetail() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/admin/plans/builder/${id}`);
+                  router.push(`/admin/plans/builder?id=${id}`);
                 }}
                 className="w-9 h-9 rounded-xl items-center justify-center bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-60"
               >
