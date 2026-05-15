@@ -2,10 +2,10 @@
 import { useLocalSearchParams } from "expo-router";
 
 // Contexto
-import { usePlanFormContext } from "../../../../../src/contexts/PlanFormContext";
+import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
 
 // Componentes
-import FormPlanWeek from "../../../../../src/components/forms/FormPlanWeek";
+import FormPlanWeek from "../../../../../../src/components/forms/FormPlanWeek";
 
 export default function PlanWeekEditor() {
   const { week } = useLocalSearchParams();
