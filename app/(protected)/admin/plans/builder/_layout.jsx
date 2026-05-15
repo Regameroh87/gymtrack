@@ -47,23 +47,6 @@ export default function PlanBuilderLayout() {
           headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
         }}
       >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerLeft: () => (
-              <Pressable
-                onPress={() => router.back()}
-                hitSlop={10}
-                className="active:opacity-50"
-              >
-                <ArrowLeft
-                  size={22}
-                  color={isDark ? ui.text.mainDark : ui.text.main}
-                />
-              </Pressable>
-            ),
-          }}
-        />
         <Stack.Screen name="[week]/index" />
       </Stack>
     </PlanFormProvider>
