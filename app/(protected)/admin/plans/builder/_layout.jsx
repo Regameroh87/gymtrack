@@ -1,6 +1,3 @@
-// React Native
-import { ActivityIndicator, Pressable, View } from "react-native";
-
 // Librerías externas
 import { Stack, useGlobalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -12,8 +9,7 @@ import { useTrainingPlanForm } from "../../../../../src/hooks/useTrainingPlanFor
 import { PlanFormProvider } from "../../../../../src/contexts/PlanFormContext";
 
 // Tema y assets
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
-import { ArrowLeft } from "../../../../../assets/icons";
+import { ui } from "../../../../../src/theme/colors";
 
 export default function PlanBuilderLayout() {
   const { id } = useGlobalSearchParams();
@@ -26,16 +22,8 @@ export default function PlanBuilderLayout() {
     onSuccess: () => router.back(),
   });
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <ActivityIndicator size="large" color={brandPrimary[500]} />
-      </View>
-    );
-  }
-
   return (
-    <PlanFormProvider value={{ form, planId: id ?? null }}>
+    <PlanFormProvider value={{ form, planId: id ?? null, isLoading }}>
       <Stack
         screenOptions={{
           headerTitle: "",
