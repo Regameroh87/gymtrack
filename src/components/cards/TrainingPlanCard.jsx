@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 
 // Librerías externas
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
 // Utilidades
@@ -20,12 +21,12 @@ import {
 } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
-  hipertrofia: { accent: "#6366f1", Icon: Barbell },
-  fuerza: { accent: "#ef4444", Icon: Barbell },
-  perdida_grasa: { accent: "#22c55e", Icon: ChartBar },
-  resistencia: { accent: "#38bdf8", Icon: Clock },
-  acondicionamiento: { accent: "#f59e0b", Icon: Logs },
-  rehabilitacion: { accent: "#a855f7", Icon: ShieldHalf },
+  hipertrofia: { Icon: Barbell },
+  fuerza: { Icon: Barbell },
+  perdida_grasa: { Icon: ChartBar },
+  resistencia: { Icon: Clock },
+  acondicionamiento: { Icon: Logs },
+  rehabilitacion: { Icon: ShieldHalf },
 };
 
 const OBJECTIVE_LABELS = {
@@ -42,12 +43,13 @@ const TrainingPlanCard = ({ plan, onPress }) => {
     OBJECTIVE_CONFIG[plan.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const { Icon } = config;
   const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
+
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
       : getCloudinaryUrl(
           plan.cover_image_uri,
-          "w_120,h_120,c_fill,f_auto,q_auto"
+          "w_240,h_240,c_fill,f_auto,q_auto"
         )
     : null;
 
@@ -59,90 +61,67 @@ const TrainingPlanCard = ({ plan, onPress }) => {
   return (
     <Pressable onPress={handlePress} className="active:scale-[0.985]">
       <View
-        className="rounded-2xl overflow-hidden border border-[rgba(196,190,230,0.13)] bg-ui-surface-light dark:bg-ui-surface-dark"
-        style={{ elevation: 4 }}
+        className="rounded-2xl overflow-hidden flex-row border border-[rgba(196,190,230,0.13)] bg-ui-surface-light dark:bg-ui-surface-dark"
+        style={{ elevation: 4, minHeight: 120 }}
       >
-        {/* Barra de acento superior */}
-        <View style={{ height: 3, backgroundColor: config.accent }} />
+        {/* ── Contenido izquierdo ── */}
+        <View className="flex-1 px-4 py-4 justify-between gap-2">
+          {/* Objetivo */}
+          {objectiveLabel && (
+            <Text className="font-manrope-semi text-[11px] text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-label">
+              {objectiveLabel}
+            </Text>
+          )}
 
-        {/* Contenido principal */}
-        <View className="px-4 pt-4 pb-[14px] gap-3">
-          {/* Fila superior: badge + thumbnail / ícono */}
-          <View className="flex-row items-center justify-between">
-            {objectiveLabel && (
-              <View
-                className="rounded-full px-3 py-[5px] border-[0.5px]"
-                style={{
-                  backgroundColor: config.accent + "22",
-                  borderColor: config.accent + "55",
-                }}
-              >
-                <Text
-                  className="font-manrope-semi text-[11px]"
-                  style={{ color: config.accent }}
-                >
-                  {objectiveLabel}
-                </Text>
-              </View>
-            )}
-
-            {imageUrl ? (
-              <Image
-                source={{ uri: imageUrl }}
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: config.accent + "44",
-                }}
-                contentFit="cover"
-              />
-            ) : (
-              <View style={{ opacity: 0.2 }}>
-                <Icon size={34} color={config.accent} />
-              </View>
-            )}
-          </View>
-
-          {/* Nombre del plan */}
+          {/* Nombre */}
           <Text
-            className="font-jakarta-bold text-[19px] leading-[24px] text-ui-text-main dark:text-ui-text-mainDark"
+            className="font-jakarta-bold text-[18px] leading-[22px] text-ui-text-main dark:text-ui-text-mainDark"
             numberOfLines={2}
           >
             {plan.name}
           </Text>
 
-          {/* Separador */}
-          <View className="h-[0.5px] bg-[rgba(196,190,230,0.15)]" />
-
           {/* Stats + chevron */}
           <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-5">
-              <View className="flex-row items-center gap-1.5">
-                <Calendar size={13} color="rgba(196,190,230,0.6)" />
-                <Text className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark">
-                  {plan.duration_weeks} semanas
+            <View className="flex-row items-center gap-4">
+              <View className="flex-row items-center gap-1">
+                <Calendar size={12} color="rgba(196,190,230,0.65)" />
+                <Text className="font-manrope-bold text-[12px] text-ui-text-muted dark:text-ui-text-mutedDark">
+                  {plan.duration_weeks} sem
                 </Text>
               </View>
-              <View className="flex-row items-center gap-1.5">
-                <Clock size={13} color="rgba(196,190,230,0.6)" />
-                <Text className="font-manrope-bold text-[13px] text-ui-text-main dark:text-ui-text-mainDark">
+              <View className="flex-row items-center gap-1">
+                <Clock size={12} color="rgba(196,190,230,0.65)" />
+                <Text className="font-manrope-bold text-[12px] text-ui-text-muted dark:text-ui-text-mutedDark">
                   {plan.weekly_days} días/sem
                 </Text>
               </View>
             </View>
 
-            <View
-              className="h-8 w-8 shrink-0 items-center justify-center rounded-full border-[1px]"
-              style={{
-                backgroundColor: config.accent + "22",
-                borderColor: config.accent + "55",
-              }}
-            >
-              <ChevronRight size={14} color={config.accent} />
+            <View className="h-7 w-7 items-center justify-center rounded-full bg-brandPrimary-700/10 border border-brandPrimary-700/20">
+              <ChevronRight size={13} color="#4a44e4" />
             </View>
           </View>
+        </View>
+
+        {/* ── Imagen derecha ── */}
+        <View className="w-[116px]">
+          {imageUrl ? (
+            <Image
+              source={{ uri: imageUrl }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+            />
+          ) : (
+            <LinearGradient
+              colors={["#3023cd", "#4a44e4"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            >
+              <Icon size={38} color="rgba(255,255,255,0.25)" />
+            </LinearGradient>
+          )}
         </View>
       </View>
     </Pressable>
