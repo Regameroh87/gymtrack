@@ -10,6 +10,7 @@ const corsHeaders = {
 const ASSET_FIELDS = [
   { column: "image_uri", resource_type: "image" },
   { column: "video_uri", resource_type: "video" },
+  { column: "cover_image_uri", resource_type: "image" },
 ] as const;
 
 serve(async (req) => {

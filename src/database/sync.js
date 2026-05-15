@@ -644,6 +644,29 @@ export async function pushTrainingPlansChanges() {
       continue;
     }
 
+    if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.cover_image_uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.cover_image_uri);
+          row.cover_image_uri = public_id;
+          await database
+            .update(training_plans)
+            .set({ cover_image_uri: public_id })
+            .where(eq(training_plans.id, row.id));
+        }
+      } catch (err) {
+        console.error(
+          `❌ [PUSH] Error subiendo imagen de plan "${row.name}":`,
+          err.message
+        );
+      }
+    }
+
     // Stripeamos updated_at: que lo escriba Postgres (default now() + trigger).
     // Así un push tardío de una fila creada offline tiene updated_at = momento del push,
     // no del reloj local de hace horas — y otros devices no pierden la fila por watermark.
