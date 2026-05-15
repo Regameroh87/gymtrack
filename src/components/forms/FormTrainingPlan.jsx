@@ -171,7 +171,7 @@ export default function FormTrainingPlan({ form, plan }) {
   const handleWeekPress = (weekNumber) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: "builer/[week]",
+      pathname: "/admin/plans/builder/[week]",
       params: { week: String(weekNumber), id: plan ?? "" },
     });
   };
