@@ -427,7 +427,7 @@ export default function PlanDetail() {
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/admin/plans/builder?id=${id}`);
+                  router.push(`/admin/plans/builder/${id}`);
                 }}
                 className="w-9 h-9 rounded-xl items-center justify-center bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-60"
               >
@@ -477,7 +477,8 @@ export default function PlanDetail() {
           ) : weeks.length === 0 ? (
             <View className="py-10 items-center rounded-2xl border border-dashed border-ui-input-border">
               <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center px-6 leading-6">
-                Este plan aún no tiene semanas configuradas.{"\n"}Tocá el lápiz para armar la rutina.
+                Este plan aún no tiene semanas configuradas.{"\n"}Tocá el lápiz
+                para armar la rutina.
               </Text>
             </View>
           ) : (
