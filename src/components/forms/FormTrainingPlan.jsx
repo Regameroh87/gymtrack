@@ -173,7 +173,7 @@ export default function FormTrainingPlan({ form, plan }) {
     router.push({
       pathname: "/admin/plans/builder/[week]",
       params: { week: String(weekNumber), id: plan ?? "" },
-    });
+    }); // arregle el enrutamiento
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
