@@ -85,10 +85,23 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json()
-    const { gym_name, email, name, last_name, image_profile, phone, document_number, address } = body
+    const {
+      gym_name,
+      gym_slug,
+      logo_url,
+      theme_primary,
+      theme_accent,
+      email,
+      name,
+      last_name,
+      image_profile,
+      phone,
+      document_number,
+      address,
+    } = body
 
-    if (!gym_name || !email) {
-      return new Response(JSON.stringify({ error: 'gym_name y email son requeridos.' }), {
+    if (!gym_name || !gym_slug || !email) {
+      return new Response(JSON.stringify({ error: 'gym_name, gym_slug y email son requeridos.' }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         status: 400,
       })
@@ -111,7 +124,14 @@ Deno.serve(async (req) => {
     // 2. Crear gym con owner_id = nuevo user
     const { data: gymData, error: gymError } = await supabaseAdmin
       .from('gyms')
-      .insert({ name: gym_name, owner_id: createdUserId })
+      .insert({
+        name: gym_name,
+        slug: gym_slug,
+        owner_id: createdUserId,
+        logo_url: logo_url ?? null,
+        theme_primary: theme_primary ?? null,
+        theme_accent: theme_accent ?? null,
+      })
       .select()
       .single()
 

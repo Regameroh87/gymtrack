@@ -3,13 +3,23 @@
 -- No toca el resto de tablas ni habilita RLS — eso va en pasos siguientes.
 
 -- 1. Tabla gyms
+-- Branding (logo, colores) está hardcodeado en el build del cliente.
+-- Los campos logo_url/theme_* viven acá como referencia para el dashboard
+-- del super_admin y para mostrar info del gym en lugares que se renderizan
+-- después del login (no son fuente de verdad del look & feel).
 create table public.gyms (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  owner_id    uuid not null references auth.users(id),
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  slug          text unique not null,
+  name          text not null,
+  owner_id      uuid not null references auth.users(id),
+  logo_url      text,
+  theme_primary text,
+  theme_accent  text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
 );
+
+create index gyms_owner_id_idx on public.gyms(owner_id);
 
 create trigger set_updated_at before update on public.gyms
   for each row execute function public.set_updated_at();
