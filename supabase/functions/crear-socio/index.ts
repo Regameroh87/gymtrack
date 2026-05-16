@@ -1,11 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-   const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+const supabaseAdmin = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+)
 
-// Errores de auth.admin.createUser()
 const AUTH_ERRORS: Record<string, string> = {
   "User already registered": "Este correo ya se encuentra registrado.",
   "email_exists":            "Este correo ya se encuentra registrado.",
@@ -18,84 +17,136 @@ const AUTH_ERRORS: Record<string, string> = {
   "Database error saving new user": "Error interno al guardar el usuario. Intentá de nuevo.",
 }
 
-
 function getErrorMessage(error: any): string {
   console.error("Auth Error details:", JSON.stringify(error));
   return AUTH_ERRORS[error.code] ?? "Ha ocurrido un error inesperado, por favor intentá de nuevo.";
 }
 
+async function rollbackUser(userId: string) {
+  const MAX_RETRIES = 3
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    if (!error) return true
+    console.warn(`[ROLLBACK user] Intento ${attempt}/${MAX_RETRIES}: ${error.message}`)
+    if (attempt < MAX_RETRIES) {
+      await new Promise(r => setTimeout(r, 500 * attempt))
+    }
+  }
+  console.error(`[ROLLBACK FALLIDO] No se pudo eliminar user de Auth. Eliminarlo manualmente.`)
+  return false
+}
 
 Deno.serve(async (req) => {
-  // 1. Manejo de CORS (Para que tu app de React Native pueda llamar a la función)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
   }
 
   try {
+    // Auth: solo owner o admin pueden crear usuarios.
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const jwt = authHeader.replace('Bearer ', '').trim()
+    if (!jwt) {
+      return new Response(JSON.stringify({ error: 'No autorizado.' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        status: 401,
+      })
+    }
+
+    const { data: callerAuth, error: callerAuthError } = await supabaseAdmin.auth.getUser(jwt)
+    if (callerAuthError || !callerAuth?.user) {
+      return new Response(JSON.stringify({ error: 'Token inválido.' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        status: 401,
+      })
+    }
+
+    // gym_id y role vienen del caller — el cliente nunca los pasa en el body.
+    const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
+      .from('profiles')
+      .select('gym_id, role')
+      .eq('id', callerAuth.user.id)
+      .single()
+
+    if (callerProfileError || !callerProfile) {
+      return new Response(JSON.stringify({ error: 'Perfil del caller no encontrado.' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        status: 403,
+      })
+    }
+
+    const { gym_id: callerGymId, role: callerRole } = callerProfile
+
+    if (!['owner', 'admin'].includes(callerRole)) {
+      return new Response(JSON.stringify({ error: 'No tenés permisos para crear usuarios.' }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        status: 403,
+      })
+    }
+
     const body = await req.json()
-    const { email, name, last_name, image_profile, phone, document_number, address } = body
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: 'tugimnasio123',
-      email_confirm: true
-    })
-    if (authError) {
-      const message = getErrorMessage(authError)
-      return new Response(JSON.stringify({ error: message }), {
+    const { email, name, last_name, image_profile, phone, document_number, address, role: newRole } = body
+
+    if (!email || !newRole) {
+      return new Response(JSON.stringify({ error: 'email y role son requeridos.' }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         status: 400,
       })
     }
 
+    // admin solo puede crear members; owner puede crear admin/coach/member.
+    const allowedByAdmin = ['member']
+    const allowedByOwner = ['admin', 'coach', 'member']
+    const allowed = callerRole === 'owner' ? allowedByOwner : allowedByAdmin
+
+    if (!allowed.includes(newRole)) {
+      return new Response(JSON.stringify({ error: `El rol '${callerRole}' no puede crear usuarios con rol '${newRole}'.` }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        status: 403,
+      })
+    }
+
+    // 1. Crear user en Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'tugimnasio123',
+      email_confirm: true,
+    })
+    if (authError) {
+      return new Response(JSON.stringify({ error: getErrorMessage(authError) }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        status: 400,
+      })
+    }
+
+    // 2. Crear profile con gym_id heredado del caller
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
         id: authData.user.id,
+        gym_id: callerGymId,
+        role: newRole,
         email: email?.toLowerCase() ?? null,
         name: name?.toLowerCase() ?? null,
         last_name: last_name?.toLowerCase() ?? null,
-        image_profile: image_profile || null,      
-        phone: phone ?? null,                      
+        image_profile: image_profile || null,
+        phone: phone ?? null,
         document_number: document_number ?? null,
-        address: address?.toLowerCase() ?? null
+        address: address?.toLowerCase() ?? null,
       })
 
     if (profileError) {
-      // Rollback: intentar eliminar el usuario de Auth para no dejar un usuario huérfano.
-      // Usamos retry limitado (máx 3 intentos) con backoff.
-      const MAX_RETRIES = 3
-      let deleted = false
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-        if (!deleteError) {
-          deleted = true
-          break // ✅ Borrado exitoso
-        }
-        console.warn(
-          `[ROLLBACK] Intento ${attempt}/${MAX_RETRIES} fallido para borrar user ${authData.user.id}: ${deleteError.message}`
-        )
-        // Esperar antes del próximo intento: 500ms → 1000ms → 2000ms
-        if (attempt < MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 500 * attempt))
-        }
-      }
-      if (!deleted) {
-        console.error(
-          `[ROLLBACK FALLIDO] No se pudo eliminar el usuario de Auth tras ${MAX_RETRIES} intentos. ID: ${authData.user.id} — Eliminarlo manualmente desde el dashboard.`
-        )
-      }
+      await rollbackUser(authData.user.id)
       throw profileError
     }
-    
+
     return new Response(JSON.stringify({ done: true }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       status: 200,
     })
 
   } catch (error: any) {
-    const message = error?.message || error?.msg || "Error interno del servidor";
-    console.error("Error crítico al crear usuario en supabase");
-    
+    const message = error?.message || error?.msg || "Error interno del servidor"
+    console.error("Error crítico al crear socio:", message)
     return new Response(JSON.stringify({ error: message }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       status: 400,
