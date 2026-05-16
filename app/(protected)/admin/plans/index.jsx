@@ -1,19 +1,11 @@
 // React Native
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { useCallback } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 
 // Librerías externas
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
 
 // Hooks
 import { useTrainingPlans } from "../../../../src/hooks/useTrainingPlans";
@@ -27,47 +19,10 @@ import ButtonAddPill from "../../../../src/components/buttons/ButtonAddPill";
 import { brandPrimary } from "../../../../src/theme/colors";
 import { ClipboardList, Plus } from "../../../../assets/icons";
 
-function AnimatedCard({ plan, onPress, scrollY, containerY }) {
-  const cardY = useSharedValue(0);
-  const cardHeight = useSharedValue(1);
-
-  const onLayout = useCallback(
-    (e) => {
-      cardY.value = e.nativeEvent.layout.y;
-      cardHeight.value = e.nativeEvent.layout.height;
-    },
-    [cardY, cardHeight]
-  );
-
-  const animatedStyle = useAnimatedStyle(() => {
-    const absoluteY = containerY.value + cardY.value;
-    const cardTop = absoluteY - scrollY.value;
-    const opacity = interpolate(
-      cardTop,
-      [-cardHeight.value, 0],
-      [0, 1],
-      Extrapolation.CLAMP
-    );
-    return { opacity };
-  });
-
-  return (
-    <Animated.View style={animatedStyle} onLayout={onLayout}>
-      <TrainingPlanCard plan={plan} onPress={onPress} />
-    </Animated.View>
-  );
-}
-
 export default function PlansList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: plans = [], isLoading } = useTrainingPlans();
-  const scrollY = useSharedValue(0);
-  const containerY = useSharedValue(0);
-
-  const scrollHandler = useAnimatedScrollHandler((e) => {
-    scrollY.value = e.contentOffset.y;
-  });
 
   const handleNew = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -95,14 +50,13 @@ export default function PlansList() {
         <ButtonAddPill onPress={handleNew} />
       </View>
 
-      <Animated.ScrollView
+      <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={{
           paddingTop: 8,
           paddingBottom: insets.bottom + 32,
         }}
         showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
       >
         {isLoading ? (
           <View className="items-center py-16">
@@ -137,24 +91,17 @@ export default function PlansList() {
             </Pressable>
           </View>
         ) : (
-          <View
-            className="px-5 gap-5"
-            onLayout={(e) => {
-              containerY.value = e.nativeEvent.layout.y;
-            }}
-          >
+          <View className="px-5 gap-5">
             {plans.map((plan) => (
-              <AnimatedCard
+              <TrainingPlanCard
                 key={plan.id}
                 plan={plan}
-                scrollY={scrollY}
-                containerY={containerY}
                 onPress={(p) => router.push(`/admin/plans/${p.id}`)}
               />
             ))}
           </View>
         )}
-      </Animated.ScrollView>
+      </ScrollView>
     </Screen>
   );
 }
