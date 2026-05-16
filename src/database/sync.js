@@ -20,6 +20,7 @@ import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "../lib/queryClient";
 
 const LAST_SYNC_KEY = "last_sync_at";
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 let isSyncing = false;
 
 const TABLE_QUERY_KEYS = {
@@ -47,15 +48,19 @@ function invalidateQueriesForTable(tableName) {
   }
 }
 
-async function pullTableChanges(tableName, schemaTable, lastSync) {
+async function pullTableChanges(
+  tableName,
+  schemaTable,
+  lastSync,
+  gymId = null
+) {
   let query = supabase
     .from(tableName)
     .select("*")
     .order("updated_at", { ascending: true });
 
-  if (lastSync) {
-    query = query.gte("updated_at", lastSync);
-  }
+  if (gymId) query = query.eq("gym_id", gymId);
+  if (lastSync) query = query.gte("updated_at", lastSync);
 
   const { data, error } = await query;
 
@@ -105,9 +110,9 @@ async function pullTableChanges(tableName, schemaTable, lastSync) {
 
   // Reconciliar borrados remotos: detectar registros locales "synced" que ya
   // no existen en Supabase (fueron borrados desde otro dispositivo)
-  const { data: remoteIds, error: idsError } = await supabase
-    .from(tableName)
-    .select("id");
+  let idsQuery = supabase.from(tableName).select("id");
+  if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
+  const { data: remoteIds, error: idsError } = await idsQuery;
 
   if (!idsError && remoteIds) {
     const remoteIdSet = new Set(remoteIds.map((r) => r.id));
@@ -943,6 +948,13 @@ export async function syncWithSupabase(
       const syncKey = `${LAST_SYNC_KEY}_${table}`;
       const lastSync = await AsyncStorage.getItem(syncKey);
 
+      const GYM_SCOPED_TABLES = new Set([
+        "exercises_base",
+        "equipment",
+        "sessions",
+        "training_plans",
+      ]);
+
       let schemaTable;
       if (table === "exercises_base") schemaTable = exercises_base;
       else if (table === "equipment") schemaTable = equipment;
@@ -958,10 +970,12 @@ export async function syncWithSupabase(
         schemaTable = plan_week_day_exercise_sets;
 
       if (schemaTable) {
+        const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
         const { success, changed, newLastSync } = await pullTableChanges(
           table,
           schemaTable,
-          lastSync
+          lastSync,
+          gymId
         );
         if (success) {
           // Solo avanzamos el watermark si el servidor devolvió filas nuevas.

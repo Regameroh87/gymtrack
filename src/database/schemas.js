@@ -8,6 +8,7 @@ import {
 
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id").primaryKey(),
+  gym_id: text("gym_id").notNull(),
   name: text("name").notNull(),
   category: text("category").notNull(),
   muscle_group: text("muscle_group").notNull(),
@@ -29,6 +30,7 @@ export const exercises_base = sqliteTable("exercises_base", {
 
 export const equipment = sqliteTable("equipment", {
   id: text("id").primaryKey(),
+  gym_id: text("gym_id").notNull(),
   name: text("name").notNull(),
   image_uri: text("image_uri"),
   created_at: text("created_at")
@@ -59,6 +61,7 @@ export const exercise_equipment = sqliteTable("exercise_equipment", {
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
+  gym_id: text("gym_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   level: text("level"),
@@ -93,6 +96,7 @@ export const session_exercises = sqliteTable("session_exercises", {
 
 export const training_plans = sqliteTable("training_plans", {
   id: text("id").primaryKey(),
+  gym_id: text("gym_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   objective: text("objective"),
