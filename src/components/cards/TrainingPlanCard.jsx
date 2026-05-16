@@ -1,5 +1,5 @@
 // React Native
-import { Pressable, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 // Librerías externas
 import { Image } from "expo-image";
@@ -105,11 +105,11 @@ const TrainingPlanCard = ({ plan, onPress }) => {
         </View>
 
         {/* ── Imagen derecha ── */}
-        <View className="w-[116px]">
+        <View className="w-[116px] overflow-hidden">
           {imageUrl ? (
             <Image
               source={{ uri: imageUrl }}
-              style={{ width: "100%", height: "100%" }}
+              style={StyleSheet.absoluteFillObject}
               contentFit="cover"
             />
           ) : (
@@ -117,7 +117,10 @@ const TrainingPlanCard = ({ plan, onPress }) => {
               colors={["#3023cd", "#4a44e4"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+              style={[
+                StyleSheet.absoluteFillObject,
+                { alignItems: "center", justifyContent: "center" },
+              ]}
             >
               <Icon size={38} color="rgba(255,255,255,0.25)" />
             </LinearGradient>
