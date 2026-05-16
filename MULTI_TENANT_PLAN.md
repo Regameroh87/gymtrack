@@ -10,13 +10,17 @@ White-label: una sola base remota en Supabase, **N builds del cliente, uno por g
 
 - Logo del gym (en `assets/`)
 - Colores del gym (en `tailwind.config.js`)
-- ID del gym (en `src/config/gym.js`)
+- ID del gym (vía variable de entorno `EXPO_PUBLIC_GYM_ID` al compilar)
 
 **Flujo del super_admin (vos) para vender a un gym nuevo:**
 
-1. Crear el gym + owner en la DB vía edge function `crear-gym`.
-2. Abrir el proyecto, reemplazar logo, cambiar colores, escribir `id` y `name` en `src/config/gym.js`.
-3. `eas build` → entregar APK/IPA al gym.
+1. Crear el gym + owner en la DB vía edge function `crear-gym` (devuelve el `gym_id`).
+2. Abrir el proyecto, reemplazar logo, cambiar colores en `tailwind.config.js`.
+3. Compilar con la env var apuntando al nuevo gym:
+   ```
+   EXPO_PUBLIC_GYM_ID=<uuid> eas build --platform android
+   ```
+4. Entregar APK/IPA al gym.
 
 **Flujo del owner del gym:**
 
@@ -37,7 +41,7 @@ White-label: una sola base remota en Supabase, **N builds del cliente, uno por g
 | Roles | `super_admin`, `owner`, `admin`, `coach`, `member`. |
 | Super admin | No pertenece a ningún gym. Único que crea gyms. Bootstrap manual con SQL. |
 | Catálogo (ejercicios/equipos) | **Por gym**, no global. |
-| Build per-gym | **Manual:** editar logo/colores/`gym.js` y recompilar. (No env vars). |
+| Build per-gym | Logo/colores se editan en el proyecto; el `gym_id` se inyecta vía env var `EXPO_PUBLIC_GYM_ID` al compilar. |
 | Branding fuente de verdad | Hardcoded en el build (logo, colores). DB guarda copia para dashboard del super_admin. |
 | Aislamiento de datos | **RLS en Postgres** — no se confía en el cliente. |
 | Denormalización de `gym_id` en hijas | **No** — heredan vía FK del padre. |
@@ -117,30 +121,39 @@ gyms (
 ```js
 .from("profiles").select("*")
   .eq("email", email)
-  .eq("gym_id", GYM_CONFIG.id)   // del archivo src/config/gym.js
+  .eq("gym_id", process.env.EXPO_PUBLIC_GYM_ID)
 ```
 
 > Esto evita que un user de Gym A pueda loguearse desde la app de Gym B. La RLS lo cubriría igual (no vería datos cruzados) pero la UX sería confusa.
 
 ---
 
-## Archivo de config en el cliente
+## Variables de entorno
 
-`src/config/gym.js` — se edita manualmente entre builds:
-
-```js
-export const GYM_CONFIG = {
-  id: 'abc-123-uuid',          // copiar de la DB tras crear-gym
-  slug: 'fitness-cordoba',
-  name: 'Fitness Córdoba',
-}
-```
-
-Variables compartidas (mismo valor en todos los builds, en `.env`):
+**Compartidas (mismo valor en todos los builds, en `.env`):**
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
+
+**Por gym (cambia en cada build):**
+```
+EXPO_PUBLIC_GYM_ID=<uuid-del-gym>
+```
+
+Cómo se inyecta al compilar:
+```bash
+EXPO_PUBLIC_GYM_ID=abc-123-uuid eas build --platform android
+```
+
+La env var queda horneada en el bundle JS — el usuario final no la ve ni la puede cambiar. Cada APK/IPA es un build distinto con su `gym_id` tatuado.
+
+**Acceso en el código:**
+```js
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID
+```
+
+> El `name` y demás metadata del gym (logo_url, etc.) se leen de la tabla `gyms` después del login. Solo `gym_id` necesita venir del build.
 
 ---
 
@@ -227,7 +240,7 @@ create policy "via parent" on plan_weeks
    - `enable row level security` + policies por tabla.
 6. **Update `crear-socio`** (validación de role + herencia de `gym_id`).
 7. **Cliente:**
-   - Crear `src/config/gym.js`.
+   - Agregar `EXPO_PUBLIC_GYM_ID` al `.env` local (para desarrollo).
    - Update `sendCode.js` para filtrar whitelist por `gym_id`.
    - Update schema Drizzle local + lógica de sync para incluir `gym_id` en inserts.
 8. **Tests de aislamiento:** 2 gyms, 2 users, verificar que no se filtran datos entre gyms en ninguna tabla.
