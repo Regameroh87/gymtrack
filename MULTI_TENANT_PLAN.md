@@ -43,7 +43,7 @@ White-label: una sola base remota en Supabase, **N builds del cliente, uno por g
 | Catálogo (ejercicios/equipos) | **Por gym**, no global. |
 | Build per-gym | Logo/colores se editan en el proyecto; el `gym_id` se inyecta vía env var `EXPO_PUBLIC_GYM_ID` al compilar. |
 | Branding fuente de verdad | Hardcoded en el build (logo, colores). DB guarda copia para dashboard del super_admin. |
-| Aislamiento de datos | **RLS en Postgres** — no se confía en el cliente. |
+| Aislamiento de datos | **RLS en Postgres** — diseñada pero **pospuesta**: durante desarrollo las tablas quedan sin RLS. Se aplica antes de producción. |
 | Denormalización de `gym_id` en hijas | **No** — heredan vía FK del padre. |
 
 ---
@@ -235,9 +235,10 @@ create policy "via parent" on plan_weeks
    - Agrega `gym_id` NOT NULL a `exercises_base`, `equipment`, `sessions`, `training_plans`.
    - Índices por `gym_id`.
 4. **Deploy `crear-gym`** y probar creando un gym de prueba.
-5. **Migración 3 (pendiente):**
+5. **Migración 3 — RLS (pospuesta, antes de producción):**
    - Helpers `auth.user_gym()`, `auth.user_role()`.
    - `enable row level security` + policies por tabla.
+   - **No aplicar durante desarrollo:** la app necesita acceso libre a las tablas mientras se itera.
 6. **Update `crear-socio`** (validación de role + herencia de `gym_id`).
 7. **Cliente:**
    - Agregar `EXPO_PUBLIC_GYM_ID` al `.env` local (para desarrollo).
