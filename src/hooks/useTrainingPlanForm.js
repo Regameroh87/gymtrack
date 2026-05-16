@@ -25,6 +25,8 @@ import {
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
+// Constantes
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 const DRAFT_KEY = "training_plan_form_draft";
 
 const persistWeeks = async (planId, weeks, now) => {
@@ -242,6 +244,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
         await database.insert(training_plans).values({
           id: planId,
+          gym_id: GYM_ID,
           name: value.name.trim(),
           description: value.description?.trim() || null,
           objective: value.objective || null,

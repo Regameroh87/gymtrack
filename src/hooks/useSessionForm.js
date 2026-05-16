@@ -19,6 +19,9 @@ import {
 import { supabase } from "../database/supabase";
 import { checkNetInfoAndSync } from "../database/sync";
 
+// Constantes
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+
 const str = (v) => (v === null || v === undefined ? "" : String(v));
 
 export const useSessionForm = ({ id = null, onSuccess } = {}) => {
@@ -75,6 +78,7 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
           await database.insert(sessions).values({
             id: sessionId,
+            gym_id: GYM_ID,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             level: value.level || null,

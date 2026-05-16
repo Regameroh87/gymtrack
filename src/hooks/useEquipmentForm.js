@@ -1,10 +1,16 @@
+// Librerías externas
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
+
+// Base de datos
 import { database } from "../database";
 import { equipment } from "../database/schemas";
 import { checkNetInfoAndSync } from "../database/sync";
+
+// Constantes
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
 export const useEquipmentForm = ({ onSuccess, initialValues = {} } = {}) => {
   const queryClient = useQueryClient();
@@ -21,6 +27,7 @@ export const useEquipmentForm = ({ onSuccess, initialValues = {} } = {}) => {
 
         const newEquipment = {
           id: newId,
+          gym_id: GYM_ID,
           name: trimmedName,
           image_uri: value.image_uri,
           sync_status: "pending",
