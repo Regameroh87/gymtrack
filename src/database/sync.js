@@ -48,11 +48,19 @@ function invalidateQueriesForTable(tableName) {
   }
 }
 
+const COMPOSITE_UNIQUE_COLUMNS = {
+  plan_weeks: ["plan_id", "week_number"],
+  plan_week_days: ["week_id", "day_number"],
+  plan_week_day_exercises: ["week_day_id", "session_exercise_id"],
+  plan_week_day_exercise_sets: ["exercise_id", "set_number"],
+};
+
 async function pullTableChanges(
   tableName,
   schemaTable,
   lastSync,
-  gymId = null
+  gymId = null,
+  compositeUniqueColumns = null
 ) {
   let query = supabase
     .from(tableName)
@@ -88,11 +96,29 @@ async function pullTableChanges(
       );
     const lockedIds = new Set(lockedLocal.map((r) => r.id));
 
+    let lockedCompositeKeys = null;
+    if (compositeUniqueColumns) {
+      const pendingRows = await database
+        .select()
+        .from(schemaTable)
+        .where(ne(schemaTable.sync_status, "synced"));
+      lockedCompositeKeys = new Set(
+        pendingRows.map((r) => compositeUniqueColumns.map((c) => r[c]).join("::"))
+      );
+    }
+
     let skipped = 0;
     for (const remoteRow of data) {
       if (lockedIds.has(remoteRow.id)) {
         skipped++;
         continue;
+      }
+      if (lockedCompositeKeys) {
+        const key = compositeUniqueColumns.map((c) => remoteRow[c]).join("::");
+        if (lockedCompositeKeys.has(key)) {
+          skipped++;
+          continue;
+        }
       }
       remoteRow.sync_status = "synced";
       await database.insert(schemaTable).values(remoteRow).onConflictDoUpdate({
@@ -1107,11 +1133,13 @@ export async function syncWithSupabase(
 
       if (schemaTable) {
         const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
+        const compositeUniqueColumns = COMPOSITE_UNIQUE_COLUMNS[table] ?? null;
         const { success, changed, newLastSync } = await pullTableChanges(
           table,
           schemaTable,
           lastSync,
-          gymId
+          gymId,
+          compositeUniqueColumns
         );
         if (success) {
           // Solo avanzamos el watermark si el servidor devolvió filas nuevas.

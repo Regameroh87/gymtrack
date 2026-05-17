@@ -98,12 +98,12 @@ const persistWeeks = async (planId, weeks, now, db = database) => {
     }
   }
 
-  if (weeksRows.length) await database.insert(plan_weeks).values(weeksRows);
-  if (daysRows.length) await database.insert(plan_week_days).values(daysRows);
+  if (weeksRows.length) await db.insert(plan_weeks).values(weeksRows);
+  if (daysRows.length) await db.insert(plan_week_days).values(daysRows);
   if (exercisesRows.length)
-    await database.insert(plan_week_day_exercises).values(exercisesRows);
+    await db.insert(plan_week_day_exercises).values(exercisesRows);
   if (setsRows.length)
-    await database.insert(plan_week_day_exercise_sets).values(setsRows);
+    await db.insert(plan_week_day_exercise_sets).values(setsRows);
 };
 
 const DEFAULT_DURATION_WEEKS = 4;
@@ -187,9 +187,67 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       const now = new Date().toISOString();
 
       if (id) {
-        await database
-          .update(training_plans)
-          .set({
+        await database.transaction(async (tx) => {
+          await tx
+            .update(training_plans)
+            .set({
+              name: value.name.trim(),
+              description: value.description?.trim() || null,
+              objective: value.objective || null,
+              level: value.level || null,
+              duration_weeks: value.duration_weeks,
+              cover_image_uri: value.cover_image_uri || null,
+              weekly_days: value.weekly_days,
+              updated_at: now,
+              sync_status: "pending",
+            })
+            .where(eq(training_plans.id, id));
+
+          const oldWeekRows = await tx
+            .select({ id: plan_weeks.id })
+            .from(plan_weeks)
+            .where(eq(plan_weeks.plan_id, id));
+          const oldWeekIds = oldWeekRows.map((w) => w.id);
+
+          if (oldWeekIds.length) {
+            const oldDayRows = await tx
+              .select({ id: plan_week_days.id })
+              .from(plan_week_days)
+              .where(inArray(plan_week_days.week_id, oldWeekIds));
+            const oldDayIds = oldDayRows.map((d) => d.id);
+
+            if (oldDayIds.length) {
+              const oldExRows = await tx
+                .select({ id: plan_week_day_exercises.id })
+                .from(plan_week_day_exercises)
+                .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
+              const oldExIds = oldExRows.map((e) => e.id);
+
+              if (oldExIds.length) {
+                await tx
+                  .delete(plan_week_day_exercise_sets)
+                  .where(
+                    inArray(plan_week_day_exercise_sets.exercise_id, oldExIds)
+                  );
+              }
+              await tx
+                .delete(plan_week_day_exercises)
+                .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
+            }
+            await tx
+              .delete(plan_week_days)
+              .where(inArray(plan_week_days.week_id, oldWeekIds));
+          }
+          await tx.delete(plan_weeks).where(eq(plan_weeks.plan_id, id));
+          await persistWeeks(id, value.weeks, now, tx);
+        });
+      } else {
+        const planId = Crypto.randomUUID();
+
+        await database.transaction(async (tx) => {
+          await tx.insert(training_plans).values({
+            id: planId,
+            gym_id: GYM_ID,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             objective: value.objective || null,
@@ -197,68 +255,14 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             duration_weeks: value.duration_weeks,
             cover_image_uri: value.cover_image_uri || null,
             weekly_days: value.weekly_days,
+            created_by: userId,
+            created_at: now,
             updated_at: now,
             sync_status: "pending",
-          })
-          .where(eq(training_plans.id, id));
+          });
 
-        const oldWeekRows = await database
-          .select({ id: plan_weeks.id })
-          .from(plan_weeks)
-          .where(eq(plan_weeks.plan_id, id));
-        const oldWeekIds = oldWeekRows.map((w) => w.id);
-
-        if (oldWeekIds.length) {
-          const oldDayRows = await database
-            .select({ id: plan_week_days.id })
-            .from(plan_week_days)
-            .where(inArray(plan_week_days.week_id, oldWeekIds));
-          const oldDayIds = oldDayRows.map((d) => d.id);
-
-          if (oldDayIds.length) {
-            const oldExRows = await database
-              .select({ id: plan_week_day_exercises.id })
-              .from(plan_week_day_exercises)
-              .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
-            const oldExIds = oldExRows.map((e) => e.id);
-
-            if (oldExIds.length) {
-              await database
-                .delete(plan_week_day_exercise_sets)
-                .where(
-                  inArray(plan_week_day_exercise_sets.exercise_id, oldExIds)
-                );
-            }
-            await database
-              .delete(plan_week_day_exercises)
-              .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
-          }
-          await database
-            .delete(plan_week_days)
-            .where(inArray(plan_week_days.week_id, oldWeekIds));
-        }
-        await database.delete(plan_weeks).where(eq(plan_weeks.plan_id, id));
-        await persistWeeks(id, value.weeks, now);
-      } else {
-        const planId = Crypto.randomUUID();
-
-        await database.insert(training_plans).values({
-          id: planId,
-          gym_id: GYM_ID,
-          name: value.name.trim(),
-          description: value.description?.trim() || null,
-          objective: value.objective || null,
-          level: value.level || null,
-          duration_weeks: value.duration_weeks,
-          cover_image_uri: value.cover_image_uri || null,
-          weekly_days: value.weekly_days,
-          created_by: userId,
-          created_at: now,
-          updated_at: now,
-          sync_status: "pending",
+          await persistWeeks(planId, value.weeks, now, tx);
         });
-
-        await persistWeeks(planId, value.weeks, now);
 
         await AsyncStorage.removeItem(DRAFT_KEY);
       }
