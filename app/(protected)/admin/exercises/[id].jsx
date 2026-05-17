@@ -2,7 +2,7 @@
 import { View, ActivityIndicator } from "react-native";
 
 // Expo
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import * as Crypto from "expo-crypto";
 
@@ -29,6 +29,7 @@ import FormExercise from "../../../../src/components/forms/FormExercise";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
 
   const { data: exerciseRecord, isLoading } = useRecordById(
     "exercise",
@@ -73,23 +74,20 @@ export default function EditExercise() {
     },
     onSubmit: async ({ value }) => {
       try {
-        const exerciseValues = {
-          id: data.id,
-          gym_id: data.gym_id,
-          name: value.name.trim(),
-          category: value.category,
-          muscle_group: value.muscle_group,
-          video_uri: value.video_uri,
-          image_uri: value.image_uri,
-          youtube_video_url: value.youtube_video_url,
-          instructions: value.instructions,
-          is_unilateral: value.is_unilateral ? 1 : 0,
-        };
-
-        await database.upsert(exercises_base).values({
-          id: data.id,
-          ...exerciseValues,
-        });
+        await database
+          .update(exercises_base)
+          .set({
+            name: value.name.trim(),
+            category: value.category,
+            muscle_group: value.muscle_group,
+            video_uri: value.video_uri,
+            image_uri: value.image_uri,
+            youtube_video_url: value.youtube_video_url,
+            instructions: value.instructions,
+            is_unilateral: value.is_unilateral ? 1 : 0,
+            sync_status: "pending",
+          })
+          .where(eq(exercises_base.id, data.id));
 
         // 2. Manejar Equipamiento (Muchos a Muchos)
         if (value.equipments && value.equipments.length > 0) {
@@ -114,6 +112,7 @@ export default function EditExercise() {
           text2: "El ejercicio fue editado exitosamente.",
           position: "bottom",
         });
+        router.back();
       } catch (error) {
         console.error("Error al insertar un ejercicio", error.message);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
