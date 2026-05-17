@@ -4,7 +4,6 @@ import { View, Text, ScrollView, Pressable } from "react-native";
 // Librerías
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { useQueryClient } from "@tanstack/react-query";
 
 // BD / Auth
 import { supabase } from "../../../src/database/supabase.js";
