@@ -1,36 +1,16 @@
-import { Text, View, Image, Pressable, Alert } from "react-native";
+import { Text, View, Image, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
 import Screen from "../../src/components/Screen";
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
 import { brandPrimary } from "../../src/theme/colors.js";
-import { Calendar, Clock, Logout } from "../../assets/icons.jsx";
-import { supabase } from "../../src/database/supabase.js";
+import { Calendar, Clock } from "../../assets/icons.jsx";
+import ButtonLogout from "../../src/components/buttons/ButtonLogout.jsx";
 
 export default function Index() {
   const imageProfile = require("../../assets/profile.png");
   const { user } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    Alert.alert("Cerrar Sesión", "¿Estás seguro de que deseas salir?", [
-      {
-        text: "Cancelar",
-        style: "cancel",
-      },
-      {
-        text: "Salir",
-        style: "destructive",
-        onPress: async () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          await supabase.auth.signOut();
-          router.replace("/(auth)/login");
-        },
-      },
-    ]);
-  };
-
   return (
     <Screen>
       {/* CARD PROFILE */}
@@ -56,12 +36,7 @@ export default function Index() {
               </Text>
             </View>
           </View>
-          <Pressable
-            onPress={handleLogout}
-            className="p-3 border border-red-500/20 bg-red-500/10 rounded-full active:scale-95 transition-all"
-          >
-            <Logout color="#ef4444" size={24} />
-          </Pressable>
+          <ButtonLogout />
         </View>
       </View>
       {/* CARD PROGRESS */}
