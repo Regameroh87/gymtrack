@@ -113,9 +113,6 @@ export default function EditExercise() {
           text2: "El ejercicio fue editado exitosamente.",
           position: "bottom",
         });
-        /*  if (scrollRef.current) {
-          scrollRef.current.scrollTo({ y: 0, animated: true });
-        } */
       } catch (error) {
         console.error("Error al insertar un ejercicio", error.message);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
