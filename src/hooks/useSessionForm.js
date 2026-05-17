@@ -56,7 +56,6 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
             })
             .where(eq(sessions.id, id));
 
-
           await database
             .delete(session_exercises)
             .where(eq(session_exercises.session_id, id));

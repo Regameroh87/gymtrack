@@ -1,5 +1,5 @@
 // React Native
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Image, Pressable, Alert } from "react-native";
 
 // Librerías
 import { useRef } from "react";
@@ -8,12 +8,10 @@ import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+import * as ImagePicker from "expo-image-picker";
 
 // BD
 import { supabase } from "../../../../src/database/supabase";
-
-// Hooks
-import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
 
 // Utils
 import { uploadFileToCloudinary } from "../../../../src/utils/uploadFileToCloudinary.js";
@@ -38,7 +36,6 @@ import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 export default function RegisterUser() {
   const scrollRef = useRef(null);
-  const { pickMedia } = useMediaPicker();
 
   const form = useForm({
     defaultValues: {
@@ -107,10 +104,23 @@ export default function RegisterUser() {
   });
 
   const pickImage = async (field) => {
-    const asset = await pickMedia({ aspect: [1, 1] });
-    if (asset) {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permiso requerido",
+        "Necesitás permitir el acceso a la galería."
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets?.[0]?.uri) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      field.handleChange(asset.uri);
+      field.handleChange(result.assets[0].uri);
     }
   };
 
