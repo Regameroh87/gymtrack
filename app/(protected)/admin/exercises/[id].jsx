@@ -50,7 +50,14 @@ export default function EditExercise() {
         .from(exercise_equipment)
         .innerJoin(equipment, eq(exercise_equipment.equipment_id, equipment.id))
         .where(eq(exercise_equipment.exercise_id, id));
-      return rows.map((item) => ({ ...item, isNew: false }));
+      const seen = new Set();
+      return rows
+        .filter((item) => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        })
+        .map((item) => ({ ...item, isNew: false }));
     },
   });
 
@@ -94,14 +101,16 @@ export default function EditExercise() {
           .delete(exercise_equipment)
           .where(eq(exercise_equipment.exercise_id, data.id));
 
-        if (value.equipments && value.equipments.length > 0) {
-          for (const item of value.equipments) {
-            await database.insert(exercise_equipment).values({
-              id: Crypto.randomUUID(),
-              exercise_id: data.id,
-              equipment_id: item.id,
-            });
-          }
+        const uniqueEquipments = (value.equipments ?? []).filter(
+          (item, index, self) =>
+            self.findIndex((e) => e.id === item.id) === index
+        );
+        for (const item of uniqueEquipments) {
+          await database.insert(exercise_equipment).values({
+            id: Crypto.randomUUID(),
+            exercise_id: data.id,
+            equipment_id: item.id,
+          });
         }
 
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
