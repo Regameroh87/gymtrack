@@ -29,7 +29,7 @@ import { checkNetInfoAndSync } from "../database/sync";
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 const DRAFT_KEY = "training_plan_form_draft";
 
-const persistWeeks = async (planId, weeks, now) => {
+const persistWeeks = async (planId, weeks, now, db = database) => {
   const weeksRows = [];
   const daysRows = [];
   const exercisesRows = [];
@@ -484,9 +484,10 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, form]);
 
   const values = useStore(form.store, (state) => state.values);
+
   useEffect(() => {
     if (!isDraftLoaded || id) return;
     clearTimeout(saveTimerRef.current);
@@ -494,7 +495,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(values));
     }, 800);
     return () => clearTimeout(saveTimerRef.current);
-  }, [values, isDraftLoaded]);
+  }, [values, isDraftLoaded, id]);
 
   return { form, isLoading: !isDraftLoaded };
 };
