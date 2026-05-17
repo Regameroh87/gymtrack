@@ -149,12 +149,154 @@ Las tablas de contenido (ejercicios, equipamiento, sesiones, planes) son offline
 - `sync_status` — `"pending"` | `"dirty"` | `"deleted"` | `"synced"`
 - `updated_at` — gestionado por trigger en el servidor (no por el cliente)
 
-**Ciclo de sync (`sync.js`):**
-1. **PULL** — Descarga cambios remotos desde el último watermark (`last_sync_at` por tabla en AsyncStorage). Omite filas locales con cambios pendientes para no pisar trabajo del usuario.
-2. **PUSH** — Sube filas en estado `pending`, `dirty` o `deleted`. Maneja conflictos de nombres duplicados y borrados remotos.
-3. **Reconciliación** — Elimina localmente las filas `synced` que ya no existen en el servidor (borradas desde otro dispositivo).
+#### Ciclo de sync (`src/database/sync.js`)
 
-El sync se dispara automáticamente al recuperar conectividad (via `NetInfo`).
+El entry point es `syncWithSupabase()`. Se ejecuta en tres fases secuenciales para todas las tablas configuradas en `tablesToSync`.
+
+```
+PULL (todas las tablas)
+    ↓
+CLEANUP (huérfanos de planes)
+    ↓
+PUSH (todas las tablas)
+```
+
+El sync se dispara automáticamente al recuperar conectividad (via `NetInfo`). Hay un flag `isSyncing` que previene ejecuciones concurrentes.
+
+---
+
+#### Fase 1 — PULL (`pullTableChanges`)
+
+Descarga desde Supabase todos los registros con `updated_at >= lastSync` (watermark por tabla guardado en AsyncStorage).
+
+**Protección de cambios locales — por ID:**
+
+Antes de insertar los rows remotos, se consultan los IDs locales que están en estado no-synced (`pending`, `dirty`, `deleted`) y se construye un `Set` llamado `lockedIds`. Cualquier row remoto cuyo `id` esté en ese set se saltea: el PUSH del mismo ciclo se encargará de resolver la versión canónica.
+
+**Protección de cambios locales — por unique compuesta:**
+
+Cuatro tablas del árbol de planes tienen restricciones de unique compuesta (dos columnas):
+
+| Tabla | Unique compuesta |
+|-------|-----------------|
+| `plan_weeks` | `(plan_id, week_number)` |
+| `plan_week_days` | `(week_id, day_number)` |
+| `plan_week_day_exercises` | `(week_day_id, session_exercise_id)` |
+| `plan_week_day_exercise_sets` | `(exercise_id, set_number)` |
+
+El check por `id` no protege el caso donde el row remoto tiene un **ID diferente** pero el **mismo par de columnas únicas** que un row local pendiente — el `INSERT` exploraría con un error de constraint. Para evitarlo, cuando la tabla tiene `COMPOSITE_UNIQUE_COLUMNS` definidas, se cargan todos los rows locales no-synced, se construye un `Set` de claves `"col1::col2"`, y se saltea cualquier row remoto cuya clave ya esté ocupada localmente.
+
+**Reconciliación de borrados remotos:**
+
+Después de aplicar las novedades, se descarga la lista completa de IDs remotos y se eliminan localmente los rows `synced` que ya no existen en el servidor (borrados desde otro dispositivo u otro proceso).
+
+**Watermark:**
+
+El `last_sync_at` por tabla solo avanza si el servidor devolvió al menos un registro. Usa el `updated_at` del último row devuelto (no el reloj local) para evitar clock-skew entre dispositivos.
+
+---
+
+#### Fase 2 — CLEANUP (`cleanOrphanedPlanChildren`)
+
+Elimina hijos locales cuyo padre ya no existe, independientemente del `sync_status` del hijo. Esto previene errores de FK en el PUSH: si un padre fue borrado remotamente durante el PULL, sus hijos huérfanos fallarían al intentar subirse.
+
+El orden de limpieza respeta la jerarquía de FK:
+
+```
+plan_week_day_exercise_sets (hijos sin plan_week_day_exercise padre)
+    ↓
+plan_week_day_exercises (hijos sin plan_week_day padre)
+    ↓
+plan_week_days (hijos sin plan_week padre)
+    ↓
+plan_weeks (hijos sin training_plan padre)
+```
+
+---
+
+#### Fase 3 — PUSH
+
+Cada tabla tiene su función de push dedicada. La estrategia varía:
+
+**Entidades simples** (`exercises_base`, `equipment`, `exercise_equipment`, `sessions`, `session_exercises`):
+- Filas `pending`/`dirty` → upsert en Supabase → marcar `synced` localmente
+- Filas `deleted` → delete en Supabase → delete local
+- Manejo especial: detección de conflictos de nombre duplicado (upsert por nombre cuando el ID no existe en el servidor)
+
+**Planes de entrenamiento** (`training_plans` + árbol de hijos):
+- El plan root se upsert por `id` (igual que entidades simples)
+- Las semanas/días/ejercicios/series se sincronizan con una estrategia de **replace total**: se borran todas las semanas del plan en Supabase (CASCADE elimina los hijos en cascada) y luego se hace upsert de todas las filas locales en lote. Esto evita la complejidad de detectar qué cambió a nivel de fila en un árbol de 4 niveles.
+
+---
+
+### Flujo de planes de entrenamiento
+
+#### Jerarquía de datos
+
+```
+training_plans
+└── plan_weeks          (week_number: 1…N)
+    └── plan_week_days  (day_number: 1…M, session_id FK opcional)
+        └── plan_week_day_exercises  (session_exercise_id FK, position)
+            └── plan_week_day_exercise_sets  (set_number: 1…S)
+```
+
+Cada nivel tiene `sync_status` propio y unique constraints que evitan duplicados:
+
+| Nivel | Unique |
+|-------|--------|
+| `plan_weeks` | `(plan_id, week_number)` |
+| `plan_week_days` | `(week_id, day_number)` |
+| `plan_week_day_exercises` | `(week_day_id, session_exercise_id)` |
+| `plan_week_day_exercise_sets` | `(exercise_id, set_number)` |
+
+#### Guardado atómico (`useTrainingPlanForm.js`)
+
+El hook `useTrainingPlanForm` expone un formulario TanStack Form. Al hacer submit, `onSubmit` persiste el árbol completo en SQLite dentro de una **transacción atómica**:
+
+**Path de creación (plan nuevo):**
+```
+database.transaction(async (tx) => {
+    INSERT training_plans
+    persistWeeks(planId, weeks, now, tx)   ← INSERT weeks, days, exercises, sets
+})
+AsyncStorage.removeItem(DRAFT_KEY)          ← fuera de la transacción
+```
+
+**Path de edición:**
+```
+database.transaction(async (tx) => {
+    UPDATE training_plans
+    SELECT → DELETE sets → DELETE exercises → DELETE days → DELETE weeks
+    persistWeeks(id, weeks, now, tx)        ← INSERT weeks, days, exercises, sets
+})
+```
+
+La transacción garantiza atomicidad: si cualquier INSERT falla (por ejemplo, un conflicto de unique en sets), **todo hace rollback**. La BD local queda en el estado anterior, sin dejar datos corruptos en `pending`.
+
+`persistWeeks` acepta `db` como cuarto parámetro (default: `database`) para recibir el `tx` de la transacción.
+
+#### Borrador en AsyncStorage
+
+Cuando el formulario está en modo **creación** (sin `id`), los valores se persisten automáticamente en AsyncStorage con debounce de 800ms (`DRAFT_KEY = "training_plan_form_draft"`). Al volver a la pantalla se restauran. Al guardar exitosamente se elimina el borrador. En modo edición no hay borrador — los datos se cargan desde SQLite.
+
+#### Hidratación del formulario (modo edición)
+
+Al montar el hook con un `id`, carga el árbol completo desde SQLite mediante queries encadenadas:
+
+```
+SELECT training_plans WHERE id = ?
+    ↓
+SELECT plan_weeks WHERE plan_id = ?
+    ↓
+SELECT plan_week_days + JOIN sessions WHERE week_id IN (...)
+    ↓
+SELECT plan_week_day_exercises + JOIN session_exercises + JOIN exercises_base WHERE week_day_id IN (...)
+    ↓
+SELECT plan_week_day_exercise_sets WHERE exercise_id IN (...)
+```
+
+Los sets se agrupan por `exercise_id` y se mapean a `set_configs[]` dentro de cada ejercicio. Si un ejercicio no tiene sets en BD, se inicializa con un set por defecto `{reps_min: 8, reps_max: 12, rest_seconds: 90}`.
 
 ---
 

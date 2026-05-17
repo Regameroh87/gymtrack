@@ -160,7 +160,7 @@ export const resizeWeeksByWeeklyDays = (currentWeeks, newWeeklyDays) =>
 export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
   const saveTimerRef = useRef(null);
-  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const defaultValues = useMemo(
     () => ({
@@ -286,22 +286,24 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   useEffect(() => {
     let cancelled = false;
     if (id) {
-      setIsDraftLoaded(false);
+      setIsLoading(true);
 
       (async () => {
         try {
+          //Me quedo con el plan
           const [planRow] = await database
             .select()
             .from(training_plans)
             .where(eq(training_plans.id, id));
 
           if (cancelled) return;
-
+          // si no hay plan vuelvo
           if (!planRow) {
-            setIsDraftLoaded(true);
+            setIsLoading(false);
             return;
           }
 
+          //Me quedo con las semanas ordenadas
           const weeksRows = await database
             .select()
             .from(plan_weeks)
@@ -465,11 +467,11 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             { keepDefaultValues: true }
           );
 
-          setIsDraftLoaded(true);
+          setIsLoading(false);
         } catch (e) {
           if (!cancelled) {
             console.error("Error hydrating plan form:", e);
-            setIsDraftLoaded(true);
+            setIsLoading(false);
           }
         }
       })();
@@ -481,7 +483,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             form.reset(JSON.parse(raw), { keepDefaultValues: true });
           } catch {}
         }
-        setIsDraftLoaded(true);
+        setIsLoading(false);
       });
     }
 
@@ -493,13 +495,13 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const values = useStore(form.store, (state) => state.values);
 
   useEffect(() => {
-    if (!isDraftLoaded || id) return;
+    if (isLoading || id) return;
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(values));
     }, 800);
     return () => clearTimeout(saveTimerRef.current);
-  }, [values, isDraftLoaded, id]);
+  }, [values, isLoading, id]);
 
-  return { form, isLoading: !isDraftLoaded };
+  return { form, isLoading };
 };
