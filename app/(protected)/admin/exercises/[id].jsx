@@ -29,7 +29,6 @@ import FormExercise from "../../../../src/components/forms/FormExercise";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
 
   const { data: exerciseRecord, isLoading } = useRecordById(
     "exercise",
@@ -37,47 +36,65 @@ export default function EditExercise() {
     id
   );
 
-  const { data: exerciseEquipments = [] } = useQuery({
-    queryKey: ["exercise", id, "equipments"],
-    enabled: !!id,
-    queryFn: async () => {
-      const rows = await database
-        .select({
-          id: equipment.id,
-          name: equipment.name,
-          image_uri: equipment.image_uri,
-        })
-        .from(exercise_equipment)
-        .innerJoin(equipment, eq(exercise_equipment.equipment_id, equipment.id))
-        .where(eq(exercise_equipment.exercise_id, id));
-      const seen = new Set();
-      return rows
-        .filter((item) => {
-          if (seen.has(item.id)) return false;
-          seen.add(item.id);
-          return true;
-        })
-        .map((item) => ({ ...item, isNew: false }));
-    },
-  });
+  const { data: exerciseEquipments, isLoading: isLoadingEquipments } = useQuery(
+    {
+      queryKey: ["exercise", id, "equipments"],
+      enabled: !!id,
+      queryFn: async () => {
+        const rows = await database
+          .select({
+            id: equipment.id,
+            name: equipment.name,
+            image_uri: equipment.image_uri,
+          })
+          .from(exercise_equipment)
+          .innerJoin(
+            equipment,
+            eq(exercise_equipment.equipment_id, equipment.id)
+          )
+          .where(eq(exercise_equipment.exercise_id, id));
+        const seen = new Set();
+        return rows
+          .filter((item) => {
+            if (seen.has(item.id)) return false;
+            seen.add(item.id);
+            return true;
+          })
+          .map((item) => ({ ...item, isNew: false }));
+      },
+    }
+  );
 
-  const data = exerciseRecord
-    ? { ...exerciseRecord, equipments: exerciseEquipments }
-    : null;
+  if (isLoading || isLoadingEquipments || !exerciseRecord) {
+    return (
+      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
+  return (
+    <EditExerciseForm
+      data={{ ...exerciseRecord, equipments: exerciseEquipments ?? [] }}
+    />
+  );
+}
+
+function EditExerciseForm({ data }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const editExerciseForm = useForm({
     defaultValues: {
-      name: data?.name || "",
-      category: data?.category || "",
-      muscle_group: data?.muscle_group || "",
-      equipments: data?.equipments || [], // Ahora es un array de objetos { name, image_public_id/uri, isNew, etc }
-      youtube_video_url: data?.youtube_video_url || "",
-      image_uri: data?.image_uri || "",
-      video_uri: data?.video_uri || "",
-      instructions: data?.instructions || "",
-      is_unilateral: data?.is_unilateral || false,
+      name: data.name || "",
+      category: data.category || "",
+      muscle_group: data.muscle_group || "",
+      equipments: data.equipments || [],
+      youtube_video_url: data.youtube_video_url || "",
+      image_uri: data.image_uri || "",
+      video_uri: data.video_uri || "",
+      instructions: data.instructions || "",
+      is_unilateral: data.is_unilateral || false,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -96,7 +113,6 @@ export default function EditExercise() {
           })
           .where(eq(exercises_base.id, data.id));
 
-        // 2. Manejar Equipamiento (Muchos a Muchos)
         await database
           .delete(exercise_equipment)
           .where(eq(exercise_equipment.exercise_id, data.id));
@@ -138,13 +154,6 @@ export default function EditExercise() {
       }
     },
   });
-  if (isLoading || !data) {
-    return (
-      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
 
   return (
     <FormExercise

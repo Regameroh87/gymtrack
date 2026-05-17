@@ -10,7 +10,7 @@ import { database } from "../../database";
 import { exercises_base, equipment } from "../../database/schemas";
 import useAsyncStorage from "../../hooks/useAsyncStorage";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { checkNetInfoAndSync } from "../../database/sync";
 import { useEquipmentForm } from "../../hooks/useEquipmentForm";
 
@@ -185,7 +185,14 @@ const FormExercise = forwardRef(function FormExercise(
               const existing = await database
                 .select()
                 .from(exercises_base)
-                .where(eq(exercises_base.name, value.trim()));
+                .where(
+                  exercise?.id
+                    ? and(
+                        eq(exercises_base.name, value.trim()),
+                        ne(exercises_base.id, exercise.id)
+                      )
+                    : eq(exercises_base.name, value.trim())
+                );
 
               if (existing.length > 0) {
                 return "Ya existe un ejercicio con este nombre.";
@@ -263,10 +270,15 @@ const FormExercise = forwardRef(function FormExercise(
               {!isCreatingEquipment ? (
                 <CustomSelect
                   label="EQUIPAMIENTO"
-                  options={dbEquipments.map((eq) => ({
-                    value: eq.id,
-                    label: eq.name,
-                  }))}
+                  options={dbEquipments
+                    .filter(
+                      (eq) =>
+                        !field.state.value.find((e) => e.id === eq.id)
+                    )
+                    .map((eq) => ({
+                      value: eq.id,
+                      label: eq.name,
+                    }))}
                   value={null}
                   searchable={true}
                   onChange={(selectedId) => {
