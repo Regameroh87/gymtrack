@@ -74,7 +74,12 @@ const LEVEL_FILTERS = [
   ...SESSION_LEVELS.map((l) => ({ key: l.value, label: l.label })),
 ];
 
-const TABS = [
+const MAIN_TABS = [
+  { key: "mis_planes", label: "Mis Planes" },
+  { key: "catalogo", label: "Catálogo" },
+];
+
+const CATALOG_TYPES = [
   { key: "planes", label: "Planes" },
   { key: "sesiones", label: "Sesiones" },
 ];
@@ -82,7 +87,8 @@ const TABS = [
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState("planes");
+  const [activeTab, setActiveTab] = useState("mis_planes");
+  const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
 
   const { data: plans = [], isLoading: plansLoading } = useTrainingPlans();
@@ -96,11 +102,6 @@ export default function RutinasTab() {
     [sessions, activeLevel]
   );
 
-  const totalDays = useMemo(
-    () => plans.reduce((acc, p) => acc + (p.day_count || 0), 0),
-    [plans]
-  );
-
   const availableLevelFilters = useMemo(() => {
     const usedLevels = new Set(sessions.map((s) => s.level).filter(Boolean));
     return LEVEL_FILTERS.filter((f) => f.key === null || usedLevels.has(f.key));
@@ -111,8 +112,12 @@ export default function RutinasTab() {
     setActiveTab(key);
   };
 
-  const isSesiones = activeTab === "sesiones";
-  const isLoading = isSesiones ? sessionsLoading : plansLoading;
+  const isLoading =
+    activeTab === "catalogo"
+      ? catalogType === "planes"
+        ? plansLoading
+        : sessionsLoading
+      : false;
 
   return (
     <Screen safe>
@@ -127,60 +132,45 @@ export default function RutinasTab() {
           </Text>
         </View>
 
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push(
-              isSesiones ? "/rutinas/sessions/new" : "/rutinas/builder"
-            );
-          }}
-          className="mt-1 active:scale-[0.95]"
-        >
-          <LinearGradient
-            colors={[brandPrimary[600], brandPrimary[500]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="w-10 h-10 rounded-xl items-center justify-center"
+        {activeTab === "mis_planes" && (
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/rutinas/builder");
+            }}
+            className="mt-1 active:scale-[0.95]"
           >
-            <Plus size={18} color="white" />
-          </LinearGradient>
-        </Pressable>
+            <LinearGradient
+              colors={[brandPrimary[600], brandPrimary[500]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              className="w-10 h-10 rounded-xl items-center justify-center"
+            >
+              <Plus size={18} color="white" />
+            </LinearGradient>
+          </Pressable>
+        )}
       </View>
 
-      {/* Tabs con subrayado */}
+      {/* Main Tabs */}
       <View className="flex-row px-6 mt-5 border-b border-ui-input-border">
-        {TABS.map((tab) => {
+        {MAIN_TABS.map((tab) => {
           const isActive = activeTab === tab.key;
-          const count = tab.key === "sesiones" ? sessions.length : plans.length;
           return (
             <Pressable
               key={tab.key}
               onPress={() => switchTab(tab.key)}
               className="mr-7 pb-3 relative"
             >
-              <View className="flex-row items-center gap-2">
-                <Text
-                  className={`font-jakarta-bold text-[17px] ${
-                    isActive
-                      ? "text-ui-text-main dark:text-ui-text-mainDark"
-                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                  }`}
-                >
-                  {tab.label}
-                </Text>
-                {count > 0 && (
-                  <Text
-                    className="font-manrope-bold text-[11px]"
-                    style={{
-                      color: isActive
-                        ? brandPrimary[500]
-                        : "rgba(110,107,138,0.5)",
-                    }}
-                  >
-                    {count}
-                  </Text>
-                )}
-              </View>
+              <Text
+                className={`font-jakarta-bold text-[17px] ${
+                  isActive
+                    ? "text-ui-text-main dark:text-ui-text-mainDark"
+                    : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                }`}
+              >
+                {tab.label}
+              </Text>
 
               {isActive && (
                 <LinearGradient
@@ -207,10 +197,22 @@ export default function RutinasTab() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={brandPrimary[500]} />
         </View>
-      ) : isSesiones ? (
-        <SesionesContent
+      ) : activeTab === "mis_planes" ? (
+        <MisPlanesContent
+          router={router}
+          insets={insets}
+          onBrowseCatalog={() => switchTab("catalogo")}
+        />
+      ) : (
+        <CatalogoContent
+          plans={plans}
           sessions={filteredSessions}
           allSessions={sessions}
+          catalogType={catalogType}
+          onTypeChange={(t) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setCatalogType(t);
+          }}
           levelFilters={availableLevelFilters}
           activeLevel={activeLevel}
           onLevelChange={(level) => {
@@ -220,33 +222,188 @@ export default function RutinasTab() {
           router={router}
           insets={insets}
         />
-      ) : (
-        <PlanesContent
-          plans={plans}
-          totalDays={totalDays}
-          router={router}
-          insets={insets}
-        />
       )}
     </Screen>
   );
 }
 
-// ─── Tab: Planes ────────────────────────────────────────────────────────────
+// ─── Tab: Mis Planes ──────────────────────────────────────────────────────────
 
-function PlanesContent({ plans, totalDays, router, insets }) {
+function MisPlanesContent({ router, insets, onBrowseCatalog }) {
+  return (
+    <ScrollView
+      contentContainerStyle={{
+        paddingBottom: insets.bottom + 32,
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        flexGrow: 1,
+      }}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Planes asignados por el entrenador */}
+      <Text className="font-jakarta-bold text-[16px] text-ui-text-main dark:text-ui-text-mainDark mb-3">
+        Asignados por mi entrenador
+      </Text>
+
+      <View
+        className="rounded-2xl overflow-hidden mb-6"
+        style={{ borderWidth: 1, borderColor: brandPrimary[500] + "30" }}
+      >
+        <LinearGradient
+          colors={[brandPrimary[500] + "12", brandPrimary[500] + "04"]}
+          className="p-5"
+        >
+          <View className="flex-row items-center gap-3 mb-2.5">
+            <View
+              className="w-9 h-9 rounded-xl items-center justify-center"
+              style={{ backgroundColor: brandPrimary[500] + "20" }}
+            >
+              <ClipboardList size={18} color={brandPrimary[500]} />
+            </View>
+            <Text className="font-jakarta-bold text-[15px] text-ui-text-main dark:text-ui-text-mainDark">
+              Sin planes asignados
+            </Text>
+          </View>
+          <Text className="font-manrope text-[13px] text-ui-text-muted dark:text-ui-text-mutedDark leading-5 mb-4">
+            Tu entrenador aún no te asignó un plan. Cuando lo haga, aparecerá
+            acá listo para arrancar.
+          </Text>
+          <Pressable
+            onPress={onBrowseCatalog}
+            className="flex-row items-center gap-1 active:opacity-60"
+          >
+            <Text
+              className="font-jakarta-semi text-[13px]"
+              style={{ color: brandPrimary[500] }}
+            >
+              Explorar catálogo del gym
+            </Text>
+            <Text
+              className="font-jakarta-semi text-[13px]"
+              style={{ color: brandPrimary[500] }}
+            >
+              →
+            </Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+
+      {/* Mis rutinas propias */}
+      <Text className="font-jakarta-bold text-[16px] text-ui-text-main dark:text-ui-text-mainDark mb-3">
+        Mis rutinas
+      </Text>
+
+      <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
+        <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 bg-brandPrimary-50 dark:bg-brandPrimary-950">
+          <Barbell size={28} color={brandPrimary[600]} />
+        </View>
+        <Text className="text-[15px] font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-1.5">
+          Sin rutinas propias
+        </Text>
+        <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-5 max-w-[240px]">
+          Armá tu propia rutina eligiendo ejercicios y prescripciones a tu
+          medida.
+        </Text>
+        <Pressable
+          onPress={() => router.push("/rutinas/builder")}
+          className="w-full active:scale-[0.98]"
+        >
+          <LinearGradient
+            colors={[brandPrimary[600], brandPrimary[500]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            className="py-3.5 rounded-xl items-center flex-row justify-center"
+          >
+            <Plus size={16} color="white" />
+            <Text className="text-white font-jakarta-semi text-sm ml-2">
+              Crear mi rutina
+            </Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+}
+
+// ─── Tab: Catálogo ────────────────────────────────────────────────────────────
+
+function CatalogoContent({
+  plans,
+  sessions,
+  allSessions,
+  catalogType,
+  onTypeChange,
+  levelFilters,
+  activeLevel,
+  onLevelChange,
+  router,
+  insets,
+}) {
+  return (
+    <Animated.ScrollView
+      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Toggle Planes / Sesiones */}
+      <View className="px-6 pt-4 pb-1">
+        <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
+          {CATALOG_TYPES.map((type) => {
+            const isActive = catalogType === type.key;
+            return (
+              <Pressable
+                key={type.key}
+                onPress={() => onTypeChange(type.key)}
+                className="flex-1 items-center py-2 rounded-lg active:opacity-70"
+                style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
+              >
+                <Text
+                  className={`font-jakarta-semi text-[13px] ${
+                    isActive
+                      ? "text-white"
+                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                  }`}
+                >
+                  {type.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      {catalogType === "planes" ? (
+        <PlanesSection plans={plans} router={router} />
+      ) : (
+        <SesionesSection
+          sessions={sessions}
+          allSessions={allSessions}
+          levelFilters={levelFilters}
+          activeLevel={activeLevel}
+          onLevelChange={onLevelChange}
+          router={router}
+        />
+      )}
+    </Animated.ScrollView>
+  );
+}
+
+// ─── Sección Planes ───────────────────────────────────────────────────────────
+
+function PlanesSection({ plans, router }) {
+  const totalDays = useMemo(
+    () => plans.reduce((acc, p) => acc + (p.day_count || 0), 0),
+    [plans]
+  );
+
   if (plans.length === 0) {
     return (
-      <ScrollView
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 32,
-          paddingHorizontal: 24,
-          flexGrow: 1,
-          justifyContent: "center",
-        }}
-      >
-        <EmptyPlanes router={router} />
-      </ScrollView>
+      <View className="px-6 pt-5">
+        <EmptyCard
+          icon={<ClipboardList size={28} color={brandPrimary[600]} />}
+          title="Sin planes disponibles"
+          description="El gym todavía no publicó planes de entrenamiento."
+        />
+      </View>
     );
   }
 
@@ -254,12 +411,8 @@ function PlanesContent({ plans, totalDays, router, insets }) {
   for (let i = 0; i < plans.length; i += 2) rows.push(plans.slice(i, i + 2));
 
   return (
-    <Animated.ScrollView
-      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Stats */}
-      <View className="flex-row gap-3 px-6 pt-5 mb-6">
+    <>
+      <View className="flex-row gap-3 px-6 pt-5 mb-5">
         <StatTile
           value={plans.length}
           label={plans.length === 1 ? "Plan disponible" : "Planes disponibles"}
@@ -272,7 +425,6 @@ function PlanesContent({ plans, totalDays, router, insets }) {
         />
       </View>
 
-      {/* Grid 2 columnas */}
       <View className="px-6 gap-3">
         {rows.map((row, rowIndex) => (
           <Animated.View
@@ -291,42 +443,34 @@ function PlanesContent({ plans, totalDays, router, insets }) {
           </Animated.View>
         ))}
       </View>
-    </Animated.ScrollView>
+    </>
   );
 }
 
-// ─── Tab: Sesiones ───────────────────────────────────────────────────────────
+// ─── Sección Sesiones ─────────────────────────────────────────────────────────
 
-function SesionesContent({
+function SesionesSection({
   sessions,
   allSessions,
   levelFilters,
   activeLevel,
   onLevelChange,
   router,
-  insets,
 }) {
   if (allSessions.length === 0) {
     return (
-      <ScrollView
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 32,
-          paddingHorizontal: 24,
-          flexGrow: 1,
-          justifyContent: "center",
-        }}
-      >
-        <EmptySesiones router={router} />
-      </ScrollView>
+      <View className="px-6 pt-5">
+        <EmptyCard
+          icon={<Barbell size={28} color={brandPrimary[600]} />}
+          title="Sin sesiones disponibles"
+          description="El gym todavía no publicó sesiones de entrenamiento."
+        />
+      </View>
     );
   }
 
   return (
-    <Animated.ScrollView
-      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Filter chips */}
+    <>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -370,9 +514,9 @@ function SesionesContent({
       </ScrollView>
 
       {sessions.length === 0 ? (
-        <View className="px-6 py-8 items-center">
+        <View className="px-6 py-4 items-center">
           <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-            No hay rutinas para este nivel.
+            No hay sesiones para este nivel.
           </Text>
         </View>
       ) : (
@@ -390,7 +534,7 @@ function SesionesContent({
           ))}
         </View>
       )}
-    </Animated.ScrollView>
+    </>
   );
 }
 
@@ -414,7 +558,6 @@ function PlanTile({ plan, onPress }) {
         className="rounded-2xl overflow-hidden p-4 justify-between"
         style={{ minHeight: 148 }}
       >
-        {/* Círculos decorativos */}
         <View
           className="absolute rounded-full"
           style={{
@@ -436,7 +579,6 @@ function PlanTile({ plan, onPress }) {
           }}
         />
 
-        {/* Badge objetivo */}
         {config.label && (
           <View
             className="self-start rounded-full px-2 py-0.5 mb-3"
@@ -451,7 +593,6 @@ function PlanTile({ plan, onPress }) {
           </View>
         )}
 
-        {/* Nombre */}
         <Text
           className="font-jakarta-bold text-white text-[15px] leading-[19px] flex-1"
           numberOfLines={3}
@@ -459,7 +600,6 @@ function PlanTile({ plan, onPress }) {
           {plan.name}
         </Text>
 
-        {/* Días */}
         <View className="flex-row items-center gap-1.5 mt-3">
           <Calendar size={11} color="rgba(255,255,255,0.6)" />
           <Text
@@ -501,79 +641,18 @@ function StatTile({ value, label, accent }) {
   );
 }
 
-// ─── Empty states ────────────────────────────────────────────────────────────
-
-function EmptyPlanes({ router }) {
+function EmptyCard({ icon, title, description }) {
   return (
     <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
-      <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
-        <ClipboardList size={32} color={brandPrimary[600]} />
+      <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 bg-brandPrimary-50 dark:bg-brandPrimary-950">
+        {icon}
       </View>
-      <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
-        No tenés planes activos
+      <Text className="text-[15px] font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-1.5">
+        {title}
       </Text>
-      <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
-        Elegí una plantilla de tu entrenador o creá el tuyo propio.
+      <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 max-w-[240px]">
+        {description}
       </Text>
-      <View className="w-full gap-3">
-        <Pressable
-          onPress={() => router.push("/rutinas/select")}
-          className="w-full active:scale-[0.98]"
-        >
-          <LinearGradient
-            colors={[brandPrimary[600], brandPrimary[500]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="py-3.5 rounded-xl items-center flex-row justify-center"
-          >
-            <ClipboardList size={18} color="white" />
-            <Text className="text-white font-jakarta-semi text-sm ml-2">
-              Elegir un plan
-            </Text>
-          </LinearGradient>
-        </Pressable>
-        <Pressable
-          onPress={() => router.push("/rutinas/builder")}
-          className="py-3.5 rounded-xl items-center flex-row justify-center border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-70"
-        >
-          <Plus size={18} color={brandPrimary[500]} />
-          <Text className="font-jakarta-semi text-sm ml-2 text-brandPrimary-500 dark:text-brandPrimary-400">
-            Crear mi propio plan
-          </Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-function EmptySesiones({ router }) {
-  return (
-    <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
-      <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
-        <Barbell size={32} color={brandPrimary[600]} />
-      </View>
-      <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
-        No hay sesiones
-      </Text>
-      <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-6 max-w-[260px]">
-        Creá tu primera sesión para empezar a estructurar tus entrenamientos.
-      </Text>
-      <Pressable
-        onPress={() => router.push("/rutinas/sessions/new")}
-        className="w-full active:scale-[0.98]"
-      >
-        <LinearGradient
-          colors={[brandPrimary[600], brandPrimary[500]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          className="py-3.5 rounded-xl items-center flex-row justify-center"
-        >
-          <Plus size={18} color="white" />
-          <Text className="text-white font-jakarta-semi text-sm ml-2">
-            Nueva sesión
-          </Text>
-        </LinearGradient>
-      </Pressable>
     </View>
   );
 }
