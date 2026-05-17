@@ -1,17 +1,24 @@
-import {
-  View,
-  Text,
-  Image,
-  Pressable,
-} from "react-native";
+// React Native
+import { View, Text, Image, Pressable } from "react-native";
+
+// Librerías
 import { useRef } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+
+// BD
 import { supabase } from "../../../../src/database/supabase";
-import * as ImagePicker from "expo-image-picker";
+
+// Hooks
+import { useMediaPicker } from "../../../../src/hooks/useMediaPicker";
+
+// Utils
+import { uploadFileToCloudinary } from "../../../../src/utils/uploadFileToCloudinary.js";
+
+// Assets
 import {
   Polaroid,
   Mail,
@@ -20,16 +27,18 @@ import {
   MapPin,
   UserPlus,
 } from "../../../../assets/icons.jsx";
-import { uploadToCloudinary } from "../../../../src/utils/uploadFileToCloudinary.js";
+
+// Tema
 import { ui, brandPrimary } from "../../../../src/theme/colors";
 
-// Shared components
+// Componentes
 import FormField from "../../../../src/components/forms/FormField";
 import StyledTextInput from "../../../../src/components/forms/StyledTextInput";
 import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
 export default function RegisterUser() {
   const scrollRef = useRef(null);
+  const { pickMedia } = useMediaPicker();
 
   const form = useForm({
     defaultValues: {
@@ -43,8 +52,23 @@ export default function RegisterUser() {
     },
     onSubmit: async ({ value }) => {
       try {
+        let image_profile = value.image_profile || null;
+
+        if (image_profile?.startsWith("file://")) {
+          try {
+            const { public_id } = await uploadFileToCloudinary({
+              fileUri: image_profile,
+              uploadPreset: "gymtrack_images",
+              typeFile: "image",
+            });
+            image_profile = public_id;
+          } catch {
+            image_profile = null;
+          }
+        }
+
         const response = await supabase.functions.invoke("crear-socio", {
-          body: value,
+          body: { ...value, image_profile },
         });
 
         if (response.error) {
@@ -81,21 +105,10 @@ export default function RegisterUser() {
   });
 
   const pickImage = async (field) => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      alert("Necesitamos permisos para acceder a la galería");
-      return;
-    }
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled) {
+    const asset = await pickMedia({ aspect: [1, 1] });
+    if (asset) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const URL = await uploadToCloudinary(result.assets[0].uri);
-      field.handleChange(URL);
+      field.handleChange(asset.uri);
     }
   };
 
