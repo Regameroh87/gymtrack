@@ -84,10 +84,11 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json()
-    const { email, name, last_name, image_profile, phone, document_number, address, role: newRole } = body
+    const { email, name, last_name, image_profile, phone, document_number, address } = body
+    const newRole: string = body.role ?? 'member'
 
-    if (!email || !newRole) {
-      return new Response(JSON.stringify({ error: 'email y role son requeridos.' }), {
+    if (!email) {
+      return new Response(JSON.stringify({ error: 'email es requerido.' }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         status: 400,
       })
