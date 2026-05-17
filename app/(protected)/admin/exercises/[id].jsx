@@ -75,6 +75,7 @@ export default function EditExercise() {
       try {
         const exerciseValues = {
           id: data.id,
+          gym_id: data.gym_id,
           name: value.name.trim(),
           category: value.category,
           muscle_group: value.muscle_group,
