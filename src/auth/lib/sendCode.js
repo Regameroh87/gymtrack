@@ -3,6 +3,7 @@ import { supabase } from "../../database/supabase";
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
 const sendCodeVerify = async (email) => {
+  console.log("Enviando email a verificar");
   const { data, error } = await supabase
     .from("profiles")
     .select("id")

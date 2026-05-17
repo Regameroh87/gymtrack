@@ -90,10 +90,7 @@ export default function RootLayoutWeb() {
           <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
           <Stack>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(protected)"
-              options={{ headerShown: false }}
-            />
+            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
           </Stack>
           <Toast config={toastConfig} />
         </ThemeProvider>
