@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
       .from('profiles')
       .select('gym_id, role')
-      .eq('id', callerAuth.user.id)
+      .eq('user_id', callerAuth.user.id)
       .single()
 
     if (callerProfileError || !callerProfile) {
@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
-        id: authData.user.id,
+        user_id: authData.user.id,
         gym_id: callerGymId,
         role: newRole,
         email: email?.toLowerCase() ?? null,
