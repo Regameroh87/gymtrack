@@ -1,5 +1,12 @@
 // React Native
-import { Text, View, TextInput, Image, Pressable, useWindowDimensions } from "react-native";
+import {
+  Text,
+  View,
+  TextInput,
+  Image,
+  Pressable,
+  useWindowDimensions,
+} from "react-native";
 
 // Librerías
 import { useForm } from "@tanstack/react-form";
@@ -201,7 +208,9 @@ export default function LoginWeb() {
                   }`}
                   disabled={isPending || !canSubmit}
                   onPress={() => form.handleSubmit()}
-                  style={{ cursor: isPending || !canSubmit ? "not-allowed" : "pointer" }}
+                  style={{
+                    cursor: isPending || !canSubmit ? "not-allowed" : "pointer",
+                  }}
                 >
                   <Text
                     className={`font-manrope-bold text-lg mr-2 ${
@@ -212,9 +221,7 @@ export default function LoginWeb() {
                   </Text>
                   {!isPending && (
                     <ArrowRight
-                      color={
-                        !canSubmit ? "rgba(255,255,255,0.6)" : "white"
-                      }
+                      color={!canSubmit ? "rgba(255,255,255,0.6)" : "white"}
                       size={20}
                     />
                   )}
