@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -11,6 +12,7 @@ import { useState, useMemo } from "react";
 // Librerías externas
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -18,6 +20,9 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 // Hooks
 import { useTrainingPlans } from "../../../src/hooks/useTrainingPlans";
 import { useSessions } from "../../../src/hooks/useSessions";
+
+// Utilidades
+import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
 
 // Constantes
 import { SESSION_LEVELS } from "../../../src/constants/sessionOptions";
@@ -28,46 +33,33 @@ import SessionCard from "../../../src/components/cards/SessionCard";
 
 // Tema / assets
 import { brandPrimary } from "../../../src/theme/colors";
-import { Calendar, ClipboardList, Plus, Barbell } from "../../../assets/icons";
+import {
+  Barbell,
+  Calendar,
+  ChartBar,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  Logs,
+  Plus,
+  ShieldHalf,
+} from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
-  hipertrofia: {
-    gradient: ["#1e1580", "#6366f1"],
-    accent: "#6366f1",
-    label: "Hipertrofia",
-  },
-  fuerza: {
-    gradient: ["#7f1d1d", "#ef4444"],
-    accent: "#ef4444",
-    label: "Fuerza",
-  },
-  perdida_grasa: {
-    gradient: ["#052e16", "#22c55e"],
-    accent: "#22c55e",
-    label: "Pérdida de grasa",
-  },
-  resistencia: {
-    gradient: ["#0c4a6e", "#38bdf8"],
-    accent: "#38bdf8",
-    label: "Resistencia",
-  },
-  acondicionamiento: {
-    gradient: ["#78350f", "#f59e0b"],
-    accent: "#f59e0b",
-    label: "Acondicionamiento",
-  },
-  rehabilitacion: {
-    gradient: ["#3b0764", "#a855f7"],
-    accent: "#a855f7",
-    label: "Rehabilitación",
-  },
+  hipertrofia: { Icon: Barbell, label: "Hipertrofia" },
+  fuerza: { Icon: Barbell, label: "Fuerza" },
+  perdida_grasa: { Icon: ChartBar, label: "Pérdida de grasa" },
+  resistencia: { Icon: Clock, label: "Resistencia" },
+  acondicionamiento: { Icon: Logs, label: "Acondicionamiento" },
+  rehabilitacion: { Icon: ShieldHalf, label: "Rehabilitación" },
 };
 
-const DEFAULT_CONFIG = {
-  gradient: ["#1e1580", "#4A44E4"],
-  accent: "#4A44E4",
-  label: null,
-};
+const DEFAULT_CONFIG = { Icon: Barbell, label: null };
+
+// Brand colors del design system Kinetic Precision
+const BRAND_PRIMARY = "#4A44E4";
+const BRAND_MINT = "#2DD4BF";
+const BRAND_FALLBACK_GRADIENT = ["#0C0B14", "#1e1b4b", "#3023cd"];
 
 const LEVEL_FILTERS = [
   { key: null, label: "Todos" },
@@ -407,9 +399,6 @@ function PlanesSection({ plans, router }) {
     );
   }
 
-  const rows = [];
-  for (let i = 0; i < plans.length; i += 2) rows.push(plans.slice(i, i + 2));
-
   return (
     <>
       <View className="flex-row gap-3 px-6 pt-5 mb-5">
@@ -425,21 +414,17 @@ function PlanesSection({ plans, router }) {
         />
       </View>
 
-      <View className="px-6 gap-3">
-        {rows.map((row, rowIndex) => (
+      <View className="px-6" style={{ gap: 18 }}>
+        {plans.map((plan, i) => (
           <Animated.View
-            key={rowIndex}
-            entering={FadeInDown.delay(rowIndex * 100).springify()}
-            className="flex-row gap-3"
+            key={plan.id}
+            entering={FadeInDown.delay(i * 80).springify()}
           >
-            {row.map((plan) => (
-              <PlanTile
-                key={plan.id}
-                plan={plan}
-                onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
-              />
-            ))}
-            {row.length === 1 && <View className="flex-1" />}
+            <PlanTile
+              plan={plan}
+              index={i}
+              onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
+            />
           </Animated.View>
         ))}
       </View>
@@ -540,8 +525,20 @@ function SesionesSection({
 
 // ─── Componentes auxiliares ──────────────────────────────────────────────────
 
-function PlanTile({ plan, onPress }) {
+function PlanTile({ plan, index = 0, onPress }) {
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
+  const { Icon } = config;
+
+  const imageUrl = plan.cover_image_uri
+    ? plan.cover_image_uri.startsWith("file://")
+      ? plan.cover_image_uri
+      : getCloudinaryUrl(
+          plan.cover_image_uri,
+          "w_500,h_500,c_fill,f_auto,q_auto"
+        )
+    : null;
+
+  const planNumber = String(index + 1).padStart(2, "0");
 
   return (
     <Pressable
@@ -549,67 +546,366 @@ function PlanTile({ plan, onPress }) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress?.(plan);
       }}
-      className="flex-1 active:scale-[0.97]"
+      className="active:scale-[0.985]"
     >
-      <LinearGradient
-        colors={config.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="rounded-2xl overflow-hidden p-4 justify-between"
-        style={{ minHeight: 148 }}
+      <View
+        className="rounded-3xl overflow-hidden"
+        style={{
+          backgroundColor: "#0F0D20",
+          shadowColor: BRAND_PRIMARY,
+          shadowOpacity: 0.18,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 10,
+        }}
       >
-        <View
-          className="absolute rounded-full"
+        {/* Halo mint en esquina superior izquierda */}
+        <LinearGradient
+          colors={["rgba(45,212,191,0.22)", "rgba(45,212,191,0)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.7, y: 0.8 }}
           style={{
-            width: 96,
-            height: 96,
-            top: -32,
-            right: -32,
-            backgroundColor: "rgba(255,255,255,0.07)",
-          }}
-        />
-        <View
-          className="absolute rounded-full"
-          style={{
-            width: 72,
-            height: 72,
-            bottom: -16,
-            left: -24,
-            backgroundColor: "rgba(0,0,0,0.12)",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 220,
+            height: 220,
           }}
         />
 
-        {config.label && (
-          <View
-            className="self-start rounded-full px-2 py-0.5 mb-3"
-            style={{ backgroundColor: config.accent + "33" }}
-          >
-            <Text
-              className="text-[9px] font-manrope-bold uppercase tracking-wide"
-              style={{ color: config.accent + "ee" }}
-            >
-              {config.label}
-            </Text>
-          </View>
-        )}
+        {/* Glow indigo esquina inferior derecha */}
+        <LinearGradient
+          colors={["rgba(74,68,228,0)", "rgba(74,68,228,0.28)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            position: "absolute",
+            right: 0,
+            bottom: 0,
+            width: 260,
+            height: 180,
+          }}
+        />
 
+        {/* Número editorial gigante de fondo */}
         <Text
-          className="font-jakarta-bold text-white text-[15px] leading-[19px] flex-1"
-          numberOfLines={3}
+          className="font-jakarta-bold"
+          style={{
+            position: "absolute",
+            top: -22,
+            right: -8,
+            fontSize: 180,
+            lineHeight: 180,
+            color: "rgba(255,255,255,0.04)",
+            letterSpacing: -8,
+          }}
         >
-          {plan.name}
+          {planNumber}
         </Text>
 
-        <View className="flex-row items-center gap-1.5 mt-3">
-          <Calendar size={11} color="rgba(255,255,255,0.6)" />
+        {/* Tick mint top-left */}
+        <View
+          style={{
+            position: "absolute",
+            top: 18,
+            left: 20,
+            width: 28,
+            height: 3,
+            backgroundColor: BRAND_MINT,
+            borderRadius: 2,
+          }}
+        />
+
+        {/* Tick mint complementario */}
+        <View
+          style={{
+            position: "absolute",
+            top: 18,
+            left: 52,
+            width: 10,
+            height: 3,
+            backgroundColor: "rgba(45,212,191,0.4)",
+            borderRadius: 2,
+          }}
+        />
+
+        {/* ── Header row: kicker + número ── */}
+        <View
+          className="flex-row items-center justify-between"
+          style={{ paddingHorizontal: 20, paddingTop: 32 }}
+        >
           <Text
-            className="text-[11px] font-manrope-semi"
-            style={{ color: "rgba(255,255,255,0.65)" }}
+            className="font-manrope-bold uppercase"
+            style={{
+              fontSize: 10,
+              color: BRAND_MINT,
+              letterSpacing: 2.4,
+            }}
           >
-            {plan.day_count} {plan.day_count === 1 ? "día" : "días"}
+            Workout Program
           </Text>
+
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <View
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: BRAND_MINT,
+                shadowColor: BRAND_MINT,
+                shadowOpacity: 1,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 0 },
+              }}
+            />
+            <Text
+              className="font-jakarta-bold"
+              style={{
+                fontSize: 10,
+                color: "rgba(255,255,255,0.5)",
+                letterSpacing: 2,
+              }}
+            >
+              EDITION N°{planNumber}
+            </Text>
+          </View>
         </View>
-      </LinearGradient>
+
+        {/* ── Body: título + imagen ── */}
+        <View
+          className="flex-row"
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 18,
+            paddingBottom: 22,
+            gap: 16,
+          }}
+        >
+          {/* Columna izquierda — título + meta */}
+          <View className="flex-1 justify-between" style={{ gap: 14 }}>
+            <View style={{ gap: 8 }}>
+              {/* Objetivo label minimalista */}
+              {config.label && (
+                <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <View
+                    style={{
+                      width: 4,
+                      height: 4,
+                      borderRadius: 2,
+                      backgroundColor: "rgba(255,255,255,0.4)",
+                    }}
+                  />
+                  <Text
+                    className="font-manrope-bold uppercase"
+                    style={{
+                      fontSize: 9,
+                      color: "rgba(255,255,255,0.55)",
+                      letterSpacing: 1.6,
+                    }}
+                  >
+                    {config.label}
+                  </Text>
+                </View>
+              )}
+
+              {/* Título grande editorial */}
+              <Text
+                className="font-jakarta-bold text-white"
+                style={{
+                  fontSize: 26,
+                  lineHeight: 30,
+                  letterSpacing: -0.8,
+                }}
+                numberOfLines={3}
+              >
+                {plan.name}
+              </Text>
+            </View>
+
+            {/* Línea de stats */}
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <Text
+                className="font-jakarta-bold text-white"
+                style={{
+                  fontSize: 32,
+                  lineHeight: 32,
+                  letterSpacing: -1.5,
+                }}
+              >
+                {plan.day_count ?? 0}
+              </Text>
+              <View style={{ gap: 1 }}>
+                <Text
+                  className="font-manrope-bold uppercase"
+                  style={{
+                    fontSize: 9,
+                    color: BRAND_MINT,
+                    letterSpacing: 1.6,
+                  }}
+                >
+                  {plan.day_count === 1 ? "día" : "días"}
+                </Text>
+                <Text
+                  className="font-manrope-semi uppercase"
+                  style={{
+                    fontSize: 9,
+                    color: "rgba(255,255,255,0.4)",
+                    letterSpacing: 1.4,
+                  }}
+                >
+                  de entrenamiento
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Columna derecha — imagen cuadrada contenida */}
+          <View style={{ gap: 6, alignItems: "center" }}>
+            {/* Tick vertical mint pegado al borde */}
+            <View
+              style={{
+                position: "absolute",
+                left: -10,
+                top: 12,
+                width: 3,
+                height: 36,
+                backgroundColor: BRAND_MINT,
+                borderRadius: 2,
+              }}
+            />
+
+            <View
+              className="rounded-2xl overflow-hidden"
+              style={{
+                width: 124,
+                height: 124,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.12)",
+                backgroundColor: "#1a1730",
+              }}
+            >
+              {imageUrl ? (
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={StyleSheet.absoluteFillObject}
+                  contentFit="cover"
+                  transition={250}
+                />
+              ) : (
+                <>
+                  <LinearGradient
+                    colors={BRAND_FALLBACK_GRADIENT}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFillObject}
+                  />
+                  <View
+                    style={{
+                      ...StyleSheet.absoluteFillObject,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon size={56} color="rgba(255,255,255,0.35)" />
+                  </View>
+                </>
+              )}
+            </View>
+
+            {/* Marcador inferior bajo la imagen */}
+            <View className="flex-row items-center" style={{ gap: 4 }}>
+              <View
+                style={{
+                  width: 14,
+                  height: 1,
+                  backgroundColor: "rgba(255,255,255,0.25)",
+                }}
+              />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{
+                  fontSize: 8,
+                  color: "rgba(255,255,255,0.45)",
+                  letterSpacing: 1.4,
+                }}
+              >
+                Cover
+              </Text>
+              <View
+                style={{
+                  width: 14,
+                  height: 1,
+                  backgroundColor: "rgba(255,255,255,0.25)",
+                }}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* ── CTA Strip ── */}
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: "rgba(255,255,255,0.08)",
+          }}
+        >
+          <View
+            className="flex-row items-center justify-between"
+            style={{
+              paddingHorizontal: 20,
+              paddingVertical: 14,
+            }}
+          >
+            <View className="flex-row items-center" style={{ gap: 8 }}>
+              <View
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
+                  backgroundColor: "rgba(74,68,228,0.18)",
+                  borderWidth: 1,
+                  borderColor: "rgba(74,68,228,0.5)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: BRAND_PRIMARY,
+                  }}
+                />
+              </View>
+              <Text
+                className="font-manrope-bold uppercase text-white"
+                style={{
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                }}
+              >
+                Ver Plan Completo
+              </Text>
+            </View>
+
+            <View
+              className="items-center justify-center rounded-full"
+              style={{
+                width: 30,
+                height: 30,
+                backgroundColor: BRAND_PRIMARY,
+                shadowColor: BRAND_PRIMARY,
+                shadowOpacity: 0.6,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
+              }}
+            >
+              <ChevronRight size={14} color="white" />
+            </View>
+          </View>
+        </View>
+      </View>
     </Pressable>
   );
 }
