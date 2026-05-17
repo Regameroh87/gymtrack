@@ -90,12 +90,16 @@ export default function EditExercise() {
           .where(eq(exercises_base.id, data.id));
 
         // 2. Manejar Equipamiento (Muchos a Muchos)
+        await database
+          .delete(exercise_equipment)
+          .where(eq(exercise_equipment.exercise_id, data.id));
+
         if (value.equipments && value.equipments.length > 0) {
-          for (const eq of value.equipments) {
+          for (const item of value.equipments) {
             await database.insert(exercise_equipment).values({
               id: Crypto.randomUUID(),
               exercise_id: data.id,
-              equipment_id: eq.id,
+              equipment_id: item.id,
             });
           }
         }
@@ -125,9 +129,7 @@ export default function EditExercise() {
       }
     },
   });
-  if (!data) return;
-
-  if (isLoading) {
+  if (isLoading || !data) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <ActivityIndicator size="large" />
