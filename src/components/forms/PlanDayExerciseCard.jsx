@@ -251,7 +251,7 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
   };
 
   const addSet = () => {
-    const last = setConfigs[setConfigs.length - 1] ?? DEFAULT_SET;
+    const { id: _id, ...last } = setConfigs[setConfigs.length - 1] ?? DEFAULT_SET;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onChange({ set_configs: [...setConfigs, { ...last }] });
   };
