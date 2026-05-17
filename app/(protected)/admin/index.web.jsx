@@ -202,7 +202,7 @@ export default function AdminDashboardWeb() {
       <View
         style={{
           width: 248,
-          height: "100%",
+          height: "100vh",
           backgroundColor: "#0C0B14",
           flexShrink: 0,
         }}
