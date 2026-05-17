@@ -1,9 +1,8 @@
 // React Native
-import { View, Text, Image, Pressable, Alert } from "react-native";
+import { View, Text, Image, Pressable, Alert, ScrollView } from "react-native";
 
 // Librerías
 import { useRef } from "react";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
@@ -125,10 +124,11 @@ export default function RegisterUser() {
   };
 
   return (
-    <KeyboardAwareScrollView
+    <ScrollView
       ref={scrollRef}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
       contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+      keyboardShouldPersistTaps="handled"
     >
       {/* ── Photo Picker ── */}
       <View className="items-center mb-8">
@@ -318,6 +318,6 @@ export default function RegisterUser() {
           title="Registrar Socio"
         />
       </View>
-    </KeyboardAwareScrollView>
+    </ScrollView>
   );
 }
