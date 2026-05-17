@@ -77,7 +77,9 @@ export default function RegisterUser() {
             try {
               const body = await response.error.context.json();
               if (body && body.error) errorMsg = body.error;
-            } catch (e) {}
+            } catch (e) {
+              console.log(e);
+            }
           }
           throw new Error(errorMsg);
         }
