@@ -654,36 +654,57 @@ async function cascadeDeletePlanLocally(planId) {
 async function cleanOrphanedPlanChildren() {
   // Semanas sin plan padre
   const planIds = new Set(
-    (await database.select({ id: training_plans.id }).from(training_plans)).map((r) => r.id)
+    (await database.select({ id: training_plans.id }).from(training_plans)).map(
+      (r) => r.id
+    )
   );
   const allWeeks = await database
     .select({ id: plan_weeks.id, plan_id: plan_weeks.plan_id })
     .from(plan_weeks);
-  const orphanWeekIds = allWeeks.filter((w) => !planIds.has(w.plan_id)).map((w) => w.id);
+  const orphanWeekIds = allWeeks
+    .filter((w) => !planIds.has(w.plan_id))
+    .map((w) => w.id);
   if (orphanWeekIds.length) {
-    await database.delete(plan_weeks).where(inArray(plan_weeks.id, orphanWeekIds));
-    console.log(`🧹 [CLEANUP] ${orphanWeekIds.length} semana(s) huérfana(s) eliminada(s)`);
+    await database
+      .delete(plan_weeks)
+      .where(inArray(plan_weeks.id, orphanWeekIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanWeekIds.length} semana(s) huérfana(s) eliminada(s)`
+    );
   }
 
   // Días sin semana padre
   const weekIds = new Set(
-    (await database.select({ id: plan_weeks.id }).from(plan_weeks)).map((r) => r.id)
+    (await database.select({ id: plan_weeks.id }).from(plan_weeks)).map(
+      (r) => r.id
+    )
   );
   const allDays = await database
     .select({ id: plan_week_days.id, week_id: plan_week_days.week_id })
     .from(plan_week_days);
-  const orphanDayIds = allDays.filter((d) => !weekIds.has(d.week_id)).map((d) => d.id);
+  const orphanDayIds = allDays
+    .filter((d) => !weekIds.has(d.week_id))
+    .map((d) => d.id);
   if (orphanDayIds.length) {
-    await database.delete(plan_week_days).where(inArray(plan_week_days.id, orphanDayIds));
-    console.log(`🧹 [CLEANUP] ${orphanDayIds.length} día(s) huérfano(s) eliminado(s)`);
+    await database
+      .delete(plan_week_days)
+      .where(inArray(plan_week_days.id, orphanDayIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanDayIds.length} día(s) huérfano(s) eliminado(s)`
+    );
   }
 
   // Ejercicios sin día padre
   const dayIds = new Set(
-    (await database.select({ id: plan_week_days.id }).from(plan_week_days)).map((r) => r.id)
+    (await database.select({ id: plan_week_days.id }).from(plan_week_days)).map(
+      (r) => r.id
+    )
   );
   const allExercises = await database
-    .select({ id: plan_week_day_exercises.id, week_day_id: plan_week_day_exercises.week_day_id })
+    .select({
+      id: plan_week_day_exercises.id,
+      week_day_id: plan_week_day_exercises.week_day_id,
+    })
     .from(plan_week_day_exercises);
   const orphanExIds = allExercises
     .filter((e) => !dayIds.has(e.week_day_id))
@@ -695,22 +716,35 @@ async function cleanOrphanedPlanChildren() {
     await database
       .delete(plan_week_day_exercises)
       .where(inArray(plan_week_day_exercises.id, orphanExIds));
-    console.log(`🧹 [CLEANUP] ${orphanExIds.length} ejercicio(s) huérfano(s) eliminado(s)`);
+    console.log(
+      `🧹 [CLEANUP] ${orphanExIds.length} ejercicio(s) huérfano(s) eliminado(s)`
+    );
   }
 
   // Sets sin ejercicio padre
   const exIds = new Set(
-    (await database.select({ id: plan_week_day_exercises.id }).from(plan_week_day_exercises)).map((r) => r.id)
+    (
+      await database
+        .select({ id: plan_week_day_exercises.id })
+        .from(plan_week_day_exercises)
+    ).map((r) => r.id)
   );
   const allSets = await database
-    .select({ id: plan_week_day_exercise_sets.id, exercise_id: plan_week_day_exercise_sets.exercise_id })
+    .select({
+      id: plan_week_day_exercise_sets.id,
+      exercise_id: plan_week_day_exercise_sets.exercise_id,
+    })
     .from(plan_week_day_exercise_sets);
-  const orphanSetIds = allSets.filter((s) => !exIds.has(s.exercise_id)).map((s) => s.id);
+  const orphanSetIds = allSets
+    .filter((s) => !exIds.has(s.exercise_id))
+    .map((s) => s.id);
   if (orphanSetIds.length) {
     await database
       .delete(plan_week_day_exercise_sets)
       .where(inArray(plan_week_day_exercise_sets.id, orphanSetIds));
-    console.log(`🧹 [CLEANUP] ${orphanSetIds.length} set(s) huérfano(s) eliminado(s)`);
+    console.log(
+      `🧹 [CLEANUP] ${orphanSetIds.length} set(s) huérfano(s) eliminado(s)`
+    );
   }
 }
 
