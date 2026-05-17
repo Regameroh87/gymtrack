@@ -277,6 +277,10 @@ export default function FormPlanWeek({ form, weekNumber }) {
           exercises: (src.exercises ?? []).map((ex) => ({
             ...ex,
             id: Crypto.randomUUID(),
+            set_configs: (ex.set_configs ?? []).map((cfg) => ({
+              ...cfg,
+              id: Crypto.randomUUID(),
+            })),
           })),
         };
       }),
