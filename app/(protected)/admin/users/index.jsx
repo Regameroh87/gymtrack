@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
@@ -22,7 +21,6 @@ import { brandPrimary, ui } from "../../../../src/theme/colors";
 const FILTER_OPTIONS = ["Todos", "Administradores", "Socios"];
 
 export default function UsersList() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
@@ -99,7 +97,10 @@ export default function UsersList() {
         </View>
       </View>
 
-      <ChevronRight size={14} className="text-ui-text-muted dark:text-ui-text-mutedDark" />
+      <ChevronRight
+        size={14}
+        className="text-ui-text-muted dark:text-ui-text-mutedDark"
+      />
     </Pressable>
   );
 
