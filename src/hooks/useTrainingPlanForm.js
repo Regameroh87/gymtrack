@@ -80,7 +80,7 @@ const persistWeeks = async (planId, weeks, now) => {
         for (let s = 0; s < configs.length; s++) {
           const cfg = configs[s];
           setsRows.push({
-            id: Crypto.randomUUID(),
+            id: cfg.id ?? Crypto.randomUUID(),
             exercise_id: ex.id,
             set_number: s + 1,
             reps_min: cfg.reps_min ?? null,
@@ -403,6 +403,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               notes: ex.notes ?? "",
               set_configs: rawSets.length
                 ? rawSets.map((s) => ({
+                    id: s.id,
                     reps_min: s.reps_min,
                     reps_max: s.reps_max,
                     duration_seconds: s.duration_seconds,
