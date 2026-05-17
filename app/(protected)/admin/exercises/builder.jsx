@@ -12,6 +12,8 @@ import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+
 export default function AddExerciseScreen() {
   const formRef = useRef(null);
   const queryClient = useQueryClient();
@@ -43,6 +45,7 @@ export default function AddExerciseScreen() {
         // Inserto el ejercicio en la tabla exercises_base
         await database.insert(exercises_base).values({
           id: exerciseId,
+          gym_id: GYM_ID,
           ...exerciseValues,
         });
 
