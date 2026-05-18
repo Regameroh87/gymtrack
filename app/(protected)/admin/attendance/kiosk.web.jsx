@@ -30,9 +30,14 @@ export default function AttendanceKioskWeb() {
   // Tick que dispara refetch cada ROTATE_MS
   const [tick, setTick] = useState(0);
 
-  const { data: tokenInfo, isLoading } = useQuery({
+  const {
+    data: tokenInfo,
+    isLoading,
+    error: queryError,
+  } = useQuery({
     queryKey: ["qr_token", gymId, tick],
     enabled: !!gymId,
+    retry: false,
     queryFn: async () => {
       const token = randomToken();
       const expiresAt = new Date(Date.now() + ROTATE_MS + GRACE_MS);
@@ -41,7 +46,10 @@ export default function AttendanceKioskWeb() {
         gym_id: gymId,
         expires_at: expiresAt.toISOString(),
       });
-      if (error) throw error;
+      if (error) {
+        console.error("[kiosk] insert gym_qr_tokens failed:", error);
+        throw error;
+      }
       return { token, expiresAt: expiresAt.getTime() };
     },
     staleTime: ROTATE_MS,
@@ -133,7 +141,37 @@ export default function AttendanceKioskWeb() {
           shadowOffset: { width: 0, height: 12 },
         }}
       >
-        {isLoading || !payload ? (
+        {queryError ? (
+          <View
+            style={{ width: 420, height: 420 }}
+            className="items-center justify-center px-6"
+          >
+            <Text className="text-red-600 text-base font-jakarta-bold text-center mb-2">
+              No se pudo generar el QR
+            </Text>
+            <Text className="text-ui-text-muted text-xs font-manrope text-center">
+              {queryError.message}
+            </Text>
+            <Text className="text-ui-text-muted text-[11px] font-manrope text-center mt-3">
+              Verificá que la migración `20260518130000_attendance_qr.sql` esté
+              aplicada y que tu usuario tenga `gym_id` y rol staff
+              (coach/admin/owner).
+            </Text>
+          </View>
+        ) : !gymId ? (
+          <View
+            style={{ width: 420, height: 420 }}
+            className="items-center justify-center px-6"
+          >
+            <Text className="text-red-600 text-base font-jakarta-bold text-center mb-2">
+              Falta gym_id
+            </Text>
+            <Text className="text-ui-text-muted text-xs font-manrope text-center">
+              Tu perfil no tiene gym asignado y EXPO_PUBLIC_GYM_ID no está
+              definido.
+            </Text>
+          </View>
+        ) : isLoading || !payload ? (
           <View
             style={{ width: 420, height: 420 }}
             className="items-center justify-center"
