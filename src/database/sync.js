@@ -5,6 +5,7 @@ import {
   exercises_base,
   equipment,
   exercise_equipment,
+  plan_assignments,
   plan_week_day_exercise_sets,
   plan_week_day_exercises,
   plan_week_days,
@@ -34,6 +35,7 @@ const TABLE_QUERY_KEYS = {
     ["exercise_equipment_detail"],
   ],
   training_plans: [["training_plans"], ["training_plan"]],
+  plan_assignments: [["plan_assignments"]],
   plan_weeks: [["training_plans"], ["training_plan"]],
   plan_week_days: [["training_plans"], ["training_plan"]],
   plan_week_day_exercises: [["training_plans"], ["training_plan"]],
@@ -1078,6 +1080,64 @@ export async function pushPlanWeekDayExerciseSetsChanges() {
   }
 }
 
+/**
+ * PUSH: Sube cambios locales de Asignaciones de Planes
+ */
+export async function pushPlanAssignmentsChanges() {
+  const localChanges = await database
+    .select()
+    .from(plan_assignments)
+    .where(
+      or(
+        eq(plan_assignments.sync_status, "pending"),
+        eq(plan_assignments.sync_status, "dirty"),
+        eq(plan_assignments.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] plan_assignments: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (const row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("plan_assignments")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(plan_assignments)
+          .where(eq(plan_assignments.id, row.id));
+        console.log(`✅ [PUSH] plan_assignment (id: ${row.id}) eliminada`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando plan_assignment (id: ${row.id}):`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    const { sync_status, updated_at, ...payload } = row;
+    const { error } = await supabase
+      .from("plan_assignments")
+      .upsert(payload, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(plan_assignments)
+        .set({ sync_status: "synced" })
+        .where(eq(plan_assignments.id, row.id));
+      console.log(`✅ [PUSH] plan_assignment (id: ${row.id}) sincronizada`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo plan_assignment (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+}
+
 export async function syncWithSupabase(
   tablesToSync = [
     "exercises_base",
@@ -1086,6 +1146,7 @@ export async function syncWithSupabase(
     "sessions",
     "session_exercises",
     "training_plans",
+    "plan_assignments",
     "plan_weeks",
     "plan_week_days",
     "plan_week_day_exercises",
@@ -1115,6 +1176,7 @@ export async function syncWithSupabase(
         "equipment",
         "sessions",
         "training_plans",
+        "plan_assignments",
       ]);
 
       let schemaTable;
@@ -1124,6 +1186,7 @@ export async function syncWithSupabase(
       else if (table === "sessions") schemaTable = sessions;
       else if (table === "session_exercises") schemaTable = session_exercises;
       else if (table === "training_plans") schemaTable = training_plans;
+      else if (table === "plan_assignments") schemaTable = plan_assignments;
       else if (table === "plan_weeks") schemaTable = plan_weeks;
       else if (table === "plan_week_days") schemaTable = plan_week_days;
       else if (table === "plan_week_day_exercises")
@@ -1177,6 +1240,9 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("training_plans")) {
       await pushTrainingPlansChanges();
+    }
+    if (tablesToSync.includes("plan_assignments")) {
+      await pushPlanAssignmentsChanges();
     }
     if (tablesToSync.includes("plan_weeks")) {
       await pushPlanWeeksChanges();

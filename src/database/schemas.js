@@ -204,3 +204,23 @@ export const plan_week_day_exercise_sets = sqliteTable(
   },
   (t) => [unique().on(t.exercise_id, t.set_number)]
 );
+
+export const plan_assignments = sqliteTable("plan_assignments", {
+  id: text("id").primaryKey(),
+  plan_id: text("plan_id")
+    .notNull()
+    .references(() => training_plans.id),
+  user_id: text("user_id").notNull(),
+  assigned_by: text("assigned_by").notNull(),
+  gym_id: text("gym_id").notNull(),
+  start_date: text("start_date").notNull(),
+  end_date: text("end_date"),
+  status: text("status").notNull().default("active"),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  sync_status: text("sync_status").notNull().default("pending"),
+});

@@ -20,6 +20,9 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 // Hooks
 import { useTrainingPlans } from "../../../src/hooks/useTrainingPlans";
 import { useSessions } from "../../../src/hooks/useSessions";
+import { usePlanAssignments } from "../../../src/hooks/usePlanAssignments";
+import { useDropPlan } from "../../../src/hooks/useAssignPlan";
+import { useAuth } from "../../../src/auth/lib/getSession";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
@@ -222,6 +225,36 @@ export default function RutinasTab() {
 // ─── Tab: Mis Planes ──────────────────────────────────────────────────────────
 
 function MisPlanesContent({ router, insets, onBrowseCatalog }) {
+  const { userId } = useAuth();
+  const { data: assignments, isLoading } = usePlanAssignments();
+  const { mutate: dropPlan, isPending: isDropping } = useDropPlan();
+
+  const currentPlan = assignments?.currentPlan ?? null;
+  const history = assignments?.history ?? [];
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator color={brandPrimary[500]} />
+      </View>
+    );
+  }
+
+  const planObj = currentPlan
+    ? {
+        id: currentPlan.plan_id,
+        name: currentPlan.plan_name,
+        cover_image_uri: currentPlan.plan_cover,
+        objective: currentPlan.plan_objective,
+        level: currentPlan.plan_level,
+        weekly_days: currentPlan.plan_weekly_days,
+        duration_weeks: currentPlan.plan_duration_weeks,
+      }
+    : null;
+
+  const assignedByCoach =
+    currentPlan && currentPlan.assigned_by !== userId;
+
   return (
     <ScrollView
       contentContainerStyle={{
@@ -232,87 +265,150 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
       }}
       showsVerticalScrollIndicator={false}
     >
-      {/* Planes asignados por el entrenador */}
+      {/* ── Plan actual ── */}
       <Text className="font-jakarta-bold text-[16px] text-ui-text-main dark:text-ui-text-mainDark mb-3">
-        Asignados por mi entrenador
+        Plan actual
       </Text>
 
-      <View
-        className="rounded-2xl overflow-hidden mb-6"
-        style={{ borderWidth: 1, borderColor: brandPrimary[500] + "30" }}
-      >
-        <LinearGradient
-          colors={[brandPrimary[500] + "12", brandPrimary[500] + "04"]}
-          className="p-5"
-        >
-          <View className="flex-row items-center gap-3 mb-2.5">
+      {planObj ? (
+        <View className="mb-6">
+          {assignedByCoach && (
             <View
-              className="w-9 h-9 rounded-xl items-center justify-center"
-              style={{ backgroundColor: brandPrimary[500] + "20" }}
+              className="flex-row items-center gap-2 mb-2 px-1"
             >
-              <ClipboardList size={18} color={brandPrimary[500]} />
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: BRAND_MINT,
+                }}
+              />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 1.6 }}
+              >
+                Asignado por tu entrenador
+              </Text>
             </View>
-            <Text className="font-jakarta-bold text-[15px] text-ui-text-main dark:text-ui-text-mainDark">
-              Sin planes asignados
-            </Text>
-          </View>
-          <Text className="font-manrope text-[13px] text-ui-text-muted dark:text-ui-text-mutedDark leading-5 mb-4">
-            Tu entrenador aún no te asignó un plan. Cuando lo haga, aparecerá
-            acá listo para arrancar.
-          </Text>
+          )}
+          <PlanTile
+            plan={planObj}
+            index={0}
+            onPress={() =>
+              router.push(`/rutinas/plan/${currentPlan.plan_id}`)
+            }
+          />
           <Pressable
-            onPress={onBrowseCatalog}
-            className="flex-row items-center gap-1 active:opacity-60"
+            disabled={isDropping}
+            onPress={() => dropPlan({ assignmentId: currentPlan.id })}
+            className="mt-3 items-center active:opacity-60"
           >
             <Text
-              className="font-jakarta-semi text-[13px]"
-              style={{ color: brandPrimary[500] }}
+              className="font-manrope text-[13px]"
+              style={{ color: "rgba(255,255,255,0.35)" }}
             >
-              Explorar catálogo del gym
-            </Text>
-            <Text
-              className="font-jakarta-semi text-[13px]"
-              style={{ color: brandPrimary[500] }}
-            >
-              →
+              {isDropping ? "Abandonando…" : "Abandonar este plan"}
             </Text>
           </Pressable>
-        </LinearGradient>
-      </View>
-
-      {/* Mis rutinas propias */}
-      <Text className="font-jakarta-bold text-[16px] text-ui-text-main dark:text-ui-text-mainDark mb-3">
-        Mis rutinas
-      </Text>
-
-      <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
-        <View className="w-14 h-14 rounded-2xl items-center justify-center mb-4 bg-brandPrimary-50 dark:bg-brandPrimary-950">
-          <Barbell size={28} color={brandPrimary[600]} />
         </View>
-        <Text className="text-[15px] font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-1.5">
-          Sin rutinas propias
-        </Text>
-        <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 mb-5 max-w-[240px]">
-          Armá tu propia rutina eligiendo ejercicios y prescripciones a tu
-          medida.
-        </Text>
-        <Pressable
-          onPress={() => router.push("/rutinas/builder")}
-          className="w-full active:scale-[0.98]"
+      ) : (
+        <View
+          className="rounded-2xl overflow-hidden mb-6"
+          style={{ borderWidth: 1, borderColor: brandPrimary[500] + "30" }}
         >
           <LinearGradient
-            colors={[brandPrimary[600], brandPrimary[500]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            className="py-3.5 rounded-xl items-center flex-row justify-center"
+            colors={[brandPrimary[500] + "12", brandPrimary[500] + "04"]}
+            className="p-5"
           >
-            <Plus size={16} color="white" />
-            <Text className="text-white font-jakarta-semi text-sm ml-2">
-              Crear mi rutina
+            <View className="flex-row items-center gap-3 mb-2.5">
+              <View
+                className="w-9 h-9 rounded-xl items-center justify-center"
+                style={{ backgroundColor: brandPrimary[500] + "20" }}
+              >
+                <ClipboardList size={18} color={brandPrimary[500]} />
+              </View>
+              <Text className="font-jakarta-bold text-[15px] text-ui-text-main dark:text-ui-text-mainDark">
+                Sin plan activo
+              </Text>
+            </View>
+            <Text className="font-manrope text-[13px] text-ui-text-muted dark:text-ui-text-mutedDark leading-5 mb-4">
+              Elegí un plan del catálogo y empezá a entrenar con estructura.
             </Text>
+            <Pressable
+              onPress={onBrowseCatalog}
+              className="flex-row items-center gap-1 active:opacity-60"
+            >
+              <Text
+                className="font-jakarta-semi text-[13px]"
+                style={{ color: brandPrimary[500] }}
+              >
+                Explorar catálogo del gym
+              </Text>
+              <Text
+                className="font-jakarta-semi text-[13px]"
+                style={{ color: brandPrimary[500] }}
+              >
+                →
+              </Text>
+            </Pressable>
           </LinearGradient>
-        </Pressable>
-      </View>
+        </View>
+      )}
+
+      {/* ── Historial ── */}
+      {history.length > 0 && (
+        <>
+          <Text className="font-jakarta-bold text-[16px] text-ui-text-main dark:text-ui-text-mainDark mb-3">
+            Historial
+          </Text>
+          <View className="gap-3">
+            {history.map((item) => (
+              <Pressable
+                key={item.id}
+                onPress={() =>
+                  router.push(`/rutinas/plan/${item.plan_id}`)
+                }
+                className="active:opacity-70"
+              >
+                <View
+                  className="rounded-2xl p-4 flex-row items-center gap-4"
+                  style={{
+                    backgroundColor: "#0F0D20",
+                    borderWidth: 1,
+                    borderColor: "rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <View
+                    className="w-10 h-10 rounded-xl items-center justify-center"
+                    style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                  >
+                    <Calendar size={18} color="rgba(255,255,255,0.4)" />
+                  </View>
+                  <View className="flex-1">
+                    <Text
+                      className="font-jakarta-semi text-[14px] text-white"
+                      numberOfLines={1}
+                    >
+                      {item.plan_name ?? "Plan eliminado"}
+                    </Text>
+                    <Text
+                      className="font-manrope text-[12px] mt-0.5"
+                      style={{ color: "rgba(255,255,255,0.4)" }}
+                    >
+                      {item.start_date}
+                      {item.end_date ? ` → ${item.end_date}` : ""}
+                      {"  ·  "}
+                      {item.status === "dropped" ? "Abandonado" : "Completado"}
+                    </Text>
+                  </View>
+                  <ChevronRight size={14} color="rgba(255,255,255,0.25)" />
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      )}
     </ScrollView>
   );
 }

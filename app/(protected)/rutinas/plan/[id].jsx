@@ -1,6 +1,7 @@
 // React Native
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -33,6 +34,8 @@ import {
 
 // Hooks
 import { useRecordById } from "../../../../src/hooks/useRecordById";
+import { usePlanAssignments } from "../../../../src/hooks/usePlanAssignments";
+import { useAssignPlan } from "../../../../src/hooks/useAssignPlan";
 
 // Constantes
 import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
@@ -80,6 +83,11 @@ export default function PlanDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
+
+  const { data: assignments } = usePlanAssignments();
+  const { mutate: assignPlan, isPending: isAssigning } = useAssignPlan();
+  const alreadyActive = assignments?.currentPlan?.plan_id === id;
+  const hasOtherActive = !!assignments?.currentPlan && !alreadyActive;
 
   const { data: plan, isLoading } = useRecordById(
     "training_plan_detail",
@@ -654,14 +662,33 @@ export default function PlanDetail() {
         }}
       >
         <Pressable
+          disabled={alreadyActive || isAssigning}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            // TODO: handler "empezar plan"
+            if (hasOtherActive) {
+              Alert.alert(
+                "¿Reemplazar plan actual?",
+                `Estás haciendo "${assignments.currentPlan.plan_name}". Si arrancás este, el anterior queda como completado.`,
+                [
+                  { text: "Cancelar", style: "cancel" },
+                  {
+                    text: "Sí, cambiar",
+                    onPress: () => assignPlan({ planId: id }),
+                  },
+                ]
+              );
+            } else {
+              assignPlan({ planId: id });
+            }
           }}
           className="active:scale-[0.98]"
         >
           <LinearGradient
-            colors={[BRAND_PRIMARY, "#6366f1"]}
+            colors={
+              alreadyActive
+                ? ["#1e1b4b", "#1e1b4b"]
+                : [BRAND_PRIMARY, "#6366f1"]
+            }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{
@@ -671,10 +698,11 @@ export default function PlanDetail() {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              shadowColor: BRAND_PRIMARY,
-              shadowOpacity: 0.5,
+              shadowColor: alreadyActive ? "transparent" : BRAND_PRIMARY,
+              shadowOpacity: alreadyActive ? 0 : 0.5,
               shadowRadius: 16,
               shadowOffset: { width: 0, height: 6 },
+              opacity: isAssigning ? 0.7 : 1,
             }}
           >
             <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -692,26 +720,29 @@ export default function PlanDetail() {
               </View>
               <Text
                 className="font-manrope-bold uppercase text-white"
-                style={{
-                  fontSize: 13,
-                  letterSpacing: 1.4,
-                }}
+                style={{ fontSize: 13, letterSpacing: 1.4 }}
               >
-                Empezar este plan
+                {isAssigning
+                  ? "Guardando…"
+                  : alreadyActive
+                    ? "Plan activo ✓"
+                    : "Empezar este plan"}
               </Text>
             </View>
-            <View
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: "white",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ChevronRight size={14} color={BRAND_PRIMARY} />
-            </View>
+            {!alreadyActive && (
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  backgroundColor: "white",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ChevronRight size={14} color={BRAND_PRIMARY} />
+              </View>
+            )}
           </LinearGradient>
         </Pressable>
       </View>
