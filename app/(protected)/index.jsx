@@ -15,6 +15,8 @@ import { useAuth } from "../../src/auth/lib/getSession.jsx";
 import ButtonLogout from "../../src/components/buttons/ButtonLogout.jsx";
 
 // Tema / assets
+import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors.js";
+import { useTheme } from "../../src/theme/theme.jsx";
 import {
   Barbell,
   ChevronRight,
@@ -23,9 +25,100 @@ import {
 } from "../../assets/icons.jsx";
 
 // ─── Brand tokens (Kinetic Precision / Editorial Pass) ───────────────────────
-const BRAND_PRIMARY = "#4A44E4";
-const BRAND_MINT = "#2DD4BF";
-const SURFACE_DARK = "#0F0D20";
+const BRAND_PRIMARY = brandPrimary[700]; // "#4a44e4"
+const BRAND_MINT = brandSecondary[400]; // "#2ae8cc" — Pulse Mint canónico
+
+// ─── Tokens por modo (light/dark) ────────────────────────────────────────────
+// Centraliza overlays, halos y tints. En el futuro, estos vendrán de la config
+// del gym (white-label) en lugar de constantes locales.
+function useHomeTokens() {
+  const { isDark } = useTheme();
+  return useMemo(
+    () =>
+      isDark
+        ? {
+            pageBg: ui.background.dark,
+            cardBg: ui.background.dark,
+            cardBorder: "rgba(255,255,255,0.08)",
+            mainText: "#ffffff",
+            mutedText: "rgba(255,255,255,0.6)",
+            mutedTextSoft: "rgba(255,255,255,0.5)",
+            mutedTextSofter: "rgba(255,255,255,0.45)",
+            mutedTextDecorative: "rgba(255,255,255,0.4)",
+            mutedTextFaint: "rgba(255,255,255,0.35)",
+            decorativeLine: "rgba(255,255,255,0.25)",
+            decorativeBorder: "rgba(255,255,255,0.12)",
+            bigNumber: "rgba(255,255,255,0.04)",
+            ghostBg: "rgba(255,255,255,0.04)",
+            ghostBorder: "rgba(255,255,255,0.08)",
+            ghostChip: "rgba(255,255,255,0.08)",
+            ghostChipBorder: "rgba(255,255,255,0.12)",
+            kickerMint: BRAND_MINT,
+            iconMint: BRAND_MINT,
+            mintHalo: "rgba(42,232,204,0.22)",
+            mintHaloEnd: "rgba(42,232,204,0)",
+            mintSofter: "rgba(42,232,204,0.4)",
+            mintSurface: "rgba(42,232,204,0.12)",
+            mintBorder: "rgba(42,232,204,0.35)",
+            primaryHaloStart: "rgba(74,68,228,0)",
+            primaryHaloEnd: "rgba(74,68,228,0.3)",
+            primarySoftFill: "rgba(74,68,228,0.18)",
+            primarySoftFillLight: "rgba(74,68,228,0.12)",
+            primaryBorder: "rgba(74,68,228,0.5)",
+            primaryBorderSoft: "rgba(74,68,228,0.35)",
+            primaryChipBorder: "rgba(255,255,255,0.18)",
+            placeholderBg: "#1a1730",
+            placeholderGradient: ["#0C0B14", "#1e1b4b", "#3023cd"],
+            placeholderIcon: "rgba(255,255,255,0.4)",
+            arrowGhostBg: "rgba(255,255,255,0.08)",
+            arrowGhostBorder: "rgba(255,255,255,0.12)",
+            arrowGhostColor: "rgba(255,255,255,0.65)",
+          }
+        : {
+            pageBg: ui.background.light,
+            cardBg: ui.surface.light,
+            cardBorder: "rgba(15,13,32,0.08)",
+            mainText: ui.text.main,
+            mutedText: "rgba(15,13,32,0.65)",
+            mutedTextSoft: "rgba(15,13,32,0.55)",
+            mutedTextSofter: "rgba(15,13,32,0.45)",
+            mutedTextDecorative: "rgba(15,13,32,0.4)",
+            mutedTextFaint: "rgba(15,13,32,0.35)",
+            decorativeLine: "rgba(15,13,32,0.18)",
+            decorativeBorder: "rgba(15,13,32,0.1)",
+            bigNumber: "rgba(15,13,32,0.05)",
+            ghostBg: "rgba(15,13,32,0.03)",
+            ghostBorder: "rgba(15,13,32,0.08)",
+            ghostChip: "rgba(15,13,32,0.05)",
+            ghostChipBorder: "rgba(15,13,32,0.08)",
+            kickerMint: brandSecondary[700], // "#005047" Pulse Mint dark
+            iconMint: brandSecondary[700],
+            mintHalo: "rgba(42,232,204,0.18)",
+            mintHaloEnd: "rgba(42,232,204,0)",
+            mintSofter: "rgba(0,80,71,0.5)",
+            mintSurface: "rgba(42,232,204,0.12)",
+            mintBorder: "rgba(0,80,71,0.35)",
+            primaryHaloStart: "rgba(74,68,228,0)",
+            primaryHaloEnd: "rgba(74,68,228,0.18)",
+            primarySoftFill: "rgba(74,68,228,0.1)",
+            primarySoftFillLight: "rgba(74,68,228,0.06)",
+            primaryBorder: "rgba(74,68,228,0.45)",
+            primaryBorderSoft: "rgba(74,68,228,0.25)",
+            primaryChipBorder: "rgba(255,255,255,0.4)",
+            placeholderBg: brandPrimary[50], // "#eef0ff"
+            placeholderGradient: [
+              brandPrimary[50],
+              brandPrimary[200],
+              brandPrimary[400],
+            ],
+            placeholderIcon: "rgba(15,13,32,0.35)",
+            arrowGhostBg: "rgba(15,13,32,0.05)",
+            arrowGhostBorder: "rgba(15,13,32,0.1)",
+            arrowGhostColor: "rgba(15,13,32,0.6)",
+          },
+    [isDark]
+  );
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -75,6 +168,7 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const tokens = useHomeTokens();
 
   const now = useMemo(() => new Date(), []);
   const dateLine = formatDateLine(now);
@@ -85,7 +179,7 @@ export default function Home() {
   const imageProfile = require("../../assets/profile.png");
 
   return (
-    <View className="flex-1" style={{ backgroundColor: SURFACE_DARK }}>
+    <View className="flex-1" style={{ backgroundColor: tokens.pageBg }}>
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + 18,
@@ -113,7 +207,7 @@ export default function Home() {
                 width: 10,
                 height: 3,
                 borderRadius: 2,
-                backgroundColor: "rgba(45,212,191,0.4)",
+                backgroundColor: tokens.mintSofter,
               }}
             />
           </View>
@@ -127,7 +221,7 @@ export default function Home() {
               className="font-manrope-bold uppercase"
               style={{
                 fontSize: 10,
-                color: BRAND_MINT,
+                color: tokens.kickerMint,
                 letterSpacing: 2.4,
               }}
             >
@@ -150,7 +244,7 @@ export default function Home() {
                 className="font-jakarta-bold"
                 style={{
                   fontSize: 10,
-                  color: "rgba(255,255,255,0.55)",
+                  color: tokens.mutedTextSoft,
                   letterSpacing: 2,
                 }}
               >
@@ -166,7 +260,7 @@ export default function Home() {
                 className="font-manrope-semi"
                 style={{
                   fontSize: 12,
-                  color: "rgba(255,255,255,0.5)",
+                  color: tokens.mutedTextSoft,
                   letterSpacing: 0.4,
                   marginBottom: 2,
                 }}
@@ -174,11 +268,12 @@ export default function Home() {
                 {greeting},
               </Text>
               <Text
-                className="font-jakarta-bold text-white"
+                className="font-jakarta-bold"
                 style={{
                   fontSize: 30,
                   lineHeight: 34,
                   letterSpacing: -1,
+                  color: tokens.mainText,
                 }}
                 numberOfLines={1}
               >
@@ -193,9 +288,9 @@ export default function Home() {
                   height: 44,
                   borderRadius: 22,
                   borderWidth: 1.5,
-                  borderColor: "rgba(74,68,228,0.5)",
+                  borderColor: tokens.primaryBorder,
                   padding: 2,
-                  backgroundColor: "rgba(74,68,228,0.12)",
+                  backgroundColor: tokens.primarySoftFillLight,
                 }}
               >
                 <Image
@@ -224,9 +319,9 @@ export default function Home() {
             <View
               className="rounded-3xl overflow-hidden"
               style={{
-                backgroundColor: SURFACE_DARK,
+                backgroundColor: tokens.cardBg,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.08)",
+                borderColor: tokens.cardBorder,
                 shadowColor: BRAND_PRIMARY,
                 shadowOpacity: 0.18,
                 shadowRadius: 24,
@@ -236,7 +331,7 @@ export default function Home() {
             >
               {/* Halo mint top-left */}
               <LinearGradient
-                colors={["rgba(45,212,191,0.22)", "rgba(45,212,191,0)"]}
+                colors={[tokens.mintHalo, tokens.mintHaloEnd]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0.7, y: 0.8 }}
                 style={{
@@ -250,7 +345,7 @@ export default function Home() {
 
               {/* Glow indigo bottom-right */}
               <LinearGradient
-                colors={["rgba(74,68,228,0)", "rgba(74,68,228,0.3)"]}
+                colors={[tokens.primaryHaloStart, tokens.primaryHaloEnd]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -271,7 +366,7 @@ export default function Home() {
                   right: -8,
                   fontSize: 180,
                   lineHeight: 180,
-                  color: "rgba(255,255,255,0.04)",
+                  color: tokens.bigNumber,
                   letterSpacing: -8,
                 }}
               >
@@ -297,7 +392,7 @@ export default function Home() {
                   left: 52,
                   width: 10,
                   height: 3,
-                  backgroundColor: "rgba(45,212,191,0.4)",
+                  backgroundColor: tokens.mintSofter,
                   borderRadius: 2,
                 }}
               />
@@ -311,7 +406,7 @@ export default function Home() {
                   className="font-manrope-bold uppercase"
                   style={{
                     fontSize: 10,
-                    color: BRAND_MINT,
+                    color: tokens.kickerMint,
                     letterSpacing: 2.4,
                   }}
                 >
@@ -324,14 +419,14 @@ export default function Home() {
                       width: 6,
                       height: 6,
                       borderRadius: 3,
-                      backgroundColor: "rgba(255,255,255,0.35)",
+                      backgroundColor: tokens.mutedTextFaint,
                     }}
                   />
                   <Text
                     className="font-jakarta-bold"
                     style={{
                       fontSize: 10,
-                      color: "rgba(255,255,255,0.5)",
+                      color: tokens.mutedTextSoft,
                       letterSpacing: 2,
                     }}
                   >
@@ -351,28 +446,22 @@ export default function Home() {
                 }}
               >
                 {/* Columna izquierda */}
-                <View
-                  className="flex-1 justify-between"
-                  style={{ gap: 14 }}
-                >
+                <View className="flex-1 justify-between" style={{ gap: 14 }}>
                   <View style={{ gap: 8 }}>
-                    <View
-                      className="flex-row items-center"
-                      style={{ gap: 6 }}
-                    >
+                    <View className="flex-row items-center" style={{ gap: 6 }}>
                       <View
                         style={{
                           width: 4,
                           height: 4,
                           borderRadius: 2,
-                          backgroundColor: "rgba(255,255,255,0.4)",
+                          backgroundColor: tokens.mutedTextDecorative,
                         }}
                       />
                       <Text
                         className="font-manrope-bold uppercase"
                         style={{
                           fontSize: 9,
-                          color: "rgba(255,255,255,0.55)",
+                          color: tokens.mutedTextSoft,
                           letterSpacing: 1.6,
                         }}
                       >
@@ -381,11 +470,12 @@ export default function Home() {
                     </View>
 
                     <Text
-                      className="font-jakarta-bold text-white"
+                      className="font-jakarta-bold"
                       style={{
                         fontSize: 26,
                         lineHeight: 30,
                         letterSpacing: -0.8,
+                        color: tokens.mainText,
                       }}
                       numberOfLines={3}
                     >
@@ -397,11 +487,12 @@ export default function Home() {
                       style={{
                         fontSize: 13,
                         lineHeight: 19,
-                        color: "rgba(255,255,255,0.6)",
+                        color: tokens.mutedText,
                         marginTop: 2,
                       }}
                     >
-                      Explorá el catálogo y elegí un plan para empezar a entrenar.
+                      Explorá el catálogo y elegí un plan para empezar a
+                      entrenar.
                     </Text>
                   </View>
                 </View>
@@ -426,12 +517,12 @@ export default function Home() {
                       width: 124,
                       height: 124,
                       borderWidth: 1,
-                      borderColor: "rgba(255,255,255,0.12)",
-                      backgroundColor: "#1a1730",
+                      borderColor: tokens.decorativeBorder,
+                      backgroundColor: tokens.placeholderBg,
                     }}
                   >
                     <LinearGradient
-                      colors={["#0C0B14", "#1e1b4b", "#3023cd"]}
+                      colors={tokens.placeholderGradient}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={{
@@ -442,25 +533,22 @@ export default function Home() {
                         bottom: 0,
                       }}
                     />
-                    <Barbell size={56} color="rgba(255,255,255,0.4)" />
+                    <Barbell size={56} color={tokens.placeholderIcon} />
                   </View>
 
-                  <View
-                    className="flex-row items-center"
-                    style={{ gap: 4 }}
-                  >
+                  <View className="flex-row items-center" style={{ gap: 4 }}>
                     <View
                       style={{
                         width: 14,
                         height: 1,
-                        backgroundColor: "rgba(255,255,255,0.25)",
+                        backgroundColor: tokens.decorativeLine,
                       }}
                     />
                     <Text
                       className="font-manrope-bold uppercase"
                       style={{
                         fontSize: 8,
-                        color: "rgba(255,255,255,0.45)",
+                        color: tokens.mutedTextSofter,
                         letterSpacing: 1.4,
                       }}
                     >
@@ -470,7 +558,7 @@ export default function Home() {
                       style={{
                         width: 14,
                         height: 1,
-                        backgroundColor: "rgba(255,255,255,0.25)",
+                        backgroundColor: tokens.decorativeLine,
                       }}
                     />
                   </View>
@@ -481,7 +569,7 @@ export default function Home() {
               <View
                 style={{
                   borderTopWidth: 1,
-                  borderTopColor: "rgba(255,255,255,0.08)",
+                  borderTopColor: tokens.cardBorder,
                 }}
               >
                 <View
@@ -491,18 +579,15 @@ export default function Home() {
                     paddingVertical: 14,
                   }}
                 >
-                  <View
-                    className="flex-row items-center"
-                    style={{ gap: 8 }}
-                  >
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
                     <View
                       style={{
                         width: 22,
                         height: 22,
                         borderRadius: 11,
-                        backgroundColor: "rgba(74,68,228,0.18)",
+                        backgroundColor: tokens.primarySoftFill,
                         borderWidth: 1,
-                        borderColor: "rgba(74,68,228,0.5)",
+                        borderColor: tokens.primaryBorder,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -517,10 +602,11 @@ export default function Home() {
                       />
                     </View>
                     <Text
-                      className="font-manrope-bold uppercase text-white"
+                      className="font-manrope-bold uppercase"
                       style={{
                         fontSize: 11,
                         letterSpacing: 1.5,
+                        color: tokens.mainText,
                       }}
                     >
                       Explorar planes
@@ -565,7 +651,7 @@ export default function Home() {
               className="font-manrope-bold uppercase"
               style={{
                 fontSize: 10,
-                color: BRAND_MINT,
+                color: tokens.kickerMint,
                 letterSpacing: 2.2,
               }}
             >
@@ -575,7 +661,7 @@ export default function Home() {
               style={{
                 flex: 1,
                 height: 1,
-                backgroundColor: "rgba(255,255,255,0.08)",
+                backgroundColor: tokens.ghostBorder,
               }}
             />
           </View>
@@ -597,7 +683,7 @@ export default function Home() {
               kicker="Personalizado"
               title="Crear mi rutina"
               description="Armá una rutina propia eligiendo ejercicios."
-              icon={<Plus size={18} color={BRAND_MINT} />}
+              icon={<Plus size={18} color={tokens.iconMint} />}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push("/rutinas/builder");
@@ -622,19 +708,18 @@ function QuickAction({
   variant = "ghost",
 }) {
   const isPrimary = variant === "primary";
+  const tokens = useHomeTokens();
 
   return (
     <Pressable onPress={onPress} className="active:scale-[0.985]">
       <View
         className="rounded-2xl overflow-hidden"
         style={{
-          backgroundColor: isPrimary
-            ? "rgba(74,68,228,0.12)"
-            : "rgba(255,255,255,0.04)",
+          backgroundColor: isPrimary ? tokens.primarySoftFill : tokens.ghostBg,
           borderWidth: 1,
           borderColor: isPrimary
-            ? "rgba(74,68,228,0.35)"
-            : "rgba(255,255,255,0.08)",
+            ? tokens.primaryBorderSoft
+            : tokens.ghostBorder,
           padding: 16,
           flexDirection: "row",
           alignItems: "center",
@@ -646,13 +731,11 @@ function QuickAction({
             width: 44,
             height: 44,
             borderRadius: 14,
-            backgroundColor: isPrimary
-              ? BRAND_PRIMARY
-              : "rgba(45,212,191,0.12)",
+            backgroundColor: isPrimary ? BRAND_PRIMARY : tokens.mintSurface,
             borderWidth: 1,
             borderColor: isPrimary
-              ? "rgba(255,255,255,0.18)"
-              : "rgba(45,212,191,0.35)",
+              ? tokens.primaryChipBorder
+              : tokens.mintBorder,
             alignItems: "center",
             justifyContent: "center",
             shadowColor: isPrimary ? BRAND_PRIMARY : "transparent",
@@ -669,7 +752,7 @@ function QuickAction({
             className="font-manrope-bold uppercase"
             style={{
               fontSize: 9,
-              color: isPrimary ? BRAND_MINT : "rgba(255,255,255,0.45)",
+              color: isPrimary ? tokens.kickerMint : tokens.mutedTextSofter,
               letterSpacing: 1.6,
               marginBottom: 3,
             }}
@@ -677,11 +760,12 @@ function QuickAction({
             {kicker}
           </Text>
           <Text
-            className="font-jakarta-bold text-white"
+            className="font-jakarta-bold"
             style={{
               fontSize: 15,
               letterSpacing: -0.3,
               marginBottom: 2,
+              color: tokens.mainText,
             }}
           >
             {title}
@@ -690,7 +774,7 @@ function QuickAction({
             className="font-manrope"
             style={{
               fontSize: 12,
-              color: "rgba(255,255,255,0.5)",
+              color: tokens.mutedTextSoft,
               lineHeight: 16,
             }}
             numberOfLines={1}
@@ -704,16 +788,14 @@ function QuickAction({
           style={{
             width: 26,
             height: 26,
-            backgroundColor: isPrimary
-              ? "white"
-              : "rgba(255,255,255,0.08)",
+            backgroundColor: isPrimary ? "white" : tokens.arrowGhostBg,
             borderWidth: isPrimary ? 0 : 1,
-            borderColor: "rgba(255,255,255,0.12)",
+            borderColor: tokens.arrowGhostBorder,
           }}
         >
           <ChevronRight
             size={12}
-            color={isPrimary ? BRAND_PRIMARY : "rgba(255,255,255,0.65)"}
+            color={isPrimary ? BRAND_PRIMARY : tokens.arrowGhostColor}
           />
         </View>
       </View>
