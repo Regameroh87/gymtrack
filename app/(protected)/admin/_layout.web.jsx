@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { Slot } from "expo-router";
 
-import AdminSidebar from "../../../src/components/admin/AdminSidebar";
+import AdminSidebar from "../../../src/components/admin/AdminSidebar.web";
 
 export default function AdminLayoutWeb() {
   return (
