@@ -51,7 +51,13 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Necesitamos acceso a la cámara para escanear el QR de check-in del gimnasio."
+        }
+      ]
     ],
     "extra": {
       "eas": {

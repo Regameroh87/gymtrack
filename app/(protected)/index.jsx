@@ -22,6 +22,7 @@ import {
   ChevronRight,
   ClipboardList,
   Plus,
+  QrCode,
 } from "../../assets/icons.jsx";
 
 // ─── Brand tokens (Kinetic Precision / Editorial Pass) ───────────────────────
@@ -687,6 +688,18 @@ export default function Home() {
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push("/rutinas/builder");
+              }}
+              variant="ghost"
+            />
+
+            <QuickAction
+              kicker="Asistencia"
+              title="Check-in en el gym"
+              description="Escaneá el QR de recepción al llegar."
+              icon={<QrCode size={18} color={tokens.iconMint} />}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/check-in");
               }}
               variant="ghost"
             />

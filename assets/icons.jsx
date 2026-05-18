@@ -725,6 +725,64 @@ export const GripVertical = ({ size = 24, className, ...props }) => (
   </Svg>
 );
 
+export const QrCode = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-qrcode ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z" />
+  </Svg>
+);
+
+export const Camera = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-camera ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M5 7h2a2 2 0 0 0 2-2 1 1 0 0 1 1-1h4a1 1 0 0 1 1 1 2 2 0 0 0 2 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2" />
+    <Path d="M9 13a3 3 0 1 0 6 0 3 3 0 0 0-6 0" />
+  </Svg>
+);
+
+export const CheckCircle = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-circle-check ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0M9 12l2 2 4-4" />
+  </Svg>
+);
+
 export const Logout = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
