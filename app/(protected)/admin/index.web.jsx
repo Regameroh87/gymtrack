@@ -16,41 +16,38 @@ import {
 
 import { brandSecondary, ui } from "../../../src/theme/colors";
 
-const toRgba = (hex, alpha) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-};
-
 const STATS = [
   {
     label: "Socios activos",
     value: "—",
     icon: Users,
-    color: "#3023cd",
-    bg: "#eef0ff",
+    dot: "bg-brandPrimary-600",
+    bubble: "bg-brandPrimary-50",
+    iconColor: "#3023cd",
   },
   {
     label: "Sesiones totales",
     value: "—",
     icon: ClipboardList,
-    color: "#7c3aed",
-    bg: "#f5f3ff",
+    dot: "bg-violet-600",
+    bubble: "bg-violet-50",
+    iconColor: "#7c3aed",
   },
   {
     label: "Planes activos",
     value: "—",
     icon: ClipboardList,
-    color: "#0284c7",
-    bg: "#e0f2fe",
+    dot: "bg-sky-600",
+    bubble: "bg-sky-50",
+    iconColor: "#0284c7",
   },
   {
     label: "Facturación mes",
     value: "—",
     icon: Receipt,
-    color: "#d97706",
-    bg: "#fffbeb",
+    dot: "bg-amber-600",
+    bubble: "bg-amber-50",
+    iconColor: "#d97706",
   },
 ];
 
@@ -61,6 +58,8 @@ const MODULES = [
     sub: "Socios y Staff",
     path: "users",
     color: "#3023cd",
+    bar: "bg-brandPrimary-600",
+    bubble: "bg-brandPrimary-600/10",
   },
   {
     icon: Barbell,
@@ -68,6 +67,8 @@ const MODULES = [
     sub: "Catálogo maestro",
     path: "exercises",
     color: brandSecondary[500],
+    bar: "bg-brandSecondary-500",
+    bubble: "bg-brandSecondary-500/10",
   },
   {
     icon: Barbell,
@@ -75,6 +76,8 @@ const MODULES = [
     sub: "Inventario del gimnasio",
     path: "equipments",
     color: "#f43f5e",
+    bar: "bg-rose-500",
+    bubble: "bg-rose-500/10",
   },
   {
     icon: ClipboardList,
@@ -82,6 +85,8 @@ const MODULES = [
     sub: "Armador técnico",
     path: "sessions",
     color: "#7c3aed",
+    bar: "bg-violet-600",
+    bubble: "bg-violet-600/10",
   },
   {
     icon: ClipboardList,
@@ -89,6 +94,8 @@ const MODULES = [
     sub: "Plantillas de entreno",
     path: "plans",
     color: "#0284c7",
+    bar: "bg-sky-600",
+    bubble: "bg-sky-600/10",
   },
   {
     icon: Receipt,
@@ -96,6 +103,8 @@ const MODULES = [
     sub: "Membresías y pagos",
     path: "billing",
     color: "#d97706",
+    bar: "bg-amber-600",
+    bubble: "bg-amber-600/10",
   },
 ];
 
@@ -105,6 +114,7 @@ const QUICK_ACTIONS = [
     sub: "Nuevo miembro",
     path: "users/register",
     color: "#3023cd",
+    bubble: "bg-brandPrimary-600/10",
     icon: UserPlus,
   },
   {
@@ -112,6 +122,7 @@ const QUICK_ACTIONS = [
     sub: "Builder de ejercicios",
     path: "exercises/builder",
     color: brandSecondary[500],
+    bubble: "bg-brandSecondary-500/10",
     icon: Barbell,
   },
   {
@@ -119,6 +130,7 @@ const QUICK_ACTIONS = [
     sub: "Constructor técnico",
     path: "sessions/builder",
     color: "#7c3aed",
+    bubble: "bg-violet-600/10",
     icon: ClipboardList,
   },
   {
@@ -126,8 +138,14 @@ const QUICK_ACTIONS = [
     sub: "Plantilla semanal",
     path: "plans/builder",
     color: "#0284c7",
+    bubble: "bg-sky-600/10",
     icon: ClipboardList,
   },
+];
+
+const COMING_SOON = [
+  { icon: ChartBar, label: "Reportes", sub: "Estadísticas del gimnasio" },
+  { icon: Settings, label: "Ajustes", sub: "Configuración del sistema" },
 ];
 
 export default function AdminDashboardWeb() {
@@ -144,202 +162,65 @@ export default function AdminDashboardWeb() {
 
   return (
     <ScrollView
-      style={{ flex: 1 }}
+      className="flex-1"
       contentContainerStyle={{ padding: 36, paddingBottom: 56 }}
       showsVerticalScrollIndicator={false}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          marginBottom: 28,
-        }}
-      >
+      {/* Top bar */}
+      <View className="flex-row items-end justify-between mb-7">
         <View>
-          <Text
-            style={{
-              fontFamily: "Manrope_400Regular",
-              color: ui.text.muted,
-              fontSize: 12,
-              textTransform: "capitalize",
-              marginBottom: 3,
-            }}
-          >
+          <Text className="text-xs font-manrope text-ui-text-muted capitalize mb-0.5">
             {dateStr}
           </Text>
-          <Text
-            style={{
-              fontFamily: "PlusJakartaSans_700Bold",
-              color: ui.text.main,
-              fontSize: 26,
-              letterSpacing: -0.6,
-            }}
-          >
+          <Text className="text-[26px] font-jakarta-bold text-ui-text-main tracking-tight">
             Panel de Control
           </Text>
         </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 7,
-            backgroundColor: "#fff",
-            borderRadius: 12,
-            paddingHorizontal: 14,
-            paddingVertical: 8,
-            borderWidth: 1,
-            borderColor: "rgba(196,190,230,0.2)",
-          }}
-        >
-          <View
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: 3.5,
-              backgroundColor: "#22c55e",
-            }}
-          />
-          <Text
-            style={{
-              fontFamily: "Manrope_600SemiBold",
-              color: ui.text.main,
-              fontSize: 12,
-            }}
-          >
+        <View className="flex-row items-center gap-1.5 bg-white rounded-xl px-3.5 py-2 border border-ui-input-border">
+          <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          <Text className="text-xs font-manrope-semi text-ui-text-main">
             Admin activo
           </Text>
         </View>
       </View>
 
+      {/* Welcome Banner */}
       <LinearGradient
         colors={["#2518b8", "#4a44e4", "#6366f1"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{
-          borderRadius: 22,
-          padding: 30,
-          marginBottom: 24,
-          overflow: "hidden",
-        }}
+        style={{ borderRadius: 22, padding: 30, marginBottom: 24, overflow: "hidden" }}
       >
-        <View
-          style={{
-            position: "absolute",
-            right: -40,
-            top: -40,
-            width: 180,
-            height: 180,
-            borderRadius: 90,
-            backgroundColor: "rgba(255,255,255,0.04)",
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            right: 100,
-            bottom: -50,
-            width: 140,
-            height: 140,
-            borderRadius: 70,
-            backgroundColor: "rgba(255,255,255,0.04)",
-          }}
-        />
-        <View
-          style={{
-            position: "absolute",
-            right: 10,
-            top: 10,
-            width: 80,
-            height: 80,
-            borderRadius: 40,
-            backgroundColor: "rgba(255,255,255,0.05)",
-          }}
-        />
+        <View className="absolute -right-10 -top-10 w-[180px] h-[180px] rounded-full bg-white/5" />
+        <View className="absolute right-[100px] -bottom-[50px] w-[140px] h-[140px] rounded-full bg-white/5" />
+        <View className="absolute right-2.5 top-2.5 w-20 h-20 rounded-full bg-white/[0.05]" />
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={{ flex: 1 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 8,
-              }}
-            >
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: "#2dd4bf",
-                }}
-              />
-              <Text
-                style={{
-                  fontFamily: "Manrope_600SemiBold",
-                  color: "rgba(255,255,255,0.65)",
-                  fontSize: 12,
-                  letterSpacing: 0.3,
-                }}
-              >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1">
+            <View className="flex-row items-center gap-2 mb-2">
+              <View className="w-1.5 h-1.5 rounded-full bg-[#2dd4bf]" />
+              <Text className="text-xs font-manrope-semi text-white/65 tracking-wide">
                 Bienvenido de vuelta
               </Text>
             </View>
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: "#fff",
-                fontSize: 28,
-                letterSpacing: -0.8,
-                marginBottom: 8,
-              }}
-            >
+            <Text className="text-[28px] font-jakarta-bold text-white tracking-tight mb-2">
               Hola, Administrador
             </Text>
-            <Text
-              style={{
-                fontFamily: "Manrope_400Regular",
-                color: "rgba(255,255,255,0.55)",
-                fontSize: 13,
-                lineHeight: 20,
-                maxWidth: 380,
-              }}
-            >
-              Gestiona tu gimnasio desde aquí. Usuarios, rutinas, equipos y
-              más, todo centralizado.
+            <Text className="text-[13px] font-manrope text-white/55 leading-5 max-w-[380px]">
+              Gestiona tu gimnasio desde aquí. Usuarios, rutinas, equipos y más, todo centralizado.
             </Text>
 
-            <View style={{ flexDirection: "row", gap: 20, marginTop: 20 }}>
+            <View className="flex-row gap-5 mt-5">
               {[
                 { label: "Módulos activos", val: "6" },
                 { label: "Próximamente", val: "2" },
               ].map((s, i) => (
                 <View key={i}>
-                  <Text
-                    style={{
-                      fontFamily: "PlusJakartaSans_700Bold",
-                      color: "#fff",
-                      fontSize: 22,
-                      letterSpacing: -0.5,
-                    }}
-                  >
+                  <Text className="text-[22px] font-jakarta-bold text-white tracking-tight">
                     {s.val}
                   </Text>
-                  <Text
-                    style={{
-                      fontFamily: "Manrope_400Regular",
-                      color: "rgba(255,255,255,0.45)",
-                      fontSize: 11,
-                    }}
-                  >
+                  <Text className="text-[11px] font-manrope text-white/45">
                     {s.label}
                   </Text>
                 </View>
@@ -347,177 +228,67 @@ export default function AdminDashboardWeb() {
             </View>
           </View>
 
-          <View
-            style={{
-              marginLeft: 32,
-              backgroundColor: "rgba(255,255,255,0.1)",
-              borderRadius: 20,
-              padding: 24,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.12)",
-            }}
-          >
+          <View className="ml-8 bg-white/10 rounded-[20px] p-6 items-center justify-center border border-white/10">
             <Barbell size={36} color="rgba(255,255,255,0.9)" />
-            <Text
-              style={{
-                fontFamily: "Manrope_600SemiBold",
-                color: "rgba(255,255,255,0.55)",
-                fontSize: 9,
-                marginTop: 8,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-              }}
-            >
+            <Text className="text-[9px] font-manrope-semi text-white/55 mt-2 tracking-widest uppercase">
               GymTrack
             </Text>
           </View>
         </View>
       </LinearGradient>
 
-      <View style={{ flexDirection: "row", gap: 14, marginBottom: 28 }}>
+      {/* Stats Row */}
+      <View className="flex-row gap-3.5 mb-7">
         {STATS.map((stat, i) => {
           const Icon = stat.icon;
           return (
             <View
               key={i}
-              style={{
-                flex: 1,
-                backgroundColor: "#fff",
-                borderRadius: 18,
-                padding: 20,
-                borderWidth: 1,
-                borderColor: "rgba(196,190,230,0.18)",
-              }}
+              className="flex-1 bg-white rounded-[18px] p-5 border border-ui-input-border"
             >
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 14,
-                }}
-              >
-                <View
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 11,
-                    backgroundColor: stat.bg,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon size={17} color={stat.color} />
+              <View className="flex-row items-center justify-between mb-3.5">
+                <View className={`w-[38px] h-[38px] rounded-[11px] items-center justify-center ${stat.bubble}`}>
+                  <Icon size={17} color={stat.iconColor} />
                 </View>
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: toRgba(stat.color, 0.35),
-                  }}
-                />
+                <View className={`w-1.5 h-1.5 rounded-full ${stat.dot} opacity-40`} />
               </View>
-              <Text
-                style={{
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: ui.text.main,
-                  fontSize: 30,
-                  letterSpacing: -1,
-                }}
-              >
+              <Text className="text-[30px] font-jakarta-bold text-ui-text-main tracking-tight">
                 {stat.value}
               </Text>
-              <Text
-                style={{
-                  fontFamily: "Manrope_400Regular",
-                  color: ui.text.muted,
-                  fontSize: 12,
-                  marginTop: 3,
-                }}
-              >
+              <Text className="text-xs font-manrope text-ui-text-muted mt-1">
                 {stat.label}
               </Text>
-              <View
-                style={{
-                  height: 2,
-                  backgroundColor: stat.color,
-                  borderRadius: 1,
-                  marginTop: 16,
-                  width: "35%",
-                  opacity: 0.28,
-                }}
-              />
+              <View className={`h-0.5 rounded-sm mt-4 w-[35%] opacity-30 ${stat.dot}`} />
             </View>
           );
         })}
       </View>
 
-      <View style={{ flexDirection: "row", gap: 20, alignItems: "flex-start" }}>
-        <View style={{ flex: 3 }}>
-          <Text style={styles.sectionLabel}>Módulos del sistema</Text>
-          <View style={{ gap: 8 }}>
+      {/* Bottom Section */}
+      <View className="flex-row gap-5 items-start">
+        <View className="flex-[3]">
+          <Text className="mb-3 text-[10px] font-manrope-semi tracking-[1.5px] uppercase text-ui-text-muted">
+            Módulos del sistema
+          </Text>
+          <View className="gap-2">
             {MODULES.map((mod, i) => {
               const Icon = mod.icon;
               return (
                 <Pressable
                   key={i}
                   onPress={() => nav(mod.path)}
-                  style={({ hovered, pressed }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 14,
-                    backgroundColor: hovered ? toRgba(mod.color, 0.04) : "#fff",
-                    borderRadius: 15,
-                    padding: 15,
-                    borderWidth: 1,
-                    borderColor: hovered
-                      ? toRgba(mod.color, 0.22)
-                      : "rgba(196,190,230,0.18)",
-                    cursor: "pointer",
-                    transform: [{ scale: pressed ? 0.99 : 1 }],
-                  })}
+                  className="flex-row items-center gap-3.5 bg-white hover:bg-brandPrimary-50/40 rounded-[15px] p-4 border border-ui-input-border active:scale-[0.99]"
+                  style={{ cursor: "pointer" }}
                 >
-                  <View
-                    style={{
-                      width: 3,
-                      height: 38,
-                      borderRadius: 2,
-                      backgroundColor: mod.color,
-                    }}
-                  />
-                  <View
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 11,
-                      backgroundColor: toRgba(mod.color, 0.1),
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                  <View className={`w-[3px] h-[38px] rounded-sm ${mod.bar}`} />
+                  <View className={`w-[38px] h-[38px] rounded-[11px] items-center justify-center ${mod.bubble}`}>
                     <Icon size={17} color={mod.color} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontFamily: "PlusJakartaSans_700Bold",
-                        color: ui.text.main,
-                        fontSize: 14,
-                      }}
-                    >
+                  <View className="flex-1">
+                    <Text className="text-sm font-jakarta-bold text-ui-text-main">
                       {mod.label}
                     </Text>
-                    <Text
-                      style={{
-                        fontFamily: "Manrope_400Regular",
-                        color: ui.text.muted,
-                        fontSize: 11,
-                        marginTop: 1,
-                      }}
-                    >
+                    <Text className="text-[11px] font-manrope text-ui-text-muted mt-px">
                       {mod.sub}
                     </Text>
                   </View>
@@ -528,60 +299,28 @@ export default function AdminDashboardWeb() {
           </View>
         </View>
 
-        <View style={{ flex: 2, gap: 0 }}>
-          <Text style={styles.sectionLabel}>Acciones rápidas</Text>
-          <View style={{ gap: 8, marginBottom: 24 }}>
+        <View className="flex-[2]">
+          <Text className="mb-3 text-[10px] font-manrope-semi tracking-[1.5px] uppercase text-ui-text-muted">
+            Acciones rápidas
+          </Text>
+          <View className="gap-2 mb-6">
             {QUICK_ACTIONS.map((action, i) => {
               const Icon = action.icon;
               return (
                 <Pressable
                   key={i}
                   onPress={() => nav(action.path)}
-                  style={({ hovered }) => ({
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 12,
-                    backgroundColor: hovered
-                      ? toRgba(action.color, 0.05)
-                      : "#fff",
-                    borderRadius: 13,
-                    padding: 13,
-                    borderWidth: 1,
-                    borderColor: hovered
-                      ? toRgba(action.color, 0.22)
-                      : "rgba(196,190,230,0.18)",
-                    cursor: "pointer",
-                  })}
+                  className="flex-row items-center gap-3 bg-white hover:bg-brandPrimary-50/40 rounded-[13px] p-3.5 border border-ui-input-border"
+                  style={{ cursor: "pointer" }}
                 >
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 9,
-                      backgroundColor: toRgba(action.color, 0.1),
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                  <View className={`w-8 h-8 rounded-[9px] items-center justify-center ${action.bubble}`}>
                     <Icon size={14} color={action.color} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontFamily: "Manrope_700Bold",
-                        color: ui.text.main,
-                        fontSize: 13,
-                      }}
-                    >
+                  <View className="flex-1">
+                    <Text className="text-[13px] font-manrope-bold text-ui-text-main">
                       {action.label}
                     </Text>
-                    <Text
-                      style={{
-                        fontFamily: "Manrope_400Regular",
-                        color: ui.text.muted,
-                        fontSize: 11,
-                      }}
-                    >
+                    <Text className="text-[11px] font-manrope text-ui-text-muted">
                       {action.sub}
                     </Text>
                   </View>
@@ -591,84 +330,30 @@ export default function AdminDashboardWeb() {
             })}
           </View>
 
-          <Text style={styles.sectionLabel}>Próximamente</Text>
-          <View style={{ gap: 8 }}>
-            {[
-              {
-                icon: ChartBar,
-                label: "Reportes",
-                sub: "Estadísticas del gimnasio",
-              },
-              {
-                icon: Settings,
-                label: "Ajustes",
-                sub: "Configuración del sistema",
-              },
-            ].map((item, i) => {
+          <Text className="mb-3 text-[10px] font-manrope-semi tracking-[1.5px] uppercase text-ui-text-muted">
+            Próximamente
+          </Text>
+          <View className="gap-2">
+            {COMING_SOON.map((item, i) => {
               const Icon = item.icon;
               return (
                 <View
                   key={i}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 12,
-                    backgroundColor: "#f8f9fc",
-                    borderRadius: 13,
-                    padding: 13,
-                    borderWidth: 1,
-                    borderColor: "rgba(196,190,230,0.12)",
-                    opacity: 0.55,
-                  }}
+                  className="flex-row items-center gap-3 bg-ui-background-light rounded-[13px] p-3.5 border border-ui-input-border opacity-55"
                 >
-                  <View
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 9,
-                      backgroundColor: "rgba(110,107,138,0.08)",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
+                  <View className="w-8 h-8 rounded-[9px] items-center justify-center bg-ui-text-muted/10">
                     <Lock size={13} color={ui.text.muted} />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontFamily: "Manrope_700Bold",
-                        color: ui.text.muted,
-                        fontSize: 13,
-                      }}
-                    >
+                  <View className="flex-1">
+                    <Text className="text-[13px] font-manrope-bold text-ui-text-muted">
                       {item.label}
                     </Text>
-                    <Text
-                      style={{
-                        fontFamily: "Manrope_400Regular",
-                        color: ui.text.muted,
-                        fontSize: 11,
-                      }}
-                    >
+                    <Text className="text-[11px] font-manrope text-ui-text-muted">
                       {item.sub}
                     </Text>
                   </View>
-                  <View
-                    style={{
-                      backgroundColor: "rgba(110,107,138,0.1)",
-                      paddingHorizontal: 8,
-                      paddingVertical: 3,
-                      borderRadius: 6,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Manrope_600SemiBold",
-                        color: ui.text.muted,
-                        fontSize: 9,
-                        letterSpacing: 0.5,
-                      }}
-                    >
+                  <View className="bg-ui-text-muted/10 px-2 py-0.5 rounded-md">
+                    <Text className="text-[9px] font-manrope-semi text-ui-text-muted tracking-wider">
                       SOON
                     </Text>
                   </View>
@@ -681,14 +366,3 @@ export default function AdminDashboardWeb() {
     </ScrollView>
   );
 }
-
-const styles = {
-  sectionLabel: {
-    fontFamily: "Manrope_600SemiBold",
-    color: ui.text.muted,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: 12,
-  },
-};

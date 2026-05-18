@@ -59,19 +59,13 @@ export default function AdminSidebar() {
   const initial = (email[0] || "A").toUpperCase();
 
   return (
-    <View
-      style={{
-        width: 248,
-        height: "100vh",
-        backgroundColor: "#0C0B14",
-        flexShrink: 0,
-      }}
-    >
+    <View className="w-[248px] h-screen bg-[#0C0B14] shrink-0">
+      {/* Brand */}
       <LinearGradient
         colors={["#2518b8", "#0C0B14"]}
         style={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: 24 }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View className="flex-row items-center gap-2.5">
           <LinearGradient
             colors={["#4a44e4", "#3023cd"]}
             style={{
@@ -85,117 +79,65 @@ export default function AdminSidebar() {
             <Barbell size={18} color="#fff" />
           </LinearGradient>
           <View>
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: "#fff",
-                fontSize: 16,
-                letterSpacing: -0.3,
-              }}
-            >
+            <Text className="text-white text-base font-jakarta-bold tracking-tight">
               GymTrack
             </Text>
-            <Text
-              style={{
-                fontFamily: "Manrope_400Regular",
-                color: "rgba(255,255,255,0.4)",
-                fontSize: 10,
-                letterSpacing: 0.3,
-              }}
-            >
+            <Text className="text-white/40 text-[10px] font-manrope tracking-wide">
               Panel de Control
             </Text>
           </View>
         </View>
       </LinearGradient>
 
-      <ScrollView
-        style={{ flex: 1, paddingTop: 8 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.navSectionLabel}>Navegación</Text>
+      {/* Nav */}
+      <ScrollView className="flex-1 pt-2" showsVerticalScrollIndicator={false}>
+        <Text className="px-[18px] mb-1.5 mt-1 text-[9px] font-manrope-semi uppercase tracking-[1.5px] text-white/25">
+          Navegación
+        </Text>
 
         {NAV_ITEMS.map((item, i) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.path);
+          const disabled = item.comingSoon || active;
+
           return (
             <Pressable
               key={i}
               onPress={() => !item.comingSoon && !active && nav(item.path)}
-              style={({ hovered }) => ({
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingHorizontal: 10,
-                paddingVertical: 9,
-                marginHorizontal: 8,
-                marginBottom: 2,
-                borderRadius: 10,
-                backgroundColor: active
-                  ? "#3023cd"
-                  : hovered && !item.comingSoon
-                    ? "rgba(255,255,255,0.055)"
-                    : "transparent",
-                opacity: item.comingSoon ? 0.38 : 1,
-                cursor: item.comingSoon || active ? "default" : "pointer",
-              })}
+              className={`relative flex-row items-center gap-2.5 px-2.5 py-2.5 mx-2 mb-0.5 rounded-[10px] ${
+                active
+                  ? "bg-brandPrimary-600"
+                  : item.comingSoon
+                    ? "opacity-40"
+                    : "hover:bg-white/5"
+              }`}
+              style={{ cursor: disabled ? "default" : "pointer" }}
             >
               {active && (
-                <View
-                  style={{
-                    position: "absolute",
-                    left: -8,
-                    width: 3,
-                    height: 22,
-                    borderRadius: 2,
-                    backgroundColor: "#2dd4bf",
-                  }}
-                />
+                <View className="absolute -left-2 w-[3px] h-[22px] rounded-sm bg-[#2dd4bf]" />
               )}
 
               <View
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: active
-                    ? "rgba(255,255,255,0.18)"
-                    : "rgba(255,255,255,0.05)",
-                }}
+                className={`w-7 h-7 rounded-lg items-center justify-center ${
+                  active ? "bg-white/20" : "bg-white/5"
+                }`}
               >
                 <Icon size={14} color={active ? "#fff" : "rgba(255,255,255,0.55)"} />
               </View>
 
               <Text
-                style={{
-                  fontFamily: active ? "Manrope_700Bold" : "Manrope_400Regular",
-                  color: active ? "#fff" : "rgba(255,255,255,0.55)",
-                  fontSize: 13,
-                  flex: 1,
-                }}
+                className={`flex-1 text-[13px] ${
+                  active
+                    ? "font-manrope-bold text-white"
+                    : "font-manrope text-white/55"
+                }`}
               >
                 {item.label}
               </Text>
 
               {item.comingSoon && (
-                <View
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.07)",
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    borderRadius: 4,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "Manrope_600SemiBold",
-                      color: "rgba(255,255,255,0.28)",
-                      fontSize: 8,
-                      letterSpacing: 0.5,
-                    }}
-                  >
+                <View className="bg-white/5 px-1.5 py-0.5 rounded">
+                  <Text className="text-[8px] font-manrope-semi tracking-wider text-white/30">
                     SOON
                   </Text>
                 </View>
@@ -204,64 +146,22 @@ export default function AdminSidebar() {
           );
         })}
 
-        <View
-          style={{
-            height: 1,
-            backgroundColor: "rgba(255,255,255,0.05)",
-            marginHorizontal: 16,
-            marginVertical: 16,
-          }}
-        />
+        <View className="h-px bg-white/5 mx-4 my-4" />
 
-        <View
-          style={{
-            marginHorizontal: 16,
-            marginBottom: 12,
-            borderRadius: 12,
-            padding: 14,
-            backgroundColor: "rgba(45,212,191,0.07)",
-            borderWidth: 1,
-            borderColor: "rgba(45,212,191,0.12)",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Manrope_600SemiBold",
-              color: "#2dd4bf",
-              fontSize: 11,
-              marginBottom: 3,
-            }}
-          >
+        {/* Status card */}
+        <View className="mx-4 mb-3 rounded-xl p-3.5 bg-[#2dd4bf]/[0.07] border border-[#2dd4bf]/10">
+          <Text className="text-[#2dd4bf] text-[11px] font-manrope-semi mb-0.5">
             Sistema activo
           </Text>
-          <Text
-            style={{
-              fontFamily: "Manrope_400Regular",
-              color: "rgba(255,255,255,0.35)",
-              fontSize: 10,
-              lineHeight: 15,
-            }}
-          >
+          <Text className="text-white/35 text-[10px] font-manrope leading-[15px]">
             Todos los módulos operativos
           </Text>
         </View>
       </ScrollView>
 
-      <View
-        style={{
-          padding: 14,
-          borderTopWidth: 1,
-          borderTopColor: "rgba(255,255,255,0.05)",
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 10,
-          }}
-        >
+      {/* Footer user */}
+      <View className="p-3.5 border-t border-white/5">
+        <View className="flex-row items-center gap-2.5 mb-2.5">
           <LinearGradient
             colors={["#4a44e4", "#3023cd"]}
             style={{
@@ -272,34 +172,15 @@ export default function AdminSidebar() {
               justifyContent: "center",
             }}
           >
-            <Text
-              style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                color: "#fff",
-                fontSize: 14,
-              }}
-            >
+            <Text className="text-white text-sm font-jakarta-bold">
               {initial}
             </Text>
           </LinearGradient>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                fontFamily: "Manrope_700Bold",
-                color: "rgba(255,255,255,0.9)",
-                fontSize: 12,
-              }}
-            >
+          <View className="flex-1">
+            <Text className="text-white/90 text-xs font-manrope-bold">
               Administrador
             </Text>
-            <Text
-              style={{
-                fontFamily: "Manrope_400Regular",
-                color: "rgba(255,255,255,0.3)",
-                fontSize: 10,
-              }}
-              numberOfLines={1}
-            >
+            <Text className="text-white/30 text-[10px] font-manrope" numberOfLines={1}>
               {email}
             </Text>
           </View>
@@ -307,29 +188,11 @@ export default function AdminSidebar() {
 
         <Pressable
           onPress={handleLogout}
-          style={({ hovered }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            paddingVertical: 8,
-            borderRadius: 9,
-            backgroundColor: hovered
-              ? "rgba(239,68,68,0.15)"
-              : "rgba(239,68,68,0.07)",
-            borderWidth: 1,
-            borderColor: "rgba(239,68,68,0.18)",
-            cursor: "pointer",
-          })}
+          className="flex-row items-center justify-center gap-1.5 py-2 rounded-[9px] bg-red-500/10 border border-red-500/20 hover:bg-red-500/15"
+          style={{ cursor: "pointer" }}
         >
           <Logout size={13} color="#ef4444" />
-          <Text
-            style={{
-              fontFamily: "Manrope_600SemiBold",
-              color: "#ef4444",
-              fontSize: 12,
-            }}
-          >
+          <Text className="text-red-500 text-xs font-manrope-semi">
             Cerrar sesión
           </Text>
         </Pressable>
@@ -337,16 +200,3 @@ export default function AdminSidebar() {
     </View>
   );
 }
-
-const styles = {
-  navSectionLabel: {
-    fontFamily: "Manrope_600SemiBold",
-    color: "rgba(255,255,255,0.25)",
-    fontSize: 9,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    paddingHorizontal: 18,
-    marginBottom: 6,
-    marginTop: 4,
-  },
-};
