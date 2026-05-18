@@ -20,9 +20,19 @@ import {
 const NAV_ITEMS = [
   { icon: Home, label: "Dashboard", path: "", color: gradient.primary[0] },
   { icon: Users, label: "Usuarios", path: "users", color: gradient.primary[0] },
-  { icon: Barbell, label: "Ejercicios", path: "exercises", color: brandSecondary[500] },
+  {
+    icon: Barbell,
+    label: "Ejercicios",
+    path: "exercises",
+    color: brandSecondary[500],
+  },
   { icon: Barbell, label: "Máquinas", path: "equipments", color: "#f43f5e" },
-  { icon: ClipboardList, label: "Sesiones", path: "sessions", color: "#7c3aed" },
+  {
+    icon: ClipboardList,
+    label: "Sesiones",
+    path: "sessions",
+    color: "#7c3aed",
+  },
   { icon: ClipboardList, label: "Planes", path: "plans", color: "#0284c7" },
   { icon: Receipt, label: "Contabilidad", path: "billing", color: "#d97706" },
   { icon: ChartBar, label: "Reportes", path: "reports", comingSoon: true },
@@ -122,7 +132,10 @@ export default function AdminSidebar() {
                   active ? "bg-white/20" : "bg-white/5"
                 }`}
               >
-                <Icon size={14} color={active ? "#fff" : "rgba(255,255,255,0.55)"} />
+                <Icon
+                  size={14}
+                  color={active ? "#fff" : "rgba(255,255,255,0.55)"}
+                />
               </View>
 
               <Text
@@ -180,7 +193,10 @@ export default function AdminSidebar() {
             <Text className="text-white/90 text-xs font-manrope-bold">
               Administrador
             </Text>
-            <Text className="text-white/30 text-[10px] font-manrope" numberOfLines={1}>
+            <Text
+              className="text-white/30 text-[10px] font-manrope"
+              numberOfLines={1}
+            >
               {email}
             </Text>
           </View>
