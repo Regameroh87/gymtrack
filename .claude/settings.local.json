@@ -4,7 +4,12 @@
       "mcp__claude_ai_Supabase__list_projects",
       "mcp__claude_ai_Supabase__list_migrations",
       "mcp__claude_ai_Supabase__execute_sql",
-      "mcp__claude_ai_Supabase__apply_migration"
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(codegraph init *)",
+      "Bash(codegraph sync *)",
+      "Bash(npm install *)",
+      "Bash(npm rebuild *)",
+      "Bash(Remove-Item -Force \".codegraph/codegraph.db.lock\" -ErrorAction SilentlyContinue)"
     ]
   }
 }

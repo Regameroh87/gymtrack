@@ -25,6 +25,7 @@
     "@tanstack/zod-form-adapter": "^0.42.1",
     "babel-plugin-inline-import": "^3.0.0",
     "babel-preset-expo": "^54.0.10",
+    "better-sqlite3": "^12.10.0",
     "drizzle-orm": "^0.45.2",
     "eslint-config-expo": "~10.0.0",
     "expo": "~54.0.33",
