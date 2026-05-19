@@ -153,9 +153,8 @@ export default function AttendanceKioskWeb() {
               {queryError.message}
             </Text>
             <Text className="text-ui-text-muted text-[11px] font-manrope text-center mt-3">
-              Verificá que la migración `20260518130000_attendance_qr.sql` esté
-              aplicada y que tu usuario tenga `gym_id` y rol staff
-              (coach/admin/owner).
+              Verificá que las migraciones estén aplicadas y que tu usuario
+              tenga un `gym_id` asignado.
             </Text>
           </View>
         ) : !gymId ? (
