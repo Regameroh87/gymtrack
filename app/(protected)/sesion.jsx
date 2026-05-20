@@ -541,9 +541,10 @@ function ActiveSession({ onEnd }) {
       </View>
 
       <ScrollView
+        className="flex-1"
         contentContainerStyle={{
           paddingTop: 24,
-          paddingBottom: insets.bottom + 36,
+          paddingBottom: 28,
           paddingHorizontal: 20,
         }}
         showsVerticalScrollIndicator={false}
