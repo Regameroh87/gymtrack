@@ -1,7 +1,8 @@
 // ── React Native ──
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 // ── Expo ──
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -17,6 +18,9 @@ import { ChevronRight, Barbell } from "../../../assets/icons";
 
 // ── Hooks ──
 import { useActivePlan } from "../../hooks/use-active-plan";
+
+// ── Utils ──
+import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 export default function HeroeCardHome({ image }) {
   const router = useRouter();
@@ -52,7 +56,13 @@ export default function HeroeCardHome({ image }) {
   const exerciseCount = exercises.length;
   const sessionImage =
     image ??
-    (session?.cover_image_uri ? { uri: session.cover_image_uri } : null);
+    (session?.cover_image_uri
+      ? {
+          uri:
+            getCloudinaryUrl(session.cover_image_uri) ??
+            session.cover_image_uri,
+        }
+      : null);
 
   return (
     <View>
@@ -151,14 +161,14 @@ export default function HeroeCardHome({ image }) {
                   <View className="flex-row items-center gap-2">
                     <View className="bg-brandSecondary-700 dark:bg-brandSecondary-400 w-1 h-1 rounded-sm" />
                     <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-[8px] tracking-[2px]">
-                      {`${objective} · semana ${firstWeek.week_number} día ${firstDay.day_number}`}
+                      {`${objective} · semana ${firstWeek.week_number} `}
                     </Text>
                   </View>
                   <Text
                     className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark text-[26px] leading-8 tracking-wider "
                     numberOfLines={3}
                   >
-                    {session?.name ?? "Sesión"}
+                    {activePlan.plan.name}
                   </Text>
                   <Text className="font-manrope text-[#0f0d20]/65 dark:text-white/60 text-sm mt-3 leading-5">
                     {`${exerciseCount} ${
@@ -182,15 +192,12 @@ export default function HeroeCardHome({ image }) {
                     padding: 2,
                   }}
                 >
-                  <View
-                    className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center overflow-hidden"
-                    style={{ borderRadius: 16 }}
-                  >
+                  <View className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center rounded-2xl overflow-hidden">
                     {sessionImage ? (
                       <Image
                         source={sessionImage}
                         className="w-full h-full"
-                        resizeMode="cover"
+                        contentFit="cover"
                       />
                     ) : (
                       <>
