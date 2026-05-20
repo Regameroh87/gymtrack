@@ -1,12 +1,20 @@
 // React Native
-import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
-import { useState, useEffect, useMemo } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 // Librerías externas
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
+import { useRouter } from "expo-router";
 
 // Tema / assets
 import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors.js";
@@ -18,58 +26,56 @@ import {
   CheckCircle,
 } from "../../assets/icons.jsx";
 
+// Hooks
+import { useActivePlanSummary } from "../../src/hooks/use-active-plan-summary";
+import { usePlanDayExercises } from "../../src/hooks/use-plan-day-exercises";
+
+// Componentes
+import PlanExerciseRow from "../../src/components/cards/plan-exercise-row";
+import VideoPlayerSheet from "../../src/components/videos/VideoPlayerSheet";
+
 const BRAND_PRIMARY = brandPrimary[700];
 const BRAND_PRIMARY_DEEP = brandPrimary[600];
 const BRAND_MINT = brandSecondary[400];
 
-const SESSION = {
-  planName: "Fuerza Total 4x",
-  dayLabel: "Día A",
-  sessionName: "Pecho & Tríceps",
-  estimatedMinutes: 60,
-  exercises: [
-    {
-      id: 1,
-      name: "Press de Banca",
-      muscleGroup: "Pecho",
-      refWeight: "80 kg",
-      repRange: "8–10",
-      sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
-    },
-    {
-      id: 2,
-      name: "Press Inclinado DB",
-      muscleGroup: "Pecho Superior",
-      refWeight: "22 kg",
-      repRange: "10–12",
-      sets: [{ id: 1 }, { id: 2 }, { id: 3 }],
-    },
-    {
-      id: 3,
-      name: "Cruces con Cable",
-      muscleGroup: "Pecho",
-      refWeight: "15 kg",
-      repRange: "12–15",
-      sets: [{ id: 1 }, { id: 2 }, { id: 3 }],
-    },
-    {
-      id: 4,
-      name: "Jalón Tríceps",
-      muscleGroup: "Tríceps",
-      refWeight: "40 kg",
-      repRange: "10–12",
-      sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
-    },
-    {
-      id: 5,
-      name: "Extensión OH Tríceps",
-      muscleGroup: "Tríceps",
-      refWeight: "25 kg",
-      repRange: "10–12",
-      sets: [{ id: 1 }, { id: 2 }, { id: 3 }],
-    },
-  ],
-};
+const MONTHS_ES = [
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DIC",
+];
+
+// ─── Helpers de prescripción ────────────────────────────────────────────────
+
+// Texto del objetivo de una serie según el modo del ejercicio.
+function setTargetLabel(set, mode) {
+  if ((mode ?? "reps") === "duration") {
+    return set.duration_seconds != null ? `${set.duration_seconds}s` : "—";
+  }
+  const lo = set.reps_min;
+  const hi = set.reps_max;
+  if (lo != null && hi != null) {
+    return lo === hi ? `${lo} reps` : `${lo}–${hi} reps`;
+  }
+  if (lo != null || hi != null) return `${lo ?? hi} reps`;
+  return "— reps";
+}
+
+// Peso de referencia del ejercicio: el mayor peso prescrito entre sus series.
+function refWeightLabel(exercise) {
+  const weights = exercise.sets
+    .map((s) => s.weight_kg)
+    .filter((w) => w != null);
+  return weights.length ? `${Math.max(...weights)} kg` : "Libre";
+}
 
 function useTokens() {
   const { colorScheme } = useColorScheme();
@@ -100,14 +106,27 @@ function useTokens() {
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
 
-function PreviewScreen({ onStart }) {
+function PreviewScreen({ session, onStart }) {
   const insets = useSafeAreaInsets();
   const t = useTokens();
 
+  const videoSheetRef = useRef(null);
+  const [activeVideo, setActiveVideo] = useState(null);
+
+  const handleVideoPress = ({ url, kind, title }) => {
+    setActiveVideo({ url, kind, title });
+    videoSheetRef.current?.present();
+  };
+
   const avgSets = useMemo(() => {
-    const total = SESSION.exercises.reduce((s, ex) => s + ex.sets.length, 0);
-    return Math.round(total / SESSION.exercises.length);
-  }, []);
+    const total = session.exercises.reduce((s, ex) => s + ex.sets.length, 0);
+    return session.exercises.length
+      ? Math.round(total / session.exercises.length)
+      : 0;
+  }, [session.exercises]);
+
+  const now = new Date();
+  const dateLabel = `${now.getDate()} ${MONTHS_ES[now.getMonth()]} ${now.getFullYear()}`;
 
   return (
     <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
@@ -166,7 +185,7 @@ function PreviewScreen({ onStart }) {
                 className="font-jakarta-bold"
                 style={{ fontSize: 10, color: t.mutedText, letterSpacing: 2 }}
               >
-                20 MAY 2026
+                {dateLabel}
               </Text>
             </View>
           </View>
@@ -187,7 +206,7 @@ function PreviewScreen({ onStart }) {
               className="font-manrope-bold uppercase"
               style={{ fontSize: 9, color: BRAND_PRIMARY, letterSpacing: 1.8 }}
             >
-              {SESSION.planName} · {SESSION.dayLabel}
+              {session.planName} · {session.dayLabel}
             </Text>
           </View>
 
@@ -195,21 +214,22 @@ function PreviewScreen({ onStart }) {
           <Text
             className="font-jakarta-bold"
             style={{
-              fontSize: 40,
-              lineHeight: 44,
-              letterSpacing: -1.4,
+              fontSize: 28,
+              lineHeight: 32,
+              letterSpacing: -0.8,
               color: t.mainText,
             }}
+            numberOfLines={2}
           >
-            {SESSION.sessionName}.
+            {session.sessionName}.
           </Text>
         </View>
 
         {/* ── Stats ── */}
         <View className="flex-row gap-2.5 mb-8">
           {[
-            { value: `${SESSION.exercises.length}`, label: "ejercicios" },
-            { value: `${SESSION.estimatedMinutes}'`, label: "est." },
+            { value: `${session.exercises.length}`, label: "ejercicios" },
+            { value: `${session.estimatedMinutes}'`, label: "est." },
             { value: `${avgSets}`, label: "series avg" },
           ].map((stat, i) => (
             <View
@@ -266,95 +286,14 @@ function PreviewScreen({ onStart }) {
             />
           </View>
 
-          <View
-            style={{
-              borderRadius: 22,
-              backgroundColor: t.cardBg,
-              borderWidth: 1,
-              borderColor: t.cardBorder,
-              overflow: "hidden",
-            }}
-          >
-            {SESSION.exercises.map((ex, idx) => (
-              <View key={ex.id}>
-                {idx > 0 && (
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: t.divider,
-                      marginHorizontal: 18,
-                    }}
-                  />
-                )}
-                <View
-                  className="flex-row items-center gap-3.5"
-                  style={{ paddingHorizontal: 18, paddingVertical: 15 }}
-                >
-                  <Text
-                    className="font-jakarta-bold"
-                    style={{
-                      fontSize: 11,
-                      color: t.bigNumber,
-                      width: 22,
-                      letterSpacing: 0.4,
-                    }}
-                  >
-                    {String(idx + 1).padStart(2, "0")}
-                  </Text>
-
-                  <View className="flex-1 gap-1">
-                    <Text
-                      className="font-jakarta-semi"
-                      style={{
-                        fontSize: 14,
-                        color: t.mainText,
-                        letterSpacing: -0.2,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {ex.name}
-                    </Text>
-                    <View className="flex-row items-center gap-1.5">
-                      <View
-                        style={{
-                          paddingHorizontal: 7,
-                          paddingVertical: 2,
-                          borderRadius: 6,
-                          backgroundColor: t.mintSurface,
-                        }}
-                      >
-                        <Text
-                          className="font-manrope-bold uppercase"
-                          style={{
-                            fontSize: 8,
-                            color: t.kickerMint,
-                            letterSpacing: 1.2,
-                          }}
-                        >
-                          {ex.muscleGroup}
-                        </Text>
-                      </View>
-                      <Text
-                        className="font-manrope"
-                        style={{ fontSize: 12, color: t.mutedText }}
-                      >
-                        {ex.sets.length} × {ex.repRange} reps
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text
-                    className="font-jakarta-bold"
-                    style={{
-                      fontSize: 13,
-                      color: t.bigNumber,
-                      letterSpacing: -0.2,
-                    }}
-                  >
-                    {ex.refWeight}
-                  </Text>
-                </View>
-              </View>
+          <View style={{ gap: 10 }}>
+            {session.exercises.map((ex, idx) => (
+              <PlanExerciseRow
+                key={ex.id}
+                exercise={ex}
+                position={idx + 1}
+                onVideoPress={handleVideoPress}
+              />
             ))}
           </View>
         </View>
@@ -405,13 +344,19 @@ function PreviewScreen({ onStart }) {
           </LinearGradient>
         </Pressable>
       </ScrollView>
+
+      <VideoPlayerSheet
+        sheetRef={videoSheetRef}
+        videoUrl={activeVideo?.url}
+        title={activeVideo?.title}
+      />
     </View>
   );
 }
 
 // ─── Active session ──────────────────────────────────────────────────────────
 
-function ActiveSession({ onEnd }) {
+function ActiveSession({ session, onEnd }) {
   const insets = useSafeAreaInsets();
   const t = useTokens();
 
@@ -431,13 +376,13 @@ function ActiveSession({ onEnd }) {
     return () => clearInterval(id);
   }, []);
 
-  const exercise = SESSION.exercises[currentIdx];
+  const exercise = session.exercises[currentIdx];
   const canPrev = currentIdx > 0;
-  const canNext = currentIdx < SESSION.exercises.length - 1;
+  const canNext = currentIdx < session.exercises.length - 1;
 
   const totalSets = useMemo(
-    () => SESSION.exercises.reduce((s, ex) => s + ex.sets.length, 0),
-    []
+    () => session.exercises.reduce((s, ex) => s + ex.sets.length, 0),
+    [session.exercises]
   );
   const doneCount = completedSets.size;
 
@@ -555,10 +500,10 @@ function ActiveSession({ onEnd }) {
             className="font-manrope-bold uppercase"
             style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.2 }}
           >
-            Ejercicio {currentIdx + 1} de {SESSION.exercises.length}
+            Ejercicio {currentIdx + 1} de {session.exercises.length}
           </Text>
           <View className="flex-row gap-1">
-            {SESSION.exercises.map((_, i) => (
+            {session.exercises.map((_, i) => (
               <View
                 key={i}
                 style={{
@@ -626,7 +571,7 @@ function ActiveSession({ onEnd }) {
                     letterSpacing: 1.6,
                   }}
                 >
-                  {exercise.muscleGroup}
+                  {exercise.exercise_muscle}
                 </Text>
               </View>
 
@@ -650,7 +595,7 @@ function ActiveSession({ onEnd }) {
                     letterSpacing: 0.4,
                   }}
                 >
-                  {exercise.refWeight}
+                  {refWeightLabel(exercise)}
                 </Text>
               </View>
             </View>
@@ -664,7 +609,7 @@ function ActiveSession({ onEnd }) {
                 color: t.mainText,
               }}
             >
-              {exercise.name}
+              {exercise.exercise_name}
             </Text>
           </View>
 
@@ -721,7 +666,7 @@ function ActiveSession({ onEnd }) {
                           color: done ? dimColor : t.kickerMint,
                         }}
                       >
-                        {exercise.repRange} reps
+                        {setTargetLabel(set, exercise.prescription_mode)}
                       </Text>
                     </View>
 
@@ -734,7 +679,9 @@ function ActiveSession({ onEnd }) {
                       keyboardType="decimal-pad"
                       editable={!done}
                       selectTextOnFocus
-                      placeholder="—"
+                      placeholder={
+                        set.weight_kg != null ? String(set.weight_kg) : "—"
+                      }
                       placeholderTextColor={
                         t.isDark
                           ? "rgba(255,255,255,0.2)"
@@ -916,7 +863,7 @@ function ActiveSession({ onEnd }) {
                   className="font-jakarta-bold text-white text-[15px] tracking-[-0.3px]"
                   numberOfLines={1}
                 >
-                  {SESSION.exercises[currentIdx + 1].name}
+                  {session.exercises[currentIdx + 1].exercise_name}
                 </Text>
               </View>
             ) : (
@@ -938,18 +885,117 @@ function ActiveSession({ onEnd }) {
   );
 }
 
+// ─── Estado vacío / carga ──────────────────────────────────────────────────────
+
+function StatusScreen({ children }) {
+  const t = useTokens();
+  return (
+    <View
+      className="flex-1 items-center justify-center px-10"
+      style={{ backgroundColor: t.pageBg }}
+    >
+      {children}
+    </View>
+  );
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function Sesion() {
   const [phase, setPhase] = useState("preview");
   const t = useTokens();
+  const router = useRouter();
+
+  const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
+  const currentDay = summary?.currentDay ?? null;
+  const { data: dayExercises = [], isLoading: loadingExercises } =
+    usePlanDayExercises(currentDay?.id);
+
+  // El plan que toca se calcula desde session_logs (ver useActivePlanSummary):
+  // currentDay trae el plan_week_day; usePlanDayExercises trae su prescripción.
+  const session = useMemo(() => {
+    if (!summary || !currentDay) return null;
+    const estimatedMinutes = Math.round(
+      dayExercises.reduce((acc, ex) => {
+        const perSet = (ex.rest_seconds ?? 90) + 45;
+        return acc + ex.sets.length * perSet;
+      }, 0) / 60
+    );
+    return {
+      planName: summary.plan.name,
+      dayLabel: `Día ${currentDay.day_number}`,
+      weekNumber: currentDay.week_number,
+      sessionName: currentDay.session?.name ?? summary.plan.name,
+      exercises: dayExercises,
+      estimatedMinutes,
+    };
+  }, [summary, currentDay, dayExercises]);
+
+  if (loadingSummary || (currentDay && loadingExercises)) {
+    return (
+      <StatusScreen>
+        <ActivityIndicator size="large" color={BRAND_PRIMARY} />
+      </StatusScreen>
+    );
+  }
+
+  // Sin asignación activa, plan completado o sin día disponible.
+  if (!session) {
+    return (
+      <StatusScreen>
+        <Text
+          className="font-jakarta-bold text-center"
+          style={{ fontSize: 18, color: t.mainText, marginBottom: 6 }}
+        >
+          No tenés una sesión pendiente
+        </Text>
+        <Text
+          className="font-manrope text-center"
+          style={{ fontSize: 14, color: t.mutedText }}
+        >
+          {summary?.isCompleted
+            ? "Completaste todo el plan. ¡Buen trabajo!"
+            : "Cuando tengas un plan activo, tu próxima sesión va a aparecer acá."}
+        </Text>
+      </StatusScreen>
+    );
+  }
+
+  // Día sin ejercicios prescritos: no se puede entrenar.
+  if (session.exercises.length === 0) {
+    return (
+      <StatusScreen>
+        <Barbell size={32} color={t.mutedText} />
+        <Text
+          className="font-jakarta-bold text-center"
+          style={{ fontSize: 18, color: t.mainText, marginTop: 14 }}
+        >
+          {session.sessionName}
+        </Text>
+        <Text
+          className="font-manrope text-center"
+          style={{ fontSize: 14, color: t.mutedText, marginTop: 6 }}
+        >
+          Esta sesión todavía no tiene ejercicios cargados.
+        </Text>
+        <Pressable onPress={() => router.back()} className="mt-6">
+          <Text
+            className="font-jakarta-bold"
+            style={{ fontSize: 14, color: BRAND_PRIMARY }}
+          >
+            Volver
+          </Text>
+        </Pressable>
+      </StatusScreen>
+    );
+  }
 
   return (
     <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
       {phase === "preview" ? (
-        <PreviewScreen onStart={() => setPhase("active")} />
+        <PreviewScreen session={session} onStart={() => setPhase("active")} />
       ) : (
-        <ActiveSession onEnd={() => setPhase("preview")} />
+        <ActiveSession session={session} onEnd={() => setPhase("preview")} />
       )}
     </View>
   );
