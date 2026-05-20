@@ -823,152 +823,145 @@ function ActiveSession({ onEnd }) {
         </View>
 
         {/* ── Navegación ejercicios ── */}
-        <View className="flex-row gap-3 mb-5">
-          {/* Anterior */}
-          {canPrev && (
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setCurrentIdx((i) => i - 1);
+        <View
+          className="flex-row mb-5"
+          style={{
+            borderRadius: 20,
+            backgroundColor: t.cardBg,
+            borderWidth: 1,
+            borderColor: t.cardBorder,
+            shadowColor: "#0f0d20",
+            shadowOpacity: t.isDark ? 0 : 0.05,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 3 },
+          }}
+        >
+          {/* ← Anterior */}
+          <Pressable
+            onPress={() => {
+              if (!canPrev) return;
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setCurrentIdx((i) => i - 1);
+            }}
+            disabled={!canPrev}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: 16,
+              paddingLeft: 16,
+              paddingRight: 12,
+              opacity: !canPrev ? 0.28 : pressed ? 0.6 : 1,
+            })}
+          >
+            <View
+              className="items-center justify-center"
+              style={{
+                alignSelf: "flex-start",
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                marginBottom: 10,
+                backgroundColor: canPrev ? t.mintSurface : t.ghostBg,
+                borderWidth: 1,
+                borderColor: canPrev
+                  ? t.isDark
+                    ? "rgba(42,232,204,0.25)"
+                    : "rgba(0,80,71,0.12)"
+                  : t.ghostBorder,
               }}
-              style={({ pressed }) => ({
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-                borderRadius: 20,
-                backgroundColor: t.cardBg,
-                borderWidth: 1.5,
-                borderColor: t.cardBorder,
-                shadowColor: "#0f0d20",
-                shadowOpacity: t.isDark ? 0 : 0.06,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 3 },
-                elevation: 2,
-                opacity: pressed ? 0.7 : 1,
-              })}
             >
-              {/* Ícono con fondo mint */}
-              <View
-                className="items-center justify-center"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: t.mintSurface,
-                  borderWidth: 1,
-                  borderColor: t.isDark
-                    ? "rgba(42,232,204,0.2)"
-                    : "rgba(0,80,71,0.12)",
-                }}
-              >
-                <ChevronRight
-                  size={14}
-                  color={t.kickerMint}
-                  style={{ transform: [{ rotate: "180deg" }] }}
-                />
-              </View>
-              <View className="flex-1">
-                <Text
-                  className="font-manrope-bold uppercase"
-                  style={{
-                    fontSize: 8,
-                    color: t.mutedText,
-                    letterSpacing: 2,
-                    marginBottom: 3,
-                  }}
-                >
-                  Anterior
-                </Text>
-                <Text
-                  className="font-jakarta-semi"
-                  style={{
-                    fontSize: 13,
-                    color: t.mainText,
-                    letterSpacing: -0.3,
-                  }}
-                  numberOfLines={1}
-                >
-                  {SESSION.exercises[currentIdx - 1].name}
-                </Text>
-              </View>
-            </Pressable>
-          )}
+              <ChevronRight
+                size={13}
+                color={canPrev ? t.kickerMint : t.mutedText}
+                style={{ transform: [{ rotate: "180deg" }] }}
+              />
+            </View>
+            <Text
+              className="font-manrope-bold uppercase"
+              style={{
+                fontSize: 8,
+                color: t.mutedText,
+                letterSpacing: 2,
+                marginBottom: 3,
+              }}
+            >
+              Anterior
+            </Text>
+            <Text
+              className="font-jakarta-semi"
+              style={{
+                fontSize: 12,
+                color: canPrev ? t.mainText : t.mutedText,
+                letterSpacing: -0.2,
+              }}
+              numberOfLines={1}
+            >
+              {canPrev ? SESSION.exercises[currentIdx - 1].name : "—"}
+            </Text>
+          </Pressable>
 
-          {/* Siguiente */}
-          {canNext && (
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setCurrentIdx((i) => i + 1);
+          {/* Divider vertical */}
+          <View
+            style={{ width: 1, backgroundColor: t.divider, marginVertical: 14 }}
+          />
+
+          {/* → Siguiente */}
+          <Pressable
+            onPress={() => {
+              if (!canNext) return;
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setCurrentIdx((i) => i + 1);
+            }}
+            disabled={!canNext}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: 16,
+              paddingRight: 16,
+              paddingLeft: 12,
+              alignItems: "flex-end",
+              opacity: !canNext ? 0.28 : pressed ? 0.6 : 1,
+            })}
+          >
+            <View
+              className="items-center justify-center"
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                marginBottom: 10,
+                backgroundColor: canNext ? BRAND_PRIMARY : t.ghostBg,
+                borderWidth: canNext ? 0 : 1,
+                borderColor: t.ghostBorder,
+                shadowColor: canNext ? BRAND_PRIMARY : "transparent",
+                shadowOpacity: canNext ? 0.5 : 0,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
               }}
-              style={({ pressed }) => ({
-                flex: 1,
-                borderRadius: 20,
-                shadowColor: BRAND_PRIMARY,
-                shadowOpacity: 0.5,
-                shadowRadius: 20,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 8,
-                opacity: pressed ? 0.82 : 1,
-              })}
             >
-              <LinearGradient
-                colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  flex: 1,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  gap: 12,
-                  paddingVertical: 14,
-                  paddingHorizontal: 16,
-                  borderRadius: 20,
-                }}
-              >
-                <View className="flex-1 items-end">
-                  <Text
-                    className="font-manrope-bold uppercase"
-                    style={{
-                      fontSize: 8,
-                      color: "rgba(255,255,255,0.55)",
-                      letterSpacing: 2,
-                      marginBottom: 3,
-                    }}
-                  >
-                    Siguiente
-                  </Text>
-                  <Text
-                    className="font-jakarta-semi"
-                    style={{
-                      fontSize: 13,
-                      color: "white",
-                      letterSpacing: -0.3,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {SESSION.exercises[currentIdx + 1].name}
-                  </Text>
-                </View>
-                {/* Ícono con fondo blanco translúcido */}
-                <View
-                  className="items-center justify-center"
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: "rgba(255,255,255,0.18)",
-                  }}
-                >
-                  <ChevronRight size={14} color="white" />
-                </View>
-              </LinearGradient>
-            </Pressable>
-          )}
+              <ChevronRight size={13} color={canNext ? "white" : t.mutedText} />
+            </View>
+            <Text
+              className="font-manrope-bold uppercase"
+              style={{
+                fontSize: 8,
+                color: t.mutedText,
+                letterSpacing: 2,
+                marginBottom: 3,
+              }}
+            >
+              Siguiente
+            </Text>
+            <Text
+              className="font-jakarta-semi"
+              style={{
+                fontSize: 12,
+                color: canNext ? t.mainText : t.mutedText,
+                letterSpacing: -0.2,
+              }}
+              numberOfLines={1}
+            >
+              {canNext ? SESSION.exercises[currentIdx + 1].name : "—"}
+            </Text>
+          </Pressable>
         </View>
 
         {/* ── Series counter ── */}
