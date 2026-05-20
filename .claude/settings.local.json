@@ -9,7 +9,8 @@
       "Bash(codegraph sync *)",
       "Bash(npm install *)",
       "Bash(npm rebuild *)",
-      "Bash(Remove-Item -Force \".codegraph/codegraph.db.lock\" -ErrorAction SilentlyContinue)"
+      "Bash(Remove-Item -Force \".codegraph/codegraph.db.lock\" -ErrorAction SilentlyContinue)",
+      "mcp__claude_ai_Supabase__list_tables"
     ]
   }
 }
