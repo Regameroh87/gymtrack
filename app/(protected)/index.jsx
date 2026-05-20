@@ -230,53 +230,30 @@ export default function Home() {
                   gap: 16,
                 }}
               >
-                <View className="flex-1 justify-between" style={{ gap: 14 }}>
-                  <View style={{ gap: 8 }}>
-                    <View className="flex-row items-center" style={{ gap: 6 }}>
-                      <View
-                        className="bg-brandSecondary-700 dark:bg-brandSecondary-400"
-                        style={{ width: 4, height: 4, borderRadius: 2 }}
-                      />
-                      <Text
-                        className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400"
-                        style={{ fontSize: 9, letterSpacing: 1.6 }}
-                      >
-                        Fuerza Total 4x · Día A
+                <View className="flex-1 justify-between gap-4">
+                  <View className=" gap-2">
+                    <View className="flex-row items-center gap-2">
+                      <View className="bg-brandSecondary-700 dark:bg-brandSecondary-400 w-1 h-1 rounded-sm" />
+                      <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-[8px] tracking-[2px]">
+                        Fuerza semana 1 dia 1
+                        {/* Iria objetivo del plan semana y dia que toca */}
                       </Text>
                     </View>
                     <Text
-                      className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
-                      style={{
-                        fontSize: 26,
-                        lineHeight: 30,
-                        letterSpacing: -0.8,
-                      }}
+                      className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark text-[26px] leading-8 tracking-wider "
                       numberOfLines={3}
                     >
-                      Pecho &{"\n"}Tríceps.
+                      Pecho &{"\n"}Tríceps. {/* Titulo del Plan */}
                     </Text>
-                    <Text
-                      className="font-manrope text-[#0f0d20]/65 dark:text-white/60"
-                      style={{ fontSize: 13, lineHeight: 19, marginTop: 2 }}
-                    >
-                      5 ejercicios · 60 min est.
+                    <Text className="font-manrope text-[#0f0d20]/65 dark:text-white/60 text-sm mt-3 leading-5">
+                      5 ejercicios · 60 min {/* Duracion de la sesion*/}
                     </Text>
                   </View>
                 </View>
 
                 {/* Placeholder visual */}
                 <View style={{ gap: 6, alignItems: "center" }}>
-                  <View
-                    className="bg-brandSecondary-400"
-                    style={{
-                      position: "absolute",
-                      left: -10,
-                      top: 12,
-                      width: 3,
-                      height: 36,
-                      borderRadius: 2,
-                    }}
-                  />
+                  <View className="bg-brandSecondary-400 absolute -left-[10px] top-3 w-1 h-9 rounded-sm " />
                   <View
                     className="rounded-2xl overflow-hidden items-center justify-center border border-[#0f0d20]/10 dark:border-white/[12%]"
                     style={{
