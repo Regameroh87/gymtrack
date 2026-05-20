@@ -196,7 +196,7 @@ export default function HeroeCardHome({ image }) {
                     {sessionImage ? (
                       <Image
                         source={sessionImage}
-                        className="w-full h-full"
+                        style={{ width: "100%", height: "100%" }}
                         contentFit="cover"
                       />
                     ) : (
