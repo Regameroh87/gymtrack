@@ -286,10 +286,7 @@ function ActiveSession({ session, onEnd }) {
   return (
     <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       {/* ── Top bar ── */}
-      <View
-        className="flex-row items-center justify-between px-5 pb-3.5"
-        style={{ paddingTop: insets.top + 12 }}
-      >
+      <View className="flex-row items-center justify-between px-5 pb-3.5">
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
