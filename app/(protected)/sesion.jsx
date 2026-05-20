@@ -1,5 +1,5 @@
 // React Native
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
 import { useState, useEffect, useMemo } from "react";
 
 // Librerías externas
@@ -28,63 +28,11 @@ const SESSION = {
   sessionName: "Pecho & Tríceps",
   estimatedMinutes: 60,
   exercises: [
-    {
-      id: 1,
-      name: "Press de Banca",
-      muscleGroup: "Pecho",
-      refWeight: "80 kg",
-      sets: [
-        { id: 1, weight: 80, reps: 10 },
-        { id: 2, weight: 80, reps: 10 },
-        { id: 3, weight: 80, reps: 8 },
-        { id: 4, weight: 80, reps: 8 },
-      ],
-    },
-    {
-      id: 2,
-      name: "Press Inclinado DB",
-      muscleGroup: "Pecho Superior",
-      refWeight: "22 kg",
-      sets: [
-        { id: 1, weight: 22, reps: 12 },
-        { id: 2, weight: 22, reps: 12 },
-        { id: 3, weight: 22, reps: 10 },
-      ],
-    },
-    {
-      id: 3,
-      name: "Cruces con Cable",
-      muscleGroup: "Pecho",
-      refWeight: "15 kg",
-      sets: [
-        { id: 1, weight: 15, reps: 15 },
-        { id: 2, weight: 15, reps: 15 },
-        { id: 3, weight: 15, reps: 12 },
-      ],
-    },
-    {
-      id: 4,
-      name: "Jalón Tríceps",
-      muscleGroup: "Tríceps",
-      refWeight: "40 kg",
-      sets: [
-        { id: 1, weight: 40, reps: 12 },
-        { id: 2, weight: 40, reps: 12 },
-        { id: 3, weight: 42, reps: 10 },
-        { id: 4, weight: 42, reps: 10 },
-      ],
-    },
-    {
-      id: 5,
-      name: "Extensión OH Tríceps",
-      muscleGroup: "Tríceps",
-      refWeight: "25 kg",
-      sets: [
-        { id: 1, weight: 25, reps: 12 },
-        { id: 2, weight: 25, reps: 12 },
-        { id: 3, weight: 25, reps: 10 },
-      ],
-    },
+    { id: 1, name: "Press de Banca",       muscleGroup: "Pecho",          refWeight: "80 kg", repRange: "8–10",  sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }] },
+    { id: 2, name: "Press Inclinado DB",   muscleGroup: "Pecho Superior", refWeight: "22 kg", repRange: "10–12", sets: [{ id: 1 }, { id: 2 }, { id: 3 }] },
+    { id: 3, name: "Cruces con Cable",     muscleGroup: "Pecho",          refWeight: "15 kg", repRange: "12–15", sets: [{ id: 1 }, { id: 2 }, { id: 3 }] },
+    { id: 4, name: "Jalón Tríceps",        muscleGroup: "Tríceps",        refWeight: "40 kg", repRange: "10–12", sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }] },
+    { id: 5, name: "Extensión OH Tríceps", muscleGroup: "Tríceps",        refWeight: "25 kg", repRange: "10–12", sets: [{ id: 1 }, { id: 2 }, { id: 3 }] },
   ],
 };
 
@@ -310,12 +258,7 @@ function PreviewScreen({ onStart }) {
                         className="font-manrope"
                         style={{ fontSize: 12, color: t.mutedText }}
                       >
-                        {ex.sets.length} ×{" "}
-                        {ex.sets[0].reps}
-                        {ex.sets[ex.sets.length - 1].reps !== ex.sets[0].reps
-                          ? `–${ex.sets[ex.sets.length - 1].reps}`
-                          : ""}{" "}
-                        reps
+                        {ex.sets.length} × {ex.repRange} reps
                       </Text>
                     </View>
                   </View>
@@ -392,6 +335,13 @@ function ActiveSession({ onEnd }) {
   const [elapsed, setElapsed] = useState(0);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [completedSets, setCompletedSets] = useState(new Set());
+  const [setData, setSetData] = useState({});
+  const [setNotes, setSetNotes] = useState({});
+
+  function updateWeight(exId, setId, value) {
+    const key = `${exId}-${setId}`;
+    setSetData((prev) => ({ ...prev, [key]: { weight: value } }));
+  }
 
   useEffect(() => {
     const id = setInterval(() => setElapsed((s) => s + 1), 1000);
@@ -401,6 +351,7 @@ function ActiveSession({ onEnd }) {
   const exercise = SESSION.exercises[currentIdx];
   const canPrev = currentIdx > 0;
   const canNext = currentIdx < SESSION.exercises.length - 1;
+
 
   const totalSets = useMemo(
     () => SESSION.exercises.reduce((s, ex) => s + ex.sets.length, 0),
@@ -526,28 +477,6 @@ function ActiveSession({ onEnd }) {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Timer hero ───────────────────────────────────────────────── */}
-        <View style={{ alignItems: "center", marginBottom: 28 }}>
-          {/* Giant number as editorial backdrop */}
-          <Text
-            className="font-jakarta-bold"
-            style={{
-              fontSize: 90,
-              lineHeight: 90,
-              letterSpacing: -5,
-              color: BRAND_PRIMARY,
-            }}
-          >
-            {timerStr}
-          </Text>
-          <Text
-            className="font-manrope-bold uppercase"
-            style={{ fontSize: 9, color: t.mutedText, letterSpacing: 2.4, marginTop: 4 }}
-          >
-            Tiempo transcurrido
-          </Text>
-        </View>
-
         {/* ── Exercise progress ─────────────────────────────────────────── */}
         <View
           style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 }}
@@ -663,86 +592,136 @@ function ActiveSession({ onEnd }) {
           <View style={{ height: 1, backgroundColor: t.divider, marginHorizontal: 20 }} />
 
           {/* Set rows */}
-          <View style={{ paddingHorizontal: 20, paddingVertical: 18, gap: 12 }}>
+          <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8, gap: 10 }}>
             {exercise.sets.map((set, si) => {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
+              const dimColor = t.isDark ? "rgba(255,255,255,0.25)" : "rgba(15,13,32,0.25)";
               return (
-                <View key={set.id} style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-                  <Text
-                    className="font-manrope-bold uppercase"
-                    style={{
-                      fontSize: 11,
-                      color: done ? t.kickerMint : t.mutedText,
-                      letterSpacing: 1.2,
-                      width: 24,
-                    }}
-                  >
-                    S{si + 1}
-                  </Text>
-
-                  <View style={{ flex: 1 }}>
+                <View key={set.id} style={{ gap: 6 }}>
+                  {/* Main row */}
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    {/* Set label */}
                     <Text
-                      className="font-jakarta-semi"
+                      className="font-manrope-bold uppercase"
                       style={{
-                        fontSize: 16,
-                        letterSpacing: -0.3,
-                        color: done
-                          ? t.isDark
-                            ? "rgba(255,255,255,0.3)"
-                            : "rgba(15,13,32,0.3)"
-                          : t.mainText,
-                        textDecorationLine: done ? "line-through" : "none",
+                        fontSize: 11,
+                        color: done ? t.kickerMint : t.mutedText,
+                        letterSpacing: 1.2,
+                        width: 24,
                       }}
                     >
-                      {set.weight} kg × {set.reps}
+                      S{si + 1}
                     </Text>
+
+                    {/* Target reps chip */}
+                    <View
+                      style={{
+                        paddingHorizontal: 9,
+                        paddingVertical: 4,
+                        borderRadius: 8,
+                        backgroundColor: done ? "transparent" : t.mintSurface,
+                        borderWidth: 1,
+                        borderColor: done ? "transparent" : t.isDark ? "rgba(42,232,204,0.2)" : "rgba(0,80,71,0.15)",
+                      }}
+                    >
+                      <Text
+                        className="font-manrope-bold"
+                        style={{
+                          fontSize: 12,
+                          color: done ? dimColor : t.kickerMint,
+                        }}
+                      >
+                        {exercise.repRange} reps
+                      </Text>
+                    </View>
+
+                    <View style={{ flex: 1 }} />
+
+                    {/* Kg input */}
+                    <TextInput
+                      value={setData[key]?.weight ?? ""}
+                      onChangeText={(v) => updateWeight(exercise.id, set.id, v)}
+                      keyboardType="decimal-pad"
+                      editable={!done}
+                      selectTextOnFocus
+                      placeholder="— kg"
+                      placeholderTextColor={t.isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"}
+                      style={{
+                        width: 64,
+                        paddingHorizontal: 10,
+                        paddingVertical: 7,
+                        borderRadius: 10,
+                        backgroundColor: done ? "transparent" : t.ghostBg,
+                        borderWidth: 1,
+                        borderColor: done ? "transparent" : t.ghostBorder,
+                        fontFamily: "PlusJakartaSans-SemiBold",
+                        fontSize: 15,
+                        color: done ? dimColor : t.mainText,
+                        textAlign: "center",
+                      }}
+                    />
+                    <Text className="font-manrope" style={{ fontSize: 12, color: t.mutedText }}>
+                      kg
+                    </Text>
+
+                    {/* Toggle */}
+                    <Pressable
+                      onPress={() => toggleSet(exercise.id, set.id)}
+                      hitSlop={10}
+                      style={({ pressed }) => ({
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: done ? BRAND_MINT : t.ghostBg,
+                        borderWidth: 1.5,
+                        borderColor: done
+                          ? BRAND_MINT
+                          : t.isDark ? "rgba(255,255,255,0.15)" : "rgba(15,13,32,0.14)",
+                        shadowColor: done ? BRAND_MINT : "transparent",
+                        shadowOpacity: done ? 0.65 : 0,
+                        shadowRadius: 10,
+                        shadowOffset: { width: 0, height: 2 },
+                        opacity: pressed ? 0.72 : 1,
+                      })}
+                    >
+                      {done && (
+                        <CheckCircle size={18} color={t.isDark ? "#0f0d20" : "#ffffff"} />
+                      )}
+                    </Pressable>
                   </View>
 
-                  <Pressable
-                    onPress={() => toggleSet(exercise.id, set.id)}
-                    hitSlop={10}
-                    style={({ pressed }) => ({
-                      width: 34,
-                      height: 34,
-                      borderRadius: 17,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: done ? BRAND_MINT : t.ghostBg,
-                      borderWidth: 1.5,
-                      borderColor: done
-                        ? BRAND_MINT
-                        : t.isDark
-                          ? "rgba(255,255,255,0.15)"
-                          : "rgba(15,13,32,0.14)",
-                      shadowColor: done ? BRAND_MINT : "transparent",
-                      shadowOpacity: done ? 0.65 : 0,
-                      shadowRadius: 10,
-                      shadowOffset: { width: 0, height: 2 },
-                      opacity: pressed ? 0.72 : 1,
-                    })}
-                  >
-                    {done && (
-                      <CheckCircle
-                        size={18}
-                        color={t.isDark ? "#0f0d20" : "#ffffff"}
-                      />
-                    )}
-                  </Pressable>
+                  {/* Per-set note */}
+                  <TextInput
+                    value={setNotes[key] ?? ""}
+                    onChangeText={(v) =>
+                      setSetNotes((prev) => ({ ...prev, [key]: v }))
+                    }
+                    placeholder="Nota de la serie..."
+                    placeholderTextColor={t.isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"}
+                    style={{
+                      marginLeft: 34,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 9,
+                      backgroundColor: t.ghostBg,
+                      borderWidth: 1,
+                      borderColor: t.ghostBorder,
+                      fontFamily: "Manrope",
+                      fontSize: 12,
+                      color: t.mainText,
+                    }}
+                  />
                 </View>
               );
             })}
           </View>
 
           {/* Prev / Next navigation */}
-          <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 16,
-              paddingBottom: 16,
-              gap: 10,
-            }}
-          >
+          <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingBottom: 16, gap: 10 }}>
+            {/* Anterior */}
             <Pressable
               onPress={() => {
                 if (!canPrev) return;
@@ -751,32 +730,51 @@ function ActiveSession({ onEnd }) {
               }}
               disabled={!canPrev}
               style={({ pressed }) => ({
-                flex: 1,
+                flex: canPrev ? 1 : 0,
                 paddingVertical: 12,
-                borderRadius: 14,
+                paddingHorizontal: 14,
+                borderRadius: 16,
                 backgroundColor: t.ghostBg,
                 borderWidth: 1,
                 borderColor: t.ghostBorder,
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                opacity: !canPrev ? 0.3 : pressed ? 0.65 : 1,
+                gap: 10,
+                opacity: !canPrev ? 0 : pressed ? 0.6 : 1,
               })}
             >
-              <ChevronRight
-                size={14}
-                color={t.mutedText}
-                style={{ transform: [{ rotate: "180deg" }] }}
-              />
-              <Text
-                className="font-manrope-bold"
-                style={{ fontSize: 12, color: t.mutedText, letterSpacing: 0.3 }}
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  backgroundColor: t.ghostBg,
+                  borderWidth: 1,
+                  borderColor: t.ghostBorder,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                Anterior
-              </Text>
+                <ChevronRight size={13} color={t.mutedText} style={{ transform: [{ rotate: "180deg" }] }} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  className="font-manrope-bold uppercase"
+                  style={{ fontSize: 8, color: t.mutedText, letterSpacing: 1.6, marginBottom: 2 }}
+                >
+                  Anterior
+                </Text>
+                <Text
+                  className="font-jakarta-semi"
+                  style={{ fontSize: 12, color: t.mainText, letterSpacing: -0.2 }}
+                  numberOfLines={1}
+                >
+                  {canPrev ? SESSION.exercises[currentIdx - 1].name : ""}
+                </Text>
+              </View>
             </Pressable>
 
+            {/* Siguiente */}
             <Pressable
               onPress={() => {
                 if (!canNext) return;
@@ -785,26 +783,50 @@ function ActiveSession({ onEnd }) {
               }}
               disabled={!canNext}
               style={({ pressed }) => ({
-                flex: 1,
+                flex: canNext ? 1 : 0,
                 paddingVertical: 12,
-                borderRadius: 14,
-                backgroundColor: t.primaryFill,
-                borderWidth: 1,
-                borderColor: t.primaryBorder,
+                paddingHorizontal: 14,
+                borderRadius: 16,
+                backgroundColor: BRAND_PRIMARY,
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                opacity: !canNext ? 0.3 : pressed ? 0.65 : 1,
+                justifyContent: "flex-end",
+                gap: 10,
+                opacity: !canNext ? 0 : pressed ? 0.75 : 1,
+                shadowColor: BRAND_PRIMARY,
+                shadowOpacity: canNext ? 0.45 : 0,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: canNext ? 6 : 0,
               })}
             >
-              <Text
-                className="font-manrope-bold"
-                style={{ fontSize: 12, color: BRAND_PRIMARY, letterSpacing: 0.3 }}
+              <View style={{ flex: 1, alignItems: "flex-end" }}>
+                <Text
+                  className="font-manrope-bold uppercase"
+                  style={{ fontSize: 8, color: "rgba(255,255,255,0.6)", letterSpacing: 1.6, marginBottom: 2 }}
+                >
+                  Siguiente
+                </Text>
+                <Text
+                  className="font-jakarta-semi"
+                  style={{ fontSize: 12, color: "white", letterSpacing: -0.2 }}
+                  numberOfLines={1}
+                >
+                  {canNext ? SESSION.exercises[currentIdx + 1].name : ""}
+                </Text>
+              </View>
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                Siguiente
-              </Text>
-              <ChevronRight size={14} color={BRAND_PRIMARY} />
+                <ChevronRight size={13} color="white" />
+              </View>
             </Pressable>
           </View>
         </View>
