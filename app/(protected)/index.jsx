@@ -313,7 +313,7 @@ export default function Home() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push("/rutinas");
+              router.push("/sesion");
             }}
             className="active:scale-[0.985]"
           >
@@ -420,18 +420,22 @@ export default function Home() {
                       width: 6,
                       height: 6,
                       borderRadius: 3,
-                      backgroundColor: tokens.mutedTextFaint,
+                      backgroundColor: BRAND_MINT,
+                      shadowColor: BRAND_MINT,
+                      shadowOpacity: 0.9,
+                      shadowRadius: 5,
+                      shadowOffset: { width: 0, height: 0 },
                     }}
                   />
                   <Text
                     className="font-jakarta-bold"
                     style={{
                       fontSize: 10,
-                      color: tokens.mutedTextSoft,
+                      color: tokens.kickerMint,
                       letterSpacing: 2,
                     }}
                   >
-                    DESCANSO
+                    PRÓXIMA
                   </Text>
                 </View>
               </View>
@@ -455,18 +459,18 @@ export default function Home() {
                           width: 4,
                           height: 4,
                           borderRadius: 2,
-                          backgroundColor: tokens.mutedTextDecorative,
+                          backgroundColor: tokens.kickerMint,
                         }}
                       />
                       <Text
                         className="font-manrope-bold uppercase"
                         style={{
                           fontSize: 9,
-                          color: tokens.mutedTextSoft,
+                          color: tokens.kickerMint,
                           letterSpacing: 1.6,
                         }}
                       >
-                        Sin plan asignado
+                        Fuerza Total 4x · Día A
                       </Text>
                     </View>
 
@@ -480,7 +484,7 @@ export default function Home() {
                       }}
                       numberOfLines={3}
                     >
-                      Hoy es día libre.
+                      Pecho &{"\n"}Tríceps.
                     </Text>
 
                     <Text
@@ -492,8 +496,7 @@ export default function Home() {
                         marginTop: 2,
                       }}
                     >
-                      Explorá el catálogo y elegí un plan para empezar a
-                      entrenar.
+                      5 ejercicios · 60 min est.
                     </Text>
                   </View>
                 </View>
@@ -553,7 +556,7 @@ export default function Home() {
                         letterSpacing: 1.4,
                       }}
                     >
-                      Empty
+                      Día A
                     </Text>
                     <View
                       style={{
@@ -610,7 +613,7 @@ export default function Home() {
                         color: tokens.mainText,
                       }}
                     >
-                      Explorar planes
+                      Iniciar sesión
                     </Text>
                   </View>
 

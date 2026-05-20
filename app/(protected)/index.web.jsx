@@ -341,7 +341,7 @@ function MemberHomeWeb() {
               </Text>
 
               <Pressable
-                onPress={() => router.push("/rutinas")}
+                onPress={() => router.push("/sesion")}
                 style={({ pressed }) => ({
                   borderRadius: 22, overflow: "hidden",
                   backgroundColor: SURFACE,
