@@ -15,15 +15,15 @@ import { brandPrimary, brandSecondary, gradient, ui } from "../../theme/colors";
 // ── Assets ──
 import { ChevronRight, Barbell } from "../../../assets/icons";
 
-const HARDCODED_IMAGE = {
-  uri: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=400&fit=crop",
-};
+// ── Hooks ──
+import { useActivePlan } from "../../hooks/use-active-plan";
 
 export default function HeroeCardHome({ image }) {
-  image = image ?? HARDCODED_IMAGE;
   const router = useRouter();
   const { isDark } = useTheme();
   const now = new Date();
+
+  const { data: activePlan, isLoading } = useActivePlan();
 
   const BRAND_PRIMARY = brandPrimary[700];
   const BRAND_MINT = brandSecondary[400];
@@ -38,6 +38,21 @@ export default function HeroeCardHome({ image }) {
   const placeholderGradientColors = isDark
     ? gradient.sessionPlaceholder.dark
     : gradient.sessionPlaceholder.light;
+
+  // Sin tracking de progreso todavía: la "sesión de hoy" es el primer día
+  // del plan (semana 1, día 1). Se ajustará cuando exista workout_logs.
+  if (isLoading || !activePlan) return null;
+
+  const firstWeek = activePlan.weeks[0];
+  const firstDay = firstWeek?.days?.[0];
+  if (!firstDay) return null;
+
+  const { session, exercises } = firstDay;
+  const objective = activePlan.plan.objective ?? "Entrenamiento";
+  const exerciseCount = exercises.length;
+  const sessionImage =
+    image ??
+    (session?.cover_image_uri ? { uri: session.cover_image_uri } : null);
 
   return (
     <View>
@@ -136,18 +151,19 @@ export default function HeroeCardHome({ image }) {
                   <View className="flex-row items-center gap-2">
                     <View className="bg-brandSecondary-700 dark:bg-brandSecondary-400 w-1 h-1 rounded-sm" />
                     <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-[8px] tracking-[2px]">
-                      Fuerza semana 1 dia 1
-                      {/* Iria objetivo del plan semana y dia que toca */}
+                      {`${objective} · semana ${firstWeek.week_number} día ${firstDay.day_number}`}
                     </Text>
                   </View>
                   <Text
                     className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark text-[26px] leading-8 tracking-wider "
                     numberOfLines={3}
                   >
-                    Pecho &{"\n"}Tríceps. {/* Titulo del Plan */}
+                    {session?.name ?? "Sesión"}
                   </Text>
                   <Text className="font-manrope text-[#0f0d20]/65 dark:text-white/60 text-sm mt-3 leading-5">
-                    5 ejercicios · 60 min {/* Duracion de la sesion*/}
+                    {`${exerciseCount} ${
+                      exerciseCount === 1 ? "ejercicio" : "ejercicios"
+                    }`}
                   </Text>
                 </View>
               </View>
@@ -170,9 +186,9 @@ export default function HeroeCardHome({ image }) {
                     className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center overflow-hidden"
                     style={{ borderRadius: 16 }}
                   >
-                    {image ? (
+                    {sessionImage ? (
                       <Image
-                        source={image}
+                        source={sessionImage}
                         className="w-full h-full"
                         resizeMode="cover"
                       />
@@ -201,7 +217,7 @@ export default function HeroeCardHome({ image }) {
                 <View className="flex-row items-center gap-1">
                   <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-3 h-[1px]" />
                   <Text className="font-manrope-bold uppercase text-[#0f0d20]/45 dark:text-white/45 text-[10px] tracking-[2px] ">
-                    Día 1 {/* Ajustar el dia que toca  */}
+                    {`Día ${firstDay.day_number}`}
                   </Text>
                   <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-4 h-[1px]" />
                 </View>

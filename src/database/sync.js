@@ -13,6 +13,8 @@ import {
   session_exercises,
   sessions,
   training_plans,
+  session_logs,
+  session_set_logs,
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, ne, or, and, inArray } from "drizzle-orm";
@@ -40,6 +42,8 @@ const TABLE_QUERY_KEYS = {
   plan_week_days: [["training_plans"], ["training_plan"]],
   plan_week_day_exercises: [["training_plans"], ["training_plan"]],
   plan_week_day_exercise_sets: [["training_plans"], ["training_plan"]],
+  session_logs: [["session_logs"], ["sessions"]],
+  session_set_logs: [["session_logs"], ["sessions"]],
 };
 
 function invalidateQueriesForTable(tableName) {
@@ -55,6 +59,7 @@ const COMPOSITE_UNIQUE_COLUMNS = {
   plan_week_days: ["week_id", "day_number"],
   plan_week_day_exercises: ["week_day_id", "session_exercise_id"],
   plan_week_day_exercise_sets: ["exercise_id", "set_number"],
+  session_set_logs: ["session_log_id", "exercise_id", "set_number"],
 };
 
 async function pullTableChanges(
@@ -1138,6 +1143,110 @@ export async function pushPlanAssignmentsChanges() {
   }
 }
 
+/**
+ * PUSH: Sube cambios locales de Cabeceras de Logs de Sesión
+ */
+export async function pushSessionLogsChanges() {
+  const localChanges = await database
+    .select()
+    .from(session_logs)
+    .where(
+      or(
+        eq(session_logs.sync_status, "pending"),
+        eq(session_logs.sync_status, "dirty"),
+        eq(session_logs.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] session_logs: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (const row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("session_logs")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(session_logs)
+          .where(eq(session_logs.id, row.id));
+        console.log(`✅ [PUSH] session_log (id: ${row.id}) eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando session_log (id: ${row.id}):`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    const { sync_status, updated_at, ...payload } = row;
+    const { error } = await supabase
+      .from("session_logs")
+      .upsert(payload, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(session_logs)
+        .set({ sync_status: "synced" })
+        .where(eq(session_logs.id, row.id));
+      console.log(`✅ [PUSH] session_log (id: ${row.id}) sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo session_log (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Series de Logs de Sesión
+ */
+export async function pushSessionSetLogsChanges() {
+  const localChanges = await database
+    .select()
+    .from(session_set_logs)
+    .where(
+      or(
+        eq(session_set_logs.sync_status, "pending"),
+        eq(session_set_logs.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] session_set_logs: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("session_set_logs")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(session_set_logs)
+      .set({ sync_status: "synced" })
+      .where(
+        inArray(
+          session_set_logs.id,
+          localChanges.map((r) => r.id)
+        )
+      );
+    console.log(
+      `✅ [PUSH] session_set_logs: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(
+      `❌ [PUSH] Error subiendo session_set_logs:`,
+      error.message
+    );
+  }
+}
+
+
 export async function syncWithSupabase(
   tablesToSync = [
     "exercises_base",
@@ -1151,6 +1260,8 @@ export async function syncWithSupabase(
     "plan_week_days",
     "plan_week_day_exercises",
     "plan_week_day_exercise_sets",
+    "session_logs",
+    "session_set_logs",
   ]
 ) {
   if (isSyncing) {
@@ -1177,6 +1288,7 @@ export async function syncWithSupabase(
         "sessions",
         "training_plans",
         "plan_assignments",
+        "session_logs",
       ]);
 
       let schemaTable;
@@ -1193,6 +1305,8 @@ export async function syncWithSupabase(
         schemaTable = plan_week_day_exercises;
       else if (table === "plan_week_day_exercise_sets")
         schemaTable = plan_week_day_exercise_sets;
+      else if (table === "session_logs") schemaTable = session_logs;
+      else if (table === "session_set_logs") schemaTable = session_set_logs;
 
       if (schemaTable) {
         const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
@@ -1255,6 +1369,12 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("plan_week_day_exercise_sets")) {
       await pushPlanWeekDayExerciseSetsChanges();
+    }
+    if (tablesToSync.includes("session_logs")) {
+      await pushSessionLogsChanges();
+    }
+    if (tablesToSync.includes("session_set_logs")) {
+      await pushSessionSetLogsChanges();
     }
     console.log(`✅ [SYNC] Sincronización completada`);
     return { success: true };

@@ -224,3 +224,53 @@ export const plan_assignments = sqliteTable("plan_assignments", {
     .$defaultFn(() => new Date().toISOString()),
   sync_status: text("sync_status").notNull().default("pending"),
 });
+
+export const session_logs = sqliteTable("session_logs", {
+  id: text("id").primaryKey(),
+  gym_id: text("gym_id").notNull(),
+  user_id: text("user_id").notNull(),
+  session_id: text("session_id").references(() => sessions.id, { onDelete: "set null" }),
+  plan_id: text("plan_id").references(() => training_plans.id, { onDelete: "set null" }),
+  week_number: integer("week_number"),
+  day_number: integer("day_number"),
+  duration_seconds: integer("duration_seconds"),
+  completed_at: text("completed_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  created_at: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updated_at: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  sync_status: text("sync_status").notNull().default("pending"),
+});
+
+export const session_set_logs = sqliteTable(
+  "session_set_logs",
+  {
+    id: text("id").primaryKey(),
+    session_log_id: text("session_log_id")
+      .notNull()
+      .references(() => session_logs.id, { onDelete: "cascade" }),
+    exercise_id: text("exercise_id")
+      .notNull()
+      .references(() => exercises_base.id),
+    set_number: integer("set_number").notNull(),
+    reps: integer("reps").notNull(),
+    weight_kg: real("weight_kg"),
+    rest_seconds: integer("rest_seconds"),
+    notes: text("notes"),
+    rir: real("rir"),
+    rpe: real("rpe"),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.session_log_id, t.exercise_id, t.set_number)]
+);
+
