@@ -1,5 +1,5 @@
 // ── React Native ──
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 
 // ── Expo ──
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,7 +15,12 @@ import { brandPrimary, brandSecondary, gradient, ui } from "../../theme/colors";
 // ── Assets ──
 import { ChevronRight, Barbell } from "../../../assets/icons";
 
-export default function HeroeCardHome() {
+const HARDCODED_IMAGE = {
+  uri: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=400&fit=crop",
+};
+
+export default function HeroeCardHome({ image }) {
+  image = image ?? HARDCODED_IMAGE;
   const router = useRouter();
   const { isDark } = useTheme();
   const now = new Date();
@@ -33,6 +38,7 @@ export default function HeroeCardHome() {
   const placeholderGradientColors = isDark
     ? gradient.sessionPlaceholder.dark
     : gradient.sessionPlaceholder.light;
+
   return (
     <View>
       {/* ── HERO: sesión de hoy ── */}
@@ -149,24 +155,49 @@ export default function HeroeCardHome() {
               {/* Placeholder visual */}
               <View style={{ gap: 6, alignItems: "center" }}>
                 <View className="bg-brandSecondary-400 absolute -left-[10px] top-3 w-1 h-9 rounded-sm " />
-                <View className=" w-32 h-32 bg-brandPrimary-50 dark:bg-ui-surface-dim rounded-2xl overflow-hidden items-center justify-center border border-[#0f0d20]/10 dark:border-white/[12%]">
-                  <LinearGradient
-                    colors={placeholderGradientColors}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                    }}
-                  />
-                  <Barbell
-                    size={56}
-                    color={isDark ? ui.icon.onDark : ui.icon.onLight}
-                  />
-                </View>
+                <LinearGradient
+                  colors={[BRAND_MINT, BRAND_PRIMARY]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    width: 128,
+                    height: 128,
+                    borderRadius: 18,
+                    padding: 2,
+                  }}
+                >
+                  <View
+                    className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center overflow-hidden"
+                    style={{ borderRadius: 16 }}
+                  >
+                    {image ? (
+                      <Image
+                        source={image}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <>
+                        <LinearGradient
+                          colors={placeholderGradientColors}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                          }}
+                        />
+                        <Barbell
+                          size={56}
+                          color={isDark ? ui.icon.onDark : ui.icon.onLight}
+                        />
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
                 <View className="flex-row items-center gap-1">
                   <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-3 h-[1px]" />
                   <Text className="font-manrope-bold uppercase text-[#0f0d20]/45 dark:text-white/45 text-[10px] tracking-[2px] ">
