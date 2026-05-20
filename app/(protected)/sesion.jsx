@@ -30,6 +30,9 @@ import {
 import { useActivePlanSummary } from "../../src/hooks/use-active-plan-summary";
 import { usePlanDayExercises } from "../../src/hooks/use-plan-day-exercises";
 
+// Utils
+import { formatShortDate } from "../../src/utils/format-date";
+
 // Componentes
 import PlanExerciseRow from "../../src/components/cards/plan-exercise-row";
 import VideoPlayerSheet from "../../src/components/videos/VideoPlayerSheet";
@@ -37,21 +40,6 @@ import VideoPlayerSheet from "../../src/components/videos/VideoPlayerSheet";
 const BRAND_PRIMARY = brandPrimary[700];
 const BRAND_PRIMARY_DEEP = brandPrimary[600];
 const BRAND_MINT = brandSecondary[400];
-
-const MONTHS_ES = [
-  "ENE",
-  "FEB",
-  "MAR",
-  "ABR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AGO",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DIC",
-];
 
 // ─── Helpers de prescripción ────────────────────────────────────────────────
 
@@ -125,14 +113,12 @@ function PreviewScreen({ session, onStart }) {
       : 0;
   }, [session.exercises]);
 
-  const now = new Date();
-  const dateLabel = `${now.getDate()} ${MONTHS_ES[now.getMonth()]} ${now.getFullYear()}`;
+  const dateLabel = formatShortDate();
 
   return (
     <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
       <ScrollView
         contentContainerStyle={{
-          paddingTop: insets.top + 22,
           paddingBottom: insets.bottom + 36,
           paddingHorizontal: 20,
         }}
