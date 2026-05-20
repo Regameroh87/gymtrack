@@ -29,6 +29,7 @@ export const fetchPlanDayExercises = async (weekDayId) => {
       intensity_mode: plan_week_day_exercises.intensity_mode,
       tempo: plan_week_day_exercises.tempo,
       notes: plan_week_day_exercises.notes,
+      base_exercise_id: exercises_base.id,
       exercise_name: exercises_base.name,
       exercise_muscle: exercises_base.muscle_group,
       exercise_instructions: exercises_base.instructions,

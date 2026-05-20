@@ -29,6 +29,7 @@ import {
 // Hooks
 import { useActivePlanSummary } from "../../src/hooks/use-active-plan-summary";
 import { usePlanDayExercises } from "../../src/hooks/use-plan-day-exercises";
+import { useSaveSessionLog } from "../../src/hooks/use-save-session-log";
 
 // Utils
 import { formatShortDate } from "../../src/utils/format-date";
@@ -233,7 +234,7 @@ function PreviewScreen({ session, onStart }) {
 
 // ─── Active session ──────────────────────────────────────────────────────────
 
-function ActiveSession({ session, onEnd }) {
+function ActiveSession({ session, summary, currentDay, onEnd }) {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -242,11 +243,15 @@ function ActiveSession({ session, onEnd }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [completedSets, setCompletedSets] = useState(new Set());
   const [setData, setSetData] = useState({});
-  const [setNotes, setSetNotes] = useState({});
 
-  function updateWeight(exId, setId, value) {
+  const { mutateAsync: saveLog, isPending: isSaving } = useSaveSessionLog();
+
+  function updateField(exId, setId, field, value) {
     const key = `${exId}-${setId}`;
-    setSetData((prev) => ({ ...prev, [key]: { weight: value } }));
+    setSetData((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value },
+    }));
   }
 
   useEffect(() => {
@@ -257,6 +262,7 @@ function ActiveSession({ session, onEnd }) {
   const exercise = session.exercises[currentIdx];
   const canPrev = currentIdx > 0;
   const canNext = currentIdx < session.exercises.length - 1;
+  const isDuration = (exercise.prescription_mode ?? "reps") === "duration";
 
   const totalSets = useMemo(
     () => session.exercises.reduce((s, ex) => s + ex.sets.length, 0),
@@ -265,8 +271,6 @@ function ActiveSession({ session, onEnd }) {
   const doneCount = completedSets.size;
 
   const timerStr = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
-
-  // Color de íconos según el tema (RN no acepta clase Tailwind en color).
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
 
   function toggleSet(exId, setId) {
@@ -283,10 +287,26 @@ function ActiveSession({ session, onEnd }) {
     });
   }
 
+  async function handleFinish() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    await saveLog({
+      summary,
+      currentDay,
+      session,
+      completedSets,
+      setData,
+      elapsed,
+    });
+    onEnd();
+  }
+
   return (
     <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       {/* ── Top bar ── */}
-      <View className="flex-row items-center justify-between px-5 pb-3.5">
+      <View
+        className="flex-row items-center justify-between px-5 pb-3.5"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -321,49 +341,72 @@ function ActiveSession({ session, onEnd }) {
       </View>
 
       {/* ── Progress bar ── */}
-      <View className="mx-5 h-0.5 rounded-[1px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
+      <View className="mx-5 h-[3px] rounded-[2px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
         <View
-          className="h-0.5 rounded-[1px] bg-brandSecondary-400"
+          className="h-[3px] rounded-[2px] bg-brandSecondary-400"
           style={{
             width: `${totalSets > 0 ? (doneCount / totalSets) * 100 : 0}%`,
           }}
         />
       </View>
 
+      {/* ── Exercise strip ── */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingVertical: 14,
+          gap: 6,
+        }}
+      >
+        {session.exercises.map((ex, i) => {
+          const isActive = i === currentIdx;
+          const isPast = i < currentIdx;
+          return (
+            <Pressable
+              key={ex.id}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setCurrentIdx(i);
+              }}
+              className="active:opacity-70"
+            >
+              <View
+                className={`px-3 py-1.5 rounded-xl border ${
+                  isActive
+                    ? "bg-brandPrimary-700 border-transparent"
+                    : isPast
+                      ? "bg-transparent border-brandSecondary-400/30"
+                      : "bg-transparent border-ui-text-main/[8%] dark:border-white/[8%]"
+                }`}
+              >
+                <Text
+                  className={`font-manrope-bold text-[11px] ${
+                    isActive
+                      ? "text-white"
+                      : isPast
+                        ? "text-brandSecondary-700 dark:text-brandSecondary-400"
+                        : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                  }`}
+                  numberOfLines={1}
+                >
+                  {i + 1}. {ex.exercise_name}
+                </Text>
+              </View>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{
-          paddingTop: 24,
-          paddingBottom: 28,
-          paddingHorizontal: 20,
-        }}
+        contentContainerStyle={{ paddingBottom: 28, paddingHorizontal: 20 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Exercise progress dots ── */}
-        <View className="flex-row items-center gap-2.5 mb-5">
-          <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
-            Ejercicio {currentIdx + 1} de {session.exercises.length}
-          </Text>
-          <View className="flex-row gap-1">
-            {session.exercises.map((_, i) => (
-              <View
-                key={i}
-                className={`h-1 rounded-[2px] ${
-                  i === currentIdx
-                    ? "bg-brandPrimary-700"
-                    : i < currentIdx
-                      ? "bg-brandSecondary-400"
-                      : "bg-ui-text-main/[6%] dark:bg-white/[6%]"
-                }`}
-                style={{ width: i === currentIdx ? 18 : 6 }}
-              />
-            ))}
-          </View>
-        </View>
-
         {/* ── Exercise card ── */}
         <View
-          className="rounded-3xl overflow-hidden mb-3.5 border bg-ui-surface-light dark:bg-ui-surface-dark border-ui-text-main/8 dark:border-white/8"
+          className="rounded-3xl overflow-hidden mb-4 border border-ui-text-main/8 dark:border-white/8"
           style={{
             shadowColor: BRAND_PRIMARY,
             shadowOpacity: 0.12,
@@ -372,32 +415,40 @@ function ActiveSession({ session, onEnd }) {
             elevation: 6,
           }}
         >
-          {/* Mint halo */}
+          {/* Header con gradiente */}
           <LinearGradient
             colors={[
-              isDark ? "rgba(42,232,204,0.14)" : "rgba(42,232,204,0.09)",
-              "rgba(42,232,204,0)",
+              isDark ? "rgba(42,232,204,0.18)" : "rgba(42,232,204,0.11)",
+              isDark ? "rgba(74,68,228,0.12)" : "rgba(74,68,228,0.06)",
+              "rgba(0,0,0,0)",
             ]}
             start={{ x: 0, y: 0 }}
-            end={{ x: 0.65, y: 0.85 }}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: 200,
-              height: 160,
-            }}
-          />
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 20, paddingBottom: 22 }}
+          >
+            {/* Número de posición watermark */}
+            <Text
+              className="absolute font-jakarta-bold"
+              style={{
+                right: 14,
+                top: -8,
+                fontSize: 108,
+                lineHeight: 108,
+                color: isDark
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(15,13,32,0.04)",
+              }}
+            >
+              {String(currentIdx + 1).padStart(2, "0")}
+            </Text>
 
-          {/* Card header */}
-          <View className="p-5 pb-4">
-            <View className="flex-row items-center justify-between mb-2.5">
+            {/* Muscle chip + weight chip */}
+            <View className="flex-row items-center justify-between mb-3">
               <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%]">
                 <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
-                  {exercise.exercise_muscle}
+                  {exercise.exercise_muscle || "—"}
                 </Text>
               </View>
-
               <View className="flex-row items-center gap-1 px-[9px] py-[3px] rounded-lg border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
                 <Barbell size={11} color={mutedIcon} />
                 <Text className="font-manrope-bold text-[11px] tracking-[0.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
@@ -406,24 +457,29 @@ function ActiveSession({ session, onEnd }) {
               </View>
             </View>
 
-            <Text className="font-jakarta-bold text-[28px] leading-8 tracking-[-0.9px] text-ui-text-main dark:text-ui-text-mainDark">
+            {/* Nombre del ejercicio */}
+            <Text
+              className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
+              style={{ fontSize: 24, lineHeight: 30, letterSpacing: -0.7 }}
+            >
               {exercise.exercise_name}
             </Text>
-          </View>
+          </LinearGradient>
 
           {/* Divider */}
           <View className="mx-5 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
 
           {/* Set rows */}
-          <View className="px-5 pt-5 pb-5 gap-3">
+          <View className="bg-ui-surface-light dark:bg-ui-surface-dark px-5 pt-5 pb-5 gap-4">
             {exercise.sets.map((set, si) => {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
+              const data = setData[key] ?? {};
               return (
                 <View key={set.id} className="gap-1.5">
                   {/* Main row */}
-                  <View className="flex-row items-center gap-2.5">
-                    {/* Set label */}
+                  <View className="flex-row items-center gap-2">
+                    {/* Set badge */}
                     <Text
                       className={`font-manrope-bold uppercase text-[11px] tracking-[1.2px] w-6 ${
                         done
@@ -434,7 +490,7 @@ function ActiveSession({ session, onEnd }) {
                       S{si + 1}
                     </Text>
 
-                    {/* Rep range chip */}
+                    {/* Target chip */}
                     <View
                       className={`px-[9px] py-1 rounded-lg border ${
                         done
@@ -455,10 +511,47 @@ function ActiveSession({ session, onEnd }) {
 
                     <View className="flex-1" />
 
+                    {/* Reps reales (solo modo reps) */}
+                    {!isDuration && (
+                      <>
+                        <TextInput
+                          value={data.reps ?? ""}
+                          onChangeText={(v) =>
+                            updateField(exercise.id, set.id, "reps", v)
+                          }
+                          keyboardType="number-pad"
+                          editable={!done}
+                          selectTextOnFocus
+                          placeholder={
+                            set.reps_max != null
+                              ? String(set.reps_max)
+                              : set.reps_min != null
+                                ? String(set.reps_min)
+                                : "—"
+                          }
+                          placeholderTextColor={
+                            isDark
+                              ? "rgba(255,255,255,0.2)"
+                              : "rgba(15,13,32,0.22)"
+                          }
+                          className={`w-[44px] px-2 py-[7px] rounded-[10px] border font-jakarta-semi text-[14px] text-center ${
+                            done
+                              ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
+                              : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                          }`}
+                        />
+                        <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
+                          reps
+                        </Text>
+                      </>
+                    )}
+
                     {/* Kg input */}
                     <TextInput
-                      value={setData[key]?.weight ?? ""}
-                      onChangeText={(v) => updateWeight(exercise.id, set.id, v)}
+                      value={data.weight ?? ""}
+                      onChangeText={(v) =>
+                        updateField(exercise.id, set.id, "weight", v)
+                      }
                       keyboardType="decimal-pad"
                       editable={!done}
                       selectTextOnFocus
@@ -468,7 +561,7 @@ function ActiveSession({ session, onEnd }) {
                       placeholderTextColor={
                         isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"
                       }
-                      className={`w-[58px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
+                      className={`w-[56px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
                         done
                           ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
                           : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
@@ -507,17 +600,17 @@ function ActiveSession({ session, onEnd }) {
                     </Pressable>
                   </View>
 
-                  {/* Per-set note */}
+                  {/* Nota de la serie */}
                   <TextInput
-                    value={setNotes[key] ?? ""}
+                    value={data.notes ?? ""}
                     onChangeText={(v) =>
-                      setSetNotes((prev) => ({ ...prev, [key]: v }))
+                      updateField(exercise.id, set.id, "notes", v)
                     }
                     placeholder="Nota de la serie..."
                     placeholderTextColor={
                       isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
                     }
-                    className="ml-[34px] px-3 py-1.5 rounded-[9px] border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                    className="ml-8 px-3 py-1.5 rounded-[9px] border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
                   />
                 </View>
               );
@@ -534,7 +627,7 @@ function ActiveSession({ session, onEnd }) {
         </View>
       </ScrollView>
 
-      {/* ── Footer fijo: navegación + acción principal ── */}
+      {/* ── Footer fijo ── */}
       <View
         className="flex-row items-center gap-3 px-5 pt-3.5 border-t bg-ui-background-light dark:bg-ui-background-dark border-ui-text-main/[6%] dark:border-white/[6%]"
         style={{ paddingBottom: insets.bottom + 14 }}
@@ -568,10 +661,10 @@ function ActiveSession({ session, onEnd }) {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setCurrentIdx((i) => i + 1);
             } else {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              onEnd();
+              handleFinish();
             }
           }}
+          disabled={isSaving}
           className="flex-1 active:opacity-90"
         >
           <LinearGradient
@@ -586,7 +679,7 @@ function ActiveSession({ session, onEnd }) {
               alignItems: "center",
               justifyContent: "space-between",
               shadowColor: BRAND_PRIMARY,
-              shadowOpacity: 0.5,
+              shadowOpacity: isSaving ? 0.25 : 0.5,
               shadowRadius: 18,
               shadowOffset: { width: 0, height: 8 },
               elevation: 10,
@@ -606,11 +699,13 @@ function ActiveSession({ session, onEnd }) {
               </View>
             ) : (
               <Text className="flex-1 mr-3 font-jakarta-bold text-white text-base tracking-[-0.3px]">
-                Finalizar sesión
+                {isSaving ? "Guardando..." : "Finalizar sesión"}
               </Text>
             )}
             <View className="w-9 h-9 rounded-full items-center justify-center bg-white/20">
-              {canNext ? (
+              {isSaving ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : canNext ? (
                 <ChevronRight size={16} color="white" />
               ) : (
                 <CheckCircle size={16} color="white" />
@@ -715,7 +810,12 @@ export default function Sesion() {
       {phase === "preview" ? (
         <PreviewScreen session={session} onStart={() => setPhase("active")} />
       ) : (
-        <ActiveSession session={session} onEnd={() => setPhase("preview")} />
+        <ActiveSession
+          session={session}
+          summary={summary}
+          currentDay={currentDay}
+          onEnd={() => setPhase("preview")}
+        />
       )}
     </View>
   );
