@@ -43,6 +43,7 @@ export const ui = {
   surface: {
     light: "#ffffff", //chequeado
     dark: "#1e1b2e", //chequeado
+    dim: "#1a1730", // ← Superficie más profunda (placeholders sobre dark bg)
   },
   surfaceSecondary: {
     light: "#f4f5fa", // ← Alternativa sutil (gris-azulado) para tarjetas secundarias
@@ -64,10 +65,18 @@ export const ui = {
     offLight: "#e8e6f0",
     offDark: "#231f42",
   },
-
   placeholder: {
     light: "#6e6b8a", // same as text.muted
     dark: "#334155", // slate-700
+  },
+  // ── 3. Colores de íconos SVG (no expresables como clase Tailwind) ──
+  icon: {
+    onDark: "rgba(255,255,255,0.4)",
+    onLight: "rgba(15,13,32,0.35)",
+  },
+  arrow: {
+    onDark: "rgba(255,255,255,0.65)",
+    onLight: "rgba(15,13,32,0.6)",
   },
 };
 
@@ -80,6 +89,19 @@ export const gradient = {
   previewVideo: {
     light: ["#c5caff", "#eef0ff"],
     dark: ["#3023cd", "#0f172a"],
+  },
+  // ── Halos y glows de la home ──
+  mintHalo: {
+    dark: ["rgba(42,232,204,0.22)", "rgba(42,232,204,0)"],
+    light: ["rgba(42,232,204,0.18)", "rgba(42,232,204,0)"],
+  },
+  primaryHalo: {
+    dark: ["rgba(74,68,228,0)", "rgba(74,68,228,0.3)"],
+    light: ["rgba(74,68,228,0)", "rgba(74,68,228,0.18)"],
+  },
+  sessionPlaceholder: {
+    dark: ["#0C0B14", "#1e1b4b", "#3023cd"],
+    light: ["#eef0ff", "#c5caff", "#7e79fc"],
   },
   angle: 135,
 };
