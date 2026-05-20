@@ -128,7 +128,9 @@ function PreviewScreen({ session, onStart }) {
           {/* Plan badge */}
           <View className="self-start mb-3.5 px-2.5 py-1 rounded-[9px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
             <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.8px] text-brandPrimary-700">
-              {session.planName} · {session.dayLabel}
+              {session.planName}
+              {session.weekNumber ? ` · Semana ${session.weekNumber}` : ""}
+              {` · ${session.dayLabel}`}
             </Text>
           </View>
 
