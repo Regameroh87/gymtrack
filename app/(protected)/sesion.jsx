@@ -85,13 +85,14 @@ function useTokens() {
       cardBorder: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,13,32,0.08)",
       divider: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,13,32,0.06)",
       ghostBg: isDark ? "rgba(255,255,255,0.04)" : "rgba(15,13,32,0.03)",
-      ghostBorder: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,13,32,0.08)",
+      ghostBorder: isDark ? "rgba(255,255,255,0.10)" : "rgba(15,13,32,0.10)",
       primaryFill: isDark ? "rgba(74,68,228,0.15)" : "rgba(74,68,228,0.08)",
       primaryBorder: isDark ? "rgba(74,68,228,0.4)" : "rgba(74,68,228,0.25)",
       mintSurface: isDark ? "rgba(42,232,204,0.12)" : "rgba(42,232,204,0.14)",
       mintHalo: isDark ? "rgba(42,232,204,0.14)" : "rgba(42,232,204,0.09)",
       bigNumber: isDark ? "rgba(255,255,255,0.04)" : "rgba(15,13,32,0.04)",
       mintSofter: isDark ? "rgba(42,232,204,0.4)" : "rgba(0,80,71,0.4)",
+      inputBg: isDark ? ui.input.dark : ui.input.light,
     }),
     [isDark]
   );
@@ -109,7 +110,7 @@ function PreviewScreen({ onStart }) {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.pageBg }}>
+    <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + 22,
@@ -118,17 +119,10 @@ function PreviewScreen({ onStart }) {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header editorial ────────────────────────────────────────── */}
-        <View style={{ marginBottom: 30 }}>
+        {/* ── Header editorial ── */}
+        <View className="mb-8">
           {/* Ticks */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 18,
-            }}
-          >
+          <View className="flex-row items-center gap-1.5 mb-5">
             <View
               style={{
                 width: 28,
@@ -148,23 +142,14 @@ function PreviewScreen({ onStart }) {
           </View>
 
           {/* Kicker + date */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
+          <View className="flex-row items-center justify-between mb-4">
             <Text
               className="font-manrope-bold uppercase"
               style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.4 }}
             >
               Sesión de hoy
             </Text>
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-            >
+            <View className="flex-row items-center gap-1.5">
               <View
                 style={{
                   width: 6,
@@ -181,22 +166,21 @@ function PreviewScreen({ onStart }) {
                 className="font-jakarta-bold"
                 style={{ fontSize: 10, color: t.mutedText, letterSpacing: 2 }}
               >
-                19 MAY 2026
+                20 MAY 2026
               </Text>
             </View>
           </View>
 
           {/* Plan badge */}
           <View
+            className="self-start mb-3.5"
             style={{
-              alignSelf: "flex-start",
               paddingHorizontal: 10,
               paddingVertical: 4,
               borderRadius: 9,
               backgroundColor: t.primaryFill,
               borderWidth: 1,
               borderColor: t.primaryBorder,
-              marginBottom: 14,
             }}
           >
             <Text
@@ -221,8 +205,8 @@ function PreviewScreen({ onStart }) {
           </Text>
         </View>
 
-        {/* ── Stats ──────────────────────────────────────────────────── */}
-        <View style={{ flexDirection: "row", gap: 10, marginBottom: 30 }}>
+        {/* ── Stats ── */}
+        <View className="flex-row gap-2.5 mb-8">
           {[
             { value: `${SESSION.exercises.length}`, label: "ejercicios" },
             { value: `${SESSION.estimatedMinutes}'`, label: "est." },
@@ -230,15 +214,12 @@ function PreviewScreen({ onStart }) {
           ].map((stat, i) => (
             <View
               key={i}
+              className="flex-1 items-center py-4"
               style={{
-                flex: 1,
-                paddingVertical: 16,
-                paddingHorizontal: 10,
                 borderRadius: 18,
                 backgroundColor: t.cardBg,
                 borderWidth: 1,
                 borderColor: t.cardBorder,
-                alignItems: "center",
               }}
             >
               <Text
@@ -253,13 +234,8 @@ function PreviewScreen({ onStart }) {
                 {stat.value}
               </Text>
               <Text
-                className="font-manrope-bold uppercase"
-                style={{
-                  fontSize: 9,
-                  color: t.mutedText,
-                  letterSpacing: 1.4,
-                  marginTop: 3,
-                }}
+                className="font-manrope-bold uppercase mt-1"
+                style={{ fontSize: 9, color: t.mutedText, letterSpacing: 1.4 }}
               >
                 {stat.label}
               </Text>
@@ -267,16 +243,9 @@ function PreviewScreen({ onStart }) {
           ))}
         </View>
 
-        {/* ── Exercise list ────────────────────────────────────────────── */}
-        <View style={{ marginBottom: 34 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 16,
-            }}
-          >
+        {/* ── Exercise list ── */}
+        <View className="mb-9">
+          <View className="flex-row items-center gap-2 mb-4">
             <View
               style={{
                 width: 16,
@@ -291,7 +260,10 @@ function PreviewScreen({ onStart }) {
             >
               Ejercicios
             </Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: t.divider }} />
+            <View
+              className="flex-1"
+              style={{ height: 1, backgroundColor: t.divider }}
+            />
           </View>
 
           <View
@@ -315,13 +287,8 @@ function PreviewScreen({ onStart }) {
                   />
                 )}
                 <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 18,
-                    paddingVertical: 15,
-                    gap: 14,
-                  }}
+                  className="flex-row items-center gap-3.5"
+                  style={{ paddingHorizontal: 18, paddingVertical: 15 }}
                 >
                   <Text
                     className="font-jakarta-bold"
@@ -335,7 +302,7 @@ function PreviewScreen({ onStart }) {
                     {String(idx + 1).padStart(2, "0")}
                   </Text>
 
-                  <View style={{ flex: 1, gap: 4 }}>
+                  <View className="flex-1 gap-1">
                     <Text
                       className="font-jakarta-semi"
                       style={{
@@ -347,13 +314,7 @@ function PreviewScreen({ onStart }) {
                     >
                       {ex.name}
                     </Text>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 7,
-                      }}
-                    >
+                    <View className="flex-row items-center gap-1.5">
                       <View
                         style={{
                           paddingHorizontal: 7,
@@ -398,7 +359,7 @@ function PreviewScreen({ onStart }) {
           </View>
         </View>
 
-        {/* ── CTA ──────────────────────────────────────────────────────── */}
+        {/* ── CTA ── */}
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -413,10 +374,10 @@ function PreviewScreen({ onStart }) {
             style={{
               borderRadius: 22,
               paddingVertical: 20,
+              paddingHorizontal: 26,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingHorizontal: 26,
               shadowColor: BRAND_PRIMARY,
               shadowOpacity: 0.55,
               shadowRadius: 22,
@@ -431,13 +392,12 @@ function PreviewScreen({ onStart }) {
               Iniciar sesión
             </Text>
             <View
+              className="items-center justify-center"
               style={{
                 width: 38,
                 height: 38,
                 borderRadius: 19,
                 backgroundColor: "rgba(255,255,255,0.2)",
-                alignItems: "center",
-                justifyContent: "center",
               }}
             >
               <Play size={17} color="white" />
@@ -498,17 +458,11 @@ function ActiveSession({ onEnd }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.pageBg }}>
-      {/* ── Top bar ──────────────────────────────────────────────────── */}
+    <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
+      {/* ── Top bar ── */}
       <View
-        style={{
-          paddingTop: insets.top + 12,
-          paddingHorizontal: 20,
-          paddingBottom: 14,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
+        className="flex-row items-center justify-between px-5"
+        style={{ paddingTop: insets.top + 12, paddingBottom: 14 }}
       >
         <Pressable
           onPress={() => {
@@ -531,7 +485,7 @@ function ActiveSession({ onEnd }) {
           <X size={16} color={t.mutedText} />
         </Pressable>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+        <View className="flex-row items-center gap-1.5">
           <View
             style={{
               width: 6,
@@ -571,15 +525,10 @@ function ActiveSession({ onEnd }) {
         </View>
       </View>
 
-      {/* ── Progress bar ─────────────────────────────────────────────── */}
+      {/* ── Progress bar ── */}
       <View
-        style={{
-          marginHorizontal: 20,
-          height: 2,
-          borderRadius: 1,
-          backgroundColor: t.divider,
-          marginBottom: 0,
-        }}
+        className="mx-5"
+        style={{ height: 2, borderRadius: 1, backgroundColor: t.divider }}
       >
         <View
           style={{
@@ -599,22 +548,15 @@ function ActiveSession({ onEnd }) {
         }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Exercise progress ─────────────────────────────────────────── */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 18,
-          }}
-        >
+        {/* ── Exercise progress dots ── */}
+        <View className="flex-row items-center gap-2.5 mb-5">
           <Text
             className="font-manrope-bold uppercase"
             style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.2 }}
           >
             Ejercicio {currentIdx + 1} de {SESSION.exercises.length}
           </Text>
-          <View style={{ flexDirection: "row", gap: 4 }}>
+          <View className="flex-row gap-1">
             {SESSION.exercises.map((_, i) => (
               <View
                 key={i}
@@ -634,7 +576,7 @@ function ActiveSession({ onEnd }) {
           </View>
         </View>
 
-        {/* ── Exercise card ─────────────────────────────────────────────── */}
+        {/* ── Exercise card ── */}
         <View
           style={{
             borderRadius: 24,
@@ -642,7 +584,7 @@ function ActiveSession({ onEnd }) {
             borderWidth: 1,
             borderColor: t.cardBorder,
             overflow: "hidden",
-            marginBottom: 18,
+            marginBottom: 14,
             shadowColor: BRAND_PRIMARY,
             shadowOpacity: 0.12,
             shadowRadius: 22,
@@ -665,15 +607,8 @@ function ActiveSession({ onEnd }) {
           />
 
           {/* Card header */}
-          <View style={{ padding: 20, paddingBottom: 16 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 10,
-              }}
-            >
+          <View className="p-5 pb-4">
+            <View className="flex-row items-center justify-between mb-2.5">
               <View
                 style={{
                   paddingHorizontal: 9,
@@ -695,10 +630,8 @@ function ActiveSession({ onEnd }) {
               </View>
 
               <View
+                className="flex-row items-center gap-1"
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 5,
                   paddingHorizontal: 9,
                   paddingVertical: 3,
                   borderRadius: 8,
@@ -736,38 +669,22 @@ function ActiveSession({ onEnd }) {
 
           {/* Divider */}
           <View
-            style={{
-              height: 1,
-              backgroundColor: t.divider,
-              marginHorizontal: 20,
-            }}
+            className="mx-5"
+            style={{ height: 1, backgroundColor: t.divider }}
           />
 
           {/* Set rows */}
-          <View
-            style={{
-              paddingHorizontal: 20,
-              paddingTop: 18,
-              paddingBottom: 20,
-              gap: 10,
-            }}
-          >
+          <View className="px-5 pt-5 pb-5 gap-3">
             {exercise.sets.map((set, si) => {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
               const dimColor = t.isDark
-                ? "rgba(255,255,255,0.25)"
-                : "rgba(15,13,32,0.25)";
+                ? "rgba(255,255,255,0.22)"
+                : "rgba(15,13,32,0.22)";
               return (
-                <View key={set.id} style={{ gap: 6 }}>
+                <View key={set.id} className="gap-1.5">
                   {/* Main row */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 10,
-                    }}
-                  >
+                  <View className="flex-row items-center gap-2.5">
                     {/* Set label */}
                     <Text
                       className="font-manrope-bold uppercase"
@@ -781,7 +698,7 @@ function ActiveSession({ onEnd }) {
                       S{si + 1}
                     </Text>
 
-                    {/* Target reps chip */}
+                    {/* Rep range chip */}
                     <View
                       style={{
                         paddingHorizontal: 9,
@@ -807,7 +724,7 @@ function ActiveSession({ onEnd }) {
                       </Text>
                     </View>
 
-                    <View style={{ flex: 1 }} />
+                    <View className="flex-1" />
 
                     {/* Kg input */}
                     <TextInput
@@ -816,21 +733,21 @@ function ActiveSession({ onEnd }) {
                       keyboardType="decimal-pad"
                       editable={!done}
                       selectTextOnFocus
-                      placeholder="— kg"
+                      placeholder="—"
                       placeholderTextColor={
                         t.isDark
                           ? "rgba(255,255,255,0.2)"
                           : "rgba(15,13,32,0.22)"
                       }
                       style={{
-                        width: 64,
+                        width: 58,
                         paddingHorizontal: 10,
                         paddingVertical: 7,
                         borderRadius: 10,
-                        backgroundColor: done ? "transparent" : t.ghostBg,
+                        backgroundColor: done ? "transparent" : t.inputBg,
                         borderWidth: 1,
                         borderColor: done ? "transparent" : t.ghostBorder,
-                        fontFamily: "PlusJakartaSans-SemiBold",
+                        fontFamily: "PlusJakartaSans_600SemiBold",
                         fontSize: 15,
                         color: done ? dimColor : t.mainText,
                         textAlign: "center",
@@ -894,7 +811,7 @@ function ActiveSession({ onEnd }) {
                       backgroundColor: t.ghostBg,
                       borderWidth: 1,
                       borderColor: t.ghostBorder,
-                      fontFamily: "Manrope",
+                      fontFamily: "Manrope_400Regular",
                       fontSize: 12,
                       color: t.mainText,
                     }}
@@ -903,64 +820,64 @@ function ActiveSession({ onEnd }) {
               );
             })}
           </View>
+        </View>
 
-          {/* Prev / Next navigation */}
-          <View
-            style={{
-              flexDirection: "row",
-              paddingHorizontal: 16,
-              paddingBottom: 16,
-              gap: 10,
-            }}
-          >
-            {/* Anterior */}
+        {/* ── Navegación ejercicios ── */}
+        <View className="flex-row gap-3 mb-5">
+          {/* Anterior */}
+          {canPrev && (
             <Pressable
               onPress={() => {
-                if (!canPrev) return;
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setCurrentIdx((i) => i - 1);
               }}
-              disabled={!canPrev}
               style={({ pressed }) => ({
-                flex: canPrev ? 1 : 0,
-                paddingVertical: 12,
-                paddingHorizontal: 14,
-                borderRadius: 16,
-                backgroundColor: t.ghostBg,
-                borderWidth: 1,
-                borderColor: t.ghostBorder,
+                flex: 1,
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 10,
-                opacity: !canPrev ? 0 : pressed ? 0.6 : 1,
+                gap: 12,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: 20,
+                backgroundColor: t.cardBg,
+                borderWidth: 1.5,
+                borderColor: t.cardBorder,
+                shadowColor: "#0f0d20",
+                shadowOpacity: t.isDark ? 0 : 0.06,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 3 },
+                elevation: 2,
+                opacity: pressed ? 0.7 : 1,
               })}
             >
+              {/* Ícono con fondo mint */}
               <View
+                className="items-center justify-center"
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                  backgroundColor: t.ghostBg,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: t.mintSurface,
                   borderWidth: 1,
-                  borderColor: t.ghostBorder,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  borderColor: t.isDark
+                    ? "rgba(42,232,204,0.2)"
+                    : "rgba(0,80,71,0.12)",
                 }}
               >
                 <ChevronRight
-                  size={13}
-                  color={t.mutedText}
+                  size={14}
+                  color={t.kickerMint}
                   style={{ transform: [{ rotate: "180deg" }] }}
                 />
               </View>
-              <View style={{ flex: 1 }}>
+              <View className="flex-1">
                 <Text
                   className="font-manrope-bold uppercase"
                   style={{
                     fontSize: 8,
                     color: t.mutedText,
-                    letterSpacing: 1.6,
-                    marginBottom: 2,
+                    letterSpacing: 2,
+                    marginBottom: 3,
                   }}
                 >
                   Anterior
@@ -968,89 +885,94 @@ function ActiveSession({ onEnd }) {
                 <Text
                   className="font-jakarta-semi"
                   style={{
-                    fontSize: 12,
+                    fontSize: 13,
                     color: t.mainText,
-                    letterSpacing: -0.2,
+                    letterSpacing: -0.3,
                   }}
                   numberOfLines={1}
                 >
-                  {canPrev ? SESSION.exercises[currentIdx - 1].name : ""}
+                  {SESSION.exercises[currentIdx - 1].name}
                 </Text>
               </View>
             </Pressable>
+          )}
 
-            {/* Siguiente */}
+          {/* Siguiente */}
+          {canNext && (
             <Pressable
               onPress={() => {
-                if (!canNext) return;
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setCurrentIdx((i) => i + 1);
               }}
-              disabled={!canNext}
               style={({ pressed }) => ({
-                flex: canNext ? 1 : 0,
-                paddingVertical: 12,
-                paddingHorizontal: 14,
-                borderRadius: 16,
-                backgroundColor: BRAND_PRIMARY,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: 10,
-                opacity: !canNext ? 0 : pressed ? 0.75 : 1,
+                flex: 1,
+                borderRadius: 20,
                 shadowColor: BRAND_PRIMARY,
-                shadowOpacity: canNext ? 0.45 : 0,
-                shadowRadius: 14,
-                shadowOffset: { width: 0, height: 4 },
-                elevation: canNext ? 6 : 0,
+                shadowOpacity: 0.5,
+                shadowRadius: 20,
+                shadowOffset: { width: 0, height: 6 },
+                elevation: 8,
+                opacity: pressed ? 0.82 : 1,
               })}
             >
-              <View style={{ flex: 1, alignItems: "flex-end" }}>
-                <Text
-                  className="font-manrope-bold uppercase"
-                  style={{
-                    fontSize: 8,
-                    color: "rgba(255,255,255,0.6)",
-                    letterSpacing: 1.6,
-                    marginBottom: 2,
-                  }}
-                >
-                  Siguiente
-                </Text>
-                <Text
-                  className="font-jakarta-semi"
-                  style={{ fontSize: 12, color: "white", letterSpacing: -0.2 }}
-                  numberOfLines={1}
-                >
-                  {canNext ? SESSION.exercises[currentIdx + 1].name : ""}
-                </Text>
-              </View>
-              <View
+              <LinearGradient
+                colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                  backgroundColor: "rgba(255,255,255,0.2)",
+                  flex: 1,
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 20,
                 }}
               >
-                <ChevronRight size={13} color="white" />
-              </View>
+                <View className="flex-1 items-end">
+                  <Text
+                    className="font-manrope-bold uppercase"
+                    style={{
+                      fontSize: 8,
+                      color: "rgba(255,255,255,0.55)",
+                      letterSpacing: 2,
+                      marginBottom: 3,
+                    }}
+                  >
+                    Siguiente
+                  </Text>
+                  <Text
+                    className="font-jakarta-semi"
+                    style={{
+                      fontSize: 13,
+                      color: "white",
+                      letterSpacing: -0.3,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {SESSION.exercises[currentIdx + 1].name}
+                  </Text>
+                </View>
+                {/* Ícono con fondo blanco translúcido */}
+                <View
+                  className="items-center justify-center"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "rgba(255,255,255,0.18)",
+                  }}
+                >
+                  <ChevronRight size={14} color="white" />
+                </View>
+              </LinearGradient>
             </Pressable>
-          </View>
+          )}
         </View>
 
-        {/* ── Series counter ────────────────────────────────────────────── */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 7,
-            marginBottom: 22,
-          }}
-        >
+        {/* ── Series counter ── */}
+        <View className="flex-row items-center justify-center gap-2 mb-5">
           <View
             style={{
               width: 4,
@@ -1067,7 +989,7 @@ function ActiveSession({ onEnd }) {
           </Text>
         </View>
 
-        {/* ── Finalizar ────────────────────────────────────────────────── */}
+        {/* ── Finalizar ── */}
         <Pressable
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -1076,12 +998,12 @@ function ActiveSession({ onEnd }) {
           style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
         >
           <View
+            className="items-center"
             style={{
               paddingVertical: 17,
               borderRadius: 22,
               borderWidth: 1.5,
               borderColor: t.ghostBorder,
-              alignItems: "center",
             }}
           >
             <Text
@@ -1104,7 +1026,7 @@ export default function Sesion() {
   const t = useTokens();
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.pageBg }}>
+    <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
       {phase === "preview" ? (
         <PreviewScreen onStart={() => setPhase("active")} />
       ) : (
