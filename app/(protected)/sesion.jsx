@@ -79,12 +79,10 @@ function PreviewScreen({ session, onStart }) {
     videoSheetRef.current?.present();
   };
 
-  const avgSets = useMemo(() => {
-    const total = session.exercises.reduce((s, ex) => s + ex.sets.length, 0);
-    return session.exercises.length
-      ? Math.round(total / session.exercises.length)
-      : 0;
-  }, [session.exercises]);
+  const totalSets = useMemo(
+    () => session.exercises.reduce((s, ex) => s + ex.sets.length, 0),
+    [session.exercises]
+  );
 
   const dateLabel = formatShortDate();
 
@@ -148,7 +146,7 @@ function PreviewScreen({ session, onStart }) {
           {[
             { value: `${session.exercises.length}`, label: "ejercicios" },
             { value: `${session.estimatedMinutes}'`, label: "est." },
-            { value: `${avgSets}`, label: "series avg" },
+            { value: `${totalSets}`, label: "series" },
           ].map((stat, i) => (
             <View
               key={i}
