@@ -13,52 +13,14 @@ import { useAuth } from "../auth/lib/getSession";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
-export const useAssignPlan = () => {
+const todayDate = () => new Date().toISOString().split("T")[0];
+
+// onSuccess compartido: refresca la query y dispara el sync offline-first
+const usePlanAssignmentMutation = (mutationFn) => {
   const queryClient = useQueryClient();
-  const { userId } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ planId }) => {
-      const today = new Date().toISOString().split("T")[0];
-
-      // Marcar cualquier asignación activa previa como completada
-      const existing = await database
-        .select()
-        .from(plan_assignments)
-        .where(
-          and(
-            eq(plan_assignments.user_id, userId),
-            eq(plan_assignments.status, "active")
-          )
-        );
-
-      for (const prev of existing) {
-        await database
-          .update(plan_assignments)
-          .set({
-            status: "completed",
-            end_date: today,
-            updated_at: new Date().toISOString(),
-            sync_status: "dirty",
-          })
-          .where(eq(plan_assignments.id, prev.id));
-      }
-
-      // Insertar nueva asignación
-      const newId = Crypto.randomUUID();
-      await database.insert(plan_assignments).values({
-        id: newId,
-        plan_id: planId,
-        user_id: userId,
-        assigned_by: userId,
-        gym_id: GYM_ID,
-        start_date: today,
-        status: "active",
-        sync_status: "pending",
-      });
-
-      return newId;
-    },
+    mutationFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       checkNetInfoAndSync();
@@ -66,31 +28,62 @@ export const useAssignPlan = () => {
   });
 };
 
-export const useDropPlan = () => {
-  const queryClient = useQueryClient();
+export const useAssignPlan = () => {
   const { userId } = useAuth();
 
-  return useMutation({
-    mutationFn: async ({ assignmentId }) => {
-      const today = new Date().toISOString().split("T")[0];
-      await database
-        .update(plan_assignments)
-        .set({
-          status: "dropped",
-          end_date: today,
-          updated_at: new Date().toISOString(),
-          sync_status: "dirty",
-        })
-        .where(
-          and(
-            eq(plan_assignments.id, assignmentId),
-            eq(plan_assignments.user_id, userId)
-          )
-        );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
-      checkNetInfoAndSync();
-    },
+  return usePlanAssignmentMutation(async ({ planId }) => {
+    const today = todayDate();
+
+    // Cerrar en un solo UPDATE cualquier asignación activa previa
+    await database
+      .update(plan_assignments)
+      .set({
+        status: "completed",
+        end_date: today,
+        updated_at: new Date().toISOString(),
+        sync_status: "dirty",
+      })
+      .where(
+        and(
+          eq(plan_assignments.user_id, userId),
+          eq(plan_assignments.status, "active")
+        )
+      );
+
+    // Insertar nueva asignación (created_at/updated_at se autocompletan)
+    const newId = Crypto.randomUUID();
+    await database.insert(plan_assignments).values({
+      id: newId,
+      plan_id: planId,
+      user_id: userId,
+      assigned_by: userId,
+      gym_id: GYM_ID,
+      start_date: today,
+      status: "active",
+      sync_status: "pending",
+    });
+
+    return newId;
+  });
+};
+
+export const useDropPlan = () => {
+  const { userId } = useAuth();
+
+  return usePlanAssignmentMutation(async ({ assignmentId }) => {
+    await database
+      .update(plan_assignments)
+      .set({
+        status: "dropped",
+        end_date: todayDate(),
+        updated_at: new Date().toISOString(),
+        sync_status: "dirty",
+      })
+      .where(
+        and(
+          eq(plan_assignments.id, assignmentId),
+          eq(plan_assignments.user_id, userId)
+        )
+      );
   });
 };
