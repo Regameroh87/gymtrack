@@ -90,7 +90,7 @@ function PreviewScreen({ session, onStart }) {
     <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       <ScrollView
         contentContainerStyle={{
-          paddingTop: insets.top + 22,
+          //paddingTop: insets.top + 22,
           paddingBottom: insets.bottom + 36,
           paddingHorizontal: 20,
         }}
