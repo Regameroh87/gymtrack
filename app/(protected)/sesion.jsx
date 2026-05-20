@@ -28,11 +28,46 @@ const SESSION = {
   sessionName: "Pecho & Tríceps",
   estimatedMinutes: 60,
   exercises: [
-    { id: 1, name: "Press de Banca",       muscleGroup: "Pecho",          refWeight: "80 kg", repRange: "8–10",  sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }] },
-    { id: 2, name: "Press Inclinado DB",   muscleGroup: "Pecho Superior", refWeight: "22 kg", repRange: "10–12", sets: [{ id: 1 }, { id: 2 }, { id: 3 }] },
-    { id: 3, name: "Cruces con Cable",     muscleGroup: "Pecho",          refWeight: "15 kg", repRange: "12–15", sets: [{ id: 1 }, { id: 2 }, { id: 3 }] },
-    { id: 4, name: "Jalón Tríceps",        muscleGroup: "Tríceps",        refWeight: "40 kg", repRange: "10–12", sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }] },
-    { id: 5, name: "Extensión OH Tríceps", muscleGroup: "Tríceps",        refWeight: "25 kg", repRange: "10–12", sets: [{ id: 1 }, { id: 2 }, { id: 3 }] },
+    {
+      id: 1,
+      name: "Press de Banca",
+      muscleGroup: "Pecho",
+      refWeight: "80 kg",
+      repRange: "8–10",
+      sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
+    },
+    {
+      id: 2,
+      name: "Press Inclinado DB",
+      muscleGroup: "Pecho Superior",
+      refWeight: "22 kg",
+      repRange: "10–12",
+      sets: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    },
+    {
+      id: 3,
+      name: "Cruces con Cable",
+      muscleGroup: "Pecho",
+      refWeight: "15 kg",
+      repRange: "12–15",
+      sets: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    },
+    {
+      id: 4,
+      name: "Jalón Tríceps",
+      muscleGroup: "Tríceps",
+      refWeight: "40 kg",
+      repRange: "10–12",
+      sets: [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }],
+    },
+    {
+      id: 5,
+      name: "Extensión OH Tríceps",
+      muscleGroup: "Tríceps",
+      refWeight: "25 kg",
+      repRange: "10–12",
+      sets: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    },
   ],
 };
 
@@ -86,20 +121,50 @@ function PreviewScreen({ onStart }) {
         {/* ── Header editorial ────────────────────────────────────────── */}
         <View style={{ marginBottom: 30 }}>
           {/* Ticks */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 18 }}>
-            <View style={{ width: 28, height: 3, borderRadius: 2, backgroundColor: BRAND_MINT }} />
-            <View style={{ width: 10, height: 3, borderRadius: 2, backgroundColor: t.mintSofter }} />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 18,
+            }}
+          >
+            <View
+              style={{
+                width: 28,
+                height: 3,
+                borderRadius: 2,
+                backgroundColor: BRAND_MINT,
+              }}
+            />
+            <View
+              style={{
+                width: 10,
+                height: 3,
+                borderRadius: 2,
+                backgroundColor: t.mintSofter,
+              }}
+            />
           </View>
 
           {/* Kicker + date */}
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+            }}
+          >
             <Text
               className="font-manrope-bold uppercase"
               style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.4 }}
             >
               Sesión de hoy
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
               <View
                 style={{
                   width: 6,
@@ -145,7 +210,12 @@ function PreviewScreen({ onStart }) {
           {/* Session title */}
           <Text
             className="font-jakarta-bold"
-            style={{ fontSize: 40, lineHeight: 44, letterSpacing: -1.4, color: t.mainText }}
+            style={{
+              fontSize: 40,
+              lineHeight: 44,
+              letterSpacing: -1.4,
+              color: t.mainText,
+            }}
           >
             {SESSION.sessionName}.
           </Text>
@@ -173,13 +243,23 @@ function PreviewScreen({ onStart }) {
             >
               <Text
                 className="font-jakarta-bold"
-                style={{ fontSize: 24, letterSpacing: -0.6, color: t.mainText, lineHeight: 28 }}
+                style={{
+                  fontSize: 24,
+                  letterSpacing: -0.6,
+                  color: t.mainText,
+                  lineHeight: 28,
+                }}
               >
                 {stat.value}
               </Text>
               <Text
                 className="font-manrope-bold uppercase"
-                style={{ fontSize: 9, color: t.mutedText, letterSpacing: 1.4, marginTop: 3 }}
+                style={{
+                  fontSize: 9,
+                  color: t.mutedText,
+                  letterSpacing: 1.4,
+                  marginTop: 3,
+                }}
               >
                 {stat.label}
               </Text>
@@ -189,8 +269,22 @@ function PreviewScreen({ onStart }) {
 
         {/* ── Exercise list ────────────────────────────────────────────── */}
         <View style={{ marginBottom: 34 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <View style={{ width: 16, height: 2, borderRadius: 1, backgroundColor: BRAND_MINT }} />
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <View
+              style={{
+                width: 16,
+                height: 2,
+                borderRadius: 1,
+                backgroundColor: BRAND_MINT,
+              }}
+            />
             <Text
               className="font-manrope-bold uppercase"
               style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.2 }}
@@ -212,7 +306,13 @@ function PreviewScreen({ onStart }) {
             {SESSION.exercises.map((ex, idx) => (
               <View key={ex.id}>
                 {idx > 0 && (
-                  <View style={{ height: 1, backgroundColor: t.divider, marginHorizontal: 18 }} />
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: t.divider,
+                      marginHorizontal: 18,
+                    }}
+                  />
                 )}
                 <View
                   style={{
@@ -225,7 +325,12 @@ function PreviewScreen({ onStart }) {
                 >
                   <Text
                     className="font-jakarta-bold"
-                    style={{ fontSize: 11, color: t.bigNumber, width: 22, letterSpacing: 0.4 }}
+                    style={{
+                      fontSize: 11,
+                      color: t.bigNumber,
+                      width: 22,
+                      letterSpacing: 0.4,
+                    }}
                   >
                     {String(idx + 1).padStart(2, "0")}
                   </Text>
@@ -233,12 +338,22 @@ function PreviewScreen({ onStart }) {
                   <View style={{ flex: 1, gap: 4 }}>
                     <Text
                       className="font-jakarta-semi"
-                      style={{ fontSize: 14, color: t.mainText, letterSpacing: -0.2 }}
+                      style={{
+                        fontSize: 14,
+                        color: t.mainText,
+                        letterSpacing: -0.2,
+                      }}
                       numberOfLines={1}
                     >
                       {ex.name}
                     </Text>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 7,
+                      }}
+                    >
                       <View
                         style={{
                           paddingHorizontal: 7,
@@ -249,7 +364,11 @@ function PreviewScreen({ onStart }) {
                       >
                         <Text
                           className="font-manrope-bold uppercase"
-                          style={{ fontSize: 8, color: t.kickerMint, letterSpacing: 1.2 }}
+                          style={{
+                            fontSize: 8,
+                            color: t.kickerMint,
+                            letterSpacing: 1.2,
+                          }}
                         >
                           {ex.muscleGroup}
                         </Text>
@@ -265,7 +384,11 @@ function PreviewScreen({ onStart }) {
 
                   <Text
                     className="font-jakarta-bold"
-                    style={{ fontSize: 13, color: t.bigNumber, letterSpacing: -0.2 }}
+                    style={{
+                      fontSize: 13,
+                      color: t.bigNumber,
+                      letterSpacing: -0.2,
+                    }}
                   >
                     {ex.refWeight}
                   </Text>
@@ -351,7 +474,6 @@ function ActiveSession({ onEnd }) {
   const exercise = SESSION.exercises[currentIdx];
   const canPrev = currentIdx > 0;
   const canNext = currentIdx < SESSION.exercises.length - 1;
-
 
   const totalSets = useMemo(
     () => SESSION.exercises.reduce((s, ex) => s + ex.sets.length, 0),
@@ -479,7 +601,12 @@ function ActiveSession({ onEnd }) {
       >
         {/* ── Exercise progress ─────────────────────────────────────────── */}
         <View
-          style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 18 }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 18,
+          }}
         >
           <Text
             className="font-manrope-bold uppercase"
@@ -528,7 +655,13 @@ function ActiveSession({ onEnd }) {
             colors={[t.mintHalo, "rgba(42,232,204,0)"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0.65, y: 0.85 }}
-            style={{ position: "absolute", top: 0, left: 0, width: 200, height: 160 }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 200,
+              height: 160,
+            }}
           />
 
           {/* Card header */}
@@ -551,7 +684,11 @@ function ActiveSession({ onEnd }) {
               >
                 <Text
                   className="font-manrope-bold uppercase"
-                  style={{ fontSize: 9, color: t.kickerMint, letterSpacing: 1.6 }}
+                  style={{
+                    fontSize: 9,
+                    color: t.kickerMint,
+                    letterSpacing: 1.6,
+                  }}
                 >
                   {exercise.muscleGroup}
                 </Text>
@@ -573,7 +710,11 @@ function ActiveSession({ onEnd }) {
                 <Barbell size={11} color={t.mutedText} />
                 <Text
                   className="font-manrope-bold"
-                  style={{ fontSize: 11, color: t.mutedText, letterSpacing: 0.4 }}
+                  style={{
+                    fontSize: 11,
+                    color: t.mutedText,
+                    letterSpacing: 0.4,
+                  }}
                 >
                   {exercise.refWeight}
                 </Text>
@@ -582,25 +723,51 @@ function ActiveSession({ onEnd }) {
 
             <Text
               className="font-jakarta-bold"
-              style={{ fontSize: 28, lineHeight: 32, letterSpacing: -0.9, color: t.mainText }}
+              style={{
+                fontSize: 28,
+                lineHeight: 32,
+                letterSpacing: -0.9,
+                color: t.mainText,
+              }}
             >
               {exercise.name}
             </Text>
           </View>
 
           {/* Divider */}
-          <View style={{ height: 1, backgroundColor: t.divider, marginHorizontal: 20 }} />
+          <View
+            style={{
+              height: 1,
+              backgroundColor: t.divider,
+              marginHorizontal: 20,
+            }}
+          />
 
           {/* Set rows */}
-          <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 8, gap: 10 }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 18,
+              paddingBottom: 20,
+              gap: 10,
+            }}
+          >
             {exercise.sets.map((set, si) => {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
-              const dimColor = t.isDark ? "rgba(255,255,255,0.25)" : "rgba(15,13,32,0.25)";
+              const dimColor = t.isDark
+                ? "rgba(255,255,255,0.25)"
+                : "rgba(15,13,32,0.25)";
               return (
                 <View key={set.id} style={{ gap: 6 }}>
                   {/* Main row */}
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
                     {/* Set label */}
                     <Text
                       className="font-manrope-bold uppercase"
@@ -622,7 +789,11 @@ function ActiveSession({ onEnd }) {
                         borderRadius: 8,
                         backgroundColor: done ? "transparent" : t.mintSurface,
                         borderWidth: 1,
-                        borderColor: done ? "transparent" : t.isDark ? "rgba(42,232,204,0.2)" : "rgba(0,80,71,0.15)",
+                        borderColor: done
+                          ? "transparent"
+                          : t.isDark
+                            ? "rgba(42,232,204,0.2)"
+                            : "rgba(0,80,71,0.15)",
                       }}
                     >
                       <Text
@@ -646,7 +817,11 @@ function ActiveSession({ onEnd }) {
                       editable={!done}
                       selectTextOnFocus
                       placeholder="— kg"
-                      placeholderTextColor={t.isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"}
+                      placeholderTextColor={
+                        t.isDark
+                          ? "rgba(255,255,255,0.2)"
+                          : "rgba(15,13,32,0.22)"
+                      }
                       style={{
                         width: 64,
                         paddingHorizontal: 10,
@@ -661,7 +836,10 @@ function ActiveSession({ onEnd }) {
                         textAlign: "center",
                       }}
                     />
-                    <Text className="font-manrope" style={{ fontSize: 12, color: t.mutedText }}>
+                    <Text
+                      className="font-manrope"
+                      style={{ fontSize: 12, color: t.mutedText }}
+                    >
                       kg
                     </Text>
 
@@ -679,7 +857,9 @@ function ActiveSession({ onEnd }) {
                         borderWidth: 1.5,
                         borderColor: done
                           ? BRAND_MINT
-                          : t.isDark ? "rgba(255,255,255,0.15)" : "rgba(15,13,32,0.14)",
+                          : t.isDark
+                            ? "rgba(255,255,255,0.15)"
+                            : "rgba(15,13,32,0.14)",
                         shadowColor: done ? BRAND_MINT : "transparent",
                         shadowOpacity: done ? 0.65 : 0,
                         shadowRadius: 10,
@@ -688,7 +868,10 @@ function ActiveSession({ onEnd }) {
                       })}
                     >
                       {done && (
-                        <CheckCircle size={18} color={t.isDark ? "#0f0d20" : "#ffffff"} />
+                        <CheckCircle
+                          size={18}
+                          color={t.isDark ? "#0f0d20" : "#ffffff"}
+                        />
                       )}
                     </Pressable>
                   </View>
@@ -700,7 +883,9 @@ function ActiveSession({ onEnd }) {
                       setSetNotes((prev) => ({ ...prev, [key]: v }))
                     }
                     placeholder="Nota de la serie..."
-                    placeholderTextColor={t.isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"}
+                    placeholderTextColor={
+                      t.isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
+                    }
                     style={{
                       marginLeft: 34,
                       paddingHorizontal: 12,
@@ -720,7 +905,14 @@ function ActiveSession({ onEnd }) {
           </View>
 
           {/* Prev / Next navigation */}
-          <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingBottom: 16, gap: 10 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              paddingHorizontal: 16,
+              paddingBottom: 16,
+              gap: 10,
+            }}
+          >
             {/* Anterior */}
             <Pressable
               onPress={() => {
@@ -755,18 +947,31 @@ function ActiveSession({ onEnd }) {
                   justifyContent: "center",
                 }}
               >
-                <ChevronRight size={13} color={t.mutedText} style={{ transform: [{ rotate: "180deg" }] }} />
+                <ChevronRight
+                  size={13}
+                  color={t.mutedText}
+                  style={{ transform: [{ rotate: "180deg" }] }}
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text
                   className="font-manrope-bold uppercase"
-                  style={{ fontSize: 8, color: t.mutedText, letterSpacing: 1.6, marginBottom: 2 }}
+                  style={{
+                    fontSize: 8,
+                    color: t.mutedText,
+                    letterSpacing: 1.6,
+                    marginBottom: 2,
+                  }}
                 >
                   Anterior
                 </Text>
                 <Text
                   className="font-jakarta-semi"
-                  style={{ fontSize: 12, color: t.mainText, letterSpacing: -0.2 }}
+                  style={{
+                    fontSize: 12,
+                    color: t.mainText,
+                    letterSpacing: -0.2,
+                  }}
                   numberOfLines={1}
                 >
                   {canPrev ? SESSION.exercises[currentIdx - 1].name : ""}
@@ -803,7 +1008,12 @@ function ActiveSession({ onEnd }) {
               <View style={{ flex: 1, alignItems: "flex-end" }}>
                 <Text
                   className="font-manrope-bold uppercase"
-                  style={{ fontSize: 8, color: "rgba(255,255,255,0.6)", letterSpacing: 1.6, marginBottom: 2 }}
+                  style={{
+                    fontSize: 8,
+                    color: "rgba(255,255,255,0.6)",
+                    letterSpacing: 1.6,
+                    marginBottom: 2,
+                  }}
                 >
                   Siguiente
                 </Text>
@@ -842,7 +1052,12 @@ function ActiveSession({ onEnd }) {
           }}
         >
           <View
-            style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: BRAND_MINT }}
+            style={{
+              width: 4,
+              height: 4,
+              borderRadius: 2,
+              backgroundColor: BRAND_MINT,
+            }}
           />
           <Text
             className="font-manrope-bold uppercase"
