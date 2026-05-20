@@ -37,6 +37,7 @@ import { formatShortDate } from "../../src/utils/format-date";
 import PlanExerciseRow from "../../src/components/cards/plan-exercise-row";
 import VideoPlayerSheet from "../../src/components/videos/VideoPlayerSheet";
 
+// Colores JS: solo para gradientes y sombras (no expresables como clase).
 const BRAND_PRIMARY = brandPrimary[700];
 const BRAND_PRIMARY_DEEP = brandPrimary[600];
 const BRAND_MINT = brandSecondary[400];
@@ -65,38 +66,10 @@ function refWeightLabel(exercise) {
   return weights.length ? `${Math.max(...weights)} kg` : "Libre";
 }
 
-function useTokens() {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-  return useMemo(
-    () => ({
-      isDark,
-      pageBg: isDark ? ui.background.dark : ui.background.light,
-      cardBg: isDark ? ui.surface.dark : ui.surface.light,
-      mainText: isDark ? ui.text.mainDark : ui.text.main,
-      mutedText: isDark ? ui.text.mutedDark : ui.text.muted,
-      kickerMint: isDark ? BRAND_MINT : brandSecondary[700],
-      cardBorder: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,13,32,0.08)",
-      divider: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,13,32,0.06)",
-      ghostBg: isDark ? "rgba(255,255,255,0.04)" : "rgba(15,13,32,0.03)",
-      ghostBorder: isDark ? "rgba(255,255,255,0.10)" : "rgba(15,13,32,0.10)",
-      primaryFill: isDark ? "rgba(74,68,228,0.15)" : "rgba(74,68,228,0.08)",
-      primaryBorder: isDark ? "rgba(74,68,228,0.4)" : "rgba(74,68,228,0.25)",
-      mintSurface: isDark ? "rgba(42,232,204,0.12)" : "rgba(42,232,204,0.14)",
-      mintHalo: isDark ? "rgba(42,232,204,0.14)" : "rgba(42,232,204,0.09)",
-      bigNumber: isDark ? "rgba(255,255,255,0.04)" : "rgba(15,13,32,0.04)",
-      mintSofter: isDark ? "rgba(42,232,204,0.4)" : "rgba(0,80,71,0.4)",
-      inputBg: isDark ? ui.input.dark : ui.input.light,
-    }),
-    [isDark]
-  );
-}
-
 // ─── Preview ──────────────────────────────────────────────────────────────────
 
 function PreviewScreen({ session, onStart }) {
   const insets = useSafeAreaInsets();
-  const t = useTokens();
 
   const videoSheetRef = useRef(null);
   const [activeVideo, setActiveVideo] = useState(null);
@@ -116,9 +89,10 @@ function PreviewScreen({ session, onStart }) {
   const dateLabel = formatShortDate();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
+    <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       <ScrollView
         contentContainerStyle={{
+          paddingTop: insets.top + 22,
           paddingBottom: insets.bottom + 36,
           paddingHorizontal: 20,
         }}
@@ -128,83 +102,41 @@ function PreviewScreen({ session, onStart }) {
         <View className="mb-8">
           {/* Ticks */}
           <View className="flex-row items-center gap-1.5 mb-5">
-            <View
-              style={{
-                width: 28,
-                height: 3,
-                borderRadius: 2,
-                backgroundColor: BRAND_MINT,
-              }}
-            />
-            <View
-              style={{
-                width: 10,
-                height: 3,
-                borderRadius: 2,
-                backgroundColor: t.mintSofter,
-              }}
-            />
+            <View className="w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
+            <View className="w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/40 dark:bg-brandSecondary-400/40" />
           </View>
 
           {/* Kicker + date */}
           <View className="flex-row items-center justify-between mb-4">
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.4 }}
-            >
+            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.4px] text-brandSecondary-700 dark:text-brandSecondary-400">
               Sesión de hoy
             </Text>
             <View className="flex-row items-center gap-1.5">
               <View
+                className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
                 style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: BRAND_MINT,
                   shadowColor: BRAND_MINT,
                   shadowOpacity: 1,
                   shadowRadius: 6,
                   shadowOffset: { width: 0, height: 0 },
                 }}
               />
-              <Text
-                className="font-jakarta-bold"
-                style={{ fontSize: 10, color: t.mutedText, letterSpacing: 2 }}
-              >
+              <Text className="font-jakarta-bold text-[10px] tracking-[2px] text-ui-text-muted dark:text-ui-text-mutedDark">
                 {dateLabel}
               </Text>
             </View>
           </View>
 
           {/* Plan badge */}
-          <View
-            className="self-start mb-3.5"
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 9,
-              backgroundColor: t.primaryFill,
-              borderWidth: 1,
-              borderColor: t.primaryBorder,
-            }}
-          >
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{ fontSize: 9, color: BRAND_PRIMARY, letterSpacing: 1.8 }}
-            >
+          <View className="self-start mb-3.5 px-2.5 py-1 rounded-[9px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
+            <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.8px] text-brandPrimary-700">
               {session.planName} · {session.dayLabel}
             </Text>
           </View>
 
           {/* Session title */}
           <Text
-            className="font-jakarta-bold"
-            style={{
-              fontSize: 28,
-              lineHeight: 32,
-              letterSpacing: -0.8,
-              color: t.mainText,
-            }}
+            className="font-jakarta-bold text-[28px] leading-8 tracking-[-0.8px] text-ui-text-main dark:text-ui-text-mainDark"
             numberOfLines={2}
           >
             {session.sessionName}.
@@ -220,29 +152,12 @@ function PreviewScreen({ session, onStart }) {
           ].map((stat, i) => (
             <View
               key={i}
-              className="flex-1 items-center py-4"
-              style={{
-                borderRadius: 18,
-                backgroundColor: t.cardBg,
-                borderWidth: 1,
-                borderColor: t.cardBorder,
-              }}
+              className="flex-1 items-center py-4 rounded-[18px] border bg-ui-surface-light dark:bg-ui-surface-dark border-ui-text-main/8 dark:border-white/8"
             >
-              <Text
-                className="font-jakarta-bold"
-                style={{
-                  fontSize: 24,
-                  letterSpacing: -0.6,
-                  color: t.mainText,
-                  lineHeight: 28,
-                }}
-              >
+              <Text className="font-jakarta-bold text-2xl leading-7 tracking-[-0.6px] text-ui-text-main dark:text-ui-text-mainDark">
                 {stat.value}
               </Text>
-              <Text
-                className="font-manrope-bold uppercase mt-1"
-                style={{ fontSize: 9, color: t.mutedText, letterSpacing: 1.4 }}
-              >
+              <Text className="font-manrope-bold uppercase mt-1 text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
                 {stat.label}
               </Text>
             </View>
@@ -252,27 +167,14 @@ function PreviewScreen({ session, onStart }) {
         {/* ── Exercise list ── */}
         <View className="mb-9">
           <View className="flex-row items-center gap-2 mb-4">
-            <View
-              style={{
-                width: 16,
-                height: 2,
-                borderRadius: 1,
-                backgroundColor: BRAND_MINT,
-              }}
-            />
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.2 }}
-            >
+            <View className="w-4 h-0.5 rounded-[1px] bg-brandSecondary-400" />
+            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
               Ejercicios
             </Text>
-            <View
-              className="flex-1"
-              style={{ height: 1, backgroundColor: t.divider }}
-            />
+            <View className="flex-1 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
           </View>
 
-          <View style={{ gap: 10 }}>
+          <View className="gap-2.5">
             {session.exercises.map((ex, idx) => (
               <PlanExerciseRow
                 key={ex.id}
@@ -290,7 +192,7 @@ function PreviewScreen({ session, onStart }) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             onStart();
           }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.88 : 1 })}
+          className="active:opacity-90"
         >
           <LinearGradient
             colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
@@ -310,21 +212,10 @@ function PreviewScreen({ session, onStart }) {
               elevation: 12,
             }}
           >
-            <Text
-              className="font-jakarta-bold"
-              style={{ fontSize: 17, color: "white", letterSpacing: -0.3 }}
-            >
+            <Text className="font-jakarta-bold text-[17px] tracking-[-0.3px] text-white">
               Iniciar sesión
             </Text>
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 19,
-                backgroundColor: "rgba(255,255,255,0.2)",
-              }}
-            >
+            <View className="w-[38px] h-[38px] rounded-full items-center justify-center bg-white/20">
               <Play size={17} color="white" />
             </View>
           </LinearGradient>
@@ -344,7 +235,8 @@ function PreviewScreen({ session, onStart }) {
 
 function ActiveSession({ session, onEnd }) {
   const insets = useSafeAreaInsets();
-  const t = useTokens();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const [elapsed, setElapsed] = useState(0);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -374,6 +266,9 @@ function ActiveSession({ session, onEnd }) {
 
   const timerStr = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
 
+  // Color de íconos según el tema (RN no acepta clase Tailwind en color).
+  const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
+
   function toggleSet(exId, setId) {
     const key = `${exId}-${setId}`;
     setCompletedSets((prev) => {
@@ -389,11 +284,11 @@ function ActiveSession({ session, onEnd }) {
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
+    <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       {/* ── Top bar ── */}
       <View
-        className="flex-row items-center justify-between px-5"
-        style={{ paddingTop: insets.top + 12, paddingBottom: 14 }}
+        className="flex-row items-center justify-between px-5 pb-3.5"
+        style={{ paddingTop: insets.top + 12 }}
       >
         <Pressable
           onPress={() => {
@@ -401,72 +296,39 @@ function ActiveSession({ session, onEnd }) {
             onEnd();
           }}
           hitSlop={12}
-          style={({ pressed }) => ({
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: t.ghostBg,
-            borderWidth: 1,
-            borderColor: t.ghostBorder,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.6 : 1,
-          })}
+          className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
         >
-          <X size={16} color={t.mutedText} />
+          <X size={16} color={mutedIcon} />
         </Pressable>
 
         <View className="flex-row items-center gap-1.5">
           <View
+            className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
             style={{
-              width: 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: BRAND_MINT,
               shadowColor: BRAND_MINT,
               shadowOpacity: 0.9,
               shadowRadius: 6,
               shadowOffset: { width: 0, height: 0 },
             }}
           />
-          <Text
-            className="font-manrope-bold uppercase"
-            style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.2 }}
-          >
+          <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
             Sesión en curso
           </Text>
         </View>
 
-        <View
-          style={{
-            paddingHorizontal: 11,
-            paddingVertical: 5,
-            borderRadius: 10,
-            backgroundColor: t.primaryFill,
-            borderWidth: 1,
-            borderColor: t.primaryBorder,
-          }}
-        >
-          <Text
-            className="font-jakarta-bold"
-            style={{ fontSize: 13, color: BRAND_PRIMARY, letterSpacing: 1 }}
-          >
+        <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
+          <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
             {timerStr}
           </Text>
         </View>
       </View>
 
       {/* ── Progress bar ── */}
-      <View
-        className="mx-5"
-        style={{ height: 2, borderRadius: 1, backgroundColor: t.divider }}
-      >
+      <View className="mx-5 h-0.5 rounded-[1px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
         <View
+          className="h-0.5 rounded-[1px] bg-brandSecondary-400"
           style={{
-            height: 2,
-            borderRadius: 1,
             width: `${totalSets > 0 ? (doneCount / totalSets) * 100 : 0}%`,
-            backgroundColor: BRAND_MINT,
           }}
         />
       </View>
@@ -482,27 +344,21 @@ function ActiveSession({ session, onEnd }) {
       >
         {/* ── Exercise progress dots ── */}
         <View className="flex-row items-center gap-2.5 mb-5">
-          <Text
-            className="font-manrope-bold uppercase"
-            style={{ fontSize: 10, color: t.kickerMint, letterSpacing: 2.2 }}
-          >
+          <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
             Ejercicio {currentIdx + 1} de {session.exercises.length}
           </Text>
           <View className="flex-row gap-1">
             {session.exercises.map((_, i) => (
               <View
                 key={i}
-                style={{
-                  width: i === currentIdx ? 18 : 6,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor:
-                    i === currentIdx
-                      ? BRAND_PRIMARY
-                      : i < currentIdx
-                        ? BRAND_MINT
-                        : t.divider,
-                }}
+                className={`h-1 rounded-[2px] ${
+                  i === currentIdx
+                    ? "bg-brandPrimary-700"
+                    : i < currentIdx
+                      ? "bg-brandSecondary-400"
+                      : "bg-ui-text-main/[6%] dark:bg-white/[6%]"
+                }`}
+                style={{ width: i === currentIdx ? 18 : 6 }}
               />
             ))}
           </View>
@@ -510,13 +366,8 @@ function ActiveSession({ session, onEnd }) {
 
         {/* ── Exercise card ── */}
         <View
+          className="rounded-3xl overflow-hidden mb-3.5 border bg-ui-surface-light dark:bg-ui-surface-dark border-ui-text-main/8 dark:border-white/8"
           style={{
-            borderRadius: 24,
-            backgroundColor: t.cardBg,
-            borderWidth: 1,
-            borderColor: t.cardBorder,
-            overflow: "hidden",
-            marginBottom: 14,
             shadowColor: BRAND_PRIMARY,
             shadowOpacity: 0.12,
             shadowRadius: 22,
@@ -526,7 +377,10 @@ function ActiveSession({ session, onEnd }) {
         >
           {/* Mint halo */}
           <LinearGradient
-            colors={[t.mintHalo, "rgba(42,232,204,0)"]}
+            colors={[
+              isDark ? "rgba(42,232,204,0.14)" : "rgba(42,232,204,0.09)",
+              "rgba(42,232,204,0)",
+            ]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0.65, y: 0.85 }}
             style={{
@@ -541,116 +395,62 @@ function ActiveSession({ session, onEnd }) {
           {/* Card header */}
           <View className="p-5 pb-4">
             <View className="flex-row items-center justify-between mb-2.5">
-              <View
-                style={{
-                  paddingHorizontal: 9,
-                  paddingVertical: 3,
-                  borderRadius: 8,
-                  backgroundColor: t.mintSurface,
-                }}
-              >
-                <Text
-                  className="font-manrope-bold uppercase"
-                  style={{
-                    fontSize: 9,
-                    color: t.kickerMint,
-                    letterSpacing: 1.6,
-                  }}
-                >
+              <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%]">
+                <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
                   {exercise.exercise_muscle}
                 </Text>
               </View>
 
-              <View
-                className="flex-row items-center gap-1"
-                style={{
-                  paddingHorizontal: 9,
-                  paddingVertical: 3,
-                  borderRadius: 8,
-                  backgroundColor: t.ghostBg,
-                  borderWidth: 1,
-                  borderColor: t.ghostBorder,
-                }}
-              >
-                <Barbell size={11} color={t.mutedText} />
-                <Text
-                  className="font-manrope-bold"
-                  style={{
-                    fontSize: 11,
-                    color: t.mutedText,
-                    letterSpacing: 0.4,
-                  }}
-                >
+              <View className="flex-row items-center gap-1 px-[9px] py-[3px] rounded-lg border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
+                <Barbell size={11} color={mutedIcon} />
+                <Text className="font-manrope-bold text-[11px] tracking-[0.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
                   {refWeightLabel(exercise)}
                 </Text>
               </View>
             </View>
 
-            <Text
-              className="font-jakarta-bold"
-              style={{
-                fontSize: 28,
-                lineHeight: 32,
-                letterSpacing: -0.9,
-                color: t.mainText,
-              }}
-            >
+            <Text className="font-jakarta-bold text-[28px] leading-8 tracking-[-0.9px] text-ui-text-main dark:text-ui-text-mainDark">
               {exercise.exercise_name}
             </Text>
           </View>
 
           {/* Divider */}
-          <View
-            className="mx-5"
-            style={{ height: 1, backgroundColor: t.divider }}
-          />
+          <View className="mx-5 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
 
           {/* Set rows */}
           <View className="px-5 pt-5 pb-5 gap-3">
             {exercise.sets.map((set, si) => {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
-              const dimColor = t.isDark
-                ? "rgba(255,255,255,0.22)"
-                : "rgba(15,13,32,0.22)";
               return (
                 <View key={set.id} className="gap-1.5">
                   {/* Main row */}
                   <View className="flex-row items-center gap-2.5">
                     {/* Set label */}
                     <Text
-                      className="font-manrope-bold uppercase"
-                      style={{
-                        fontSize: 11,
-                        color: done ? t.kickerMint : t.mutedText,
-                        letterSpacing: 1.2,
-                        width: 24,
-                      }}
+                      className={`font-manrope-bold uppercase text-[11px] tracking-[1.2px] w-6 ${
+                        done
+                          ? "text-brandSecondary-700 dark:text-brandSecondary-400"
+                          : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                      }`}
                     >
                       S{si + 1}
                     </Text>
 
                     {/* Rep range chip */}
                     <View
-                      style={{
-                        paddingHorizontal: 9,
-                        paddingVertical: 4,
-                        borderRadius: 8,
-                        backgroundColor: done ? "transparent" : t.mintSurface,
-                        borderWidth: 1,
-                        borderColor: done
-                          ? "transparent"
-                          : t.isDark
-                            ? "rgba(42,232,204,0.2)"
-                            : "rgba(0,80,71,0.15)",
-                      }}
+                      className={`px-[9px] py-1 rounded-lg border ${
+                        done
+                          ? "bg-transparent border-transparent"
+                          : "bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/15 dark:border-brandSecondary-400/20"
+                      }`}
                     >
                       <Text
-                        className="font-manrope-bold"
-                        style={{
-                          fontSize: 12,
-                          color: done ? dimColor : t.kickerMint,
-                        }}
+                        className={`font-manrope-bold text-xs ${
+                          done
+                            ? "text-ui-text-main/[22%] dark:text-white/[22%]"
+                            : "text-brandSecondary-700 dark:text-brandSecondary-400"
+                        }`}
                       >
                         {setTargetLabel(set, exercise.prescription_mode)}
                       </Text>
@@ -669,28 +469,15 @@ function ActiveSession({ session, onEnd }) {
                         set.weight_kg != null ? String(set.weight_kg) : "—"
                       }
                       placeholderTextColor={
-                        t.isDark
-                          ? "rgba(255,255,255,0.2)"
-                          : "rgba(15,13,32,0.22)"
+                        isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"
                       }
-                      style={{
-                        width: 58,
-                        paddingHorizontal: 10,
-                        paddingVertical: 7,
-                        borderRadius: 10,
-                        backgroundColor: done ? "transparent" : t.inputBg,
-                        borderWidth: 1,
-                        borderColor: done ? "transparent" : t.ghostBorder,
-                        fontFamily: "PlusJakartaSans_600SemiBold",
-                        fontSize: 15,
-                        color: done ? dimColor : t.mainText,
-                        textAlign: "center",
-                      }}
+                      className={`w-[58px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
+                        done
+                          ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
+                          : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                      }`}
                     />
-                    <Text
-                      className="font-manrope"
-                      style={{ fontSize: 12, color: t.mutedText }}
-                    >
+                    <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
                       kg
                     </Text>
 
@@ -698,30 +485,26 @@ function ActiveSession({ session, onEnd }) {
                     <Pressable
                       onPress={() => toggleSet(exercise.id, set.id)}
                       hitSlop={10}
-                      style={({ pressed }) => ({
-                        width: 34,
-                        height: 34,
-                        borderRadius: 17,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: done ? BRAND_MINT : t.ghostBg,
-                        borderWidth: 1.5,
-                        borderColor: done
-                          ? BRAND_MINT
-                          : t.isDark
-                            ? "rgba(255,255,255,0.15)"
-                            : "rgba(15,13,32,0.14)",
-                        shadowColor: done ? BRAND_MINT : "transparent",
-                        shadowOpacity: done ? 0.65 : 0,
-                        shadowRadius: 10,
-                        shadowOffset: { width: 0, height: 2 },
-                        opacity: pressed ? 0.72 : 1,
-                      })}
+                      className={`w-[34px] h-[34px] rounded-[17px] items-center justify-center border-[1.5px] active:opacity-70 ${
+                        done
+                          ? "bg-brandSecondary-400 border-brandSecondary-400"
+                          : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[14%] dark:border-white/15"
+                      }`}
+                      style={
+                        done
+                          ? {
+                              shadowColor: BRAND_MINT,
+                              shadowOpacity: 0.65,
+                              shadowRadius: 10,
+                              shadowOffset: { width: 0, height: 2 },
+                            }
+                          : undefined
+                      }
                     >
                       {done && (
                         <CheckCircle
                           size={18}
-                          color={t.isDark ? "#0f0d20" : "#ffffff"}
+                          color={isDark ? "#0f0d20" : "#ffffff"}
                         />
                       )}
                     </Pressable>
@@ -735,20 +518,9 @@ function ActiveSession({ session, onEnd }) {
                     }
                     placeholder="Nota de la serie..."
                     placeholderTextColor={
-                      t.isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
+                      isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
                     }
-                    style={{
-                      marginLeft: 34,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 9,
-                      backgroundColor: t.ghostBg,
-                      borderWidth: 1,
-                      borderColor: t.ghostBorder,
-                      fontFamily: "Manrope_400Regular",
-                      fontSize: 12,
-                      color: t.mainText,
-                    }}
+                    className="ml-[34px] px-3 py-1.5 rounded-[9px] border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
                   />
                 </View>
               );
@@ -758,18 +530,8 @@ function ActiveSession({ session, onEnd }) {
 
         {/* ── Series counter ── */}
         <View className="flex-row items-center justify-center gap-2 mb-5">
-          <View
-            style={{
-              width: 4,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: BRAND_MINT,
-            }}
-          />
-          <Text
-            className="font-manrope-bold uppercase"
-            style={{ fontSize: 11, color: t.mutedText, letterSpacing: 1.6 }}
-          >
+          <View className="w-1 h-1 rounded-[2px] bg-brandSecondary-400" />
+          <Text className="font-manrope-bold uppercase text-[11px] tracking-[1.6px] text-ui-text-muted dark:text-ui-text-mutedDark">
             {doneCount} / {totalSets} series completadas
           </Text>
         </View>
@@ -777,12 +539,8 @@ function ActiveSession({ session, onEnd }) {
 
       {/* ── Footer fijo: navegación + acción principal ── */}
       <View
-        className="flex-row items-center gap-3 px-5 pt-3.5 border-t"
-        style={{
-          paddingBottom: insets.bottom + 14,
-          borderTopColor: t.divider,
-          backgroundColor: t.pageBg,
-        }}
+        className="flex-row items-center gap-3 px-5 pt-3.5 border-t bg-ui-background-light dark:bg-ui-background-dark border-ui-text-main/[6%] dark:border-white/[6%]"
+        style={{ paddingBottom: insets.bottom + 14 }}
       >
         {/* ← Anterior */}
         <Pressable
@@ -797,13 +555,10 @@ function ActiveSession({ session, onEnd }) {
             opacity: !canPrev ? 0.32 : pressed ? 0.6 : 1,
           })}
         >
-          <View
-            className="w-14 h-14 rounded-[20px] border items-center justify-center"
-            style={{ backgroundColor: t.ghostBg, borderColor: t.ghostBorder }}
-          >
+          <View className="w-14 h-14 rounded-[20px] border items-center justify-center bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
             <ChevronRight
               size={18}
-              color={t.mutedText}
+              color={mutedIcon}
               style={{ transform: [{ rotate: "180deg" }] }}
             />
           </View>
@@ -820,7 +575,7 @@ function ActiveSession({ session, onEnd }) {
               onEnd();
             }
           }}
-          style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}
+          className="flex-1 active:opacity-90"
         >
           <LinearGradient
             colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
@@ -874,12 +629,8 @@ function ActiveSession({ session, onEnd }) {
 // ─── Estado vacío / carga ──────────────────────────────────────────────────────
 
 function StatusScreen({ children }) {
-  const t = useTokens();
   return (
-    <View
-      className="flex-1 items-center justify-center px-10"
-      style={{ backgroundColor: t.pageBg }}
-    >
+    <View className="flex-1 items-center justify-center px-10 bg-ui-background-light dark:bg-ui-background-dark">
       {children}
     </View>
   );
@@ -889,8 +640,9 @@ function StatusScreen({ children }) {
 
 export default function Sesion() {
   const [phase, setPhase] = useState("preview");
-  const t = useTokens();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
@@ -929,16 +681,10 @@ export default function Sesion() {
   if (!session) {
     return (
       <StatusScreen>
-        <Text
-          className="font-jakarta-bold text-center"
-          style={{ fontSize: 18, color: t.mainText, marginBottom: 6 }}
-        >
+        <Text className="font-jakarta-bold text-center text-lg mb-1.5 text-ui-text-main dark:text-ui-text-mainDark">
           No tenés una sesión pendiente
         </Text>
-        <Text
-          className="font-manrope text-center"
-          style={{ fontSize: 14, color: t.mutedText }}
-        >
+        <Text className="font-manrope text-center text-sm text-ui-text-muted dark:text-ui-text-mutedDark">
           {summary?.isCompleted
             ? "Completaste todo el plan. ¡Buen trabajo!"
             : "Cuando tengas un plan activo, tu próxima sesión va a aparecer acá."}
@@ -951,24 +697,15 @@ export default function Sesion() {
   if (session.exercises.length === 0) {
     return (
       <StatusScreen>
-        <Barbell size={32} color={t.mutedText} />
-        <Text
-          className="font-jakarta-bold text-center"
-          style={{ fontSize: 18, color: t.mainText, marginTop: 14 }}
-        >
+        <Barbell size={32} color={isDark ? ui.text.mutedDark : ui.text.muted} />
+        <Text className="font-jakarta-bold text-center text-lg mt-3.5 text-ui-text-main dark:text-ui-text-mainDark">
           {session.sessionName}
         </Text>
-        <Text
-          className="font-manrope text-center"
-          style={{ fontSize: 14, color: t.mutedText, marginTop: 6 }}
-        >
+        <Text className="font-manrope text-center text-sm mt-1.5 text-ui-text-muted dark:text-ui-text-mutedDark">
           Esta sesión todavía no tiene ejercicios cargados.
         </Text>
         <Pressable onPress={() => router.back()} className="mt-6">
-          <Text
-            className="font-jakarta-bold"
-            style={{ fontSize: 14, color: BRAND_PRIMARY }}
-          >
+          <Text className="font-jakarta-bold text-sm text-brandPrimary-700">
             Volver
           </Text>
         </Pressable>
@@ -977,7 +714,7 @@ export default function Sesion() {
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: t.pageBg }}>
+    <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       {phase === "preview" ? (
         <PreviewScreen session={session} onStart={() => setPhase("active")} />
       ) : (
