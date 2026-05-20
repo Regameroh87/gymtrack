@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "expo.vscode-expo-tools",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "naumovs.color-highlight",
+    "aaron-bond.better-comments",
+    "vincaslt.highlight-matching-tag",
+    "redhat.vscode-yaml",
+    "wayou.vscode-icons-mac",
+    "adpyke.codesnap",
+    "kisstkondoros.vscode-gutter-preview",
+    "kamikillerto.vscode-colorize"
+  ]
+}
