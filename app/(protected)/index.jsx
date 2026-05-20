@@ -108,17 +108,6 @@ export default function Home() {
             <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-xs tracking-wide">
               {dateLine} · {dayName.toUpperCase()}
             </Text>
-            {/*     <View className="flex-row items-center gap-2">
-              <View
-                className="bg-brandSecondary-400 w-2 h-2 rounded-full shadow-md"
-                style={{
-                  boxShadow: `0 0 6px ${BRAND_MINT}`,
-                }}
-              />
-              <Text className="font-jakarta-bold text-brandSecondary-700 dark:text-brandSecondary-400 text-xs tracking-wide">
-                LIVE
-              </Text>
-            </View> */}
           </View>
 
           {/* Saludo + avatar */}
@@ -152,7 +141,7 @@ export default function Home() {
         </View>
 
         {/* ── HERO: sesión de hoy ── */}
-        <View style={{ paddingHorizontal: 20, marginBottom: 28 }}>
+        <View className="px-5 mb-7">
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -196,43 +185,13 @@ export default function Home() {
               />
 
               {/* Número editorial gigante de fondo */}
-              <Text
-                className="font-jakarta-bold text-[#0f0d20]/5 dark:text-white/[4%]"
-                style={{
-                  position: "absolute",
-                  top: -22,
-                  right: -8,
-                  fontSize: 180,
-                  lineHeight: 180,
-                  letterSpacing: -8,
-                }}
-              >
+              <Text className="absolute -top-[22px] -right-[8px] text-[180px] leading-[180px] tracking-[-8px] font-jakarta-bold text-[#0f0d20]/5 dark:text-white/[4%]">
                 {String(now.getDate()).padStart(2, "0")}
               </Text>
 
               {/* Ticks decorativos */}
-              <View
-                className="bg-brandSecondary-400"
-                style={{
-                  position: "absolute",
-                  top: 18,
-                  left: 20,
-                  width: 28,
-                  height: 3,
-                  borderRadius: 2,
-                }}
-              />
-              <View
-                className="bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40"
-                style={{
-                  position: "absolute",
-                  top: 18,
-                  left: 52,
-                  width: 10,
-                  height: 3,
-                  borderRadius: 2,
-                }}
-              />
+              <View className="absolute top-[18px] left-5 w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
+              <View className="absolute top-[18px] left-[52px] w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40" />
 
               {/* Header row */}
               <View
@@ -243,25 +202,19 @@ export default function Home() {
                   className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400"
                   style={{ fontSize: 10, letterSpacing: 2.4 }}
                 >
-                  Today's Session
+                  Tu sesión de hoy
                 </Text>
                 <View className="flex-row items-center" style={{ gap: 6 }}>
                   <View
-                    className="bg-brandSecondary-400"
+                    className="bg-brandSecondary-400 w-2 h-2 rounded-full"
                     style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
                       shadowColor: BRAND_MINT,
                       shadowOpacity: 0.9,
                       shadowRadius: 5,
                       shadowOffset: { width: 0, height: 0 },
                     }}
                   />
-                  <Text
-                    className="font-jakarta-bold text-brandSecondary-700 dark:text-brandSecondary-400"
-                    style={{ fontSize: 10, letterSpacing: 2 }}
-                  >
+                  <Text className="font-jakarta-bold text-brandSecondary-700 dark:text-brandSecondary-400 text-xs tracking-[2px]">
                     PRÓXIMA
                   </Text>
                 </View>
