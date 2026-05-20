@@ -17,7 +17,7 @@ import { brandPrimary, brandSecondary, gradient, ui } from "../../theme/colors";
 import { ChevronRight, Barbell } from "../../../assets/icons";
 
 // ── Hooks ──
-import { useActivePlan } from "../../hooks/use-active-plan";
+import { useActivePlanSummary } from "../../hooks/use-active-plan-summary";
 
 // ── Utils ──
 import { getCloudinaryUrl } from "../../utils/cloudinary";
@@ -27,7 +27,7 @@ export default function HeroeCardHome({ image }) {
   const { isDark } = useTheme();
   const now = new Date();
 
-  const { data: activePlan, isLoading } = useActivePlan();
+  const { data: summary, isLoading } = useActivePlanSummary();
 
   const BRAND_PRIMARY = brandPrimary[700];
   const BRAND_MINT = brandSecondary[400];
@@ -43,17 +43,15 @@ export default function HeroeCardHome({ image }) {
     ? gradient.sessionPlaceholder.dark
     : gradient.sessionPlaceholder.light;
 
-  // Sin tracking de progreso todavía: la "sesión de hoy" es el primer día
-  // del plan (semana 1, día 1). Se ajustará cuando exista workout_logs.
-  if (isLoading || !activePlan) return null;
+  // El día que toca se calcula desde session_logs (ver useActivePlanSummary).
+  if (isLoading || !summary) return null;
 
-  const firstWeek = activePlan.weeks[0];
-  const firstDay = firstWeek?.days?.[0];
-  if (!firstDay) return null;
+  const currentDay = summary.currentDay;
+  if (!currentDay) return null; // plan completado o sin día disponible
 
-  const { session, exercises } = firstDay;
-  const objective = activePlan.plan.objective ?? "Entrenamiento";
-  const exerciseCount = exercises.length;
+  const { session } = currentDay;
+  const objective = summary.plan.objective ?? "Entrenamiento";
+  const exerciseCount = currentDay.exercise_count;
   const sessionImage =
     image ??
     (session?.cover_image_uri
@@ -161,14 +159,14 @@ export default function HeroeCardHome({ image }) {
                   <View className="flex-row items-center gap-2">
                     <View className="bg-brandSecondary-700 dark:bg-brandSecondary-400 w-1 h-1 rounded-sm" />
                     <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-[8px] tracking-[2px]">
-                      {`${objective} · semana ${firstWeek.week_number} `}
+                      {`${objective} · semana ${currentDay.week_number} `}
                     </Text>
                   </View>
                   <Text
                     className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark text-[26px] leading-8 tracking-wider "
                     numberOfLines={3}
                   >
-                    {activePlan.plan.name}
+                    {summary.plan.name}
                   </Text>
                   <Text className="font-manrope text-[#0f0d20]/65 dark:text-white/60 text-sm mt-3 leading-5">
                     {`${exerciseCount} ${
@@ -224,7 +222,7 @@ export default function HeroeCardHome({ image }) {
                 <View className="flex-row items-center gap-1">
                   <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-3 h-[1px]" />
                   <Text className="font-manrope-bold uppercase text-[#0f0d20]/45 dark:text-white/45 text-[10px] tracking-[2px] ">
-                    {`Día ${firstDay.day_number}`}
+                    {`Día ${currentDay.day_number}`}
                   </Text>
                   <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-4 h-[1px]" />
                 </View>
