@@ -823,148 +823,6 @@ function ActiveSession({ onEnd }) {
           </View>
         </View>
 
-        {/* ── Navegación ejercicios ── */}
-        <View
-          className="flex-row mb-5"
-          style={{
-            borderRadius: 20,
-            backgroundColor: t.cardBg,
-            borderWidth: 1,
-            borderColor: t.cardBorder,
-            shadowColor: "#0f0d20",
-            shadowOpacity: t.isDark ? 0 : 0.05,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 3 },
-          }}
-        >
-          {/* ← Anterior */}
-          <Pressable
-            onPress={() => {
-              if (!canPrev) return;
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setCurrentIdx((i) => i - 1);
-            }}
-            disabled={!canPrev}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 16,
-              paddingLeft: 16,
-              paddingRight: 12,
-              opacity: !canPrev ? 0.28 : pressed ? 0.6 : 1,
-            })}
-          >
-            <View
-              className="items-center justify-center"
-              style={{
-                alignSelf: "flex-start",
-                width: 34,
-                height: 34,
-                borderRadius: 17,
-                marginBottom: 10,
-                backgroundColor: canPrev ? t.mintSurface : t.ghostBg,
-                borderWidth: 1,
-                borderColor: canPrev
-                  ? t.isDark
-                    ? "rgba(42,232,204,0.25)"
-                    : "rgba(0,80,71,0.12)"
-                  : t.ghostBorder,
-              }}
-            >
-              <ChevronRight
-                size={13}
-                color={canPrev ? t.kickerMint : t.mutedText}
-                style={{ transform: [{ rotate: "180deg" }] }}
-              />
-            </View>
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{
-                fontSize: 8,
-                color: t.mutedText,
-                letterSpacing: 2,
-                marginBottom: 3,
-              }}
-            >
-              Anterior
-            </Text>
-            <Text
-              className="font-jakarta-semi"
-              style={{
-                fontSize: 12,
-                color: canPrev ? t.mainText : t.mutedText,
-                letterSpacing: -0.2,
-              }}
-              numberOfLines={1}
-            >
-              {canPrev ? SESSION.exercises[currentIdx - 1].name : "—"}
-            </Text>
-          </Pressable>
-
-          {/* Divider vertical */}
-          <View
-            style={{ width: 1, backgroundColor: t.divider, marginVertical: 14 }}
-          />
-
-          {/* → Siguiente */}
-          <Pressable
-            onPress={() => {
-              if (!canNext) return;
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setCurrentIdx((i) => i + 1);
-            }}
-            disabled={!canNext}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 16,
-              paddingRight: 16,
-              paddingLeft: 12,
-              alignItems: "flex-end",
-              opacity: !canNext ? 0.28 : pressed ? 0.6 : 1,
-            })}
-          >
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 17,
-                marginBottom: 10,
-                backgroundColor: canNext ? BRAND_PRIMARY : t.ghostBg,
-                borderWidth: canNext ? 0 : 1,
-                borderColor: t.ghostBorder,
-                shadowColor: canNext ? BRAND_PRIMARY : "transparent",
-                shadowOpacity: canNext ? 0.5 : 0,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
-              }}
-            >
-              <ChevronRight size={13} color={canNext ? "white" : t.mutedText} />
-            </View>
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{
-                fontSize: 8,
-                color: t.mutedText,
-                letterSpacing: 2,
-                marginBottom: 3,
-              }}
-            >
-              Siguiente
-            </Text>
-            <Text
-              className="font-jakarta-semi"
-              style={{
-                fontSize: 12,
-                color: canNext ? t.mainText : t.mutedText,
-                letterSpacing: -0.2,
-              }}
-              numberOfLines={1}
-            >
-              {canNext ? SESSION.exercises[currentIdx + 1].name : "—"}
-            </Text>
-          </Pressable>
-        </View>
-
         {/* ── Series counter ── */}
         <View className="flex-row items-center justify-center gap-2 mb-5">
           <View
@@ -982,33 +840,100 @@ function ActiveSession({ onEnd }) {
             {doneCount} / {totalSets} series completadas
           </Text>
         </View>
+      </ScrollView>
 
-        {/* ── Finalizar ── */}
+      {/* ── Footer fijo: navegación + acción principal ── */}
+      <View
+        className="flex-row items-center gap-3 px-5 pt-3.5 border-t"
+        style={{
+          paddingBottom: insets.bottom + 14,
+          borderTopColor: t.divider,
+          backgroundColor: t.pageBg,
+        }}
+      >
+        {/* ← Anterior */}
         <Pressable
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            onEnd();
+            if (!canPrev) return;
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setCurrentIdx((i) => i - 1);
           }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+          disabled={!canPrev}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            opacity: !canPrev ? 0.32 : pressed ? 0.6 : 1,
+          })}
         >
           <View
-            className="items-center"
-            style={{
-              paddingVertical: 17,
-              borderRadius: 22,
-              borderWidth: 1.5,
-              borderColor: t.ghostBorder,
-            }}
+            className="w-14 h-14 rounded-[20px] border items-center justify-center"
+            style={{ backgroundColor: t.ghostBg, borderColor: t.ghostBorder }}
           >
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{ fontSize: 12, color: t.mutedText, letterSpacing: 2.2 }}
-            >
-              Finalizar sesión
-            </Text>
+            <ChevronRight
+              size={18}
+              color={t.mutedText}
+              style={{ transform: [{ rotate: "180deg" }] }}
+            />
           </View>
         </Pressable>
-      </ScrollView>
+
+        {/* → Siguiente / Finalizar */}
+        <Pressable
+          onPress={() => {
+            if (canNext) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setCurrentIdx((i) => i + 1);
+            } else {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              onEnd();
+            }
+          }}
+          style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.9 : 1 })}
+        >
+          <LinearGradient
+            colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              height: 56,
+              borderRadius: 20,
+              paddingHorizontal: 22,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              shadowColor: BRAND_PRIMARY,
+              shadowOpacity: 0.5,
+              shadowRadius: 18,
+              shadowOffset: { width: 0, height: 8 },
+              elevation: 10,
+            }}
+          >
+            {canNext ? (
+              <View className="flex-1 mr-3">
+                <Text className="font-manrope-bold uppercase text-[8px] tracking-[2px] text-white/60 mb-0.5">
+                  Siguiente
+                </Text>
+                <Text
+                  className="font-jakarta-bold text-white text-[15px] tracking-[-0.3px]"
+                  numberOfLines={1}
+                >
+                  {SESSION.exercises[currentIdx + 1].name}
+                </Text>
+              </View>
+            ) : (
+              <Text className="flex-1 mr-3 font-jakarta-bold text-white text-base tracking-[-0.3px]">
+                Finalizar sesión
+              </Text>
+            )}
+            <View className="w-9 h-9 rounded-full items-center justify-center bg-white/20">
+              {canNext ? (
+                <ChevronRight size={16} color="white" />
+              ) : (
+                <CheckCircle size={16} color="white" />
+              )}
+            </View>
+          </LinearGradient>
+        </Pressable>
+      </View>
     </View>
   );
 }
