@@ -52,6 +52,9 @@ export default function HeroeCardHome({ image }) {
   const { session } = currentDay;
   const objective = summary.plan.objective ?? "Entrenamiento";
   const exerciseCount = currentDay.exercise_count;
+  // El título es el nombre de la sesión del día; si el día no tiene sesión
+  // asignada, cae al nombre del plan.
+  const sessionTitle = session?.name ?? summary.plan.name;
   const sessionImage =
     image ??
     (session?.cover_image_uri
@@ -166,7 +169,7 @@ export default function HeroeCardHome({ image }) {
                     className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark text-[26px] leading-8 tracking-wider "
                     numberOfLines={3}
                   >
-                    {summary.plan.name}
+                    {sessionTitle}
                   </Text>
                   <Text className="font-manrope text-[#0f0d20]/65 dark:text-white/60 text-sm mt-3 leading-5">
                     {`${exerciseCount} ${
