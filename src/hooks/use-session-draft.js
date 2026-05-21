@@ -10,7 +10,6 @@ export function useSessionDraft(dayId) {
   const [setData, setSetData] = useState({});
   const [isRestored, setIsRestored] = useState(false);
 
-  // Rehydrate from storage once dayId is available
   useEffect(() => {
     if (!dayId) {
       setStartedAt(Date.now());
@@ -35,7 +34,6 @@ export function useSessionDraft(dayId) {
     });
   }, [dayId]);
 
-  // Auto-save on every change (only after initial restore to avoid overwriting with defaults)
   useEffect(() => {
     if (!dayId || !isRestored || !startedAt) return;
     AsyncStorage.setItem(
@@ -53,10 +51,10 @@ export function useSessionDraft(dayId) {
     if (dayId) AsyncStorage.removeItem(draftKey(dayId));
   }, [dayId]);
 
-  function updateField(exId, setId, field, value) {
+  const updateField = useCallback((exId, setId, field, value) => {
     const k = `${exId}-${setId}`;
     setSetData((prev) => ({ ...prev, [k]: { ...prev[k], [field]: value } }));
-  }
+  }, []);
 
   return {
     startedAt,

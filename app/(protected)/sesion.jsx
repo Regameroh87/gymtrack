@@ -32,8 +32,6 @@ import { useActivePlanSummary } from "../../src/hooks/use-active-plan-summary";
 import { usePlanDayExercises } from "../../src/hooks/use-plan-day-exercises";
 import { useSaveSessionLog } from "../../src/hooks/use-save-session-log";
 import { useSessionDraft } from "../../src/hooks/use-session-draft";
-
-// Storage
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Utils
@@ -47,6 +45,9 @@ import VideoPlayerSheet from "../../src/components/videos/VideoPlayerSheet";
 const BRAND_PRIMARY = brandPrimary[700];
 const BRAND_PRIMARY_DEEP = brandPrimary[600];
 const BRAND_MINT = brandSecondary[400];
+
+const formatMMSS = (s) =>
+  `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 // ─── Helpers de prescripción ────────────────────────────────────────────────
 
@@ -256,7 +257,6 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
     isRestored,
   } = useSessionDraft(dayId);
 
-  // elapsed se deriva del timestamp de inicio — así cuenta tiempo real de pared.
   const [elapsed, setElapsed] = useState(0);
 
   const [rest, setRest] = useState(null); // descanso entre series: { total, left } | null
@@ -299,10 +299,8 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
   );
   const doneCount = completedSets.size;
 
-  const timerStr = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
-  const restLabel = rest
-    ? `${String(Math.floor(rest.left / 60)).padStart(2, "0")}:${String(rest.left % 60).padStart(2, "0")}`
-    : null;
+  const timerStr = formatMMSS(elapsed);
+  const restLabel = rest ? formatMMSS(rest.left) : null;
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
 
   function toggleSet(exId, setId) {
@@ -935,6 +933,7 @@ const phaseKey = (dayId) => `gymtrack:session_phase:${dayId}`;
 
 export default function Sesion() {
   const [phase, setPhase] = useState("preview");
+  const [isPhaseRestored, setIsPhaseRestored] = useState(false);
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -944,19 +943,18 @@ export default function Sesion() {
   const { data: dayExercises = [], isLoading: loadingExercises } =
     usePlanDayExercises(currentDay?.id);
 
-  // Restaurar la fase al volver a la pantalla (ej. cambio de pestaña)
   useEffect(() => {
     if (!currentDay?.id) return;
     AsyncStorage.getItem(phaseKey(currentDay.id)).then((saved) => {
       if (saved === "active") setPhase("active");
+      setIsPhaseRestored(true);
     });
   }, [currentDay?.id]);
 
-  // Persistir la fase en cada cambio
   useEffect(() => {
-    if (!currentDay?.id) return;
+    if (!currentDay?.id || !isPhaseRestored) return;
     AsyncStorage.setItem(phaseKey(currentDay.id), phase);
-  }, [phase, currentDay?.id]);
+  }, [phase, currentDay?.id, isPhaseRestored]);
 
   // El plan que toca se calcula desde session_logs (ver useActivePlanSummary):
   // currentDay trae el plan_week_day; usePlanDayExercises trae su prescripción.
