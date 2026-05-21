@@ -302,111 +302,114 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
 
   return (
     <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
-      {/* ── Top bar ── */}
-      <View
-        className="flex-row items-center justify-between px-5 pb-3.5"
-        style={{ paddingTop: insets.top + 12 }}
-      >
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onEnd();
-          }}
-          hitSlop={12}
-          className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-        >
-          <X size={16} color={mutedIcon} />
-        </Pressable>
-
-        <View className="flex-row items-center gap-1.5">
-          <View
-            className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
-            style={{
-              shadowColor: BRAND_MINT,
-              shadowOpacity: 0.9,
-              shadowRadius: 6,
-              shadowOffset: { width: 0, height: 0 },
-            }}
-          />
-          <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
-            Sesión en curso
-          </Text>
-        </View>
-
-        <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
-          <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
-            {timerStr}
-          </Text>
-        </View>
-      </View>
-
-      {/* ── Progress bar ── */}
-      <View className="mx-5 h-[3px] rounded-[2px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
-        <View
-          className="h-[3px] rounded-[2px] bg-brandSecondary-400"
-          style={{
-            width: `${totalSets > 0 ? (doneCount / totalSets) * 100 : 0}%`,
-          }}
-        />
-      </View>
-
-      {/* ── Exercise strip ── */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingVertical: 14,
-          gap: 6,
-        }}
-      >
-        {session.exercises.map((ex, i) => {
-          const isActive = i === currentIdx;
-          const isPast = i < currentIdx;
-          return (
-            <Pressable
-              key={ex.id}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setCurrentIdx(i);
-              }}
-              className="active:opacity-70"
-            >
-              <View
-                className={`px-3 py-1.5 rounded-xl border ${
-                  isActive
-                    ? "bg-brandPrimary-700 border-transparent"
-                    : isPast
-                      ? "bg-transparent border-brandSecondary-400/30"
-                      : "bg-transparent border-ui-text-main/[8%] dark:border-white/[8%]"
-                }`}
-              >
-                <Text
-                  className={`font-manrope-bold text-[11px] ${
-                    isActive
-                      ? "text-white"
-                      : isPast
-                        ? "text-brandSecondary-700 dark:text-brandSecondary-400"
-                        : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                  }`}
-                  numberOfLines={1}
-                >
-                  {i + 1}. {ex.exercise_name}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 28, paddingHorizontal: 20 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* ── Top bar ── */}
+        <View
+          className="flex-row items-center justify-between px-5 pb-3.5"
+          style={{ paddingTop: insets.top + 12 }}
+        >
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onEnd();
+            }}
+            hitSlop={12}
+            className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+          >
+            <X size={16} color={mutedIcon} />
+          </Pressable>
+
+          <View className="flex-row items-center gap-1.5">
+            <View
+              className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
+              style={{
+                shadowColor: BRAND_MINT,
+                shadowOpacity: 0.9,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 0 },
+              }}
+            />
+            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
+              Sesión en curso
+            </Text>
+          </View>
+
+          <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
+            <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
+              {timerStr}
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Progress bar ── */}
+        <View className="mx-5 h-[3px] rounded-[2px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
+          <View
+            className="h-[3px] rounded-[2px] bg-brandSecondary-400"
+            style={{
+              width: `${totalSets > 0 ? (doneCount / totalSets) * 100 : 0}%`,
+            }}
+          />
+        </View>
+
+        {/* ── Exercise strip (fijo, encima de la card) ── */}
+        <View style={{ height: 60 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingVertical: 14,
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            {session.exercises.map((ex, i) => {
+              const isActive = i === currentIdx;
+              const isPast = i < currentIdx;
+              return (
+                <Pressable
+                  key={ex.id}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setCurrentIdx(i);
+                  }}
+                  className="active:opacity-70"
+                >
+                  <View
+                    className={`px-3 py-1.5 rounded-xl border ${
+                      isActive
+                        ? "bg-brandPrimary-700 border-transparent"
+                        : isPast
+                          ? "bg-transparent border-brandSecondary-400/30"
+                          : "bg-transparent border-ui-text-main/[8%] dark:border-white/[8%]"
+                    }`}
+                  >
+                    <Text
+                      className={`font-manrope-bold text-[11px] ${
+                        isActive
+                          ? "text-white"
+                          : isPast
+                            ? "text-brandSecondary-700 dark:text-brandSecondary-400"
+                            : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                      }`}
+                      numberOfLines={1}
+                    >
+                      {i + 1}. {ex.exercise_name}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {/* ── Exercise card ── */}
         <View
-          className="rounded-3xl overflow-hidden mb-4 border border-ui-text-main/8 dark:border-white/8"
+          className="rounded-3xl overflow-hidden mx-5 mb-4 border border-ui-text-main/8 dark:border-white/8"
           style={{
             shadowColor: BRAND_PRIMARY,
             shadowOpacity: 0.12,
@@ -476,8 +479,8 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
               const done = completedSets.has(key);
               const data = setData[key] ?? {};
               return (
-                <View key={set.id} className="gap-1.5">
-                  {/* Main row */}
+                <View key={set.id} className="gap-2.5">
+                  {/* Línea 1 · objetivo */}
                   <View className="flex-row items-center gap-2">
                     {/* Set badge */}
                     <Text
@@ -508,9 +511,10 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
                         {setTargetLabel(set, exercise.prescription_mode)}
                       </Text>
                     </View>
+                  </View>
 
-                    <View className="flex-1" />
-
+                  {/* Línea 2 · registro */}
+                  <View className="flex-row items-center gap-2 ml-8">
                     {/* Reps reales (solo modo reps) */}
                     {!isDuration && (
                       <>
@@ -571,6 +575,8 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
                       kg
                     </Text>
 
+                    <View className="flex-1" />
+
                     {/* Toggle */}
                     <Pressable
                       onPress={() => toggleSet(exercise.id, set.id)}
@@ -625,95 +631,91 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
             {doneCount} / {totalSets} series completadas
           </Text>
         </View>
-      </ScrollView>
-
-      {/* ── Footer fijo ── */}
-      <View
-        className="flex-row items-center gap-3 px-5 pt-3.5 border-t bg-ui-background-light dark:bg-ui-background-dark border-ui-text-main/[6%] dark:border-white/[6%]"
-        style={{ paddingBottom: insets.bottom + 14 }}
-      >
-        {/* ← Anterior */}
-        <Pressable
-          onPress={() => {
-            if (!canPrev) return;
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setCurrentIdx((i) => i - 1);
-          }}
-          disabled={!canPrev}
-          hitSlop={8}
-          style={({ pressed }) => ({
-            opacity: !canPrev ? 0.32 : pressed ? 0.6 : 1,
-          })}
-        >
-          <View className="w-14 h-14 rounded-[20px] border items-center justify-center bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
-            <ChevronRight
-              size={18}
-              color={mutedIcon}
-              style={{ transform: [{ rotate: "180deg" }] }}
-            />
-          </View>
-        </Pressable>
-
-        {/* → Siguiente / Finalizar */}
-        <Pressable
-          onPress={() => {
-            if (canNext) {
+        {/* ── Navegación ── */}
+        <View className="flex-row items-center gap-3 px-5 pt-3.5">
+          {/* ← Anterior */}
+          <Pressable
+            onPress={() => {
+              if (!canPrev) return;
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setCurrentIdx((i) => i + 1);
-            } else {
-              handleFinish();
-            }
-          }}
-          disabled={isSaving}
-          className="flex-1 active:opacity-90"
-        >
-          <LinearGradient
-            colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              height: 56,
-              borderRadius: 20,
-              paddingHorizontal: 22,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              shadowColor: BRAND_PRIMARY,
-              shadowOpacity: isSaving ? 0.25 : 0.5,
-              shadowRadius: 18,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 10,
+              setCurrentIdx((i) => i - 1);
             }}
+            disabled={!canPrev}
+            hitSlop={8}
+            style={({ pressed }) => ({
+              opacity: !canPrev ? 0.32 : pressed ? 0.6 : 1,
+            })}
           >
-            {canNext ? (
-              <View className="flex-1 mr-3">
-                <Text className="font-manrope-bold uppercase text-[8px] tracking-[2px] text-white/60 mb-0.5">
-                  Siguiente
-                </Text>
-                <Text
-                  className="font-jakarta-bold text-white text-[15px] tracking-[-0.3px]"
-                  numberOfLines={1}
-                >
-                  {session.exercises[currentIdx + 1].exercise_name}
-                </Text>
-              </View>
-            ) : (
-              <Text className="flex-1 mr-3 font-jakarta-bold text-white text-base tracking-[-0.3px]">
-                {isSaving ? "Guardando..." : "Finalizar sesión"}
-              </Text>
-            )}
-            <View className="w-9 h-9 rounded-full items-center justify-center bg-white/20">
-              {isSaving ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : canNext ? (
-                <ChevronRight size={16} color="white" />
-              ) : (
-                <CheckCircle size={16} color="white" />
-              )}
+            <View className="w-14 h-14 rounded-[20px] border items-center justify-center bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
+              <ChevronRight
+                size={18}
+                color={mutedIcon}
+                style={{ transform: [{ rotate: "180deg" }] }}
+              />
             </View>
-          </LinearGradient>
-        </Pressable>
-      </View>
+          </Pressable>
+
+          {/* → Siguiente / Finalizar */}
+          <Pressable
+            onPress={() => {
+              if (canNext) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setCurrentIdx((i) => i + 1);
+              } else {
+                handleFinish();
+              }
+            }}
+            disabled={isSaving}
+            className="flex-1 active:opacity-90"
+          >
+            <LinearGradient
+              colors={[BRAND_PRIMARY, BRAND_PRIMARY_DEEP]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                height: 56,
+                borderRadius: 20,
+                paddingHorizontal: 22,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                shadowColor: BRAND_PRIMARY,
+                shadowOpacity: isSaving ? 0.25 : 0.5,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 10,
+              }}
+            >
+              {canNext ? (
+                <View className="flex-1 mr-3">
+                  <Text className="font-manrope-bold uppercase text-[8px] tracking-[2px] text-white/60 mb-0.5">
+                    Siguiente
+                  </Text>
+                  <Text
+                    className="font-jakarta-bold text-white text-[15px] tracking-[-0.3px]"
+                    numberOfLines={1}
+                  >
+                    {session.exercises[currentIdx + 1].exercise_name}
+                  </Text>
+                </View>
+              ) : (
+                <Text className="flex-1 mr-3 font-jakarta-bold text-white text-base tracking-[-0.3px]">
+                  {isSaving ? "Guardando..." : "Finalizar sesión"}
+                </Text>
+              )}
+              <View className="w-9 h-9 rounded-full items-center justify-center bg-white/20">
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : canNext ? (
+                  <ChevronRight size={16} color="white" />
+                ) : (
+                  <CheckCircle size={16} color="white" />
+                )}
+              </View>
+            </LinearGradient>
+          </Pressable>
+        </View>
+      </ScrollView>
     </View>
   );
 }
