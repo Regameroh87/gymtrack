@@ -343,7 +343,7 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
         {/* ── Top bar ── */}
         <View
           className="flex-row items-center justify-between px-5 pb-3.5"
-          style={{ paddingTop: insets.top + 12 }}
+          //style={{ paddingTop: insets.top + 12 }}
         >
           <Pressable
             onPress={() => {
