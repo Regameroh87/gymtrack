@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { database } from "../../../../src/database";
 import {
   exercises_base,
+  plan_assignments,
   plan_week_day_exercise_sets,
   plan_week_day_exercises,
   plan_week_days,
@@ -393,11 +394,18 @@ export default function PlanDetail() {
           text: "Eliminar",
           style: "destructive",
           onPress: async () => {
-            await database
-              .update(training_plans)
-              .set({ sync_status: "deleted" })
-              .where(eq(training_plans.id, id));
+            await database.transaction(async (tx) => {
+              await tx
+                .update(plan_assignments)
+                .set({ sync_status: "deleted" })
+                .where(eq(plan_assignments.plan_id, id));
+              await tx
+                .update(training_plans)
+                .set({ sync_status: "deleted" })
+                .where(eq(training_plans.id, id));
+            });
             queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+            queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
             checkNetInfoAndSync();
             router.back();
           },

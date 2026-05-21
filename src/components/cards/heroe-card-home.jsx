@@ -14,7 +14,7 @@ import { useTheme } from "../../theme/theme";
 import { brandPrimary, brandSecondary, gradient, ui } from "../../theme/colors";
 
 // ── Assets ──
-import { ChevronRight, Barbell } from "../../../assets/icons";
+import { ChevronRight, Barbell, ClipboardList } from "../../../assets/icons";
 
 // ── Hooks ──
 import { useActivePlanSummary } from "../../hooks/use-active-plan-summary";
@@ -43,8 +43,9 @@ export default function HeroeCardHome({ image }) {
     ? gradient.sessionPlaceholder.dark
     : gradient.sessionPlaceholder.light;
 
-  // El día que toca se calcula desde session_logs (ver useActivePlanSummary).
-  if (isLoading || !summary) return null;
+  if (isLoading) return null;
+
+  if (!summary) return <NoPlanCard isDark={isDark} router={router} primaryHaloColors={primaryHaloColors} mintHaloColors={mintHaloColors} BRAND_PRIMARY={BRAND_PRIMARY} BRAND_MINT={BRAND_MINT} now={now} />;
 
   const currentDay = summary.currentDay;
   if (!currentDay) return null; // plan completado o sin día disponible
@@ -259,6 +260,140 @@ export default function HeroeCardHome({ image }) {
           </View>
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+// ─── Empty state: sin plan asignado ──────────────────────────────────────────
+
+function NoPlanCard({ isDark, router, primaryHaloColors, mintHaloColors, BRAND_PRIMARY, BRAND_MINT, now }) {
+  return (
+    <View className="px-5 mb-7">
+      <Pressable
+        onPress={() => {
+          router.push("/rutinas");
+        }}
+        className="active:scale-[0.985]"
+      >
+        <View
+          className="rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-[#0f0d20]/8 dark:border-white/8"
+          style={{
+            shadowColor: BRAND_PRIMARY,
+            shadowOpacity: 0.14,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 10 },
+            elevation: 8,
+          }}
+        >
+          {/* Halos de fondo */}
+          <LinearGradient
+            colors={mintHaloColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.7, y: 0.8 }}
+            style={{ position: "absolute", top: 0, left: 0, width: 220, height: 220 }}
+          />
+          <LinearGradient
+            colors={primaryHaloColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ position: "absolute", right: 0, bottom: 0, width: 280, height: 200 }}
+          />
+
+          {/* Número editorial gigante de fondo */}
+          <Text className="absolute -top-[22px] -right-[8px] text-[180px] leading-[180px] tracking-[-8px] font-jakarta-bold text-[#0f0d20]/5 dark:text-white/[4%]">
+            {String(now.getDate()).padStart(2, "0")}
+          </Text>
+
+          {/* Ticks decorativos */}
+          <View className="absolute top-[18px] left-5 w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
+          <View className="absolute top-[18px] left-[52px] w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40" />
+
+          {/* Header */}
+          <View
+            className="flex-row items-center justify-between"
+            style={{ paddingHorizontal: 20, paddingTop: 32 }}
+          >
+            <Text
+              className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400"
+              style={{ fontSize: 10, letterSpacing: 2.4 }}
+            >
+              Tu entrenamiento
+            </Text>
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <View className="bg-[#0f0d20]/20 dark:bg-white/20 w-2 h-2 rounded-full" />
+              <Text className="font-jakarta-bold text-[#0f0d20]/45 dark:text-white/45 text-xs tracking-[2px]">
+                SIN PLAN
+              </Text>
+            </View>
+          </View>
+
+          {/* Body */}
+          <View
+            className="flex-row"
+            style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 22, gap: 16 }}
+          >
+            <View className="flex-1 justify-between gap-4">
+              <View className="gap-2">
+                <Text
+                  className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark text-[22px] leading-7 tracking-tight"
+                  numberOfLines={3}
+                >
+                  Todavía no tenés un plan asignado.
+                </Text>
+                <Text className="font-manrope text-[#0f0d20]/55 dark:text-white/50 text-sm mt-2 leading-5">
+                  Explorá el catálogo de planes y elegí el que mejor se adapte a tus objetivos.
+                </Text>
+              </View>
+            </View>
+
+            {/* Ícono decorativo */}
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <View className="bg-brandSecondary-400 absolute -left-[10px] top-3 w-1 h-9 rounded-sm" />
+              <LinearGradient
+                colors={[BRAND_MINT, BRAND_PRIMARY]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: 100, height: 100, borderRadius: 18, padding: 2 }}
+              >
+                <View className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center rounded-2xl overflow-hidden">
+                  <LinearGradient
+                    colors={isDark ? ["#4A44E420", "#2DD4BF10"] : ["#4A44E412", "#2DD4BF08"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+                  />
+                  <ClipboardList size={44} color={isDark ? BRAND_MINT : BRAND_PRIMARY} />
+                </View>
+              </LinearGradient>
+            </View>
+          </View>
+
+          {/* CTA strip */}
+          <View className="border-t border-[#0f0d20]/8 dark:border-white/8">
+            <View className="flex-row items-center justify-between px-5 py-3">
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <View className="w-6 h-6 rounded-xl items-center justify-center bg-brandPrimary-700/[18%] border border-brandPrimary-700/50">
+                  <View className="bg-brandPrimary-700 w-2 h-2 rounded-md" />
+                </View>
+                <Text className="text-xs tracking-[1.5px] font-manrope-bold uppercase text-ui-text-main dark:text-ui-text-mainDark">
+                  Ver planes
+                </Text>
+              </View>
+              <View
+                className="w-8 h-8 items-center justify-center rounded-full bg-brandPrimary-700"
+                style={{
+                  shadowColor: BRAND_PRIMARY,
+                  shadowOpacity: 0.6,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 2 },
+                }}
+              >
+                <ChevronRight size={14} color="white" />
+              </View>
+            </View>
+          </View>
+        </View>
+      </Pressable>
     </View>
   );
 }

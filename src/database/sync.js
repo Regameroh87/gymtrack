@@ -17,7 +17,7 @@ import {
   session_set_logs,
 } from "./schemas";
 import { supabase } from "../database/supabase";
-import { eq, ne, or, and, inArray } from "drizzle-orm";
+import { eq, ne, or, and, inArray, isNotNull } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "../lib/queryClient";
@@ -680,6 +680,11 @@ async function cascadeDeletePlanLocally(planId) {
       .delete(plan_week_days)
       .where(inArray(plan_week_days.week_id, weekIds));
   }
+  await database.delete(plan_assignments).where(eq(plan_assignments.plan_id, planId));
+  await database
+    .update(session_logs)
+    .set({ plan_id: null })
+    .where(eq(session_logs.plan_id, planId));
   await database.delete(plan_weeks).where(eq(plan_weeks.plan_id, planId));
   await database.delete(training_plans).where(eq(training_plans.id, planId));
 }
@@ -779,6 +784,45 @@ async function cleanOrphanedPlanChildren() {
       `🧹 [CLEANUP] ${orphanSetIds.length} set(s) huérfano(s) eliminado(s)`
     );
   }
+
+  // plan_assignments sin plan padre
+  const allPlanIds = new Set(
+    (await database.select({ id: training_plans.id }).from(training_plans)).map(
+      (r) => r.id
+    )
+  );
+  const allAssignments = await database
+    .select({ id: plan_assignments.id, plan_id: plan_assignments.plan_id })
+    .from(plan_assignments);
+  const orphanAssignmentIds = allAssignments
+    .filter((a) => !allPlanIds.has(a.plan_id))
+    .map((a) => a.id);
+  if (orphanAssignmentIds.length) {
+    await database
+      .delete(plan_assignments)
+      .where(inArray(plan_assignments.id, orphanAssignmentIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanAssignmentIds.length} asignación(es) huérfana(s) eliminada(s)`
+    );
+  }
+
+  // session_logs con plan_id que ya no existe (se mantiene el log, se libera la FK)
+  const orphanedLogs = await database
+    .select({ id: session_logs.id, plan_id: session_logs.plan_id })
+    .from(session_logs)
+    .where(isNotNull(session_logs.plan_id));
+  const orphanLogIds = orphanedLogs
+    .filter((l) => !allPlanIds.has(l.plan_id))
+    .map((l) => l.id);
+  if (orphanLogIds.length) {
+    await database
+      .update(session_logs)
+      .set({ plan_id: null })
+      .where(inArray(session_logs.id, orphanLogIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanLogIds.length} log(s) con plan_id huérfano saneado(s)`
+    );
+  }
 }
 
 /**
@@ -802,6 +846,8 @@ export async function pushTrainingPlansChanges() {
 
   for (let row of localChanges) {
     if (row.sync_status === "deleted") {
+      // Borrar asignaciones en Supabase antes que el plan para evitar FK violations
+      await supabase.from("plan_assignments").delete().eq("plan_id", row.id);
       const { error } = await supabase
         .from("training_plans")
         .delete()
