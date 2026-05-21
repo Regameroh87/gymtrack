@@ -27,7 +27,7 @@ export default function HeroeCardHome({ image }) {
   const { isDark } = useTheme();
   const now = new Date();
 
-  const { data: summary, isLoading } = useActivePlanSummary();
+  const { data: summary, isPending } = useActivePlanSummary();
 
   const BRAND_PRIMARY = brandPrimary[700];
   const BRAND_MINT = brandSecondary[400];
@@ -43,9 +43,22 @@ export default function HeroeCardHome({ image }) {
     ? gradient.sessionPlaceholder.dark
     : gradient.sessionPlaceholder.light;
 
-  if (isLoading) return null;
+  // isPending cubre tanto "fetching por primera vez" como "query deshabilitada
+  // (sin userId aún)" en TanStack Query v5 — isLoading no lo hace.
+  if (isPending) return null;
 
-  if (!summary) return <NoPlanCard isDark={isDark} router={router} primaryHaloColors={primaryHaloColors} mintHaloColors={mintHaloColors} BRAND_PRIMARY={BRAND_PRIMARY} BRAND_MINT={BRAND_MINT} now={now} />;
+  if (summary === null)
+    return (
+      <NoPlanCard
+        isDark={isDark}
+        router={router}
+        primaryHaloColors={primaryHaloColors}
+        mintHaloColors={mintHaloColors}
+        BRAND_PRIMARY={BRAND_PRIMARY}
+        BRAND_MINT={BRAND_MINT}
+        now={now}
+      />
+    );
 
   const currentDay = summary.currentDay;
   if (!currentDay) return null; // plan completado o sin día disponible
