@@ -243,6 +243,7 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [completedSets, setCompletedSets] = useState(new Set());
   const [setData, setSetData] = useState({});
+  const [rest, setRest] = useState(null); // descanso entre series: { total, left } | null
 
   const { mutateAsync: saveLog, isPending: isSaving } = useSaveSessionLog();
 
@@ -259,6 +260,22 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
     return () => clearInterval(id);
   }, []);
 
+  // Cuenta regresiva del descanso entre series. Al llegar a 0 vibra y se
+  // auto-oculta a los 2s.
+  useEffect(() => {
+    if (!rest) return;
+    if (rest.left <= 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const hide = setTimeout(() => setRest(null), 2000);
+      return () => clearTimeout(hide);
+    }
+    const tick = setTimeout(
+      () => setRest((r) => (r ? { ...r, left: r.left - 1 } : r)),
+      1000
+    );
+    return () => clearTimeout(tick);
+  }, [rest]);
+
   const exercise = session.exercises[currentIdx];
   const canPrev = currentIdx > 0;
   const canNext = currentIdx < session.exercises.length - 1;
@@ -271,20 +288,36 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
   const doneCount = completedSets.size;
 
   const timerStr = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
+  const restLabel = rest
+    ? `${String(Math.floor(rest.left / 60)).padStart(2, "0")}:${String(rest.left % 60).padStart(2, "0")}`
+    : null;
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
 
   function toggleSet(exId, setId) {
     const key = `${exId}-${setId}`;
+    const wasDone = completedSets.has(key);
     setCompletedSets((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
+    // Al marcar una serie como hecha arranca el descanso del ejercicio.
+    if (!wasDone) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      if (exercise.rest_seconds) {
+        setRest({ total: exercise.rest_seconds, left: exercise.rest_seconds });
+      }
+    }
+  }
+
+  // Controles del descanso.
+  function addRestTime(delta) {
+    setRest((r) => (r ? { ...r, left: Math.max(0, r.left + delta) } : r));
+  }
+  function skipRest() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setRest(null);
   }
 
   async function handleFinish() {
@@ -622,6 +655,70 @@ function ActiveSession({ session, summary, currentDay, onEnd }) {
               );
             })}
           </View>
+
+          {/* ── Descanso entre series ── */}
+          {rest && (
+            <View className="bg-ui-surface-light dark:bg-ui-surface-dark px-5 pb-5">
+              <View className="h-px mb-4 bg-ui-text-main/[6%] dark:bg-white/[6%]" />
+              <View className="rounded-2xl border p-3.5 border-brandSecondary-700/15 dark:border-brandSecondary-400/20 bg-brandSecondary-400/[10%] dark:bg-brandSecondary-400/[8%]">
+                {/* Kicker + controles */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-1.5">
+                    <View
+                      className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
+                      style={{
+                        shadowColor: BRAND_MINT,
+                        shadowOpacity: 1,
+                        shadowRadius: 6,
+                        shadowOffset: { width: 0, height: 0 },
+                      }}
+                    />
+                    <Text className="font-manrope-bold uppercase text-[10px] tracking-[2px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                      {rest.left > 0 ? "Descanso" : "¡A entrenar!"}
+                    </Text>
+                  </View>
+
+                  <View className="flex-row items-center gap-2">
+                    {rest.left > 0 && (
+                      <Pressable
+                        onPress={() => addRestTime(15)}
+                        hitSlop={8}
+                        className="px-2.5 py-1 rounded-lg border border-brandSecondary-700/20 dark:border-brandSecondary-400/25 active:opacity-60"
+                      >
+                        <Text className="font-manrope-bold text-[11px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                          +15s
+                        </Text>
+                      </Pressable>
+                    )}
+                    <Pressable
+                      onPress={skipRest}
+                      hitSlop={8}
+                      className="px-2.5 py-1 rounded-lg bg-ui-text-main/[4%] dark:bg-white/[6%] active:opacity-60"
+                    >
+                      <Text className="font-manrope-bold text-[11px] text-ui-text-muted dark:text-ui-text-mutedDark">
+                        {rest.left > 0 ? "Saltar" : "Cerrar"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {/* Cuenta regresiva */}
+                <Text className="font-jakarta-bold text-[34px] leading-[40px] tracking-[-1px] mt-1.5 text-ui-text-main dark:text-ui-text-mainDark">
+                  {restLabel}
+                </Text>
+
+                {/* Barra de progreso */}
+                <View className="h-[3px] rounded-[2px] mt-2 bg-ui-text-main/[8%] dark:bg-white/[8%]">
+                  <View
+                    className="h-[3px] rounded-[2px] bg-brandSecondary-400"
+                    style={{
+                      width: `${rest.total > 0 ? Math.min(100, (rest.left / rest.total) * 100) : 0}%`,
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* ── Series counter ── */}

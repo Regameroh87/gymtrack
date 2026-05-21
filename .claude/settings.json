@@ -4,7 +4,10 @@
       "Bash(cd /Users/rodrigogamero/.claude/projects/-Users-rodrigogamero-Desktop-gymtrack/memory && mv feedback_no_codegraph_default.md feedback_use_codegraph_default.md)",
       "mcp__supabase__list_projects",
       "mcp__supabase__execute_sql",
-      "Bash(npx prettier *)"
+      "Bash(npx prettier *)",
+      "Bash(xcrun simctl *)",
+      "Bash(xcodebuild -version)",
+      "Read(//Applications/Xcode.app/Contents/Developer/Platforms/**)"
     ],
     "defaultMode": "default"
   }
