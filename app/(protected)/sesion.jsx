@@ -36,6 +36,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Utils
 import { formatShortDate } from "../../src/utils/format-date";
+import { getCloudinaryUrl } from "../../src/utils/cloudinary";
 
 // Componentes
 import PlanExerciseRow from "../../src/components/cards/plan-exercise-row";
@@ -97,7 +98,6 @@ function PreviewScreen({ session, onStart }) {
     <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       <ScrollView
         contentContainerStyle={{
-          //paddingTop: insets.top + 22,
           paddingBottom: insets.bottom + 36,
           paddingHorizontal: 20,
         }}
@@ -257,9 +257,11 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
     isRestored,
   } = useSessionDraft(dayId);
 
-  const [elapsed, setElapsed] = useState(0);
+  const videoSheetRef = useRef(null);
+  const [activeVideo, setActiveVideo] = useState(null);
 
-  const [rest, setRest] = useState(null); // descanso entre series: { total, left } | null
+  const [elapsed, setElapsed] = useState(0);
+  const [rest, setRest] = useState(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const { mutateAsync: saveLog, isPending: isSaving } = useSaveSessionLog();
@@ -267,7 +269,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
   useEffect(() => {
     if (!isRestored || !startedAt) return;
     const tick = () => setElapsed(Math.floor((Date.now() - startedAt) / 1000));
-    tick(); // sincroniza inmediatamente al restaurar
+    tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [isRestored, startedAt]);
@@ -312,7 +314,6 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
       else next.add(key);
       return next;
     });
-    // Al marcar una serie como hecha arranca el descanso del ejercicio.
     if (!wasDone) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       if (exercise.rest_seconds) {
@@ -321,7 +322,6 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
     }
   }
 
-  // Controles del descanso.
   function addRestTime(delta) {
     setRest((r) => (r ? { ...r, left: Math.max(0, r.left + delta) } : r));
   }
@@ -346,326 +346,398 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
 
   return (
     <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
+      {/* ── Top bar (fijo) ── */}
+      <View className="flex-row items-center justify-between px-5 pb-3.5">
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setShowExitConfirm(true);
+          }}
+          hitSlop={12}
+          className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+        >
+          <X size={16} color={mutedIcon} />
+        </Pressable>
+
+        <View className="flex-row items-center gap-1.5">
+          <View
+            className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
+            style={{
+              shadowColor: BRAND_MINT,
+              shadowOpacity: 0.9,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 0 },
+            }}
+          />
+          <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
+            Sesión en curso
+          </Text>
+        </View>
+
+        <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
+          <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
+            {timerStr}
+          </Text>
+        </View>
+      </View>
+
+      {/* ── Progress bar (fijo) ── */}
+      <View className="mx-5 h-[3px] rounded-[2px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
+        <View
+          className="h-[3px] rounded-[2px] bg-brandSecondary-400"
+          style={{
+            width: `${totalSets > 0 ? (doneCount / totalSets) * 100 : 0}%`,
+          }}
+        />
+      </View>
+
+      {/* ── Exercise strip (fijo) ── */}
+      <View style={{ height: 60 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingVertical: 14,
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {session.exercises.map((ex, i) => {
+            const isActive = i === currentIdx;
+            const isPast = i < currentIdx;
+            return (
+              <Pressable
+                key={ex.id}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCurrentIdx(i);
+                }}
+                className="active:opacity-70"
+              >
+                <View
+                  className={`px-3 py-1.5 rounded-xl border ${
+                    isActive
+                      ? "bg-brandPrimary-700 border-transparent"
+                      : isPast
+                        ? "bg-transparent border-brandSecondary-400/30"
+                        : "bg-transparent border-ui-text-main/[8%] dark:border-white/[8%]"
+                  }`}
+                >
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${
+                      isActive
+                        ? "text-white"
+                        : isPast
+                          ? "text-brandSecondary-700 dark:text-brandSecondary-400"
+                          : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                    }`}
+                    numberOfLines={1}
+                  >
+                    {i + 1}. {ex.exercise_name}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* ── Cabecera del ejercicio (fija) ── */}
+      <View
+        className="mx-5 rounded-t-3xl overflow-hidden border-t border-l border-r border-ui-text-main/8 dark:border-white/8"
+        style={{
+          shadowColor: BRAND_PRIMARY,
+          shadowOpacity: 0.12,
+          shadowRadius: 22,
+          shadowOffset: { width: 0, height: 8 },
+          elevation: 6,
+        }}
+      >
+        <LinearGradient
+          colors={[
+            isDark ? "rgba(42,232,204,0.18)" : "rgba(42,232,204,0.11)",
+            isDark ? "rgba(74,68,228,0.12)" : "rgba(74,68,228,0.06)",
+            "rgba(0,0,0,0)",
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ padding: 20, paddingBottom: 22 }}
+        >
+          <Text
+            className="absolute font-jakarta-bold"
+            style={{
+              right: 14,
+              top: -8,
+              fontSize: 108,
+              lineHeight: 108,
+              color: isDark ? "rgba(255,255,255,0.05)" : "rgba(15,13,32,0.04)",
+            }}
+          >
+            {String(currentIdx + 1).padStart(2, "0")}
+          </Text>
+
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%]">
+              <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                {exercise.exercise_muscle || "—"}
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-1 px-[9px] py-[3px] rounded-lg border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
+              <Barbell size={11} color={mutedIcon} />
+              <Text className="font-manrope-bold text-[11px] tracking-[0.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
+                {refWeightLabel(exercise)}
+              </Text>
+            </View>
+          </View>
+
+          <View className="flex-row items-end justify-between">
+            <Text
+              className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
+              style={{
+                flex: 1,
+                fontSize: 24,
+                lineHeight: 30,
+                letterSpacing: -0.7,
+              }}
+            >
+              {exercise.exercise_name}
+            </Text>
+
+            {exercise.video_uri && (
+              <Pressable
+                onPress={() => {
+                  setActiveVideo({
+                    url:
+                      getCloudinaryUrl(exercise.video_uri) ??
+                      exercise.video_uri,
+                    title: exercise.exercise_name,
+                  });
+                  videoSheetRef.current?.present();
+                }}
+                hitSlop={10}
+                className="active:opacity-60"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDark
+                    ? "rgba(42,232,204,0.18)"
+                    : "rgba(42,232,204,0.22)",
+                  borderWidth: 1,
+                  borderColor: isDark
+                    ? "rgba(42,232,204,0.3)"
+                    : "rgba(42,232,204,0.4)",
+                  shadowColor: BRAND_MINT,
+                  shadowOpacity: 0.4,
+                  shadowRadius: 8,
+                  shadowOffset: { width: 0, height: 0 },
+                }}
+              >
+                <Play size={12} color={BRAND_MINT} />
+              </Pressable>
+            )}
+          </View>
+        </LinearGradient>
+
+        <View className="mx-5 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
+      </View>
+
+      {/* ── Series (scrollables) ── */}
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Top bar ── */}
-        <View
-          className="flex-row items-center justify-between px-5 pb-3.5"
-          //style={{ paddingTop: insets.top + 12 }}
-        >
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowExitConfirm(true);
-            }}
-            hitSlop={12}
-            className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-          >
-            <X size={16} color={mutedIcon} />
-          </Pressable>
+        {/* Set rows — parte inferior de la card */}
+        <View className="mx-5 mb-4 rounded-b-3xl overflow-hidden border-b border-l border-r border-ui-text-main/8 dark:border-white/8 bg-ui-surface-light dark:bg-ui-surface-dark px-5 pt-5 pb-5 gap-4">
+          {exercise.sets.map((set, si) => {
+            const key = `${exercise.id}-${set.id}`;
+            const done = completedSets.has(key);
+            const data = setData[key] ?? {};
+            return (
+              <View key={set.id} className="gap-2.5">
+                {/* Línea 1 · objetivo */}
+                <View className="flex-row items-center gap-2">
+                  <Text
+                    className={`font-manrope-bold uppercase text-[11px] tracking-[1.2px] w-6 ${
+                      done
+                        ? "text-brandSecondary-700 dark:text-brandSecondary-400"
+                        : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                    }`}
+                  >
+                    S{si + 1}
+                  </Text>
 
-          <View className="flex-row items-center gap-1.5">
-            <View
-              className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
-              style={{
-                shadowColor: BRAND_MINT,
-                shadowOpacity: 0.9,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
-              }}
-            />
-            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
-              Sesión en curso
-            </Text>
-          </View>
-
-          <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
-            <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
-              {timerStr}
-            </Text>
-          </View>
-        </View>
-
-        {/* ── Progress bar ── */}
-        <View className="mx-5 h-[3px] rounded-[2px] bg-ui-text-main/[6%] dark:bg-white/[6%]">
-          <View
-            className="h-[3px] rounded-[2px] bg-brandSecondary-400"
-            style={{
-              width: `${totalSets > 0 ? (doneCount / totalSets) * 100 : 0}%`,
-            }}
-          />
-        </View>
-
-        {/* ── Exercise strip (fijo, encima de la card) ── */}
-        <View style={{ height: 60 }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 20,
-              paddingVertical: 14,
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            {session.exercises.map((ex, i) => {
-              const isActive = i === currentIdx;
-              const isPast = i < currentIdx;
-              return (
-                <Pressable
-                  key={ex.id}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setCurrentIdx(i);
-                  }}
-                  className="active:opacity-70"
-                >
+                  {/* Target chip */}
                   <View
-                    className={`px-3 py-1.5 rounded-xl border ${
-                      isActive
-                        ? "bg-brandPrimary-700 border-transparent"
-                        : isPast
-                          ? "bg-transparent border-brandSecondary-400/30"
-                          : "bg-transparent border-ui-text-main/[8%] dark:border-white/[8%]"
+                    className={`px-[9px] py-1 rounded-lg border ${
+                      done
+                        ? "bg-transparent border-transparent"
+                        : "bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/15 dark:border-brandSecondary-400/20"
                     }`}
                   >
                     <Text
-                      className={`font-manrope-bold text-[11px] ${
-                        isActive
-                          ? "text-white"
-                          : isPast
-                            ? "text-brandSecondary-700 dark:text-brandSecondary-400"
-                            : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                      className={`font-manrope-bold text-xs ${
+                        done
+                          ? "text-ui-text-main/[22%] dark:text-white/[22%]"
+                          : "text-brandSecondary-700 dark:text-brandSecondary-400"
                       }`}
-                      numberOfLines={1}
                     >
-                      {i + 1}. {ex.exercise_name}
+                      {setTargetLabel(set, exercise.prescription_mode)}
                     </Text>
                   </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
 
-        {/* ── Exercise card ── */}
-        <View
-          className="rounded-3xl overflow-hidden mx-5 mb-4 border border-ui-text-main/8 dark:border-white/8"
-          style={{
-            shadowColor: BRAND_PRIMARY,
-            shadowOpacity: 0.12,
-            shadowRadius: 22,
-            shadowOffset: { width: 0, height: 8 },
-            elevation: 6,
-          }}
-        >
-          {/* Header con gradiente */}
-          <LinearGradient
-            colors={[
-              isDark ? "rgba(42,232,204,0.18)" : "rgba(42,232,204,0.11)",
-              isDark ? "rgba(74,68,228,0.12)" : "rgba(74,68,228,0.06)",
-              "rgba(0,0,0,0)",
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 20, paddingBottom: 22 }}
-          >
-            {/* Número de posición watermark */}
-            <Text
-              className="absolute font-jakarta-bold"
-              style={{
-                right: 14,
-                top: -8,
-                fontSize: 108,
-                lineHeight: 108,
-                color: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(15,13,32,0.04)",
-              }}
-            >
-              {String(currentIdx + 1).padStart(2, "0")}
-            </Text>
-
-            {/* Muscle chip + weight chip */}
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%]">
-                <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
-                  {exercise.exercise_muscle || "—"}
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-1 px-[9px] py-[3px] rounded-lg border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
-                <Barbell size={11} color={mutedIcon} />
-                <Text className="font-manrope-bold text-[11px] tracking-[0.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
-                  {refWeightLabel(exercise)}
-                </Text>
-              </View>
-            </View>
-
-            {/* Nombre del ejercicio */}
-            <Text
-              className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
-              style={{ fontSize: 24, lineHeight: 30, letterSpacing: -0.7 }}
-            >
-              {exercise.exercise_name}
-            </Text>
-          </LinearGradient>
-
-          {/* Divider */}
-          <View className="mx-5 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
-
-          {/* Set rows */}
-          <View className="bg-ui-surface-light dark:bg-ui-surface-dark px-5 pt-5 pb-5 gap-4">
-            {exercise.sets.map((set, si) => {
-              const key = `${exercise.id}-${set.id}`;
-              const done = completedSets.has(key);
-              const data = setData[key] ?? {};
-              return (
-                <View key={set.id} className="gap-2.5">
-                  {/* Línea 1 · objetivo */}
-                  <View className="flex-row items-center gap-2">
-                    {/* Set badge */}
-                    <Text
-                      className={`font-manrope-bold uppercase text-[11px] tracking-[1.2px] w-6 ${
-                        done
-                          ? "text-brandSecondary-700 dark:text-brandSecondary-400"
-                          : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                      }`}
-                    >
-                      S{si + 1}
-                    </Text>
-
-                    {/* Target chip */}
+                  {/* Intensity chip (RPE) */}
+                  {exercise.intensity_mode === "rpe" && set.rpe != null && (
                     <View
                       className={`px-[9px] py-1 rounded-lg border ${
                         done
                           ? "bg-transparent border-transparent"
-                          : "bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/15 dark:border-brandSecondary-400/20"
+                          : "bg-brandPrimary-700/[10%] border-brandPrimary-700/15 dark:border-brandPrimary-700/20"
                       }`}
                     >
                       <Text
                         className={`font-manrope-bold text-xs ${
                           done
                             ? "text-ui-text-main/[22%] dark:text-white/[22%]"
-                            : "text-brandSecondary-700 dark:text-brandSecondary-400"
+                            : "text-brandPrimary-700"
                         }`}
                       >
-                        {setTargetLabel(set, exercise.prescription_mode)}
+                        RPE {set.rpe}
                       </Text>
                     </View>
-                  </View>
+                  )}
 
-                  {/* Línea 2 · registro */}
-                  <View className="flex-row items-center gap-2 ml-8">
-                    {/* Reps reales (solo modo reps) */}
-                    {!isDuration && (
-                      <>
-                        <TextInput
-                          value={data.reps ?? ""}
-                          onChangeText={(v) =>
-                            updateField(exercise.id, set.id, "reps", v)
-                          }
-                          keyboardType="number-pad"
-                          editable={!done}
-                          selectTextOnFocus
-                          placeholder={
-                            set.reps_max != null
-                              ? String(set.reps_max)
-                              : set.reps_min != null
-                                ? String(set.reps_min)
-                                : "—"
-                          }
-                          placeholderTextColor={
-                            isDark
-                              ? "rgba(255,255,255,0.2)"
-                              : "rgba(15,13,32,0.22)"
-                          }
-                          className={`w-[44px] px-2 py-[7px] rounded-[10px] border font-jakarta-semi text-[14px] text-center ${
-                            done
-                              ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
-                              : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
-                          }`}
-                        />
-                        <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
-                          reps
-                        </Text>
-                      </>
-                    )}
-
-                    {/* Kg input */}
-                    <TextInput
-                      value={data.weight ?? ""}
-                      onChangeText={(v) =>
-                        updateField(exercise.id, set.id, "weight", v)
-                      }
-                      keyboardType="decimal-pad"
-                      editable={!done}
-                      selectTextOnFocus
-                      placeholder={
-                        set.weight_kg != null ? String(set.weight_kg) : "—"
-                      }
-                      placeholderTextColor={
-                        isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"
-                      }
-                      className={`w-[56px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
+                  {/* Intensity chip (RIR) */}
+                  {exercise.intensity_mode === "rir" && set.rir != null && (
+                    <View
+                      className={`px-[9px] py-1 rounded-lg border ${
                         done
-                          ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
-                          : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                          ? "bg-transparent border-transparent"
+                          : "bg-brandPrimary-700/[10%] border-brandPrimary-700/15 dark:border-brandPrimary-700/20"
                       }`}
-                    />
-                    <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
-                      kg
-                    </Text>
-
-                    <View className="flex-1" />
-
-                    {/* Toggle */}
-                    <Pressable
-                      onPress={() => toggleSet(exercise.id, set.id)}
-                      hitSlop={10}
-                      className={`w-[34px] h-[34px] rounded-[17px] items-center justify-center border-[1.5px] active:opacity-70 ${
-                        done
-                          ? "bg-brandSecondary-400 border-brandSecondary-400"
-                          : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[14%] dark:border-white/15"
-                      }`}
-                      style={
-                        done
-                          ? {
-                              shadowColor: BRAND_MINT,
-                              shadowOpacity: 0.65,
-                              shadowRadius: 10,
-                              shadowOffset: { width: 0, height: 2 },
-                            }
-                          : undefined
-                      }
                     >
-                      {done && (
-                        <CheckCircle
-                          size={18}
-                          color={isDark ? "#0f0d20" : "#ffffff"}
-                        />
-                      )}
-                    </Pressable>
-                  </View>
-
-                  {/* Nota de la serie */}
-                  <TextInput
-                    value={data.notes ?? ""}
-                    onChangeText={(v) =>
-                      updateField(exercise.id, set.id, "notes", v)
-                    }
-                    placeholder="Nota de la serie..."
-                    placeholderTextColor={
-                      isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
-                    }
-                    className="ml-8 px-3 py-1.5 rounded-[9px] border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
-                  />
+                      <Text
+                        className={`font-manrope-bold text-xs ${
+                          done
+                            ? "text-ui-text-main/[22%] dark:text-white/[22%]"
+                            : "text-brandPrimary-700"
+                        }`}
+                      >
+                        RIR {set.rir}
+                      </Text>
+                    </View>
+                  )}
                 </View>
-              );
-            })}
-          </View>
+
+                {/* Línea 2 · registro */}
+                <View className="flex-row items-center gap-2 ml-8">
+                  {!isDuration && (
+                    <>
+                      <TextInput
+                        value={data.reps ?? ""}
+                        onChangeText={(v) =>
+                          updateField(exercise.id, set.id, "reps", v)
+                        }
+                        keyboardType="number-pad"
+                        editable={!done}
+                        selectTextOnFocus
+                        placeholder={
+                          set.reps_max != null
+                            ? String(set.reps_max)
+                            : set.reps_min != null
+                              ? String(set.reps_min)
+                              : "—"
+                        }
+                        placeholderTextColor={
+                          isDark
+                            ? "rgba(255,255,255,0.2)"
+                            : "rgba(15,13,32,0.22)"
+                        }
+                        className={`w-[44px] px-2 py-[7px] rounded-[10px] border font-jakarta-semi text-[14px] text-center ${
+                          done
+                            ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
+                            : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                        }`}
+                      />
+                      <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
+                        reps
+                      </Text>
+                    </>
+                  )}
+
+                  <TextInput
+                    value={data.weight ?? ""}
+                    onChangeText={(v) =>
+                      updateField(exercise.id, set.id, "weight", v)
+                    }
+                    keyboardType="decimal-pad"
+                    editable={!done}
+                    selectTextOnFocus
+                    placeholder={
+                      set.weight_kg != null ? String(set.weight_kg) : "—"
+                    }
+                    placeholderTextColor={
+                      isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"
+                    }
+                    className={`w-[56px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
+                      done
+                        ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
+                        : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                    }`}
+                  />
+                  <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
+                    kg
+                  </Text>
+
+                  <View className="flex-1" />
+
+                  <Pressable
+                    onPress={() => toggleSet(exercise.id, set.id)}
+                    hitSlop={10}
+                    className={`w-[34px] h-[34px] rounded-[17px] items-center justify-center border-[1.5px] active:opacity-70 ${
+                      done
+                        ? "bg-brandSecondary-400 border-brandSecondary-400"
+                        : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[14%] dark:border-white/15"
+                    }`}
+                    style={
+                      done
+                        ? {
+                            shadowColor: BRAND_MINT,
+                            shadowOpacity: 0.65,
+                            shadowRadius: 10,
+                            shadowOffset: { width: 0, height: 2 },
+                          }
+                        : undefined
+                    }
+                  >
+                    {done && (
+                      <CheckCircle
+                        size={18}
+                        color={isDark ? "#0f0d20" : "#ffffff"}
+                      />
+                    )}
+                  </Pressable>
+                </View>
+
+                {/* Nota de la serie */}
+                <TextInput
+                  value={data.notes ?? ""}
+                  onChangeText={(v) =>
+                    updateField(exercise.id, set.id, "notes", v)
+                  }
+                  placeholder="Nota de la serie..."
+                  placeholderTextColor={
+                    isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
+                  }
+                  className="ml-8 px-3 py-1.5 rounded-[9px] border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                />
+              </View>
+            );
+          })}
         </View>
 
         {/* ── Series counter ── */}
@@ -675,6 +747,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
             {doneCount} / {totalSets} series completadas
           </Text>
         </View>
+
         {/* ── Navegación ── */}
         <View className="flex-row items-center gap-3 px-5 pt-3.5">
           {/* ← Anterior */}
@@ -761,6 +834,12 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
         </View>
       </ScrollView>
 
+      <VideoPlayerSheet
+        sheetRef={videoSheetRef}
+        videoUrl={activeVideo?.url}
+        title={activeVideo?.title}
+      />
+
       {/* ── Modal confirmación cierre ── */}
       <Modal
         visible={showExitConfirm}
@@ -782,7 +861,6 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
               elevation: 20,
             }}
           >
-            {/* Icono + título */}
             <View className="items-center mb-5 mt-1">
               <View className="w-12 h-12 rounded-full items-center justify-center mb-3.5 bg-ui-text-main/[5%] dark:bg-white/[6%]">
                 <X size={20} color={mutedIcon} />
@@ -795,7 +873,6 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
               </Text>
             </View>
 
-            {/* Botones */}
             <View className="gap-2.5">
               <Pressable
                 onPress={() => {
@@ -855,7 +932,6 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
               elevation: 20,
             }}
           >
-            {/* Kicker + controles */}
             <View className="flex-row items-center justify-between mb-1">
               <View className="flex-row items-center gap-1.5">
                 <View
@@ -896,12 +972,10 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
               </View>
             </View>
 
-            {/* Cuenta regresiva */}
             <Text className="font-jakarta-bold text-[52px] leading-[60px] tracking-[-2px] text-ui-text-main dark:text-ui-text-mainDark">
               {restLabel}
             </Text>
 
-            {/* Barra de progreso */}
             <View className="h-[3px] rounded-[2px] mt-3 bg-ui-text-main/[8%] dark:bg-white/[8%]">
               <View
                 className="h-[3px] rounded-[2px] bg-brandSecondary-400"
@@ -956,8 +1030,6 @@ export default function Sesion() {
     AsyncStorage.setItem(phaseKey(currentDay.id), phase);
   }, [phase, currentDay?.id, isPhaseRestored]);
 
-  // El plan que toca se calcula desde session_logs (ver useActivePlanSummary):
-  // currentDay trae el plan_week_day; usePlanDayExercises trae su prescripción.
   const session = useMemo(() => {
     if (!summary || !currentDay) return null;
     const estimatedMinutes = Math.round(
@@ -984,7 +1056,6 @@ export default function Sesion() {
     );
   }
 
-  // Sin asignación activa, plan completado o sin día disponible.
   if (!session) {
     return (
       <StatusScreen>
@@ -1000,7 +1071,6 @@ export default function Sesion() {
     );
   }
 
-  // Día sin ejercicios prescritos: no se puede entrenar.
   if (session.exercises.length === 0) {
     return (
       <StatusScreen>
