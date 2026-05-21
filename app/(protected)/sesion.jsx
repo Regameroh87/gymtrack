@@ -374,7 +374,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
           </Text>
         </View>
 
-        <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
+        <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[14%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/40 dark:border-brandPrimary-700/40">
           <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
             {timerStr}
           </Text>
@@ -478,7 +478,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
           </Text>
 
           <View className="flex-row items-center justify-between mb-3">
-            <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%]">
+            <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
               <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
                 {exercise.exercise_muscle || "—"}
               </Text>
@@ -576,7 +576,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                     className={`px-[9px] py-1 rounded-lg border ${
                       done
                         ? "bg-transparent border-transparent"
-                        : "bg-brandSecondary-400/[14%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/15 dark:border-brandSecondary-400/20"
+                        : "bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/30 dark:border-brandSecondary-400/20"
                     }`}
                   >
                     <Text
@@ -596,7 +596,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                       className={`px-[9px] py-1 rounded-lg border ${
                         done
                           ? "bg-transparent border-transparent"
-                          : "bg-brandPrimary-700/[10%] border-brandPrimary-700/15 dark:border-brandPrimary-700/20"
+                          : "bg-brandPrimary-700/[16%] border-brandPrimary-700/30 dark:border-brandPrimary-700/20"
                       }`}
                     >
                       <Text
@@ -617,7 +617,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                       className={`px-[9px] py-1 rounded-lg border ${
                         done
                           ? "bg-transparent border-transparent"
-                          : "bg-brandPrimary-700/[10%] border-brandPrimary-700/15 dark:border-brandPrimary-700/20"
+                          : "bg-brandPrimary-700/[16%] border-brandPrimary-700/30 dark:border-brandPrimary-700/20"
                       }`}
                     >
                       <Text
