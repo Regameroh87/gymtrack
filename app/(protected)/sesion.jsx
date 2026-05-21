@@ -421,7 +421,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                       ? "bg-brandPrimary-700 border-transparent"
                       : isPast
                         ? "bg-transparent border-brandSecondary-400/30"
-                        : "bg-transparent border-ui-text-main/[8%] dark:border-white/[8%]"
+                        : "bg-transparent border-ui-text-main/[20%] dark:border-white/[8%]"
                   }`}
                 >
                   <Text
@@ -660,7 +660,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                         className={`w-[44px] px-2 py-[7px] rounded-[10px] border font-jakarta-semi text-[14px] text-center ${
                           done
                             ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
-                            : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                            : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[22%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
                         }`}
                       />
                       <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
@@ -686,7 +686,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                     className={`w-[56px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
                       done
                         ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
-                        : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                        : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[22%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
                     }`}
                   />
                   <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
@@ -701,7 +701,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
                     className={`w-[34px] h-[34px] rounded-[17px] items-center justify-center border-[1.5px] active:opacity-70 ${
                       done
                         ? "bg-brandSecondary-400 border-brandSecondary-400"
-                        : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[14%] dark:border-white/15"
+                        : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[30%] dark:border-white/15"
                     }`}
                     style={
                       done
