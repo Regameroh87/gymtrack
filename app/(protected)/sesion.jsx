@@ -245,8 +245,7 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
   const isDark = colorScheme === "dark";
 
   const {
-    elapsed,
-    setElapsed,
+    startedAt,
     currentIdx,
     setCurrentIdx,
     completedSets,
@@ -257,17 +256,21 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
     isRestored,
   } = useSessionDraft(dayId);
 
+  // elapsed se deriva del timestamp de inicio — así cuenta tiempo real de pared.
+  const [elapsed, setElapsed] = useState(0);
+
   const [rest, setRest] = useState(null); // descanso entre series: { total, left } | null
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const { mutateAsync: saveLog, isPending: isSaving } = useSaveSessionLog();
 
-  // El timer solo arranca luego de rehydratar el draft para continuar desde el tiempo guardado.
   useEffect(() => {
-    if (!isRestored) return;
-    const id = setInterval(() => setElapsed((s) => s + 1), 1000);
+    if (!isRestored || !startedAt) return;
+    const tick = () => setElapsed(Math.floor((Date.now() - startedAt) / 1000));
+    tick(); // sincroniza inmediatamente al restaurar
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [isRestored, setElapsed]);
+  }, [isRestored, startedAt]);
 
   // Cuenta regresiva del descanso entre series. Al llegar a 0 vibra y se
   // auto-oculta a los 2s.

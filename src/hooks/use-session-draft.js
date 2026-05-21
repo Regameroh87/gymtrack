@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const draftKey = (dayId) => `gymtrack:session_draft:${dayId}`;
 
 export function useSessionDraft(dayId) {
-  const [elapsed, setElapsed] = useState(0);
+  const [startedAt, setStartedAt] = useState(null); // ms timestamp, base del timer de pared
   const [currentIdx, setCurrentIdx] = useState(0);
   const [completedSets, setCompletedSets] = useState(new Set());
   const [setData, setSetData] = useState({});
@@ -13,6 +13,7 @@ export function useSessionDraft(dayId) {
   // Rehydrate from storage once dayId is available
   useEffect(() => {
     if (!dayId) {
+      setStartedAt(Date.now());
       setIsRestored(true);
       return;
     }
@@ -20,11 +21,15 @@ export function useSessionDraft(dayId) {
       if (raw) {
         try {
           const saved = JSON.parse(raw);
-          if (saved.elapsed != null) setElapsed(saved.elapsed);
+          setStartedAt(saved.startedAt ?? Date.now());
           if (saved.currentIdx != null) setCurrentIdx(saved.currentIdx);
           if (saved.completedSets) setCompletedSets(new Set(saved.completedSets));
           if (saved.setData) setSetData(saved.setData);
-        } catch {}
+        } catch {
+          setStartedAt(Date.now());
+        }
+      } else {
+        setStartedAt(Date.now());
       }
       setIsRestored(true);
     });
@@ -32,17 +37,17 @@ export function useSessionDraft(dayId) {
 
   // Auto-save on every change (only after initial restore to avoid overwriting with defaults)
   useEffect(() => {
-    if (!dayId || !isRestored) return;
+    if (!dayId || !isRestored || !startedAt) return;
     AsyncStorage.setItem(
       draftKey(dayId),
       JSON.stringify({
-        elapsed,
+        startedAt,
         currentIdx,
         completedSets: [...completedSets],
         setData,
       })
     );
-  }, [dayId, isRestored, elapsed, currentIdx, completedSets, setData]);
+  }, [dayId, isRestored, startedAt, currentIdx, completedSets, setData]);
 
   const clearDraft = useCallback(() => {
     if (dayId) AsyncStorage.removeItem(draftKey(dayId));
@@ -54,8 +59,7 @@ export function useSessionDraft(dayId) {
   }
 
   return {
-    elapsed,
-    setElapsed,
+    startedAt,
     currentIdx,
     setCurrentIdx,
     completedSets,
