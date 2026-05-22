@@ -346,7 +346,8 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
       clearDraft();
       if (dayId) await AsyncStorage.setItem(phaseKey(dayId), "preview");
       router.replace("/registros");
-    } catch {
+    } catch (error) {
+      console.error("[handleFinish] no se pudo guardar la sesión:", error);
       Alert.alert(
         "No se pudo guardar",
         "Hubo un error al guardar tu sesión. Revisá tu conexión e intentá de nuevo."

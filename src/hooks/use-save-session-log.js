@@ -12,7 +12,14 @@ export const useSaveSessionLog = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ summary, currentDay, session, completedSets, setData, elapsed }) => {
+    mutationFn: async ({
+      summary,
+      currentDay,
+      session,
+      completedSets,
+      setData,
+      elapsed,
+    }) => {
       const logId = Crypto.randomUUID();
 
       await database.insert(session_logs).values({
@@ -28,18 +35,21 @@ export const useSaveSessionLog = () => {
       });
 
       const setLogRows = [];
+      const setCountByExercise = {};
       for (const exercise of session.exercises) {
         for (const set of exercise.sets) {
           const key = `${exercise.id}-${set.id}`;
           if (!completedSets.has(key)) continue;
           const data = setData[key] ?? {};
+          const baseId = exercise.base_exercise_id;
           const reps =
             parseInt(data.reps, 10) || (set.reps_max ?? set.reps_min ?? 1);
+          setCountByExercise[baseId] = (setCountByExercise[baseId] ?? 0) + 1;
           setLogRows.push({
             id: Crypto.randomUUID(),
             session_log_id: logId,
-            exercise_id: exercise.base_exercise_id,
-            set_number: set.set_number,
+            exercise_id: baseId,
+            set_number: setCountByExercise[baseId],
             reps,
             weight_kg: parseFloat(data.weight) || set.weight_kg || null,
             notes: data.notes?.trim() || null,
