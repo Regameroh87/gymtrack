@@ -21,7 +21,7 @@ export default function AdminDashboard() {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
 
-  const handleResetDB = () => {
+  /*   const handleResetDB = () => {
     Alert.alert(
       "Reiniciar Base de Datos",
       "¿Estás seguro? Esta acción borrará TODO el contenido local (ejercicios, máquinas, etc). Esta acción no se puede deshacer.",
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
         },
       ]
     );
-  };
+  }; */
 
   const nav = (path) => router.push(`/admin/${path}`);
 
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
         </View>
 
         {/* ── Zona de Desarrollo ── */}
-        <View className="px-5 mt-8">
+        {/*      <View className="px-5 mt-8">
           <Text className="text-[11px] font-manrope-semi text-red-500 uppercase tracking-widest mb-3 ml-1">
             Zona de Desarrollo
           </Text>
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
               Borra ejercicios, máquinas y relaciones
             </Text>
           </Pressable>
-        </View>
+        </View> */}
       </ScrollView>
     </Screen>
   );
