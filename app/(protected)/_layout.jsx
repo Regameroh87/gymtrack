@@ -74,6 +74,7 @@ export default function ProtectedLayout() {
           name="registros"
           options={{
             title: "Registros",
+            headerShown: false,
             tabBarIcon: ({ color }) => (
               <Logs color={color} width={24} height={24} />
             ),

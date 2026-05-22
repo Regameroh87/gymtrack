@@ -7,6 +7,7 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
+  Alert,
 } from "react-native";
 import { useState, useEffect, useMemo, useRef } from "react";
 
@@ -241,6 +242,7 @@ function PreviewScreen({ session, onStart }) {
 // ─── Active session ──────────────────────────────────────────────────────────
 
 function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -332,16 +334,24 @@ function ActiveSession({ session, summary, currentDay, dayId, onEnd }) {
 
   async function handleFinish() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    await saveLog({
-      summary,
-      currentDay,
-      session,
-      completedSets,
-      setData,
-      elapsed,
-    });
-    clearDraft();
-    onEnd();
+    try {
+      await saveLog({
+        summary,
+        currentDay,
+        session,
+        completedSets,
+        setData,
+        elapsed,
+      });
+      clearDraft();
+      if (dayId) await AsyncStorage.setItem(phaseKey(dayId), "preview");
+      router.replace("/registros");
+    } catch {
+      Alert.alert(
+        "No se pudo guardar",
+        "Hubo un error al guardar tu sesión. Revisá tu conexión e intentá de nuevo."
+      );
+    }
   }
 
   return (
