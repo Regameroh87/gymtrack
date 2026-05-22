@@ -5,13 +5,13 @@
     "slug": "gymtrack",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon_ progress.png",
+    "icon": "./assets/app-icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
     "scheme": "gymtrack",
     "splash": {
-      "image": "./assets/icon_ progress.png",
+      "image": "./assets/app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -25,13 +25,13 @@
       "permissions": ["VIBRATE", "VIBRATE"],
       "userInterfaceStyle": "automatic",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon_ progress.png",
+        "foregroundImage": "./assets/app-adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.anonymous.gymtrack"
     },
     "web": {
-      "favicon": "./assets/icon_ progress.png",
+      "favicon": "./assets/app-icon.png",
       "bundler": "metro"
     },
     "plugins": [
