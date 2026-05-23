@@ -34,7 +34,10 @@ import { SESSION_LEVELS } from "../../../../src/constants/sessionOptions";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
 // Hooks
-import { useDeleteSession } from "../../../../src/hooks/useDeleteSession";
+import {
+  useDeleteSession,
+  countPlansUsingSession,
+} from "../../../../src/hooks/useDeleteSession";
 import { useRecordById } from "../../../../src/hooks/useRecordById";
 
 // Componentes
@@ -62,33 +65,38 @@ export default function SessionDetail() {
     videoSheetRef.current?.present();
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      "Eliminar sesión",
-      `¿Seguro que querés eliminar "${data?.name}"? Esta acción no se puede deshacer.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () =>
-            deleteSession(id, {
-              onSuccess: () => {
-                Haptics.notificationAsync(
-                  Haptics.NotificationFeedbackType.Success
-                );
-                Toast.show({
-                  type: "success",
-                  text1: "Sesión eliminada",
-                  text2: `"${data?.name}" fue eliminada correctamente.`,
-                  position: "bottom",
-                });
-                router.replace("/admin/sessions");
-              },
-            }),
-        },
-      ]
-    );
+  const confirmAndDelete = () => {
+    deleteSession(id, {
+      onSuccess: () => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+          type: "success",
+          text1: "Sesión eliminada",
+          text2: `"${data?.name}" fue eliminada correctamente.`,
+          position: "bottom",
+        });
+        router.replace("/admin/sessions");
+      },
+    });
+  };
+
+  const handleDelete = async () => {
+    const plansUsing = await countPlansUsingSession(id);
+
+    const title = "Eliminar sesión";
+    const message =
+      plansUsing > 0
+        ? `Esta sesión está usada en ${plansUsing} ${plansUsing === 1 ? "plan" : "planes"}. Si la eliminás, esos planes perderán los ejercicios programados de los días que la usaban. ¿Continuar?`
+        : `¿Seguro que querés eliminar "${data?.name}"? Esta acción no se puede deshacer.`;
+
+    Alert.alert(title, message, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: confirmAndDelete,
+      },
+    ]);
   };
 
   const { data: session, isLoading } = useRecordById("session", sessions, id);
