@@ -18,6 +18,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 // Hooks
 import { useSessionLogs } from "../../../src/hooks/useSessionLogs";
 import { useActivePlanSummary } from "../../../src/hooks/use-active-plan-summary";
+import { useActiveSessionPhase } from "../../../src/hooks/use-active-session-phase";
 
 // Utilidades
 import {
@@ -28,6 +29,7 @@ import {
 
 // Componentes
 import Screen from "../../../src/components/Screen";
+import ActiveSessionCard from "../../../src/components/cards/active-session-card";
 
 // Tema / assets
 import { brandPrimary } from "../../../src/theme/colors";
@@ -66,6 +68,17 @@ export default function RegistrosTab() {
   const insets = useSafeAreaInsets();
 
   const { data: logs = [], isLoading } = useSessionLogs();
+  const { data: summary } = useActivePlanSummary();
+  const { isActive: hasActiveSession } = useActiveSessionPhase(
+    summary?.currentDay?.id
+  );
+  const activeSession =
+    hasActiveSession && summary?.currentDay
+      ? {
+          session: summary.currentDay.session,
+          currentDay: summary.currentDay,
+        }
+      : null;
 
   // Agrupa los logs por mes; vienen ya ordenados del más reciente al más viejo.
   const sections = useMemo(() => {
@@ -125,7 +138,12 @@ export default function RegistrosTab() {
           <ActivityIndicator color={brandPrimary[500]} />
         </View>
       ) : logs.length === 0 ? (
-        <EmptyState router={router} insets={insets} onLogPast={goToNew} />
+        <EmptyState
+          router={router}
+          insets={insets}
+          onLogPast={goToNew}
+          activeSession={activeSession}
+        />
       ) : (
         <SectionList
           sections={sections}
@@ -138,17 +156,27 @@ export default function RegistrosTab() {
             paddingBottom: insets.bottom + 32,
           }}
           ListHeaderComponent={
-            <View className="flex-row gap-3 mb-6">
-              <StatTile
-                value={logs.length}
-                label={logs.length === 1 ? "Entrenamiento" : "Entrenamientos"}
-                accent={brandPrimary[500]}
-              />
-              <StatTile
-                value={formatDuration(totalDuration)}
-                label="Tiempo total"
-                accent={BRAND_MINT}
-              />
+            <View>
+              {activeSession ? (
+                <View className="mb-5">
+                  <ActiveSessionCard
+                    session={activeSession.session}
+                    currentDay={activeSession.currentDay}
+                  />
+                </View>
+              ) : null}
+              <View className="flex-row gap-3 mb-6">
+                <StatTile
+                  value={logs.length}
+                  label={logs.length === 1 ? "Entrenamiento" : "Entrenamientos"}
+                  accent={brandPrimary[500]}
+                />
+                <StatTile
+                  value={formatDuration(totalDuration)}
+                  label="Tiempo total"
+                  accent={BRAND_MINT}
+                />
+              </View>
             </View>
           }
           renderSectionHeader={({ section }) => (
