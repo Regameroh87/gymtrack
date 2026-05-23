@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
+import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
 
 import { database } from "../database";
 import { session_logs, session_set_logs } from "../database/schemas";
@@ -66,7 +68,17 @@ export const useSaveSessionLog = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
+        queryKey: ["session_logs", userId],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["plan_assignments", "active", "summary", userId],
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Toast.show({
+        type: "success",
+        text1: "¡Sesión guardada!",
+        text2: "Tu entrenamiento quedó registrado.",
+        position: "bottom",
       });
     },
   });
