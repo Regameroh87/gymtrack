@@ -334,7 +334,7 @@ function StatTile({ value, label, accent }) {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ router, insets, onLogPast }) {
+function EmptyState({ router, insets, onLogPast, activeSession }) {
   // Si el usuario tiene un plan activo en curso, el CTA primario lo lleva a
   // continuar ese plan; si no, lo lleva a explorar el catálogo de rutinas.
   const { data: summary } = useActivePlanSummary();
@@ -349,6 +349,14 @@ function EmptyState({ router, insets, onLogPast }) {
       className="flex-1 px-6 items-center justify-center"
       style={{ paddingBottom: insets.bottom + 24 }}
     >
+      {activeSession ? (
+        <View className="w-full mb-5">
+          <ActiveSessionCard
+            session={activeSession.session}
+            currentDay={activeSession.currentDay}
+          />
+        </View>
+      ) : null}
       <View
         className="rounded-3xl overflow-hidden w-full"
         style={{
