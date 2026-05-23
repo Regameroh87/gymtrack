@@ -41,13 +41,18 @@ const AdminModuleCard = ({
 
         <View className="p-4">
           {/* Icon */}
-          <View className={`w-11 h-11 rounded-xl items-center justify-center mb-3 ${
-            comingSoon
-              ? "bg-ui-input-light dark:bg-ui-input-dark"
-              : "bg-brandPrimary-50 dark:bg-brandPrimary-950"
-          }`}>
+          <View
+            className={`w-11 h-11 rounded-xl items-center justify-center mb-3 ${
+              comingSoon
+                ? "bg-ui-input-light dark:bg-ui-input-dark"
+                : "bg-brandPrimary-50 dark:bg-brandPrimary-950"
+            }`}
+          >
             {comingSoon ? (
-              <Lock size={20} className="text-ui-text-muted dark:text-ui-text-mutedDark" />
+              <Lock
+                size={20}
+                className="text-ui-text-muted dark:text-ui-text-mutedDark"
+              />
             ) : (
               <Icon size={20} color={accentColor?.[0] || brandPrimary[600]} />
             )}
@@ -70,7 +75,10 @@ const AdminModuleCard = ({
           {/* Arrow */}
           {!comingSoon && (
             <View className="absolute top-4 right-3">
-              <ChevronRight size={14} className="text-ui-text-muted dark:text-ui-text-mutedDark" />
+              <ChevronRight
+                size={14}
+                className="text-ui-text-muted dark:text-ui-text-mutedDark"
+              />
             </View>
           )}
         </View>
