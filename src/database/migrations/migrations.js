@@ -23,6 +23,7 @@ import m0018 from './0018_icy_squadron_supreme.sql';
 import m0019 from './0019_careful_sprite.sql';
 import m0020 from './0020_panoramic_magneto.sql';
 import m0021 from './0021_lyrical_black_widow.sql';
+import m0022 from './0022_plain_wildside.sql';
 
   export default {
     journal,
@@ -48,7 +49,8 @@ m0017,
 m0018,
 m0019,
 m0020,
-m0021
+m0021,
+m0022
     }
   }
   

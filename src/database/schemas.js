@@ -76,23 +76,27 @@ export const sessions = sqliteTable("sessions", {
   sync_status: text("sync_status").notNull().default("pending"),
 });
 
-export const session_exercises = sqliteTable("session_exercises", {
-  id: text("id").primaryKey(),
-  session_id: text("session_id")
-    .notNull()
-    .references(() => sessions.id),
-  exercise_id: text("exercise_id")
-    .notNull()
-    .references(() => exercises_base.id),
-  position: integer("position").notNull().default(0),
-  created_at: text("created_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
-  updated_at: text("updated_at")
-    .notNull()
-    .$defaultFn(() => new Date().toISOString()),
-  sync_status: text("sync_status").notNull().default("pending"),
-});
+export const session_exercises = sqliteTable(
+  "session_exercises",
+  {
+    id: text("id").primaryKey(),
+    session_id: text("session_id")
+      .notNull()
+      .references(() => sessions.id),
+    exercise_id: text("exercise_id")
+      .notNull()
+      .references(() => exercises_base.id),
+    position: integer("position").notNull().default(0),
+    created_at: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    updated_at: text("updated_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    sync_status: text("sync_status").notNull().default("pending"),
+  },
+  (t) => [unique().on(t.session_id, t.exercise_id)]
+);
 
 export const training_plans = sqliteTable("training_plans", {
   id: text("id").primaryKey(),

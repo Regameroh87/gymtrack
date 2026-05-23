@@ -190,8 +190,14 @@ export default function FormSession({ form, session }) {
           <form.Field
             name="exercises"
             validators={{
-              onSubmit: ({ value }) =>
-                !value?.length ? "Agregá al menos un ejercicio" : undefined,
+              onSubmit: ({ value }) => {
+                if (!value?.length) return "Agregá al menos un ejercicio";
+                const ids = value.map((ex) => ex.exercise_id);
+                if (new Set(ids).size !== ids.length) {
+                  return "Hay ejercicios repetidos en la lista";
+                }
+                return undefined;
+              },
             }}
           >
             {(field) => (

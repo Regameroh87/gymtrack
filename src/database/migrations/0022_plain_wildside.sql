@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `session_exercises_session_id_exercise_id_unique` ON `session_exercises` (`session_id`,`exercise_id`);
