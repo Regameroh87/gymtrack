@@ -1,14 +1,20 @@
+// ── React Native ──
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+
+// ── Libs ──
 import * as Haptics from "expo-haptics";
-import { brandPrimary, gradient } from "../../theme/colors";
-import { ChevronRight, Lock } from "../../../assets/icons";
+
+// ── Tema / Assets ──
+import { brandPrimary } from "../../theme/colors";
+import { Lock } from "../../../assets/icons";
 
 const AdminModuleCard = ({
   icon: Icon,
   title,
   subtitle,
+  kicker,
+  editorialNumber,
   onPress,
   comingSoon = false,
   accentColor,
@@ -19,34 +25,35 @@ const AdminModuleCard = ({
     onPress?.();
   };
 
+  const accent = accentColor?.[0] || brandPrimary[600];
+  const displayKicker = comingSoon ? "PRÓXIMAMENTE" : kicker;
+
   return (
     <Pressable
       onPress={handlePress}
       disabled={comingSoon}
-      className="w-[48%] mb-4"
+      className="w-[48%] mb-3 active:scale-[0.985]"
       style={{ opacity: comingSoon ? 0.45 : 1 }}
     >
-      <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl overflow-hidden">
-        {/* Gradient accent bar */}
-        <LinearGradient
-          colors={
-            comingSoon
-              ? ["#e8e6f0", "#e8e6f0"]
-              : accentColor || gradient.primary
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ height: 3 }}
-        />
-
-        <View className="p-4">
-          {/* Icon */}
+      <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-4 overflow-hidden">
+        {/* Top row: icon + número editorial */}
+        <View className="flex-row items-start justify-between mb-4">
           <View
-            className={`w-11 h-11 rounded-xl items-center justify-center mb-3 ${
+            className={`w-11 h-11 rounded-2xl items-center justify-center ${
               comingSoon
                 ? "bg-ui-input-light dark:bg-ui-input-dark"
                 : "bg-brandPrimary-50 dark:bg-brandPrimary-950"
             }`}
+            style={
+              comingSoon
+                ? null
+                : {
+                    shadowColor: accent,
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    shadowOffset: { width: 0, height: 4 },
+                  }
+            }
           >
             {comingSoon ? (
               <Lock
@@ -54,34 +61,52 @@ const AdminModuleCard = ({
                 className="text-ui-text-muted dark:text-ui-text-mutedDark"
               />
             ) : (
-              <Icon size={20} color={accentColor?.[0] || brandPrimary[600]} />
+              <Icon size={20} color={accent} />
             )}
           </View>
 
-          {/* Label */}
-          <Text
-            className="text-[15px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-            numberOfLines={1}
-          >
-            {title}
-          </Text>
-          <Text
-            className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
-            numberOfLines={1}
-          >
-            {comingSoon ? "Próximamente" : subtitle}
-          </Text>
-
-          {/* Arrow */}
-          {!comingSoon && (
-            <View className="absolute top-4 right-3">
-              <ChevronRight
-                size={14}
-                className="text-ui-text-muted dark:text-ui-text-mutedDark"
-              />
-            </View>
+          {editorialNumber && (
+            <Text
+              className="font-jakarta-bold tracking-tighter text-ui-text-main/10 dark:text-ui-text-mainDark/15"
+              style={{ fontSize: 20, lineHeight: 22 }}
+            >
+              {editorialNumber}
+            </Text>
           )}
         </View>
+
+        {/* Kicker con dot mint */}
+        {displayKicker && (
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <View className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400" />
+            <Text
+              className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400"
+              style={{ fontSize: 9, letterSpacing: 1.6 }}
+              numberOfLines={1}
+            >
+              {displayKicker}
+            </Text>
+          </View>
+        )}
+
+        {/* Title */}
+        <Text
+          className="font-jakarta-bold text-[15px] text-ui-text-main dark:text-ui-text-mainDark"
+          style={{ letterSpacing: -0.3 }}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+
+        {/* Description */}
+        {subtitle && (
+          <Text
+            className="font-manrope text-[11px] text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
+            numberOfLines={1}
+          >
+            {subtitle}
+          </Text>
+        )}
       </View>
     </Pressable>
   );
