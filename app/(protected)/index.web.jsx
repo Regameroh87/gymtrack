@@ -13,17 +13,23 @@ import { useUserRole } from "../../src/hooks/useUserRole.js";
 // BD
 import { supabase } from "../../src/database/supabase.js";
 
+// Hooks
+import { useSessionLogs } from "../../src/hooks/useSessionLogs.js";
+
+// Utilidades
+import { formatDuration } from "../../src/utils/format-date.js";
+
 // Tema / assets
 import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors.js";
 import {
   Barbell,
-  Calendar,
   ChevronRight,
   ClipboardList,
+  Clock,
   Home,
   Logout,
+  Logs,
   Plus,
-  QrCode,
 } from "../../assets/icons.jsx";
 
 // ─── Tokens ──────────────────────────────────────────────────────────────────
@@ -50,6 +56,37 @@ function greetingFor(d) {
   if (h < 13) return "Buen día";
   if (h < 20) return "Buenas tardes";
   return "Buenas noches";
+}
+
+function relativeFromNow(iso, now = new Date()) {
+  const then = new Date(iso);
+  const diffMs = now.getTime() - then.getTime();
+  const minutes = Math.round(diffMs / 60000);
+  if (minutes < 1)   return "hace instantes";
+  if (minutes < 60)  return `hace ${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24)    return `hace ${hours} h`;
+  const days = Math.round(hours / 24);
+  if (days < 7)      return `hace ${days} d`;
+  const weeks = Math.round(days / 7);
+  if (weeks < 5)     return `hace ${weeks} sem`;
+  const months = Math.round(days / 30);
+  return `hace ${months} mes${months === 1 ? "" : "es"}`;
+}
+
+function resolveLogLabels(log) {
+  if (log.plan_id && log.plan_name) {
+    return {
+      title: log.session_name ?? log.plan_name,
+      kicker: `${log.plan_name}${
+        log.week_number ? ` · SEM ${log.week_number}` : ""
+      }${log.day_number ? ` D${log.day_number}` : ""}`,
+    };
+  }
+  if (log.session_name) {
+    return { title: log.session_name, kicker: "Registro manual" };
+  }
+  return { title: "Entrenamiento libre", kicker: "Registro manual" };
 }
 
 // ─── Gate ────────────────────────────────────────────────────────────────────
@@ -85,9 +122,8 @@ function Navbar({ user, router }) {
   const initial   = (user?.name?.[0] ?? email[0] ?? "A").toUpperCase();
 
   const NAV = [
-    { label: "Inicio",     icon: Home,          path: "/" },
-    { label: "Rutinas",    icon: ClipboardList,  path: "/rutinas" },
-    { label: "Check-in",   icon: QrCode,         path: "/check-in" },
+    { label: "Inicio",   icon: Home,          path: "/" },
+    { label: "Rutinas",  icon: ClipboardList, path: "/rutinas" },
   ];
 
   return (
@@ -207,18 +243,56 @@ function Navbar({ user, router }) {
 function MemberHomeWeb() {
   const router = useRouter();
   const { user } = useAuth();
+  const { data: logs = [], isLoading: logsLoading } = useSessionLogs();
 
   const now       = useMemo(() => new Date(), []);
   const dateLine  = formatDateLine(now);
   const dayName   = DAYS_ES[now.getDay()];
   const greeting  = greetingFor(now);
   const firstName = (user?.name ?? "").split(" ")[0] || "Atleta";
-  const dayNum    = String(now.getDate()).padStart(2, "0");
+
+  const { sessionsThisMonth, timeThisMonth, lastSessionLabel } = useMemo(() => {
+    const month = now.getMonth();
+    const year  = now.getFullYear();
+    const monthly = logs.filter((l) => {
+      const d = new Date(l.completed_at);
+      return d.getMonth() === month && d.getFullYear() === year;
+    });
+    const totalSeconds = monthly.reduce(
+      (acc, l) => acc + (l.duration_seconds ?? 0),
+      0
+    );
+    return {
+      sessionsThisMonth: monthly.length,
+      timeThisMonth: totalSeconds,
+      lastSessionLabel: logs[0] ? relativeFromNow(logs[0].completed_at, now) : null,
+    };
+  }, [logs, now]);
+
+  const recentLogs = useMemo(() => logs.slice(0, 5), [logs]);
 
   const STATS = [
-    { label: "Días activo este mes",    value: "—", Icon: Calendar,     dot: P600,    bubble: "rgba(48,35,205,0.08)"  },
-    { label: "Sesiones esta semana",    value: "—", Icon: ClipboardList, dot: "#7c3aed", bubble: "rgba(124,58,237,0.08)" },
-    { label: "Plan asignado",           value: "—", Icon: Barbell,      dot: MINT_DARK, bubble: "rgba(0,80,71,0.08)"    },
+    {
+      label: "Sesiones este mes",
+      value: logsLoading ? "—" : String(sessionsThisMonth),
+      Icon: ClipboardList,
+      dot: P600,
+      bubble: "rgba(48,35,205,0.08)",
+    },
+    {
+      label: "Tiempo total este mes",
+      value: logsLoading ? "—" : formatDuration(timeThisMonth),
+      Icon: Clock,
+      dot: "#7c3aed",
+      bubble: "rgba(124,58,237,0.08)",
+    },
+    {
+      label: "Última sesión",
+      value: logsLoading ? "—" : lastSessionLabel ?? "—",
+      Icon: Logs,
+      dot: MINT_DARK,
+      bubble: "rgba(0,80,71,0.08)",
+    },
   ];
 
   return (
@@ -264,27 +338,9 @@ function MemberHomeWeb() {
                   {firstName}.
                 </Text>
 
-                <Text style={{ fontSize: 13, fontFamily: "Manrope_400Regular", color: "rgba(255,255,255,0.5)", marginBottom: 20 }}>
+                <Text style={{ fontSize: 13, fontFamily: "Manrope_400Regular", color: "rgba(255,255,255,0.5)" }}>
                   {dateLine} · {dayName.charAt(0).toUpperCase() + dayName.slice(1)}
                 </Text>
-
-                {/* Mini stats inline */}
-                <View style={{ flexDirection: "row", gap: 28 }}>
-                  {[
-                    { label: "Días activos", val: "—" },
-                    { label: "Sesiones totales", val: "—" },
-                    { label: "Plan activo", val: "—" },
-                  ].map((s, i) => (
-                    <View key={i}>
-                      <Text style={{ fontSize: 24, fontFamily: "PlusJakartaSans_700Bold", color: "#fff", letterSpacing: -0.8 }}>
-                        {s.val}
-                      </Text>
-                      <Text style={{ fontSize: 10, fontFamily: "Manrope_400Regular", color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                        {s.label}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
               </View>
 
               {/* Icono decorativo */}
@@ -334,127 +390,173 @@ function MemberHomeWeb() {
           {/* ── LAYOUT 2 COLUMNAS ────────────────────────────────────── */}
           <View style={{ flexDirection: "row", gap: 20, alignItems: "flex-start" }}>
 
-            {/* Hero — Today's Session */}
+            {/* Hero — Últimas sesiones */}
             <View style={{ flex: 1.6 }}>
-              <Text style={{ fontSize: 10, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>
-                Sesión de hoy
-              </Text>
-
-              <Pressable
-                onPress={() => router.push("/sesion")}
-                style={({ pressed }) => ({
-                  borderRadius: 22, overflow: "hidden",
-                  backgroundColor: SURFACE,
-                  borderWidth: 1, borderColor: BORDER,
-                  shadowColor: P700,
-                  shadowOpacity: 0.12,
-                  shadowRadius: 24,
-                  shadowOffset: { width: 0, height: 8 },
-                  opacity: pressed ? 0.96 : 1,
-                  transform: [{ scale: pressed ? 0.99 : 1 }],
-                  cursor: "pointer",
-                })}
-              >
-                {/* Halo mint */}
-                <LinearGradient
-                  colors={["rgba(42,232,204,0.16)","rgba(42,232,204,0)"]}
-                  start={{ x: 0, y: 0 }} end={{ x: 0.7, y: 0.8 }}
-                  style={{ position: "absolute", top: 0, left: 0, width: 280, height: 280 }}
-                />
-                {/* Glow indigo */}
-                <LinearGradient
-                  colors={["rgba(74,68,228,0)","rgba(74,68,228,0.16)"]}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                  style={{ position: "absolute", right: 0, bottom: 0, width: 340, height: 220 }}
-                />
-
-                {/* Número editorial */}
-                <Text style={{
-                  position: "absolute", top: -32, right: -12,
-                  fontSize: 220, lineHeight: 220,
-                  fontFamily: "PlusJakartaSans_700Bold",
-                  color: "rgba(15,13,32,0.04)", letterSpacing: -12,
-                }}>
-                  {dayNum}
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <Text style={{ fontSize: 10, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                  Últimas sesiones
                 </Text>
+                {logs.length > recentLogs.length && (
+                  <Text style={{ fontSize: 10, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 1, textTransform: "uppercase" }}>
+                    {recentLogs.length} de {logs.length}
+                  </Text>
+                )}
+              </View>
 
-                {/* Ticks */}
-                <View style={{ position: "absolute", top: 22, left: 24, width: 28, height: 3, backgroundColor: MINT, borderRadius: 2 }} />
-                <View style={{ position: "absolute", top: 22, left: 56, width: 10, height: 3, backgroundColor: "rgba(42,232,204,0.35)", borderRadius: 2 }} />
+              <View style={{
+                borderRadius: 22, overflow: "hidden",
+                backgroundColor: SURFACE,
+                borderWidth: 1, borderColor: BORDER,
+                shadowColor: P700,
+                shadowOpacity: 0.08,
+                shadowRadius: 24,
+                shadowOffset: { width: 0, height: 8 },
+              }}>
+                {/* Ticks firma editorial */}
+                <View style={{ position: "absolute", top: 18, left: 22, width: 28, height: 3, backgroundColor: MINT, borderRadius: 2 }} />
+                <View style={{ position: "absolute", top: 18, left: 54, width: 10, height: 3, backgroundColor: "rgba(42,232,204,0.35)", borderRadius: 2 }} />
 
-                {/* Header row */}
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, paddingTop: 36 }}>
+                {/* Header */}
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 22, paddingTop: 32, paddingBottom: 18 }}>
                   <Text style={{ fontSize: 10, fontFamily: "Manrope_700Bold", color: MINT_DARK, letterSpacing: 2.4, textTransform: "uppercase" }}>
-                    Today's Session
+                    Entrenamientos recientes
                   </Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(15,13,32,0.2)" }} />
+                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: MINT, shadowColor: MINT, shadowOpacity: 0.8, shadowRadius: 6 }} />
                     <Text style={{ fontSize: 10, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MUTED, letterSpacing: 2, textTransform: "uppercase" }}>
-                      DESCANSO
+                      Historial
                     </Text>
                   </View>
                 </View>
 
                 {/* Body */}
-                <View style={{ flexDirection: "row", paddingHorizontal: 24, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
-                  <View style={{ flex: 1, gap: 10 }}>
+                {logsLoading ? (
+                  <View style={{ paddingHorizontal: 22, paddingVertical: 60, alignItems: "center" }}>
+                    <Text style={{ fontSize: 12, fontFamily: "Manrope_400Regular", color: TEXT_MUTED }}>
+                      Cargando registros...
+                    </Text>
+                  </View>
+                ) : recentLogs.length === 0 ? (
+                  <View style={{ paddingHorizontal: 22, paddingTop: 8, paddingBottom: 32, alignItems: "flex-start", gap: 14 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                       <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(15,13,32,0.25)" }} />
                       <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.6, textTransform: "uppercase" }}>
-                        Sin plan asignado
+                        Sin registros aún
                       </Text>
                     </View>
-                    <Text style={{ fontSize: 30, lineHeight: 35, letterSpacing: -1, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN }}>
-                      Hoy es{"\n"}día libre.
+                    <Text style={{ fontSize: 28, lineHeight: 33, letterSpacing: -1, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN }}>
+                      Todavía no{"\n"}registraste entrenamientos.
                     </Text>
-                    <Text style={{ fontSize: 14, lineHeight: 21, fontFamily: "Manrope_400Regular", color: TEXT_MUTED, maxWidth: 340 }}>
-                      Explorá el catálogo y elegí un plan para empezar a entrenar.
+                    <Text style={{ fontSize: 13, lineHeight: 20, fontFamily: "Manrope_400Regular", color: TEXT_MUTED, maxWidth: 380 }}>
+                      Cuando termines una sesión en el móvil, vas a ver acá tu progreso reciente.
                     </Text>
                   </View>
+                ) : (
+                  <View>
+                    {recentLogs.map((log, idx) => {
+                      const { title, kicker } = resolveLogLabels(log);
+                      const d = new Date(log.completed_at);
+                      const dayNum = String(d.getDate()).padStart(2, "0");
+                      const monthLabel = MONTHS_ES[d.getMonth()].toUpperCase();
+                      const duration = formatDuration(log.duration_seconds);
+                      return (
+                        <Pressable
+                          key={log.id}
+                          onPress={() => router.push(`/registros/${log.id}`)}
+                          style={({ hovered, pressed }) => ({
+                            flexDirection: "row", alignItems: "center", gap: 16,
+                            paddingHorizontal: 22, paddingVertical: 14,
+                            borderTopWidth: idx === 0 ? 0 : 1,
+                            borderTopColor: BORDER,
+                            backgroundColor: hovered || pressed ? "rgba(15,13,32,0.025)" : "transparent",
+                            cursor: "pointer",
+                          })}
+                        >
+                          {/* Bloque fecha editorial */}
+                          <View style={{
+                            width: 54, alignItems: "center", paddingVertical: 8,
+                            borderRadius: 12,
+                            backgroundColor: "rgba(48,35,205,0.05)",
+                            borderWidth: 1, borderColor: "rgba(48,35,205,0.1)",
+                          }}>
+                            <Text style={{ fontSize: 20, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.5, lineHeight: 22 }}>
+                              {dayNum}
+                            </Text>
+                            <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.4, marginTop: 2 }}>
+                              {monthLabel}
+                            </Text>
+                          </View>
 
-                  {/* Visual */}
-                  <View style={{ alignItems: "center", gap: 8 }}>
-                    <View style={{ position: "absolute", left: -14, top: 14, width: 3, height: 44, backgroundColor: MINT, borderRadius: 2 }} />
-                    <View style={{
-                      width: 150, height: 150, borderRadius: 22, overflow: "hidden",
-                      borderWidth: 1, borderColor: "rgba(15,13,32,0.07)",
-                      backgroundColor: brandPrimary[50],
-                      alignItems: "center", justifyContent: "center",
-                    }}>
-                      <LinearGradient
-                        colors={[brandPrimary[50], brandPrimary[200], brandPrimary[400]]}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-                      />
-                      <Barbell size={64} color="rgba(15,13,32,0.28)" />
-                    </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                      <View style={{ width: 16, height: 1, backgroundColor: "rgba(15,13,32,0.12)" }} />
-                      <Text style={{ fontSize: 8, fontFamily: "Manrope_700Bold", color: "rgba(15,13,32,0.3)", letterSpacing: 1.4, textTransform: "uppercase" }}>
-                        Empty
-                      </Text>
-                      <View style={{ width: 16, height: 1, backgroundColor: "rgba(15,13,32,0.12)" }} />
-                    </View>
+                          {/* Título + kicker */}
+                          <View style={{ flex: 1, gap: 4 }}>
+                            <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: MINT_DARK, letterSpacing: 1.6, textTransform: "uppercase" }} numberOfLines={1}>
+                              {kicker}
+                            </Text>
+                            <Text style={{ fontSize: 15, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.3 }} numberOfLines={1}>
+                              {title}
+                            </Text>
+                          </View>
+
+                          {/* Métricas */}
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
+                            <View style={{ alignItems: "flex-end" }}>
+                              <Text style={{ fontSize: 13, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.2 }}>
+                                {duration}
+                              </Text>
+                              <Text style={{ fontSize: 9, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 0.8, textTransform: "uppercase", marginTop: 1 }}>
+                                Duración
+                              </Text>
+                            </View>
+                            <View style={{ alignItems: "flex-end" }}>
+                              <Text style={{ fontSize: 13, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.2 }}>
+                                {log.set_count}
+                              </Text>
+                              <Text style={{ fontSize: 9, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 0.8, textTransform: "uppercase", marginTop: 1 }}>
+                                Series
+                              </Text>
+                            </View>
+                            <View style={{ alignItems: "flex-end" }}>
+                              <Text style={{ fontSize: 13, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.2 }}>
+                                {log.exercise_count}
+                              </Text>
+                              <Text style={{ fontSize: 9, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 0.8, textTransform: "uppercase", marginTop: 1 }}>
+                                Ejercicios
+                              </Text>
+                            </View>
+                            <ChevronRight size={16} color="rgba(15,13,32,0.35)" />
+                          </View>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-                </View>
+                )}
 
-                {/* CTA strip */}
-                <View style={{ borderTopWidth: 1, borderTopColor: BORDER }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, paddingVertical: 16 }}>
+                {/* CTA strip — solo si hay logs */}
+                {recentLogs.length > 0 && (
+                  <Pressable
+                    onPress={() => router.push("/registros")}
+                    style={({ hovered, pressed }) => ({
+                      borderTopWidth: 1, borderTopColor: BORDER,
+                      flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+                      paddingHorizontal: 22, paddingVertical: 16,
+                      backgroundColor: hovered || pressed ? "rgba(48,35,205,0.04)" : "transparent",
+                      cursor: "pointer",
+                    })}
+                  >
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                       <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(74,68,228,0.1)", borderWidth: 1, borderColor: "rgba(74,68,228,0.35)", alignItems: "center", justifyContent: "center" }}>
                         <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: P600 }} />
                       </View>
                       <Text style={{ fontSize: 12, fontFamily: "Manrope_700Bold", color: TEXT_MAIN, letterSpacing: 1.5, textTransform: "uppercase" }}>
-                        Explorar planes
+                        Ver todos los registros
                       </Text>
                     </View>
                     <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: P600, alignItems: "center", justifyContent: "center", shadowColor: P600, shadowOpacity: 0.45, shadowRadius: 10, shadowOffset: { width: 0, height: 3 } }}>
                       <ChevronRight size={15} color="white" />
                     </View>
-                  </View>
-                </View>
-              </Pressable>
+                  </Pressable>
+                )}
+              </View>
             </View>
 
             {/* Acceso rápido */}
@@ -485,17 +587,6 @@ function MemberHomeWeb() {
                   iconBorder="rgba(0,80,71,0.28)"
                   variant="ghost"
                   onPress={() => router.push("/rutinas/builder")}
-                />
-                <QuickCard
-                  kicker="Asistencia"
-                  title="Check-in en el gym"
-                  description="Escaneá el QR de recepción al llegar."
-                  icon={<QrCode size={18} color={MINT_DARK} />}
-                  accentBg={P600}
-                  iconBubble="rgba(0,80,71,0.09)"
-                  iconBorder="rgba(0,80,71,0.28)"
-                  variant="ghost"
-                  onPress={() => router.push("/check-in")}
                 />
               </View>
 
