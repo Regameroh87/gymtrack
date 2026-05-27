@@ -81,8 +81,9 @@ export default function RootLayout() {
 
   if (error)
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text>Error al inicializar la base de datos</Text>
+      <View className="flex-1 items-center justify-center bg-white px-6">
+        <Text className="text-red-600 font-bold text-base mb-2">Error al inicializar la base de datos</Text>
+        <Text className="text-gray-700 text-xs text-center">{error?.message ?? String(error)}</Text>
       </View>
     );
   if (!success)
