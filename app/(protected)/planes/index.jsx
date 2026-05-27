@@ -278,8 +278,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
       }
     : null;
 
-  const assignedByCoach =
-    currentPlan && currentPlan.assigned_by !== userId;
+  const assignedByCoach = currentPlan && currentPlan.assigned_by !== userId;
 
   return (
     <ScrollView
@@ -299,9 +298,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
       {planObj ? (
         <View className="mb-6">
           {assignedByCoach && (
-            <View
-              className="flex-row items-center gap-2 mb-2 px-1"
-            >
+            <View className="flex-row items-center gap-2 mb-2 px-1">
               <View
                 style={{
                   width: 6,
@@ -321,9 +318,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
           <PlanTile
             plan={planObj}
             index={0}
-            onPress={() =>
-              router.push(`/planes/plan/${currentPlan.plan_id}`)
-            }
+            onPress={() => router.push(`/planes/plan/${currentPlan.plan_id}`)}
           />
           <Pressable
             disabled={isDropping}
@@ -392,9 +387,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
             {history.map((item) => (
               <Pressable
                 key={item.id}
-                onPress={() =>
-                  router.push(`/planes/plan/${item.plan_id}`)
-                }
+                onPress={() => router.push(`/planes/plan/${item.plan_id}`)}
                 className="active:opacity-70"
               >
                 <View
@@ -512,7 +505,13 @@ function CatalogoContent({
 
 // ─── Sección Planes ───────────────────────────────────────────────────────────
 
-function PlanesSection({ plans, objectiveFilters, activeObjective, onObjectiveChange, router }) {
+function PlanesSection({
+  plans,
+  objectiveFilters,
+  activeObjective,
+  onObjectiveChange,
+  router,
+}) {
   const hasPlans = plans.length > 0 || activeObjective !== null;
 
   if (!hasPlans && objectiveFilters.length <= 1) {
@@ -812,7 +811,6 @@ function PlanTile({ plan, index = 0, onPress }) {
           >
             El Programa
           </Text>
-
         </View>
 
         {/* ── Body: título + imagen ── */}
@@ -868,7 +866,6 @@ function PlanTile({ plan, index = 0, onPress }) {
               {/* Creador — línea micro */}
               {plan.creator && <CreatorLine creator={plan.creator} />}
             </View>
-
           </View>
 
           {/* Columna derecha — imagen cuadrada contenida */}
@@ -1051,7 +1048,6 @@ function PlanTile({ plan, index = 0, onPress }) {
     </Pressable>
   );
 }
-
 
 function CreatorLine({ creator }) {
   const displayName =
