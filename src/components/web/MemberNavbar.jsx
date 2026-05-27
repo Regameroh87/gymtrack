@@ -12,21 +12,12 @@ import { supabase } from "../../database/supabase.js";
 import { useAuth } from "../../auth/lib/getSession.jsx";
 
 // Tema / assets
-import { brandPrimary, brandSecondary, ui } from "../../theme/colors.js";
+import { brandPrimary } from "../../theme/colors.js";
 import { Barbell, ClipboardList, Home, Logout } from "../../../assets/icons.jsx";
-
-// ─── Tokens ──────────────────────────────────────────────────────────────────
-const P600       = brandPrimary[600];
-const P700       = brandPrimary[700];
-const MINT       = brandSecondary[400];
-const SURFACE    = ui.surface.light;
-const TEXT_MAIN  = ui.text.main;
-const TEXT_MUTED = ui.text.muted;
-const BORDER     = "rgba(196,190,230,0.25)";
 
 const NAV = [
   { label: "Inicio",  icon: Home,          path: "/" },
-  { label: "Rutinas", icon: ClipboardList, path: "/rutinas" },
+  { label: "Planes", icon: ClipboardList, path: "/rutinas" },
 ];
 
 const isActivePath = (itemPath, currentPath) => {
@@ -51,43 +42,42 @@ export default function MemberNavbar() {
   const initial   = (user?.name?.[0] ?? email[0] ?? "A").toUpperCase();
 
   return (
-    <View style={{
-      position: "sticky", top: 0, zIndex: 100,
-      backgroundColor: SURFACE,
-      borderBottomWidth: 1,
-      borderBottomColor: BORDER,
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 28,
-      height: 60,
-      shadowColor: "#000",
-      shadowOpacity: 0.04,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 2 },
-    }}>
+    <View
+      className="flex-row items-center bg-ui-surface-light border-b border-ui-input-border px-7 h-[60px]"
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        shadowColor: "#000",
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 2 },
+      }}
+    >
       {/* Logo */}
       <Pressable
         onPress={() => router.push("/")}
-        style={{ flexDirection: "row", alignItems: "center", gap: 10, marginRight: 36, cursor: "pointer" }}
+        className="flex-row items-center gap-2.5 mr-9"
+        style={{ cursor: "pointer" }}
       >
         <LinearGradient
-          colors={[P700, P600]}
+          colors={[brandPrimary[700], brandPrimary[600]]}
           style={{ width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
         >
           <Barbell size={16} color="#fff" />
         </LinearGradient>
         <View>
-          <Text style={{ fontSize: 15, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.3 }}>
+          <Text className="text-[15px] font-jakarta-bold text-ui-text-main tracking-tight">
             GymTrack
           </Text>
-          <Text style={{ fontSize: 9, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 1.2, textTransform: "uppercase" }}>
+          <Text className="text-[9px] font-manrope-semi uppercase tracking-[1.2px] text-ui-text-muted">
             Mi espacio
           </Text>
         </View>
       </Pressable>
 
       {/* Nav links */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flex: 1 }}>
+      <View className="flex-row items-center gap-1 flex-1">
         {NAV.map((item) => {
           const Icon   = item.icon;
           const active = isActivePath(item.path, pathname);
@@ -95,28 +85,30 @@ export default function MemberNavbar() {
             <Pressable
               key={item.path}
               onPress={() => router.push(item.path)}
-              style={({ pressed, hovered }) => ({
-                flexDirection: "row", alignItems: "center", gap: 6,
-                paddingHorizontal: 12, paddingVertical: 7,
-                borderRadius: 99,
+              className={`flex-row items-center gap-1.5 px-3 py-1.5 rounded-full ${
+                active ? "bg-brandPrimary-600/10" : ""
+              }`}
+              style={({ hovered, pressed }) => ({
+                cursor: "pointer",
                 backgroundColor: active
-                  ? `rgba(48,35,205,0.08)`
+                  ? "rgba(48,35,205,0.08)"
                   : hovered || pressed
                     ? "rgba(15,13,32,0.04)"
                     : "transparent",
-                cursor: "pointer",
               })}
             >
-              <Icon size={14} color={active ? P600 : TEXT_MUTED} />
-              <Text style={{
-                fontSize: 13,
-                fontFamily: active ? "Manrope_700Bold" : "Manrope_400Regular",
-                color: active ? P600 : TEXT_MUTED,
-              }}>
+              <Icon size={14} color={active ? brandPrimary[600] : "#6e6b8a"} />
+              <Text
+                className={`text-[13px] ${
+                  active
+                    ? "font-manrope-bold text-brandPrimary-600"
+                    : "font-manrope text-ui-text-muted"
+                }`}
+              >
                 {item.label}
               </Text>
               {active && (
-                <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: MINT }} />
+                <View className="w-1 h-1 rounded-full bg-brandSecondary-400" />
               )}
             </Pressable>
           );
@@ -124,38 +116,42 @@ export default function MemberNavbar() {
       </View>
 
       {/* User */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <View className="flex-row items-center gap-2.5">
+        <View className="flex-row items-center gap-2">
           <LinearGradient
-            colors={[P700, P600]}
+            colors={[brandPrimary[700], brandPrimary[600]]}
             style={{ width: 32, height: 32, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
           >
-            {user?.image_profile
-              ? <Image source={{ uri: user.image_profile }} style={{ width: 32, height: 32, borderRadius: 10 }} />
-              : <Text style={{ fontSize: 13, fontFamily: "PlusJakartaSans_700Bold", color: "#fff" }}>{initial}</Text>
-            }
+            {user?.image_profile ? (
+              <Image
+                source={{ uri: user.image_profile }}
+                style={{ width: 32, height: 32, borderRadius: 10 }}
+              />
+            ) : (
+              <Text className="text-[13px] font-jakarta-bold text-white">
+                {initial}
+              </Text>
+            )}
           </LinearGradient>
           {!!firstName && (
-            <Text style={{ fontSize: 13, fontFamily: "Manrope_600SemiBold", color: TEXT_MAIN }}>
+            <Text className="text-[13px] font-manrope-semi text-ui-text-main">
               {firstName}
             </Text>
           )}
         </View>
 
-        <View style={{ width: 1, height: 22, backgroundColor: BORDER }} />
+        <View className="w-px h-[22px] bg-ui-input-border" />
 
         <Pressable
           onPress={handleLogout}
+          className="flex-row items-center gap-1.5 px-2.5 py-1.5 rounded-full"
           style={({ hovered, pressed }) => ({
-            flexDirection: "row", alignItems: "center", gap: 5,
-            paddingHorizontal: 10, paddingVertical: 6,
-            borderRadius: 99,
-            backgroundColor: hovered || pressed ? "rgba(239,68,68,0.08)" : "transparent",
             cursor: "pointer",
+            backgroundColor: hovered || pressed ? "rgba(239,68,68,0.08)" : "transparent",
           })}
         >
           <Logout size={14} color="#ef4444" />
-          <Text style={{ fontSize: 12, fontFamily: "Manrope_600SemiBold", color: "#ef4444" }}>
+          <Text className="text-xs font-manrope-semi" style={{ color: "#ef4444" }}>
             Salir
           </Text>
         </Pressable>

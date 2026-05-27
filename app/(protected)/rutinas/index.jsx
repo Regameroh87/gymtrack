@@ -70,8 +70,8 @@ const LEVEL_FILTERS = [
 ];
 
 const MAIN_TABS = [
-  { key: "mis_planes", label: "Mis Planes" },
   { key: "catalogo", label: "Catálogo" },
+  { key: "mis_planes", label: "Mis Planes" },
 ];
 
 const CATALOG_TYPES = [
@@ -82,7 +82,7 @@ const CATALOG_TYPES = [
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState("mis_planes");
+  const [activeTab, setActiveTab] = useState("catalogo");
   const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
 
@@ -123,7 +123,7 @@ export default function RutinasTab() {
             Mi Entrenamiento
           </Text>
           <Text className="text-[28px] font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark leading-8">
-            Rutinas
+            Planes
           </Text>
         </View>
 

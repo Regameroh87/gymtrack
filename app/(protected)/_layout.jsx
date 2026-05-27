@@ -83,7 +83,7 @@ export default function ProtectedLayout() {
         <Tabs.Screen
           name="rutinas"
           options={{
-            title: "Rutinas",
+            title: "Planes",
             headerShown: false,
             tabBarIcon: ({ color }) => (
               <Barbell color={color} width={24} height={24} />

@@ -19,7 +19,7 @@ import { getCloudinaryUrl } from "../../../src/utils/cloudinary.js";
 import MemberNavbar from "../../../src/components/web/MemberNavbar.jsx";
 
 // Tema / assets
-import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
+import { brandPrimary, brandSecondary } from "../../../src/theme/colors.js";
 import {
   Barbell,
   Calendar,
@@ -32,27 +32,16 @@ import {
   ShieldHalf,
 } from "../../../assets/icons.jsx";
 
-// ─── Tokens ──────────────────────────────────────────────────────────────────
-const P500       = brandPrimary[500];
-const P600       = brandPrimary[600];
-const P700       = brandPrimary[700];
-const MINT       = brandSecondary[400];
-const MINT_DARK  = brandSecondary[700];
-const BG         = ui.background.light;
-const SURFACE    = ui.surface.light;
-const TEXT_MAIN  = ui.text.main;
-const TEXT_MUTED = ui.text.muted;
-const BORDER     = "rgba(196,190,230,0.25)";
-
+// ─── Constantes ──────────────────────────────────────────────────────────────
 const BRAND_FALLBACK_GRADIENT = ["#0C0B14", "#1e1b4b", "#3023cd"];
 
 const OBJECTIVE_CONFIG = {
-  hipertrofia:       { Icon: Barbell,     label: "Hipertrofia" },
-  fuerza:            { Icon: Barbell,     label: "Fuerza" },
-  perdida_grasa:     { Icon: ChartBar,    label: "Pérdida de grasa" },
-  resistencia:       { Icon: Clock,       label: "Resistencia" },
-  acondicionamiento: { Icon: Logs,        label: "Acondicionamiento" },
-  rehabilitacion:    { Icon: ShieldHalf,  label: "Rehabilitación" },
+  hipertrofia:       { Icon: Barbell,    label: "Hipertrofia" },
+  fuerza:            { Icon: Barbell,    label: "Fuerza" },
+  perdida_grasa:     { Icon: ChartBar,   label: "Pérdida de grasa" },
+  resistencia:       { Icon: Clock,      label: "Resistencia" },
+  acondicionamiento: { Icon: Logs,       label: "Acondicionamiento" },
+  rehabilitacion:    { Icon: ShieldHalf, label: "Rehabilitación" },
 };
 const DEFAULT_CONFIG = { Icon: Barbell, label: null };
 
@@ -67,7 +56,7 @@ export default function RutinasWeb() {
   const [activeTab, setActiveTab] = useState("mis_planes");
 
   return (
-    <View style={{ flex: 1, backgroundColor: BG }}>
+    <View className="flex-1 bg-ui-background-light">
       <MemberNavbar />
 
       <ScrollView
@@ -77,83 +66,69 @@ export default function RutinasWeb() {
       >
         <View style={{ width: "100%", maxWidth: 1080 }}>
 
-          {/* ── Header ─────────────────────────────────────────────── */}
-          <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 26 }}>
+          {/* ── Header ──────────────────────────────────────────────── */}
+          <View className="flex-row items-end justify-between mb-7">
             <View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <View style={{ width: 28, height: 3, borderRadius: 2, backgroundColor: MINT }} />
-                <View style={{ width: 10, height: 3, borderRadius: 2, backgroundColor: "rgba(42,232,204,0.4)" }} />
+              <View className="flex-row items-center gap-1.5 mb-2.5">
+                <View className="w-7 h-[3px] rounded-full bg-brandSecondary-400" />
+                <View className="w-2.5 h-[3px] rounded-full" style={{ backgroundColor: "rgba(42,232,204,0.4)" }} />
               </View>
-              <Text style={{ fontSize: 10, fontFamily: "Manrope_700Bold", color: P600, letterSpacing: 2.4, textTransform: "uppercase", marginBottom: 4 }}>
+              <Text className="text-[10px] font-manrope-bold uppercase tracking-[2.4px] text-brandPrimary-600 mb-1">
                 Mi Entrenamiento
               </Text>
-              <Text style={{ fontSize: 38, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -1.4, lineHeight: 42 }}>
-                Rutinas
+              <Text className="font-jakarta-bold text-ui-text-main" style={{ fontSize: 38, lineHeight: 42, letterSpacing: -1.4 }}>
+                Planes
               </Text>
             </View>
 
             {activeTab === "mis_planes" && (
               <Pressable
                 onPress={() => router.push("/rutinas/builder")}
+                className="flex-row items-center gap-2 px-4 py-[11px] rounded-2xl bg-brandPrimary-600"
                 style={({ hovered, pressed }) => ({
-                  flexDirection: "row", alignItems: "center", gap: 8,
-                  paddingHorizontal: 16, paddingVertical: 11,
-                  borderRadius: 14,
-                  backgroundColor: P600,
                   cursor: "pointer",
-                  shadowColor: P600,
+                  shadowColor: brandPrimary[600],
                   shadowOpacity: hovered ? 0.45 : 0.28,
                   shadowRadius: hovered ? 14 : 10,
                   shadowOffset: { width: 0, height: 4 },
                   opacity: pressed ? 0.9 : 1,
                 })}
               >
-                <View style={{
-                  width: 22, height: 22, borderRadius: 11,
-                  backgroundColor: "rgba(255,255,255,0.18)",
-                  alignItems: "center", justifyContent: "center",
-                }}>
+                <View
+                  className="w-[22px] h-[22px] rounded-full items-center justify-center"
+                  style={{ backgroundColor: "rgba(255,255,255,0.18)" }}
+                >
                   <Plus size={13} color="#fff" />
                 </View>
-                <Text style={{ fontSize: 11, fontFamily: "Manrope_700Bold", color: "#fff", letterSpacing: 1.4, textTransform: "uppercase" }}>
+                <Text className="text-[11px] font-manrope-bold uppercase tracking-[1.4px] text-white">
                   Crear rutina
                 </Text>
               </Pressable>
             )}
           </View>
 
-          {/* ── Tabs ──────────────────────────────────────────────── */}
-          <View style={{
-            flexDirection: "row", alignItems: "center", gap: 4,
-            borderBottomWidth: 1, borderBottomColor: BORDER,
-            marginBottom: 28,
-          }}>
+          {/* ── Tabs ────────────────────────────────────────────────── */}
+          <View className="flex-row items-center border-b border-ui-input-border mb-7">
             {MAIN_TABS.map((tab) => {
               const active = activeTab === tab.key;
               return (
                 <Pressable
                   key={tab.key}
                   onPress={() => setActiveTab(tab.key)}
-                  style={({ hovered }) => ({
-                    paddingHorizontal: 4, paddingVertical: 14,
-                    marginRight: 26,
-                    cursor: "pointer",
-                    position: "relative",
-                  })}
+                  className="mr-7 pb-3.5 relative"
+                  style={{ cursor: "pointer" }}
                 >
-                  <Text style={{
-                    fontSize: 14,
-                    fontFamily: active ? "PlusJakartaSans_700Bold" : "Manrope_600SemiBold",
-                    color: active ? TEXT_MAIN : TEXT_MUTED,
-                    letterSpacing: -0.2,
-                  }}>
+                  <Text
+                    className={`text-sm tracking-tight ${
+                      active
+                        ? "font-jakarta-bold text-ui-text-main"
+                        : "font-manrope-semi text-ui-text-muted"
+                    }`}
+                  >
                     {tab.label}
                   </Text>
                   {active && (
-                    <View style={{
-                      position: "absolute", left: 0, right: 0, bottom: -1, height: 2.5,
-                      borderRadius: 99, backgroundColor: P600,
-                    }} />
+                    <View className="absolute left-0 right-0 bottom-[-1px] h-[2.5px] rounded-full bg-brandPrimary-600" />
                   )}
                 </Pressable>
               );
@@ -161,10 +136,11 @@ export default function RutinasWeb() {
           </View>
 
           {/* ── Contenido ─────────────────────────────────────────── */}
-          {activeTab === "mis_planes"
-            ? <MisPlanesContent router={router} onBrowseCatalog={() => setActiveTab("catalogo")} />
-            : <CatalogoContent router={router} />
-          }
+          {activeTab === "mis_planes" ? (
+            <MisPlanesContent router={router} onBrowseCatalog={() => setActiveTab("catalogo")} />
+          ) : (
+            <CatalogoContent router={router} />
+          )}
         </View>
       </ScrollView>
     </View>
@@ -179,16 +155,15 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
 
   if (isLoading) {
     return (
-      <View style={{ paddingVertical: 60, alignItems: "center" }}>
-        <Text style={{ fontSize: 12, fontFamily: "Manrope_400Regular", color: TEXT_MUTED }}>
-          Cargando planes...
-        </Text>
+      <View className="py-16 items-center">
+        <Text className="text-xs font-manrope text-ui-text-muted">Cargando planes...</Text>
       </View>
     );
   }
 
-  const currentPlan = assignments?.currentPlan ?? null;
-  const history     = assignments?.history ?? [];
+  const currentPlan     = assignments?.currentPlan ?? null;
+  const history         = assignments?.history ?? [];
+  const assignedByCoach = currentPlan && currentPlan.assigned_by !== userId;
 
   const planObj = currentPlan ? {
     id:              currentPlan.plan_id,
@@ -200,22 +175,24 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
     duration_weeks:  currentPlan.plan_duration_weeks,
   } : null;
 
-  const assignedByCoach = currentPlan && currentPlan.assigned_by !== userId;
-
   return (
-    <View style={{ flexDirection: "row", gap: 20, alignItems: "flex-start" }}>
+    <View className="flex-row items-start gap-5">
+
       {/* ── Columna izquierda: plan actual ── */}
       <View style={{ flex: 1.6 }}>
-        <Text style={{ fontSize: 10, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>
+        <Text className="text-[10px] font-manrope-bold uppercase tracking-[1.5px] text-ui-text-muted mb-3">
           Plan actual
         </Text>
 
         {planObj ? (
           <>
             {assignedByCoach && (
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10, paddingLeft: 4 }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: MINT, shadowColor: MINT, shadowOpacity: 0.8, shadowRadius: 5 }} />
-                <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: MINT_DARK, letterSpacing: 1.6, textTransform: "uppercase" }}>
+              <View className="flex-row items-center gap-2 mb-2.5 pl-1">
+                <View
+                  className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
+                  style={{ shadowColor: brandSecondary[400], shadowOpacity: 0.8, shadowRadius: 5 }}
+                />
+                <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-brandSecondary-700">
                   Asignado por tu entrenador
                 </Text>
               </View>
@@ -230,16 +207,14 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
             <Pressable
               disabled={isDropping}
               onPress={() => dropPlan({ assignmentId: currentPlan.id })}
+              className="mt-3.5 self-center px-3.5 py-2 rounded-full"
               style={({ hovered, pressed }) => ({
-                marginTop: 14, alignSelf: "center",
-                paddingHorizontal: 14, paddingVertical: 8,
-                borderRadius: 99,
-                backgroundColor: hovered || pressed ? "rgba(239,68,68,0.08)" : "transparent",
                 cursor: "pointer",
+                backgroundColor: hovered || pressed ? "rgba(239,68,68,0.08)" : "transparent",
                 opacity: isDropping ? 0.5 : 1,
               })}
             >
-              <Text style={{ fontSize: 11, fontFamily: "Manrope_600SemiBold", color: "#ef4444", letterSpacing: 0.4 }}>
+              <Text className="text-[11px] font-manrope-semi" style={{ color: "#ef4444" }}>
                 {isDropping ? "Abandonando…" : "Abandonar este plan"}
               </Text>
             </Pressable>
@@ -250,64 +225,55 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
       </View>
 
       {/* ── Columna derecha: historial ── */}
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 10, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12 }}>
+      <View className="flex-1">
+        <Text className="text-[10px] font-manrope-bold uppercase tracking-[1.5px] text-ui-text-muted mb-3">
           Historial
         </Text>
 
         {history.length === 0 ? (
-          <View style={{
-            backgroundColor: SURFACE, borderRadius: 18,
-            borderWidth: 1, borderColor: BORDER,
-            padding: 22,
-          }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
-              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(15,13,32,0.25)" }} />
-              <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.6, textTransform: "uppercase" }}>
+          <View className="bg-ui-surface-light border border-ui-input-border rounded-[18px] p-5">
+            <View className="flex-row items-center gap-1.5 mb-2">
+              <View className="w-1 h-1 rounded-full" style={{ backgroundColor: "rgba(15,13,32,0.25)" }} />
+              <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-ui-text-muted">
                 Sin registros
               </Text>
             </View>
-            <Text style={{ fontSize: 14, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.3, marginBottom: 4 }}>
+            <Text className="text-sm font-jakarta-bold text-ui-text-main tracking-tight mb-1">
               Tu historial aparecerá acá
             </Text>
-            <Text style={{ fontSize: 12, fontFamily: "Manrope_400Regular", color: TEXT_MUTED, lineHeight: 18 }}>
+            <Text className="text-xs font-manrope text-ui-text-muted leading-[18px]">
               Cuando completes o abandones un plan, lo vas a ver listado.
             </Text>
           </View>
         ) : (
-          <View style={{
-            backgroundColor: SURFACE, borderRadius: 18, overflow: "hidden",
-            borderWidth: 1, borderColor: BORDER,
-          }}>
+          <View className="bg-ui-surface-light border border-ui-input-border rounded-[18px] overflow-hidden">
             {history.map((item, idx) => (
               <Pressable
                 key={item.id}
                 onPress={() => router.push(`/rutinas/plan/${item.plan_id}`)}
+                className={`flex-row items-center gap-3 px-4 py-3.5 ${
+                  idx > 0 ? "border-t border-ui-input-border" : ""
+                }`}
                 style={({ hovered, pressed }) => ({
-                  flexDirection: "row", alignItems: "center", gap: 12,
-                  paddingHorizontal: 16, paddingVertical: 14,
-                  borderTopWidth: idx === 0 ? 0 : 1,
-                  borderTopColor: BORDER,
-                  backgroundColor: hovered || pressed ? "rgba(15,13,32,0.025)" : "transparent",
                   cursor: "pointer",
+                  backgroundColor: hovered || pressed ? "rgba(15,13,32,0.025)" : "transparent",
                 })}
               >
-                <View style={{
-                  width: 36, height: 36, borderRadius: 11,
-                  backgroundColor: "rgba(48,35,205,0.07)",
-                  borderWidth: 1, borderColor: "rgba(48,35,205,0.12)",
-                  alignItems: "center", justifyContent: "center",
-                }}>
-                  <Calendar size={15} color={P600} />
+                <View
+                  className="w-9 h-9 rounded-xl items-center justify-center"
+                  style={{
+                    backgroundColor: "rgba(48,35,205,0.07)",
+                    borderWidth: 1,
+                    borderColor: "rgba(48,35,205,0.12)",
+                  }}
+                >
+                  <Calendar size={15} color={brandPrimary[600]} />
                 </View>
-                <View style={{ flex: 1, gap: 3 }}>
-                  <Text
-                    numberOfLines={1}
-                    style={{ fontSize: 13, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.2 }}
-                  >
+                <View className="flex-1 gap-[3px]">
+                  <Text numberOfLines={1} className="text-[13px] font-jakarta-bold text-ui-text-main tracking-tight">
                     {item.plan_name ?? "Plan eliminado"}
                   </Text>
-                  <Text style={{ fontSize: 10, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 0.6 }}>
+                  <Text className="text-[10px] font-manrope-semi text-ui-text-muted">
                     {item.start_date}
                     {item.end_date ? ` → ${item.end_date}` : ""}
                     {"  ·  "}
@@ -335,34 +301,22 @@ function CatalogoContent({ router }) {
 
   if (isLoading) {
     return (
-      <View style={{ paddingVertical: 60, alignItems: "center" }}>
-        <Text style={{ fontSize: 12, fontFamily: "Manrope_400Regular", color: TEXT_MUTED }}>
-          Cargando catálogo...
-        </Text>
+      <View className="py-16 items-center">
+        <Text className="text-xs font-manrope text-ui-text-muted">Cargando catálogo...</Text>
       </View>
     );
   }
 
   if (plans.length === 0) {
     return (
-      <View style={{
-        backgroundColor: SURFACE, borderRadius: 22,
-        borderWidth: 1, borderColor: BORDER,
-        paddingHorizontal: 36, paddingVertical: 56,
-        alignItems: "center",
-      }}>
-        <View style={{
-          width: 56, height: 56, borderRadius: 18,
-          backgroundColor: "rgba(48,35,205,0.08)",
-          alignItems: "center", justifyContent: "center",
-          marginBottom: 18,
-        }}>
-          <ClipboardList size={26} color={P600} />
+      <View className="bg-ui-surface-light border border-ui-input-border rounded-[22px] px-9 py-14 items-center">
+        <View className="w-14 h-14 rounded-[18px] bg-brandPrimary-50 items-center justify-center mb-5">
+          <ClipboardList size={26} color={brandPrimary[600]} />
         </View>
-        <Text style={{ fontSize: 16, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.3, marginBottom: 6 }}>
+        <Text className="text-base font-jakarta-bold text-ui-text-main tracking-tight mb-1.5">
           Sin planes disponibles
         </Text>
-        <Text style={{ fontSize: 13, fontFamily: "Manrope_400Regular", color: TEXT_MUTED, textAlign: "center", maxWidth: 320, lineHeight: 19 }}>
+        <Text className="text-[13px] font-manrope text-ui-text-muted text-center leading-5 max-w-[320px]">
           El gym todavía no publicó planes de entrenamiento.
         </Text>
       </View>
@@ -371,24 +325,22 @@ function CatalogoContent({ router }) {
 
   return (
     <View>
-      {/* Stats */}
-      <View style={{ flexDirection: "row", gap: 14, marginBottom: 24 }}>
+      <View className="flex-row gap-3.5 mb-6">
         <StatTile
           value={plans.length}
           label={plans.length === 1 ? "Plan disponible" : "Planes disponibles"}
-          accent={P600}
+          accent={brandPrimary[600]}
           bubble="rgba(48,35,205,0.08)"
         />
         <StatTile
           value={totalDays}
           label="Días de entrenamiento"
-          accent={MINT_DARK}
+          accent={brandSecondary[700]}
           bubble="rgba(0,80,71,0.08)"
         />
       </View>
 
-      {/* Grid 2 columnas */}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 18 }}>
+      <View className="flex-row flex-wrap gap-[18px]">
         {plans.map((plan, i) => (
           <View key={plan.id} style={{ flexBasis: "calc(50% - 9px)", minWidth: 320 }}>
             <PlanCardWeb
@@ -406,55 +358,51 @@ function CatalogoContent({ router }) {
 // ─── Empty: sin plan actual ──────────────────────────────────────────────────
 function EmptyCurrentPlan({ onBrowseCatalog }) {
   return (
-    <View style={{
-      borderRadius: 22, overflow: "hidden",
-      backgroundColor: SURFACE,
-      borderWidth: 1, borderColor: "rgba(48,35,205,0.18)",
-      padding: 28,
-    }}>
+    <View
+      className="bg-ui-surface-light rounded-[22px] overflow-hidden p-7"
+      style={{ borderWidth: 1, borderColor: "rgba(48,35,205,0.18)" }}
+    >
       {/* Ticks firma */}
-      <View style={{ position: "absolute", top: 18, left: 22, width: 28, height: 3, backgroundColor: MINT, borderRadius: 2 }} />
-      <View style={{ position: "absolute", top: 18, left: 54, width: 10, height: 3, backgroundColor: "rgba(42,232,204,0.35)", borderRadius: 2 }} />
+      <View className="absolute top-[18px] left-[22px] w-7 h-[3px] rounded-full bg-brandSecondary-400" />
+      <View
+        className="absolute top-[18px] left-[54px] w-2.5 h-[3px] rounded-full"
+        style={{ backgroundColor: "rgba(42,232,204,0.35)" }}
+      />
 
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingTop: 18, marginBottom: 14 }}>
-        <View style={{
-          width: 48, height: 48, borderRadius: 14,
-          backgroundColor: "rgba(48,35,205,0.1)",
-          alignItems: "center", justifyContent: "center",
-        }}>
-          <ClipboardList size={22} color={P600} />
+      <View className="flex-row items-center gap-3.5 pt-4 mb-3.5">
+        <View
+          className="w-12 h-12 rounded-[14px] items-center justify-center"
+          style={{ backgroundColor: "rgba(48,35,205,0.1)" }}
+        >
+          <ClipboardList size={22} color={brandPrimary[600]} />
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 10, fontFamily: "Manrope_700Bold", color: MINT_DARK, letterSpacing: 1.6, textTransform: "uppercase", marginBottom: 4 }}>
+        <View className="flex-1">
+          <Text className="text-[10px] font-manrope-bold uppercase tracking-[1.6px] text-brandSecondary-700 mb-1">
             Sin plan activo
           </Text>
-          <Text style={{ fontSize: 18, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.4 }}>
+          <Text className="text-lg font-jakarta-bold text-ui-text-main tracking-tight">
             Empezá a entrenar con estructura
           </Text>
         </View>
       </View>
 
-      <Text style={{ fontSize: 13, fontFamily: "Manrope_400Regular", color: TEXT_MUTED, lineHeight: 20, marginBottom: 18 }}>
+      <Text className="text-[13px] font-manrope text-ui-text-muted leading-5 mb-5">
         Elegí un plan del catálogo publicado por el gym y empezá hoy mismo.
       </Text>
 
       <Pressable
         onPress={onBrowseCatalog}
+        className="self-start flex-row items-center gap-2 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600"
         style={({ hovered, pressed }) => ({
-          alignSelf: "flex-start",
-          flexDirection: "row", alignItems: "center", gap: 8,
-          paddingHorizontal: 14, paddingVertical: 10,
-          borderRadius: 12,
-          backgroundColor: P600,
           cursor: "pointer",
-          shadowColor: P600,
+          shadowColor: brandPrimary[600],
           shadowOpacity: hovered ? 0.4 : 0.25,
           shadowRadius: hovered ? 12 : 8,
           shadowOffset: { width: 0, height: 3 },
           opacity: pressed ? 0.9 : 1,
         })}
       >
-        <Text style={{ fontSize: 11, fontFamily: "Manrope_700Bold", color: "#fff", letterSpacing: 1.4, textTransform: "uppercase" }}>
+        <Text className="text-[11px] font-manrope-bold uppercase tracking-[1.4px] text-white">
           Explorar catálogo
         </Text>
         <ChevronRight size={14} color="#fff" />
@@ -463,7 +411,7 @@ function EmptyCurrentPlan({ onBrowseCatalog }) {
   );
 }
 
-// ─── PlanCardWeb (Editorial Pass adaptado) ──────────────────────────────────
+// ─── PlanCardWeb (Editorial Pass adaptado a fondo claro) ─────────────────────
 function PlanCardWeb({ plan, index = 0, onPress }) {
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
   const { Icon } = config;
@@ -479,16 +427,14 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
   return (
     <Pressable
       onPress={() => onPress?.(plan)}
+      className="bg-ui-surface-light border border-ui-input-border rounded-[22px] overflow-hidden"
       style={({ hovered, pressed }) => ({
-        borderRadius: 22, overflow: "hidden",
-        backgroundColor: SURFACE,
-        borderWidth: 1, borderColor: BORDER,
-        shadowColor: P700,
-        shadowOpacity: hovered ? 0.16 : 0.08,
-        shadowRadius: hovered ? 28 : 20,
+        cursor: "pointer",
+        shadowColor: brandPrimary[700],
+        shadowOpacity: hovered ? 0.14 : 0.07,
+        shadowRadius: hovered ? 28 : 18,
         shadowOffset: { width: 0, height: hovered ? 12 : 8 },
         transform: pressed ? [{ scale: 0.995 }] : [],
-        cursor: "pointer",
       })}
     >
       {/* Glow indigo esquina inferior derecha */}
@@ -499,69 +445,59 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
         style={{ position: "absolute", right: 0, bottom: 0, width: 260, height: 180 }}
       />
 
-      {/* Número editorial gigante de fondo */}
-      <Text style={{
-        position: "absolute", top: -14, right: -6,
-        fontSize: 140, lineHeight: 140,
-        fontFamily: "PlusJakartaSans_700Bold",
-        color: "rgba(15,13,32,0.04)",
-        letterSpacing: -6,
-      }}>
+      {/* Número editorial de fondo */}
+      <Text
+        className="font-jakarta-bold absolute"
+        style={{ top: -14, right: -6, fontSize: 140, lineHeight: 140, color: "rgba(15,13,32,0.04)", letterSpacing: -6 }}
+      >
         {planNumber}
       </Text>
 
-      {/* Ticks firma top-left */}
-      <View style={{ position: "absolute", top: 18, left: 20, width: 28, height: 3, backgroundColor: MINT, borderRadius: 2 }} />
-      <View style={{ position: "absolute", top: 18, left: 52, width: 10, height: 3, backgroundColor: "rgba(42,232,204,0.4)", borderRadius: 2 }} />
+      {/* Ticks firma */}
+      <View className="absolute top-[18px] left-5 w-7 h-[3px] rounded-full bg-brandSecondary-400" />
+      <View
+        className="absolute top-[18px] left-[52px] w-2.5 h-[3px] rounded-full"
+        style={{ backgroundColor: "rgba(42,232,204,0.4)" }}
+      />
 
       {/* Header: kicker + creador */}
-      <View style={{
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-        paddingHorizontal: 22, paddingTop: 32, gap: 12,
-      }}>
-        <Text style={{ fontSize: 10, fontFamily: "Manrope_700Bold", color: MINT_DARK, letterSpacing: 2.4, textTransform: "uppercase" }}>
+      <View className="flex-row items-center justify-between px-[22px] pt-8 gap-3">
+        <Text className="text-[10px] font-manrope-bold uppercase tracking-[2.4px] text-brandSecondary-700">
           El Programa
         </Text>
         {plan.creator && <CreatorChip creator={plan.creator} />}
       </View>
 
       {/* Body: título + imagen */}
-      <View style={{
-        flexDirection: "row",
-        paddingHorizontal: 22, paddingTop: 16, paddingBottom: 14, gap: 16,
-      }}>
-        <View style={{ flex: 1, gap: 8 }}>
+      <View className="flex-row px-[22px] pt-4 pb-3.5 gap-4">
+        <View className="flex-1 gap-2">
           {config.label && (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(15,13,32,0.4)" }} />
-              <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.6, textTransform: "uppercase" }}>
+            <View className="flex-row items-center gap-1.5">
+              <View className="w-1 h-1 rounded-full" style={{ backgroundColor: "rgba(15,13,32,0.4)" }} />
+              <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-ui-text-muted">
                 {config.label}
               </Text>
             </View>
           )}
           <Text
             numberOfLines={3}
-            style={{ fontSize: 24, lineHeight: 28, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -0.7 }}
+            className="font-jakarta-bold text-ui-text-main"
+            style={{ fontSize: 24, lineHeight: 28, letterSpacing: -0.7 }}
           >
             {plan.name}
           </Text>
         </View>
 
         {/* Imagen cuadrada contenida */}
-        <View style={{ gap: 6, alignItems: "center" }}>
-          <View style={{ position: "absolute", left: -10, top: 12, width: 3, height: 36, backgroundColor: MINT, borderRadius: 2 }} />
+        <View className="items-center gap-1.5">
+          <View className="absolute left-[-10px] top-3 w-[3px] h-9 rounded-full bg-brandSecondary-400" />
 
-          <View style={{
-            width: 110, height: 110, borderRadius: 18, overflow: "hidden",
-            borderWidth: 1, borderColor: "rgba(15,13,32,0.08)",
-            backgroundColor: "#f2f0fa",
-          }}>
+          <View
+            className="w-[110px] h-[110px] rounded-[18px] overflow-hidden bg-brandPrimary-50"
+            style={{ borderWidth: 1, borderColor: "rgba(15,13,32,0.08)" }}
+          >
             {imageUrl ? (
-              <Image
-                source={{ uri: imageUrl }}
-                style={StyleSheet.absoluteFillObject}
-                resizeMode="cover"
-              />
+              <Image source={{ uri: imageUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
             ) : (
               <>
                 <LinearGradient
@@ -577,27 +513,24 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
             )}
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <View style={{ width: 12, height: 1, backgroundColor: "rgba(15,13,32,0.2)" }} />
-            <Text style={{ fontSize: 8, fontFamily: "Manrope_700Bold", color: "rgba(15,13,32,0.4)", letterSpacing: 1.4, textTransform: "uppercase" }}>
+          <View className="flex-row items-center gap-1">
+            <View className="w-3 h-px" style={{ backgroundColor: "rgba(15,13,32,0.2)" }} />
+            <Text className="text-[8px] font-manrope-bold uppercase tracking-[1.4px]" style={{ color: "rgba(15,13,32,0.4)" }}>
               Cover
             </Text>
-            <View style={{ width: 12, height: 1, backgroundColor: "rgba(15,13,32,0.2)" }} />
+            <View className="w-3 h-px" style={{ backgroundColor: "rgba(15,13,32,0.2)" }} />
           </View>
         </View>
       </View>
 
       {/* Stats strip */}
-      <View style={{
-        flexDirection: "row", alignItems: "flex-end",
-        paddingHorizontal: 22, paddingTop: 4, paddingBottom: 16, gap: 22,
-      }}>
+      <View className="flex-row items-end px-[22px] pt-1 pb-4 gap-[22px]">
         <PlanStat
           value={plan.weekly_days ?? 0}
           primaryLabel={plan.weekly_days === 1 ? "día" : "días"}
           secondaryLabel="por semana"
         />
-        <View style={{ width: 1, height: 28, backgroundColor: "rgba(15,13,32,0.1)", marginBottom: 2 }} />
+        <View className="w-px h-7 mb-0.5" style={{ backgroundColor: "rgba(15,13,32,0.1)" }} />
         <PlanStat
           value={plan.duration_weeks ?? 0}
           primaryLabel={plan.duration_weeks === 1 ? "semana" : "semanas"}
@@ -607,30 +540,32 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
 
       {/* CTA strip */}
       <View style={{ borderTopWidth: 1, borderTopColor: "rgba(15,13,32,0.06)" }}>
-        <View style={{
-          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-          paddingHorizontal: 22, paddingVertical: 14,
-        }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <View style={{
-              width: 22, height: 22, borderRadius: 11,
-              backgroundColor: "rgba(74,68,228,0.1)",
-              borderWidth: 1, borderColor: "rgba(74,68,228,0.35)",
-              alignItems: "center", justifyContent: "center",
-            }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: P600 }} />
+        <View className="flex-row items-center justify-between px-[22px] py-3.5">
+          <View className="flex-row items-center gap-2">
+            <View
+              className="w-[22px] h-[22px] rounded-full items-center justify-center"
+              style={{
+                backgroundColor: "rgba(74,68,228,0.1)",
+                borderWidth: 1,
+                borderColor: "rgba(74,68,228,0.35)",
+              }}
+            >
+              <View className="w-1.5 h-1.5 rounded-full bg-brandPrimary-600" />
             </View>
-            <Text style={{ fontSize: 11, fontFamily: "Manrope_700Bold", color: TEXT_MAIN, letterSpacing: 1.5, textTransform: "uppercase" }}>
+            <Text className="text-[11px] font-manrope-bold uppercase tracking-[1.5px] text-ui-text-main">
               Ver Plan Completo
             </Text>
           </View>
 
-          <View style={{
-            width: 30, height: 30, borderRadius: 15,
-            backgroundColor: P600,
-            alignItems: "center", justifyContent: "center",
-            shadowColor: P600, shadowOpacity: 0.45, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
-          }}>
+          <View
+            className="w-[30px] h-[30px] rounded-full items-center justify-center bg-brandPrimary-600"
+            style={{
+              shadowColor: brandPrimary[600],
+              shadowOpacity: 0.45,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 2 },
+            }}
+          >
             <ChevronRight size={14} color="#fff" />
           </View>
         </View>
@@ -642,20 +577,15 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
 // ─── Helpers UI ──────────────────────────────────────────────────────────────
 function StatTile({ value, label, accent, bubble }) {
   return (
-    <View style={{
-      flex: 1, backgroundColor: SURFACE, borderRadius: 18,
-      padding: 20, borderWidth: 1, borderColor: BORDER,
-      overflow: "hidden",
-    }}>
-      <View style={{
-        position: "absolute", top: -24, right: -24,
-        width: 80, height: 80, borderRadius: 40,
-        backgroundColor: bubble,
-      }} />
-      <Text style={{ fontSize: 30, fontFamily: "PlusJakartaSans_700Bold", color: accent, letterSpacing: -0.8, lineHeight: 34 }}>
+    <View className="flex-1 bg-ui-surface-light border border-ui-input-border rounded-[18px] p-5 overflow-hidden">
+      <View
+        className="absolute top-[-24px] right-[-24px] w-20 h-20 rounded-full"
+        style={{ backgroundColor: bubble }}
+      />
+      <Text className="font-jakarta-bold leading-[34px]" style={{ fontSize: 30, color: accent, letterSpacing: -0.8 }}>
         {value}
       </Text>
-      <Text style={{ fontSize: 11, fontFamily: "Manrope_400Regular", color: TEXT_MUTED, marginTop: 4 }}>
+      <Text className="text-[11px] font-manrope text-ui-text-muted mt-1">
         {label}
       </Text>
     </View>
@@ -664,15 +594,15 @@ function StatTile({ value, label, accent, bubble }) {
 
 function PlanStat({ value, primaryLabel, secondaryLabel }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
-      <Text style={{ fontSize: 30, lineHeight: 30, fontFamily: "PlusJakartaSans_700Bold", color: TEXT_MAIN, letterSpacing: -1.2 }}>
+    <View className="flex-row items-end gap-2">
+      <Text className="font-jakarta-bold text-ui-text-main" style={{ fontSize: 30, lineHeight: 30, letterSpacing: -1.2 }}>
         {value}
       </Text>
-      <View style={{ gap: 1, paddingBottom: 3 }}>
-        <Text style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: MINT_DARK, letterSpacing: 1.6, textTransform: "uppercase" }}>
+      <View className="gap-[1px] pb-[3px]">
+        <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-brandSecondary-700">
           {primaryLabel}
         </Text>
-        <Text style={{ fontSize: 9, fontFamily: "Manrope_600SemiBold", color: TEXT_MUTED, letterSpacing: 1.4, textTransform: "uppercase" }}>
+        <Text className="text-[9px] font-manrope-semi uppercase tracking-[1.4px] text-ui-text-muted">
           {secondaryLabel}
         </Text>
       </View>
@@ -691,30 +621,23 @@ function CreatorChip({ creator }) {
     : null;
 
   return (
-    <View style={{
-      flexDirection: "row", alignItems: "center", gap: 8,
-      paddingLeft: 4, paddingRight: 10, paddingVertical: 4,
-      borderRadius: 999,
-      backgroundColor: "rgba(15,13,32,0.04)",
-      borderWidth: 1, borderColor: "rgba(15,13,32,0.06)",
-      maxWidth: 180,
-    }}>
-      <View style={{
-        width: 20, height: 20, borderRadius: 10, overflow: "hidden",
-        backgroundColor: "rgba(48,35,205,0.18)",
-        alignItems: "center", justifyContent: "center",
-      }}>
+    <View
+      className="flex-row items-center gap-2 pl-1 pr-2.5 py-1 rounded-full max-w-[180px]"
+      style={{ backgroundColor: "rgba(15,13,32,0.04)", borderWidth: 1, borderColor: "rgba(15,13,32,0.06)" }}
+    >
+      <View
+        className="w-5 h-5 rounded-full overflow-hidden items-center justify-center"
+        style={{ backgroundColor: "rgba(48,35,205,0.18)" }}
+      >
         {avatarUrl ? (
           <Image source={{ uri: avatarUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
         ) : (
-          <Text style={{ fontSize: 10, fontFamily: "PlusJakartaSans_700Bold", color: P700 }}>
-            {initial}
-          </Text>
+          <Text className="text-[10px] font-jakarta-bold text-brandPrimary-700">{initial}</Text>
         )}
       </View>
       <Text
         numberOfLines={1}
-        style={{ fontSize: 9, fontFamily: "Manrope_700Bold", color: TEXT_MUTED, letterSpacing: 1.2, textTransform: "uppercase", flexShrink: 1 }}
+        className="text-[9px] font-manrope-bold uppercase tracking-[1.2px] text-ui-text-muted flex-shrink"
       >
         Por {displayName}
       </Text>
