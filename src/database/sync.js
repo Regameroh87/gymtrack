@@ -1336,9 +1336,8 @@ export async function syncWithSupabase(
       "equipment",
       "sessions",
       "training_plans",
-      "plan_assignments",
     ]);
-    const USER_SCOPED_TABLES = new Set(["session_logs"]);
+    const USER_SCOPED_TABLES = new Set(["session_logs", "plan_assignments"]);
 
     for (const table of tablesToSync) {
       const syncKey = `${LAST_SYNC_KEY}_${table}`;
