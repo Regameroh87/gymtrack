@@ -111,7 +111,9 @@ async function pullTableChanges(
         .from(schemaTable)
         .where(ne(schemaTable.sync_status, "synced"));
       lockedCompositeKeys = new Set(
-        pendingRows.map((r) => compositeUniqueColumns.map((c) => r[c]).join("::"))
+        pendingRows.map((r) =>
+          compositeUniqueColumns.map((c) => r[c]).join("::")
+        )
       );
     }
 
@@ -681,7 +683,9 @@ async function cascadeDeletePlanLocally(planId) {
       .delete(plan_week_days)
       .where(inArray(plan_week_days.week_id, weekIds));
   }
-  await database.delete(plan_assignments).where(eq(plan_assignments.plan_id, planId));
+  await database
+    .delete(plan_assignments)
+    .where(eq(plan_assignments.plan_id, planId));
   await database
     .update(session_logs)
     .set({ plan_id: null })
@@ -1216,9 +1220,7 @@ export async function pushSessionLogsChanges() {
         .delete()
         .eq("id", row.id);
       if (!error) {
-        await database
-          .delete(session_logs)
-          .where(eq(session_logs.id, row.id));
+        await database.delete(session_logs).where(eq(session_logs.id, row.id));
         console.log(`✅ [PUSH] session_log (id: ${row.id}) eliminado`);
       } else {
         console.error(
@@ -1286,13 +1288,9 @@ export async function pushSessionSetLogsChanges() {
       `✅ [PUSH] session_set_logs: ${localChanges.length} registro(s) sincronizado(s)`
     );
   } else {
-    console.error(
-      `❌ [PUSH] Error subiendo session_set_logs:`,
-      error.message
-    );
+    console.error(`❌ [PUSH] Error subiendo session_set_logs:`, error.message);
   }
 }
-
 
 export async function syncWithSupabase(
   tablesToSync = [
