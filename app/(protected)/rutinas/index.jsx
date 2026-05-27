@@ -725,10 +725,10 @@ function PlanTile({ plan, index = 0, onPress }) {
           }}
         />
 
-        {/* ── Header row: kicker + número ── */}
+        {/* ── Header row: kicker + creador ── */}
         <View
           className="flex-row items-center justify-between"
-          style={{ paddingHorizontal: 20, paddingTop: 32 }}
+          style={{ paddingHorizontal: 20, paddingTop: 32, gap: 12 }}
         >
           <Text
             className="font-manrope-bold uppercase"
@@ -738,33 +738,10 @@ function PlanTile({ plan, index = 0, onPress }) {
               letterSpacing: 2.4,
             }}
           >
-            Workout Program
+            El Programa
           </Text>
 
-          <View className="flex-row items-center" style={{ gap: 6 }}>
-            <View
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: BRAND_MINT,
-                shadowColor: BRAND_MINT,
-                shadowOpacity: 1,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
-              }}
-            />
-            <Text
-              className="font-jakarta-bold"
-              style={{
-                fontSize: 10,
-                color: "rgba(255,255,255,0.5)",
-                letterSpacing: 2,
-              }}
-            >
-              EDITION N°{planNumber}
-            </Text>
-          </View>
+          {plan.creator && <CreatorChip creator={plan.creator} />}
         </View>
 
         {/* ── Body: título + imagen ── */}
@@ -773,12 +750,12 @@ function PlanTile({ plan, index = 0, onPress }) {
           style={{
             paddingHorizontal: 20,
             paddingTop: 18,
-            paddingBottom: 22,
+            paddingBottom: 14,
             gap: 16,
           }}
         >
           {/* Columna izquierda — título + meta */}
-          <View className="flex-1 justify-between" style={{ gap: 14 }}>
+          <View className="flex-1" style={{ gap: 8 }}>
             <View style={{ gap: 8 }}>
               {/* Objetivo label minimalista */}
               {config.label && (
@@ -818,41 +795,6 @@ function PlanTile({ plan, index = 0, onPress }) {
               </Text>
             </View>
 
-            {/* Línea de stats */}
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Text
-                className="font-jakarta-bold text-white"
-                style={{
-                  fontSize: 32,
-                  lineHeight: 32,
-                  letterSpacing: -1.5,
-                }}
-              >
-                {plan.day_count ?? 0}
-              </Text>
-              <View style={{ gap: 1 }}>
-                <Text
-                  className="font-manrope-bold uppercase"
-                  style={{
-                    fontSize: 9,
-                    color: BRAND_MINT,
-                    letterSpacing: 1.6,
-                  }}
-                >
-                  {plan.day_count === 1 ? "día" : "días"}
-                </Text>
-                <Text
-                  className="font-manrope-semi uppercase"
-                  style={{
-                    fontSize: 9,
-                    color: "rgba(255,255,255,0.4)",
-                    letterSpacing: 1.4,
-                  }}
-                >
-                  de entrenamiento
-                </Text>
-              </View>
-            </View>
           </View>
 
           {/* Columna derecha — imagen cuadrada contenida */}
@@ -936,6 +878,36 @@ function PlanTile({ plan, index = 0, onPress }) {
               />
             </View>
           </View>
+        </View>
+
+        {/* ── Stats strip ── */}
+        <View
+          className="flex-row items-end"
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 4,
+            paddingBottom: 18,
+            gap: 22,
+          }}
+        >
+          <PlanStat
+            value={plan.weekly_days ?? 0}
+            primaryLabel={plan.weekly_days === 1 ? "día" : "días"}
+            secondaryLabel="por semana"
+          />
+          <View
+            style={{
+              width: 1,
+              height: 30,
+              backgroundColor: "rgba(255,255,255,0.1)",
+              marginBottom: 2,
+            }}
+          />
+          <PlanStat
+            value={plan.duration_weeks ?? 0}
+            primaryLabel={plan.duration_weeks === 1 ? "semana" : "semanas"}
+            secondaryLabel="de duración"
+          />
         </View>
 
         {/* ── CTA Strip ── */}
@@ -1029,6 +1001,117 @@ function StatTile({ value, label, accent }) {
       <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
         {label}
       </Text>
+    </View>
+  );
+}
+
+function CreatorChip({ creator }) {
+  const fullName = [creator.name, creator.last_name].filter(Boolean).join(" ");
+  const displayName = fullName.trim() || "—";
+
+  const avatarUrl = creator.image_profile
+    ? creator.image_profile.startsWith("http")
+      ? creator.image_profile
+      : getCloudinaryUrl(
+          creator.image_profile,
+          "w_60,h_60,c_fill,f_auto,q_auto"
+        )
+    : null;
+
+  const initial = displayName.charAt(0).toUpperCase();
+
+  return (
+    <View
+      className="flex-row items-center"
+      style={{
+        gap: 8,
+        paddingLeft: 4,
+        paddingRight: 10,
+        paddingVertical: 4,
+        borderRadius: 999,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.08)",
+        maxWidth: 160,
+      }}
+    >
+      <View
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+          overflow: "hidden",
+          backgroundColor: BRAND_PRIMARY + "40",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        {avatarUrl ? (
+          <Image
+            source={{ uri: avatarUrl }}
+            style={StyleSheet.absoluteFillObject}
+            contentFit="cover"
+          />
+        ) : (
+          <Text
+            className="font-jakarta-bold text-white"
+            style={{ fontSize: 10 }}
+          >
+            {initial}
+          </Text>
+        )}
+      </View>
+      <Text
+        numberOfLines={1}
+        className="font-manrope-bold uppercase"
+        style={{
+          fontSize: 9,
+          color: "rgba(255,255,255,0.7)",
+          letterSpacing: 1.2,
+          flexShrink: 1,
+        }}
+      >
+        Por {displayName}
+      </Text>
+    </View>
+  );
+}
+
+function PlanStat({ value, primaryLabel, secondaryLabel }) {
+  return (
+    <View className="flex-row items-end" style={{ gap: 8 }}>
+      <Text
+        className="font-jakarta-bold text-white"
+        style={{
+          fontSize: 32,
+          lineHeight: 32,
+          letterSpacing: -1.5,
+        }}
+      >
+        {value}
+      </Text>
+      <View style={{ gap: 1, paddingBottom: 3 }}>
+        <Text
+          className="font-manrope-bold uppercase"
+          style={{
+            fontSize: 9,
+            color: BRAND_MINT,
+            letterSpacing: 1.6,
+          }}
+        >
+          {primaryLabel}
+        </Text>
+        <Text
+          className="font-manrope-semi uppercase"
+          style={{
+            fontSize: 9,
+            color: "rgba(255,255,255,0.4)",
+            letterSpacing: 1.4,
+          }}
+        >
+          {secondaryLabel}
+        </Text>
+      </View>
     </View>
   );
 }
