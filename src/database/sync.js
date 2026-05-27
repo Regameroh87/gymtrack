@@ -55,6 +55,7 @@ function invalidateQueriesForTable(tableName) {
 }
 
 const COMPOSITE_UNIQUE_COLUMNS = {
+  session_exercises: ["session_id", "exercise_id"],
   plan_weeks: ["plan_id", "week_number"],
   plan_week_days: ["week_id", "day_number"],
   plan_week_day_exercises: ["week_day_id", "session_exercise_id"],
