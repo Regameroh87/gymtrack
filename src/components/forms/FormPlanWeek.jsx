@@ -101,7 +101,7 @@ function DayCard({ day, onPress, onClear, mutedColor }) {
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
-export default function FormPlanWeek({ form, weekNumber }) {
+export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
@@ -306,7 +306,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         <FormsHeader
-          title={`Semana ${weekNumber}`}
+          title={weekTitle ?? `Semana ${weekNumber}`}
           subtitle={
             planName
               ? `Asigná una sesión a cada día de "${planName}".`
@@ -549,7 +549,7 @@ export default function FormPlanWeek({ form, weekNumber }) {
               style={{ borderBottomWidth: 1, borderBottomColor: ui.input.border }}
             >
               <Text className="text-xs font-manrope-semi uppercase tracking-label text-ui-text-muted dark:text-ui-text-mutedDark">
-                Día {prescriptionDay.day_number} · Semana {weekNumber}
+                Día {prescriptionDay.day_number} · {weekTitle ?? `Semana ${weekNumber}`}
               </Text>
               <Text className="text-xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark mt-0.5">
                 {prescriptionDay.session_name}
