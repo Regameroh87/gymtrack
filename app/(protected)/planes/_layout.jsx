@@ -25,6 +25,7 @@ export default function RutinasLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="plan/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="builder" options={{ headerShown: false }} />
     </Stack>
   );
 }

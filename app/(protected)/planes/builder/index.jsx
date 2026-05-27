@@ -1,4 +1,3 @@
-// React Native
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -10,38 +9,29 @@ import {
   View,
 } from "react-native";
 
-// Librerías externas
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
 import { z } from "zod";
 
-// Constantes
-import { PLAN_LEVELS, PLAN_OBJECTIVES } from "../../constants/planOptions";
-
-// Hooks
+import { PLAN_OBJECTIVES } from "../../../../src/constants/planOptions";
 import {
   resizeWeeksByDuration,
   resizeWeeksByWeeklyDays,
-} from "../../hooks/useTrainingPlanForm";
+} from "../../../../src/hooks/useTrainingPlanForm";
+import { usePlanFormContext } from "../../../../src/contexts/PlanFormContext";
 
-// Componentes
-import CustomSelect from "../CustomSelect";
-import FormField from "./FormField";
-import FormsHeader from "../FormsHeader";
-import ImagePickerCard from "./ImagePickerCard";
-import Stepper from "../Stepper";
-import StyledTextInput from "./StyledTextInput";
-import SubmitButton from "./SubmitButton";
+import CustomSelect from "../../../../src/components/CustomSelect";
+import FormField from "../../../../src/components/forms/FormField";
+import Stepper from "../../../../src/components/Stepper";
+import StyledTextInput from "../../../../src/components/forms/StyledTextInput";
 
-// Tema y assets
-import { ui } from "../../theme/colors";
-import { ChevronRight } from "../../../assets/icons";
-
-// ─── Tarjeta de semana ──────────────────────────────────────────────────────
+import { brandPrimary, ui } from "../../../../src/theme/colors";
+import { ChevronRight } from "../../../../assets/icons";
 
 function getWeekSummary(week) {
-  if (!week || !week.days?.length) return "Sin definir · Tocá para armar";
+  if (!week?.days?.length) return "Sin definir · Tocá para armar";
   const assigned = week.days.filter((d) => d.session_id).length;
   const total = week.days.length;
   if (assigned === 0) return "Sin definir · Tocá para armar";
@@ -49,7 +39,7 @@ function getWeekSummary(week) {
   return `${total} días asignados`;
 }
 
-function WeekCard({ weekNumber, summary, onPress, mutedColor }) {
+function WeekCard({ weekNumber, label, summary, onPress, mutedColor }) {
   return (
     <Pressable
       onPress={onPress}
@@ -57,16 +47,18 @@ function WeekCard({ weekNumber, summary, onPress, mutedColor }) {
     >
       <View className="w-11 h-11 rounded-lg items-center justify-center mr-3.5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
         <Text className="text-[9px] font-manrope-semi uppercase text-brandPrimary-500 dark:text-brandPrimary-400">
-          Sem
+          {label ?? "Sem"}
         </Text>
-        <Text className="text-sm font-jakarta-bold leading-tight text-brandPrimary-600 dark:text-brandPrimary-400">
-          {weekNumber}
-        </Text>
+        {!label && (
+          <Text className="text-sm font-jakarta-bold leading-tight text-brandPrimary-600 dark:text-brandPrimary-400">
+            {weekNumber}
+          </Text>
+        )}
       </View>
 
       <View className="flex-1">
         <Text className="text-sm font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark">
-          Semana {weekNumber}
+          {label ? "Semana tipo" : `Semana ${weekNumber}`}
         </Text>
         <Text
           className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
@@ -81,22 +73,19 @@ function WeekCard({ weekNumber, summary, onPress, mutedColor }) {
   );
 }
 
-// ─── Componente principal ────────────────────────────────────────────────────
-
-export default function FormTrainingPlan({ form, plan }) {
+export default function UserPlanBuilder() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
 
+  const { form } = usePlanFormContext();
+
   const handleDurationChange = (newDuration) => {
     const currentWeeks = form.state.values.weeks ?? [];
     const weeklyDays = form.state.values.weekly_days ?? 3;
-    const newWeeks = resizeWeeksByDuration(
-      currentWeeks,
-      newDuration,
-      weeklyDays
-    );
+    const effectiveWeeks = newDuration === 0 ? 1 : newDuration;
+    const newWeeks = resizeWeeksByDuration(currentWeeks, effectiveWeeks, weeklyDays);
     form.setFieldValue("duration_weeks", newDuration);
     form.setFieldValue("weeks", newWeeks);
   };
@@ -111,12 +100,10 @@ export default function FormTrainingPlan({ form, plan }) {
   const handleWeekPress = (weekNumber) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: "/admin/plans/builder/[week]",
-      params: { week: String(weekNumber), id: plan ?? "" },
-    }); // arregle el enrutamiento
+      pathname: "/planes/builder/[week]",
+      params: { week: String(weekNumber) },
+    });
   };
-
-  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <KeyboardAvoidingView
@@ -132,35 +119,24 @@ export default function FormTrainingPlan({ form, plan }) {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View>
-            <FormsHeader
-              title={plan ? "Editar Plan" : "Nuevo Plan"}
-              subtitle="Definí los datos del plan y la rutina de cada semana."
-            />
+            {/* Header */}
+            <View className="px-4 pt-6 pb-2">
+              <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
+                Nuevo Plan
+              </Text>
+              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
+                Armá tu rutina semanal personalizada.
+              </Text>
+            </View>
 
             <View className="px-4 pt-4">
-              {/* ─── PORTADA ─── */}
-              <form.Field name="cover_image_uri">
-                {(field) => (
-                  <ImagePickerCard
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    onFocus={field.handleBlur}
-                    title="Imagen de portada"
-                    hint="Una buena portada ayuda a identificar el plan rápidamente."
-                  />
-                )}
-              </form.Field>
-
-              {/* ─── NOMBRE ─── */}
+              {/* ── NOMBRE ── */}
               <form.Field
                 name="name"
                 validators={{
                   onChange: ({ value }) => {
                     if (!value) return undefined;
-                    const r = z
-                      .string()
-                      .min(3, "Mínimo 3 caracteres")
-                      .safeParse(value);
+                    const r = z.string().min(3, "Mínimo 3 caracteres").safeParse(value);
                     return r.success ? undefined : r.error.errors[0].message;
                   },
                   onSubmit: ({ value }) => {
@@ -171,10 +147,7 @@ export default function FormTrainingPlan({ form, plan }) {
                 }}
               >
                 {(field) => (
-                  <FormField
-                    label="NOMBRE"
-                    error={field.state.meta.errors?.[0]}
-                  >
+                  <FormField label="NOMBRE" error={field.state.meta.errors?.[0]}>
                     <StyledTextInput
                       value={field.state.value}
                       onChangeText={field.handleChange}
@@ -187,7 +160,7 @@ export default function FormTrainingPlan({ form, plan }) {
                 )}
               </form.Field>
 
-              {/* ─── OBJETIVO ─── */}
+              {/* ── OBJETIVO ── */}
               <form.Field
                 name="objective"
                 validators={{
@@ -209,40 +182,23 @@ export default function FormTrainingPlan({ form, plan }) {
                 )}
               </form.Field>
 
-              {/* ─── DESCRIPCIÓN ─── */}
-              <form.Field name="description">
-                {(field) => (
-                  <FormField label="DESCRIPCIÓN (opcional)">
-                    <StyledTextInput
-                      value={field.state.value}
-                      onChangeText={field.handleChange}
-                      placeholder="Enfoque del plan, a quién está dirigido, metodología..."
-                      placeholderTextColor={mutedColor}
-                      multiline
-                      numberOfLines={4}
-                      textAlignVertical="top"
-                      style={{ minHeight: 100 }}
-                    />
-                  </FormField>
-                )}
-              </form.Field>
-
-              {/* ─── DURACIÓN ─── */}
+              {/* ── DURACIÓN ── */}
               <form.Field name="duration_weeks">
                 {(field) => (
                   <FormField label="DURACIÓN DEL PLAN">
                     <Stepper
                       value={field.state.value ?? 0}
                       onChange={handleDurationChange}
-                      min={1}
+                      min={0}
                       max={null}
                       unit="semanas"
+                      zeroLabel="Indefinido"
                     />
                   </FormField>
                 )}
               </form.Field>
 
-              {/* ─── DÍAS SEMANALES ─── */}
+              {/* ── DÍAS SEMANALES ── */}
               <form.Field name="weekly_days">
                 {(field) => (
                   <FormField label="DÍAS DE ENTRENAMIENTO POR SEMANA">
@@ -257,64 +213,51 @@ export default function FormTrainingPlan({ form, plan }) {
                 )}
               </form.Field>
 
-              {/* ─── NIVEL ─── */}
-              <form.Field name="level">
-                {(field) => (
-                  <CustomSelect
-                    label="NIVEL"
-                    options={PLAN_LEVELS}
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    placeholder="Seleccionar nivel..."
-                    error={field.state.meta.errors?.[0]}
-                    searchable={false}
-                    snapPoints={["40%"]}
-                  />
-                )}
-              </form.Field>
-
-              {/* ─── SEMANAS ─── */}
-              <form.Subscribe selector={(s) => s.values.weeks ?? []}>
-                {(weeks) => (
+              {/* ── SEMANAS ── */}
+              <form.Subscribe selector={(s) => [s.values.weeks ?? [], s.values.duration_weeks ?? 0]}>
+                {([weeks, durationWeeks]) => (
                   <View className="mb-5 mt-2">
                     <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
                       RUTINA POR SEMANA
                     </Text>
-                    {weeks.length > 0 ? (
-                      weeks.map((week) => (
-                        <WeekCard
-                          key={week.id}
-                          weekNumber={week.week_number}
-                          summary={getWeekSummary(week)}
-                          onPress={() => handleWeekPress(week.week_number)}
-                          mutedColor={mutedColor}
-                        />
-                      ))
-                    ) : (
-                      <View className="px-4 py-6 rounded-xl border border-dashed border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark items-center">
-                        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-                          Definí la duración del plan para armar las semanas.
-                        </Text>
-                      </View>
-                    )}
+                    {weeks.map((week) => (
+                      <WeekCard
+                        key={week.id}
+                        weekNumber={week.week_number}
+                        label={durationWeeks === 0 ? "Rep." : undefined}
+                        summary={getWeekSummary(week)}
+                        onPress={() => handleWeekPress(week.week_number)}
+                        mutedColor={mutedColor}
+                      />
+                    ))}
                   </View>
                 )}
               </form.Subscribe>
 
-              {/* ─── SUBMIT ─── */}
+              {/* ── SUBMIT ── */}
               <form.Subscribe
-                selector={(s) => ({
-                  isDirty: s.isDirty,
-                  isSubmitting: s.isSubmitting,
-                })}
+                selector={(s) => ({ isDirty: s.isDirty, isSubmitting: s.isSubmitting })}
               >
-                {({ isDirty, isSubmitting }) => (
-                  <SubmitButton
-                    onPress={() => form.handleSubmit()}
-                    isLoading={isSubmitting}
-                    disabled={!!plan && !isDirty}
-                    label={plan ? "Guardar cambios" : "Crear plan"}
-                  />
+                {({ isSubmitting }) => (
+                  <Pressable
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      form.handleSubmit();
+                    }}
+                    disabled={isSubmitting}
+                    className="active:scale-[0.98] mt-2"
+                  >
+                    <LinearGradient
+                      colors={[brandPrimary[600], brandPrimary[500]]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      className="py-4 rounded-xl items-center"
+                    >
+                      <Text className="text-white font-jakarta-semi text-[15px]">
+                        {isSubmitting ? "Guardando…" : "Crear plan"}
+                      </Text>
+                    </LinearGradient>
+                  </Pressable>
                 )}
               </form.Subscribe>
             </View>
