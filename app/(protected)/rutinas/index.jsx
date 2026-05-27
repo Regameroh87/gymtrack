@@ -741,7 +741,6 @@ function PlanTile({ plan, index = 0, onPress }) {
             El Programa
           </Text>
 
-          {plan.creator && <CreatorChip creator={plan.creator} />}
         </View>
 
         {/* ── Body: título + imagen ── */}
@@ -793,6 +792,9 @@ function PlanTile({ plan, index = 0, onPress }) {
               >
                 {plan.name}
               </Text>
+
+              {/* Creador — línea micro */}
+              {plan.creator && <CreatorLine creator={plan.creator} />}
             </View>
 
           </View>
@@ -1005,75 +1007,21 @@ function StatTile({ value, label, accent }) {
   );
 }
 
-function CreatorChip({ creator }) {
-  const fullName = [creator.name, creator.last_name].filter(Boolean).join(" ");
-  const displayName = fullName.trim() || "—";
-
-  const avatarUrl = creator.image_profile
-    ? creator.image_profile.startsWith("http")
-      ? creator.image_profile
-      : getCloudinaryUrl(
-          creator.image_profile,
-          "w_60,h_60,c_fill,f_auto,q_auto"
-        )
-    : null;
-
-  const initial = displayName.charAt(0).toUpperCase();
+function CreatorLine({ creator }) {
+  const displayName =
+    [creator.name, creator.last_name]
+      .map((s) => s?.trim())
+      .filter(Boolean)
+      .join(" ") || "—";
 
   return (
-    <View
-      className="flex-row items-center"
-      style={{
-        gap: 8,
-        paddingLeft: 4,
-        paddingRight: 10,
-        paddingVertical: 4,
-        borderRadius: 999,
-        backgroundColor: "rgba(255,255,255,0.05)",
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.08)",
-        maxWidth: 160,
-      }}
+    <Text
+      numberOfLines={1}
+      className="font-manrope-bold uppercase text-[8px] tracking-[1.4px]"
+      style={{ color: "rgba(255,255,255,0.45)" }}
     >
-      <View
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: 10,
-          overflow: "hidden",
-          backgroundColor: BRAND_PRIMARY + "40",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {avatarUrl ? (
-          <Image
-            source={{ uri: avatarUrl }}
-            style={StyleSheet.absoluteFillObject}
-            contentFit="cover"
-          />
-        ) : (
-          <Text
-            className="font-jakarta-bold text-white"
-            style={{ fontSize: 10 }}
-          >
-            {initial}
-          </Text>
-        )}
-      </View>
-      <Text
-        numberOfLines={1}
-        className="font-manrope-bold uppercase"
-        style={{
-          fontSize: 9,
-          color: "rgba(255,255,255,0.7)",
-          letterSpacing: 1.2,
-          flexShrink: 1,
-        }}
-      >
-        Por {displayName}
-      </Text>
-    </View>
+      Por {displayName}
+    </Text>
   );
 }
 

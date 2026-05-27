@@ -318,16 +318,29 @@ export default function PlanDetail() {
             <ArrowLeft size={18} color="white" />
           </Pressable>
 
-          {/* Kicker + número edición top-right */}
+          {/* Kicker top-right */}
           <View
             style={{
               position: "absolute",
-              top: insets.top + 18,
+              top: insets.top + 22,
               right: 20,
-              alignItems: "flex-end",
-              gap: 4,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
             }}
           >
+            <View
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: BRAND_MINT,
+                shadowColor: BRAND_MINT,
+                shadowOpacity: 1,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 0 },
+              }}
+            />
             <Text
               className="font-manrope-bold uppercase"
               style={{
@@ -336,32 +349,8 @@ export default function PlanDetail() {
                 letterSpacing: 2.4,
               }}
             >
-              Workout Program
+              Rutina
             </Text>
-            <View className="flex-row items-center" style={{ gap: 6 }}>
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: BRAND_MINT,
-                  shadowColor: BRAND_MINT,
-                  shadowOpacity: 1,
-                  shadowRadius: 6,
-                  shadowOffset: { width: 0, height: 0 },
-                }}
-              />
-              <Text
-                className="font-jakarta-bold"
-                style={{
-                  fontSize: 10,
-                  color: "rgba(255,255,255,0.7)",
-                  letterSpacing: 2,
-                }}
-              >
-                EDITION
-              </Text>
-            </View>
           </View>
 
           {/* Título superpuesto al borde del scrim */}
