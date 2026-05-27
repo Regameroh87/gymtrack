@@ -293,10 +293,17 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
 // ─── Tab: Catálogo ───────────────────────────────────────────────────────────
 function CatalogoContent({ router }) {
   const { data: plans = [], isLoading } = useTrainingPlans();
+  const [activeObjective, setActiveObjective] = useState(null);
 
-  const totalDays = useMemo(
-    () => plans.reduce((acc, p) => acc + (p.day_count || 0), 0),
-    [plans]
+  const availableObjectives = useMemo(() => {
+    const seen = new Set();
+    plans.forEach((p) => { if (p.objective) seen.add(p.objective); });
+    return Array.from(seen);
+  }, [plans]);
+
+  const filteredPlans = useMemo(
+    () => activeObjective ? plans.filter((p) => p.objective === activeObjective) : plans,
+    [plans, activeObjective]
   );
 
   if (isLoading) {
@@ -325,32 +332,50 @@ function CatalogoContent({ router }) {
 
   return (
     <View>
-      <View className="flex-row gap-3.5 mb-6">
-        <StatTile
-          value={plans.length}
-          label={plans.length === 1 ? "Plan disponible" : "Planes disponibles"}
-          accent={brandPrimary[600]}
-          bubble="rgba(48,35,205,0.08)"
+      {/* ── Filtro por objetivo ── */}
+      <View className="flex-row flex-wrap gap-2 mb-6">
+        <ObjectiveChip
+          label="Todos"
+          active={activeObjective === null}
+          onPress={() => setActiveObjective(null)}
         />
-        <StatTile
-          value={totalDays}
-          label="Días de entrenamiento"
-          accent={brandSecondary[700]}
-          bubble="rgba(0,80,71,0.08)"
-        />
+        {availableObjectives.map((obj) => {
+          const cfg = OBJECTIVE_CONFIG[obj];
+          if (!cfg) return null;
+          return (
+            <ObjectiveChip
+              key={obj}
+              label={cfg.label}
+              Icon={cfg.Icon}
+              active={activeObjective === obj}
+              onPress={() => setActiveObjective(activeObjective === obj ? null : obj)}
+            />
+          );
+        })}
       </View>
 
-      <View className="flex-row flex-wrap gap-[18px]">
-        {plans.map((plan, i) => (
-          <View key={plan.id} style={{ flexBasis: "calc(50% - 9px)", minWidth: 320 }}>
-            <PlanCardWeb
-              plan={plan}
-              index={i}
-              onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
-            />
-          </View>
-        ))}
-      </View>
+      {filteredPlans.length === 0 ? (
+        <View className="bg-ui-surface-light border border-ui-input-border rounded-[22px] px-9 py-12 items-center">
+          <Text className="text-sm font-jakarta-bold text-ui-text-main tracking-tight mb-1">
+            Sin planes para este objetivo
+          </Text>
+          <Text className="text-[13px] font-manrope text-ui-text-muted text-center leading-5">
+            Probá seleccionar otro objetivo o "Todos".
+          </Text>
+        </View>
+      ) : (
+        <View className="flex-row flex-wrap gap-[18px]">
+          {filteredPlans.map((plan, i) => (
+            <View key={plan.id} style={{ flexBasis: "calc(50% - 9px)", minWidth: 320 }}>
+              <PlanCardWeb
+                plan={plan}
+                index={i}
+                onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
+              />
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -575,20 +600,37 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
 }
 
 // ─── Helpers UI ──────────────────────────────────────────────────────────────
-function StatTile({ value, label, accent, bubble }) {
+function ObjectiveChip({ label, Icon, active, onPress }) {
   return (
-    <View className="flex-1 bg-ui-surface-light border border-ui-input-border rounded-[18px] p-5 overflow-hidden">
-      <View
-        className="absolute top-[-24px] right-[-24px] w-20 h-20 rounded-full"
-        style={{ backgroundColor: bubble }}
-      />
-      <Text className="font-jakarta-bold leading-[34px]" style={{ fontSize: 30, color: accent, letterSpacing: -0.8 }}>
-        {value}
-      </Text>
-      <Text className="text-[11px] font-manrope text-ui-text-muted mt-1">
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center gap-1.5 px-3.5 py-2 rounded-full"
+      style={({ hovered, pressed }) => ({
+        cursor: "pointer",
+        backgroundColor: active
+          ? brandPrimary[600]
+          : hovered || pressed
+          ? "rgba(48,35,205,0.07)"
+          : "rgba(15,13,32,0.04)",
+        borderWidth: 1,
+        borderColor: active ? "transparent" : "rgba(15,13,32,0.1)",
+        shadowColor: active ? brandPrimary[600] : "transparent",
+        shadowOpacity: active ? 0.3 : 0,
+        shadowRadius: active ? 8 : 0,
+        shadowOffset: { width: 0, height: 2 },
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      {Icon && (
+        <Icon size={13} color={active ? "#fff" : "rgba(15,13,32,0.45)"} />
+      )}
+      <Text
+        className="text-[11px] font-manrope-bold uppercase tracking-[1.3px]"
+        style={{ color: active ? "#fff" : "rgba(15,13,32,0.55)" }}
+      >
         {label}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 

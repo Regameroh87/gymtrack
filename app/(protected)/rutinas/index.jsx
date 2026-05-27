@@ -102,6 +102,26 @@ export default function RutinasTab() {
     return LEVEL_FILTERS.filter((f) => f.key === null || usedLevels.has(f.key));
   }, [sessions]);
 
+  const [activeObjective, setActiveObjective] = useState(null);
+
+  const availableObjectiveFilters = useMemo(() => {
+    const usedObjs = new Set(plans.map((p) => p.objective).filter(Boolean));
+    return [
+      { key: null, label: "Todos" },
+      ...Object.entries(OBJECTIVE_CONFIG)
+        .filter(([key]) => usedObjs.has(key))
+        .map(([key, cfg]) => ({ key, label: cfg.label })),
+    ];
+  }, [plans]);
+
+  const filteredPlans = useMemo(
+    () =>
+      activeObjective === null
+        ? plans
+        : plans.filter((p) => p.objective === activeObjective),
+    [plans, activeObjective]
+  );
+
   const switchTab = (key) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActiveTab(key);
@@ -200,7 +220,7 @@ export default function RutinasTab() {
         />
       ) : (
         <CatalogoContent
-          plans={plans}
+          plans={filteredPlans}
           sessions={filteredSessions}
           allSessions={sessions}
           catalogType={catalogType}
@@ -213,6 +233,12 @@ export default function RutinasTab() {
           onLevelChange={(level) => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setActiveLevel(level);
+          }}
+          objectiveFilters={availableObjectiveFilters}
+          activeObjective={activeObjective}
+          onObjectiveChange={(obj) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setActiveObjective(obj);
           }}
           router={router}
           insets={insets}
@@ -424,6 +450,9 @@ function CatalogoContent({
   levelFilters,
   activeLevel,
   onLevelChange,
+  objectiveFilters,
+  activeObjective,
+  onObjectiveChange,
   router,
   insets,
 }) {
@@ -460,7 +489,13 @@ function CatalogoContent({
       </View>
 
       {catalogType === "planes" ? (
-        <PlanesSection plans={plans} router={router} />
+        <PlanesSection
+          plans={plans}
+          objectiveFilters={objectiveFilters}
+          activeObjective={activeObjective}
+          onObjectiveChange={onObjectiveChange}
+          router={router}
+        />
       ) : (
         <SesionesSection
           sessions={sessions}
@@ -477,13 +512,10 @@ function CatalogoContent({
 
 // ─── Sección Planes ───────────────────────────────────────────────────────────
 
-function PlanesSection({ plans, router }) {
-  const totalDays = useMemo(
-    () => plans.reduce((acc, p) => acc + (p.day_count || 0), 0),
-    [plans]
-  );
+function PlanesSection({ plans, objectiveFilters, activeObjective, onObjectiveChange, router }) {
+  const hasPlans = plans.length > 0 || activeObjective !== null;
 
-  if (plans.length === 0) {
+  if (!hasPlans && objectiveFilters.length <= 1) {
     return (
       <View className="px-6 pt-5">
         <EmptyCard
@@ -497,33 +529,73 @@ function PlanesSection({ plans, router }) {
 
   return (
     <>
-      <View className="flex-row gap-3 px-6 pt-5 mb-5">
-        <StatTile
-          value={plans.length}
-          label={plans.length === 1 ? "Plan disponible" : "Planes disponibles"}
-          accent={brandPrimary[500]}
-        />
-        <StatTile
-          value={totalDays}
-          label="Días de entrenamiento"
-          accent="#10b981"
-        />
-      </View>
+      {/* Filtro por objetivo */}
+      {objectiveFilters.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 16,
+            paddingBottom: 20,
+          }}
+        >
+          <View className="flex-row gap-2">
+            {objectiveFilters.map((filter) => {
+              const isActive = activeObjective === filter.key;
+              return (
+                <Pressable
+                  key={filter.key ?? "all"}
+                  onPress={() => onObjectiveChange(filter.key)}
+                  className="active:scale-[0.95]"
+                >
+                  {isActive ? (
+                    <LinearGradient
+                      colors={[brandPrimary[600], brandPrimary[500]]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      className="px-4 py-2 rounded-full"
+                    >
+                      <Text className="text-white font-jakarta-semi text-[12px]">
+                        {filter.label}
+                      </Text>
+                    </LinearGradient>
+                  ) : (
+                    <View className="px-4 py-2 rounded-full border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+                      <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi text-[12px]">
+                        {filter.label}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </ScrollView>
+      )}
 
-      <View className="px-6" style={{ gap: 18 }}>
-        {plans.map((plan, i) => (
-          <Animated.View
-            key={plan.id}
-            entering={FadeInDown.delay(i * 80).springify()}
-          >
-            <PlanTile
-              plan={plan}
-              index={i}
-              onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
-            />
-          </Animated.View>
-        ))}
-      </View>
+      {plans.length === 0 ? (
+        <View className="px-6 py-4 items-center">
+          <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
+            No hay planes para este objetivo.
+          </Text>
+        </View>
+      ) : (
+        <View className="px-6" style={{ gap: 18 }}>
+          {plans.map((plan, i) => (
+            <Animated.View
+              key={plan.id}
+              entering={FadeInDown.delay(i * 80).springify()}
+            >
+              <PlanTile
+                plan={plan}
+                index={i}
+                onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
+              />
+            </Animated.View>
+          ))}
+        </View>
+      )}
     </>
   );
 }
@@ -980,32 +1052,6 @@ function PlanTile({ plan, index = 0, onPress }) {
   );
 }
 
-function StatTile({ value, label, accent }) {
-  return (
-    <View className="flex-1 bg-ui-surface-light dark:bg-ui-surface-dark rounded-2xl px-4 py-3.5 border border-ui-input-border overflow-hidden">
-      <View
-        className="absolute rounded-full"
-        style={{
-          width: 64,
-          height: 64,
-          top: -24,
-          right: -24,
-          backgroundColor: accent,
-          opacity: 0.1,
-        }}
-      />
-      <Text
-        className="font-jakarta-bold text-[26px] leading-[30px]"
-        style={{ color: accent }}
-      >
-        {value}
-      </Text>
-      <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-        {label}
-      </Text>
-    </View>
-  );
-}
 
 function CreatorLine({ creator }) {
   const displayName =
