@@ -81,7 +81,7 @@ export default function ProtectedLayout() {
           }}
         />
         <Tabs.Screen
-          name="rutinas"
+          name="planes"
           options={{
             title: "Planes",
             headerShown: false,

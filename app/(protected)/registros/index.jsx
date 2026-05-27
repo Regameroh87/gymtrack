@@ -342,7 +342,7 @@ function EmptyState({ router, insets, onLogPast, activeSession }) {
 
   const primary = hasActivePlan
     ? { label: "Continuar mi plan", route: "/sesion" }
-    : { label: "Explorar rutinas", route: "/rutinas" };
+    : { label: "Explorar rutinas", route: "/planes" };
 
   return (
     <View

@@ -67,7 +67,7 @@ export default function HeroeCardHome({ image }) {
       : null);
 
   const handlePress = hasNoPlan
-    ? () => router.push("/rutinas")
+    ? () => router.push("/planes")
     : () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push("/sesion");

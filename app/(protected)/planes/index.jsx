@@ -151,7 +151,7 @@ export default function RutinasTab() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push("/rutinas/builder");
+              router.push("/planes/builder");
             }}
             className="mt-1 active:scale-[0.95]"
           >
@@ -322,7 +322,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
             plan={planObj}
             index={0}
             onPress={() =>
-              router.push(`/rutinas/plan/${currentPlan.plan_id}`)
+              router.push(`/planes/plan/${currentPlan.plan_id}`)
             }
           />
           <Pressable
@@ -393,7 +393,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
               <Pressable
                 key={item.id}
                 onPress={() =>
-                  router.push(`/rutinas/plan/${item.plan_id}`)
+                  router.push(`/planes/plan/${item.plan_id}`)
                 }
                 className="active:opacity-70"
               >
@@ -590,7 +590,7 @@ function PlanesSection({ plans, objectiveFilters, activeObjective, onObjectiveCh
               <PlanTile
                 plan={plan}
                 index={i}
-                onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
+                onPress={(p) => router.push(`/planes/plan/${p.id}`)}
               />
             </Animated.View>
           ))}
@@ -681,7 +681,7 @@ function SesionesSection({
             >
               <SessionCard
                 session={session}
-                onPress={(s) => router.push(`/rutinas/sesion/${s.id}`)}
+                onPress={(s) => router.push(`/planes/sesion/${s.id}`)}
               />
             </Animated.View>
           ))}

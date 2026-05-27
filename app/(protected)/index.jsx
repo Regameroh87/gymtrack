@@ -162,7 +162,7 @@ export default function Home() {
               icon={<ClipboardList size={18} color="white" />}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/rutinas");
+                router.push("/planes");
               }}
               variant="primary"
             />
@@ -173,7 +173,7 @@ export default function Home() {
               icon={<Plus size={18} color={iconMint} />}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/rutinas/builder");
+                router.push("/planes/builder");
               }}
               variant="ghost"
             />

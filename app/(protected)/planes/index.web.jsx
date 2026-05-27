@@ -83,7 +83,7 @@ export default function RutinasWeb() {
 
             {activeTab === "mis_planes" && (
               <Pressable
-                onPress={() => router.push("/rutinas/builder")}
+                onPress={() => router.push("/planes/builder")}
                 className="flex-row items-center gap-2 px-4 py-[11px] rounded-2xl bg-brandPrimary-600"
                 style={({ hovered, pressed }) => ({
                   cursor: "pointer",
@@ -201,7 +201,7 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
             <PlanCardWeb
               plan={planObj}
               index={0}
-              onPress={() => router.push(`/rutinas/plan/${currentPlan.plan_id}`)}
+              onPress={() => router.push(`/planes/plan/${currentPlan.plan_id}`)}
             />
 
             <Pressable
@@ -250,7 +250,7 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
             {history.map((item, idx) => (
               <Pressable
                 key={item.id}
-                onPress={() => router.push(`/rutinas/plan/${item.plan_id}`)}
+                onPress={() => router.push(`/planes/plan/${item.plan_id}`)}
                 className={`flex-row items-center gap-3 px-4 py-3.5 ${
                   idx > 0 ? "border-t border-ui-input-border" : ""
                 }`}
@@ -370,7 +370,7 @@ function CatalogoContent({ router }) {
               <PlanCardWeb
                 plan={plan}
                 index={i}
-                onPress={(p) => router.push(`/rutinas/plan/${p.id}`)}
+                onPress={(p) => router.push(`/planes/plan/${p.id}`)}
               />
             </View>
           ))}

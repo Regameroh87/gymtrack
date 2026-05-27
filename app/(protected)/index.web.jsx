@@ -442,7 +442,7 @@ function MemberHomeWeb() {
                   iconBubble="rgba(48,35,205,0.09)"
                   iconBorder="rgba(48,35,205,0.28)"
                   variant="primary"
-                  onPress={() => router.push("/rutinas")}
+                  onPress={() => router.push("/planes")}
                 />
                 <QuickCard
                   kicker="Personalizado"
@@ -453,7 +453,7 @@ function MemberHomeWeb() {
                   iconBubble="rgba(0,80,71,0.09)"
                   iconBorder="rgba(0,80,71,0.28)"
                   variant="ghost"
-                  onPress={() => router.push("/rutinas/builder")}
+                  onPress={() => router.push("/planes/builder")}
                 />
               </View>
 

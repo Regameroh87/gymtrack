@@ -17,7 +17,7 @@ import { Barbell, ClipboardList, Home, Logout } from "../../../assets/icons.jsx"
 
 const NAV = [
   { label: "Inicio",  icon: Home,          path: "/" },
-  { label: "Planes", icon: ClipboardList, path: "/rutinas" },
+  { label: "Planes", icon: ClipboardList, path: "/planes" },
 ];
 
 const isActivePath = (itemPath, currentPath) => {
