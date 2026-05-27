@@ -233,8 +233,12 @@ export const session_logs = sqliteTable("session_logs", {
   id: text("id").primaryKey(),
   gym_id: text("gym_id").notNull(),
   user_id: text("user_id").notNull(),
-  session_id: text("session_id").references(() => sessions.id, { onDelete: "set null" }),
-  plan_id: text("plan_id").references(() => training_plans.id, { onDelete: "set null" }),
+  session_id: text("session_id").references(() => sessions.id, {
+    onDelete: "set null",
+  }),
+  plan_id: text("plan_id").references(() => training_plans.id, {
+    onDelete: "set null",
+  }),
   week_number: integer("week_number"),
   day_number: integer("day_number"),
   duration_seconds: integer("duration_seconds"),
@@ -277,4 +281,3 @@ export const session_set_logs = sqliteTable(
   },
   (t) => [unique().on(t.session_log_id, t.exercise_id, t.set_number)]
 );
-
