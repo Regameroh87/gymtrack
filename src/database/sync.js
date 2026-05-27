@@ -68,7 +68,8 @@ async function pullTableChanges(
   schemaTable,
   lastSync,
   gymId = null,
-  compositeUniqueColumns = null
+  compositeUniqueColumns = null,
+  userId = null
 ) {
   let query = supabase
     .from(tableName)
@@ -76,6 +77,7 @@ async function pullTableChanges(
     .order("updated_at", { ascending: true });
 
   if (gymId) query = query.eq("gym_id", gymId);
+  if (userId) query = query.eq("user_id", userId);
   if (lastSync) query = query.gte("updated_at", lastSync);
 
   const { data, error } = await query;
@@ -148,6 +150,7 @@ async function pullTableChanges(
   // no existen en Supabase (fueron borrados desde otro dispositivo)
   let idsQuery = supabase.from(tableName).select("id");
   if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
+  if (userId) idsQuery = idsQuery.eq("user_id", userId);
   const { data: remoteIds, error: idsError } = await idsQuery;
 
   if (!idsError && remoteIds) {
@@ -1323,18 +1326,23 @@ export async function syncWithSupabase(
     );
 
     // --- DOWNLOAD PHASE ---
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const currentUserId = user?.id ?? null;
+
+    const GYM_SCOPED_TABLES = new Set([
+      "exercises_base",
+      "equipment",
+      "sessions",
+      "training_plans",
+      "plan_assignments",
+    ]);
+    const USER_SCOPED_TABLES = new Set(["session_logs"]);
+
     for (const table of tablesToSync) {
       const syncKey = `${LAST_SYNC_KEY}_${table}`;
       const lastSync = await AsyncStorage.getItem(syncKey);
-
-      const GYM_SCOPED_TABLES = new Set([
-        "exercises_base",
-        "equipment",
-        "sessions",
-        "training_plans",
-        "plan_assignments",
-        "session_logs",
-      ]);
 
       let schemaTable;
       if (table === "exercises_base") schemaTable = exercises_base;
@@ -1355,13 +1363,15 @@ export async function syncWithSupabase(
 
       if (schemaTable) {
         const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
+        const userId = USER_SCOPED_TABLES.has(table) ? currentUserId : null;
         const compositeUniqueColumns = COMPOSITE_UNIQUE_COLUMNS[table] ?? null;
         const { success, changed, newLastSync } = await pullTableChanges(
           table,
           schemaTable,
           lastSync,
           gymId,
-          compositeUniqueColumns
+          compositeUniqueColumns,
+          userId
         );
         if (success) {
           // Solo avanzamos el watermark si el servidor devolvió filas nuevas.
