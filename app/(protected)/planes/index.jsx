@@ -1150,6 +1150,378 @@ function PlanStat({ value, primaryLabel, secondaryLabel }) {
   );
 }
 
+// ─── Tab: Biblioteca ──────────────────────────────────────────────────────────
+
+function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
+  const [activeLib, setActiveLib] = useState("planes");
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const queryClient = useQueryClient();
+
+  const { data: allExercises = [], isLoading: loadingExercises } = useExercises();
+  const myExercises = useMemo(
+    () => allExercises.filter((e) => e.created_by === userId),
+    [allExercises, userId]
+  );
+
+  const handleDeletePlan = (plan) => {
+    Alert.alert("Eliminar plan", `¿Eliminar "${plan.name}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          await database
+            .update(training_plans)
+            .set({ sync_status: "deleted" })
+            .where(eq(training_plans.id, plan.id));
+          queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+          checkNetInfoAndSync().catch(() => {});
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteSession = (session) => {
+    Alert.alert("Eliminar sesión", `¿Eliminar "${session.name}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          await database.transaction(async (tx) => {
+            await tx
+              .update(session_exercises)
+              .set({ sync_status: "deleted" })
+              .where(eq(session_exercises.session_id, session.id));
+            await tx
+              .update(sessions)
+              .set({ sync_status: "deleted" })
+              .where(eq(sessions.id, session.id));
+          });
+          queryClient.invalidateQueries({ queryKey: ["sessions"] });
+          checkNetInfoAndSync().catch(() => {});
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteExercise = (exercise) => {
+    Alert.alert("Eliminar ejercicio", `¿Eliminar "${exercise.name}"?`, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          await database.transaction(async (tx) => {
+            await tx
+              .update(exercise_equipment)
+              .set({ sync_status: "deleted" })
+              .where(eq(exercise_equipment.exercise_id, exercise.id));
+            await tx
+              .update(exercises_base)
+              .set({ sync_status: "deleted" })
+              .where(eq(exercises_base.id, exercise.id));
+          });
+          queryClient.invalidateQueries({ queryKey: ["exercises"] });
+          checkNetInfoAndSync().catch(() => {});
+        },
+      },
+    ]);
+  };
+
+  const fabRoute =
+    activeLib === "planes"
+      ? "/planes/builder"
+      : activeLib === "sesiones"
+      ? "/biblioteca/sesiones/builder"
+      : "/biblioteca/ejercicios/builder";
+
+  const listData =
+    activeLib === "planes"
+      ? myPlans
+      : activeLib === "sesiones"
+      ? mySessions
+      : myExercises;
+
+  const isLibLoading = activeLib === "ejercicios" && loadingExercises;
+
+  return (
+    <View className="flex-1">
+      {/* Descripción */}
+      <View className="px-6 pt-4 pb-1">
+        <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark leading-5">
+          Planes, sesiones y ejercicios que vos mismo creaste. Editá o borrá
+          cualquiera desde acá, y usálos cuando armes tus rutinas.
+        </Text>
+      </View>
+
+      {/* Tabs internos */}
+      <View className="px-6 mt-4 mb-2">
+        <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
+          {LIB_TABS.map((tab) => {
+            const isActive = activeLib === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setActiveLib(tab.key);
+                }}
+                className="flex-1 items-center py-2 rounded-lg active:opacity-70"
+                style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
+              >
+                <Text
+                  className={`font-jakarta-semi text-[12px] ${
+                    isActive
+                      ? "text-white"
+                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                  }`}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      {isLibLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator color={brandPrimary[500]} />
+        </View>
+      ) : (
+        <FlatList
+          data={listData}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingTop: 8,
+            paddingBottom: insets.bottom + 120,
+          }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View className="py-16 items-center px-6">
+              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5">
+                {activeLib === "planes"
+                  ? "Todavía no creaste ningún plan.\nTocá + para armar el tuyo."
+                  : activeLib === "sesiones"
+                  ? "Todavía no creaste ninguna sesión.\nTocá + para empezar."
+                  : "Todavía no creaste ningún ejercicio.\nTocá + para agregar el primero."}
+              </Text>
+            </View>
+          }
+          renderItem={({ item }) => {
+            if (activeLib === "planes") {
+              return (
+                <LibPlanRow
+                  plan={item}
+                  onEdit={() => router.push(`/planes/builder?id=${item.id}`)}
+                  onDelete={() => handleDeletePlan(item)}
+                  isDark={isDark}
+                />
+              );
+            }
+            if (activeLib === "sesiones") {
+              return (
+                <LibSessionRow
+                  session={item}
+                  onEdit={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push(`/biblioteca/sesiones/builder?id=${item.id}`);
+                  }}
+                  onDelete={() => handleDeleteSession(item)}
+                  isDark={isDark}
+                />
+              );
+            }
+            return (
+              <LibExerciseRow
+                exercise={item}
+                onEdit={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/biblioteca/ejercicios/builder?id=${item.id}`);
+                }}
+                onDelete={() => handleDeleteExercise(item)}
+                isDark={isDark}
+              />
+            );
+          }}
+        />
+      )}
+
+      {/* FAB */}
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push(fabRoute);
+        }}
+        style={{
+          position: "absolute",
+          right: 20,
+          bottom: insets.bottom + 24,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: brandPrimary[500],
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: brandPrimary[500],
+          shadowOpacity: 0.4,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 8,
+        }}
+      >
+        <Plus size={24} color="white" />
+      </Pressable>
+    </View>
+  );
+}
+
+// ─── Filas de biblioteca ──────────────────────────────────────────────────────
+
+function LibPlanRow({ plan, onEdit, onDelete, isDark }) {
+  return (
+    <View className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+      <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
+        <Barbell size={20} color={brandPrimary[500]} />
+      </View>
+      <View className="flex-1">
+        <Text
+          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
+          numberOfLines={1}
+        >
+          {plan.name}
+        </Text>
+        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+          {plan.weekly_days} días ·{" "}
+          {plan.duration_weeks === 0 ? "Indefinido" : `${plan.duration_weeks} sem`}
+        </Text>
+      </View>
+      <View className="flex-row gap-2 ml-2">
+        <Pressable
+          onPress={onEdit}
+          className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
+        >
+          <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
+        </Pressable>
+        <Pressable
+          onPress={onDelete}
+          className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
+        >
+          <Trash size={14} color="#ef4444" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function LibSessionRow({ session, onEdit, onDelete, isDark }) {
+  const imageUrl = session.cover_image_uri
+    ? session.cover_image_uri.startsWith("file://")
+      ? session.cover_image_uri
+      : getCloudinaryUrl(
+          session.cover_image_uri,
+          "w_120,h_120,c_fill,f_auto,q_auto"
+        )
+    : null;
+
+  return (
+    <View className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width: 48, height: 48, borderRadius: 10, marginRight: 12 }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
+          <Text className="text-lg">💪</Text>
+        </View>
+      )}
+      <View className="flex-1">
+        <Text
+          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
+          numberOfLines={1}
+        >
+          {session.name}
+        </Text>
+        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+          {session.exercise_count ?? 0} ejercicio
+          {session.exercise_count !== 1 ? "s" : ""}
+        </Text>
+      </View>
+      <View className="flex-row gap-2 ml-2">
+        <Pressable
+          onPress={onEdit}
+          className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
+        >
+          <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
+        </Pressable>
+        <Pressable
+          onPress={onDelete}
+          className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
+        >
+          <Trash size={14} color="#ef4444" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function LibExerciseRow({ exercise, onEdit, onDelete, isDark }) {
+  const imageUrl = exercise.image_uri
+    ? exercise.image_uri.startsWith("file://")
+      ? exercise.image_uri
+      : getCloudinaryUrl(
+          exercise.image_uri,
+          "w_120,h_120,c_fill,f_auto,q_auto"
+        )
+    : null;
+
+  return (
+    <View className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width: 48, height: 48, borderRadius: 10, marginRight: 12 }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
+          <Text className="text-lg">🏋️</Text>
+        </View>
+      )}
+      <View className="flex-1">
+        <Text
+          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
+          numberOfLines={1}
+        >
+          {exercise.name}
+        </Text>
+        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5 capitalize">
+          {exercise.muscle_group}
+        </Text>
+      </View>
+      <View className="flex-row gap-2 ml-2">
+        <Pressable
+          onPress={onEdit}
+          className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
+        >
+          <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
+        </Pressable>
+        <Pressable
+          onPress={onDelete}
+          className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
+        >
+          <Trash size={14} color="#ef4444" />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function EmptyCard({ icon, title, description }) {
   return (
     <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
