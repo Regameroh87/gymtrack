@@ -408,6 +408,28 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
             paddingBottom: 100,
             paddingTop: 8,
           }}
+          ListHeaderComponent={() => (
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                sessionPickerRef.current?.dismiss();
+                setActiveDayIdx(null);
+                router.push("/biblioteca/sesiones/builder");
+              }}
+              className="flex-row items-center p-4 mb-3 rounded-xl border border-dashed border-brandPrimary-500/50 active:scale-[0.97]"
+              style={{ backgroundColor: "rgba(74,68,228,0.06)" }}
+            >
+              <View
+                className="w-8 h-8 rounded-lg items-center justify-center mr-3"
+                style={{ backgroundColor: brandPrimary[500] + "22" }}
+              >
+                <Plus size={16} color={brandPrimary[500]} />
+              </View>
+              <Text className="text-sm font-manrope-semi text-brandPrimary-600 dark:text-brandPrimary-400">
+                Crear sesión nueva
+              </Text>
+            </Pressable>
+          )}
           ListEmptyComponent={() => (
             <View className="items-center justify-center p-6 mt-4">
               <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-center font-manrope">
