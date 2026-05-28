@@ -19,7 +19,6 @@ export const exercises_base = sqliteTable("exercises_base", {
   is_unilateral: integer("is_unilateral", { mode: "boolean" })
     .notNull()
     .default(false),
-  created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),

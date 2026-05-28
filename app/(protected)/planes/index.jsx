@@ -1,6 +1,8 @@
 // React Native
 import {
   ActivityIndicator,
+  Alert,
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,10 +18,25 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useColorScheme } from "nativewind";
+import { useQueryClient } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
+
+// Base de datos
+import { database } from "../../../src/database";
+import {
+  exercises_base,
+  exercise_equipment,
+  sessions,
+  session_exercises,
+  training_plans,
+} from "../../../src/database/schemas";
+import { checkNetInfoAndSync } from "../../../src/database/sync";
 
 // Hooks
 import { useTrainingPlans } from "../../../src/hooks/useTrainingPlans";
 import { useSessions } from "../../../src/hooks/useSessions";
+import { useExercises } from "../../../src/hooks/useExercises";
 import { usePlanAssignments } from "../../../src/hooks/usePlanAssignments";
 import { useDropPlan } from "../../../src/hooks/useAssignPlan";
 import { useAuth } from "../../../src/auth/lib/getSession";
@@ -35,7 +52,7 @@ import Screen from "../../../src/components/Screen";
 import SessionCard from "../../../src/components/cards/SessionCard";
 
 // Tema / assets
-import { brandPrimary } from "../../../src/theme/colors";
+import { brandPrimary, ui } from "../../../src/theme/colors";
 import {
   Barbell,
   Calendar,
@@ -44,8 +61,10 @@ import {
   ClipboardList,
   Clock,
   Logs,
+  Pencil,
   Plus,
   ShieldHalf,
+  Trash,
 } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
@@ -72,6 +91,13 @@ const LEVEL_FILTERS = [
 const MAIN_TABS = [
   { key: "catalogo", label: "Catálogo" },
   { key: "mis_planes", label: "Mis Planes" },
+  { key: "biblioteca", label: "Biblioteca" },
+];
+
+const LIB_TABS = [
+  { key: "planes", label: "Planes" },
+  { key: "sesiones", label: "Sesiones" },
+  { key: "ejercicios", label: "Ejercicios" },
 ];
 
 const CATALOG_TYPES = [
@@ -82,6 +108,7 @@ const CATALOG_TYPES = [
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { userId } = useAuth();
   const [activeTab, setActiveTab] = useState("catalogo");
   const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
@@ -120,6 +147,15 @@ export default function RutinasTab() {
         ? plans
         : plans.filter((p) => p.objective === activeObjective),
     [plans, activeObjective]
+  );
+
+  const myPlans = useMemo(
+    () => plans.filter((p) => p.created_by === userId),
+    [plans, userId]
+  );
+  const mySessions = useMemo(
+    () => sessions.filter((s) => s.created_by === userId),
+    [sessions, userId]
   );
 
   const switchTab = (key) => {
@@ -217,6 +253,14 @@ export default function RutinasTab() {
           router={router}
           insets={insets}
           onBrowseCatalog={() => switchTab("catalogo")}
+        />
+      ) : activeTab === "biblioteca" ? (
+        <BibliotecaContent
+          myPlans={myPlans}
+          mySessions={mySessions}
+          userId={userId}
+          router={router}
+          insets={insets}
         />
       ) : (
         <CatalogoContent
