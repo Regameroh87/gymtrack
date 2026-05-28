@@ -49,19 +49,27 @@ function getWeekSummary(week) {
   return `${total} días asignados`;
 }
 
-function WeekCard({ weekNumber, summary, onPress, mutedColor }) {
+function WeekCard({ weekNumber, summary, onPress, mutedColor, isTemplate }) {
   return (
     <Pressable
       onPress={onPress}
       className="flex-row items-center px-4 py-3.5 mb-2 rounded-xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:scale-[0.98]"
     >
       <View className="w-11 h-11 rounded-lg items-center justify-center mr-3.5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
-        <Text className="text-[9px] font-manrope-semi uppercase text-brandPrimary-500 dark:text-brandPrimary-400">
-          Sem
-        </Text>
-        <Text className="text-sm font-jakarta-bold leading-tight text-brandPrimary-600 dark:text-brandPrimary-400">
-          {weekNumber}
-        </Text>
+        {isTemplate ? (
+          <Text className="text-[9px] font-manrope-semi uppercase text-brandPrimary-500 dark:text-brandPrimary-400 text-center leading-tight">
+            Rep.
+          </Text>
+        ) : (
+          <>
+            <Text className="text-[9px] font-manrope-semi uppercase text-brandPrimary-500 dark:text-brandPrimary-400">
+              Sem
+            </Text>
+            <Text className="text-sm font-jakarta-bold leading-tight text-brandPrimary-600 dark:text-brandPrimary-400">
+              {weekNumber}
+            </Text>
+          </>
+        )}
       </View>
 
       <View className="flex-1">
@@ -92,9 +100,10 @@ export default function FormTrainingPlan({ form, plan }) {
   const handleDurationChange = (newDuration) => {
     const currentWeeks = form.state.values.weeks ?? [];
     const weeklyDays = form.state.values.weekly_days ?? 3;
+    const effectiveWeeks = newDuration === 0 ? 1 : newDuration;
     const newWeeks = resizeWeeksByDuration(
       currentWeeks,
-      newDuration,
+      effectiveWeeks,
       weeklyDays
     );
     form.setFieldValue("duration_weeks", newDuration);
@@ -234,9 +243,10 @@ export default function FormTrainingPlan({ form, plan }) {
                     <Stepper
                       value={field.state.value ?? 0}
                       onChange={handleDurationChange}
-                      min={1}
+                      min={0}
                       max={null}
                       unit="semanas"
+                      zeroLabel="Indefinido"
                     />
                   </FormField>
                 )}
@@ -274,29 +284,29 @@ export default function FormTrainingPlan({ form, plan }) {
               </form.Field>
 
               {/* ─── SEMANAS ─── */}
-              <form.Subscribe selector={(s) => s.values.weeks ?? []}>
-                {(weeks) => (
+              <form.Subscribe
+                selector={(s) => ({
+                  weeks: s.values.weeks ?? [],
+                  durationWeeks: s.values.duration_weeks ?? 0,
+                })}
+              >
+                {({ weeks, durationWeeks }) => (
                   <View className="mb-5 mt-2">
                     <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
-                      RUTINA POR SEMANA
+                      {durationWeeks === 0
+                        ? "SEMANA TIPO"
+                        : "RUTINA POR SEMANA"}
                     </Text>
-                    {weeks.length > 0 ? (
-                      weeks.map((week) => (
-                        <WeekCard
-                          key={week.id}
-                          weekNumber={week.week_number}
-                          summary={getWeekSummary(week)}
-                          onPress={() => handleWeekPress(week.week_number)}
-                          mutedColor={mutedColor}
-                        />
-                      ))
-                    ) : (
-                      <View className="px-4 py-6 rounded-xl border border-dashed border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark items-center">
-                        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-                          Definí la duración del plan para armar las semanas.
-                        </Text>
-                      </View>
-                    )}
+                    {weeks.map((week) => (
+                      <WeekCard
+                        key={week.id}
+                        weekNumber={week.week_number}
+                        summary={getWeekSummary(week)}
+                        onPress={() => handleWeekPress(week.week_number)}
+                        mutedColor={mutedColor}
+                        isTemplate={durationWeeks === 0}
+                      />
+                    ))}
                   </View>
                 )}
               </form.Subscribe>

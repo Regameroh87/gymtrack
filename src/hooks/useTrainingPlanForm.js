@@ -106,7 +106,7 @@ const persistWeeks = async (planId, weeks, now, db = database) => {
     await db.insert(plan_week_day_exercise_sets).values(setsRows);
 };
 
-const DEFAULT_DURATION_WEEKS = 4;
+const DEFAULT_DURATION_WEEKS = 0;
 const DEFAULT_WEEKLY_DAYS = 3;
 
 const makeEmptyDay = (dayNumber) => ({
@@ -171,7 +171,10 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       duration_weeks: DEFAULT_DURATION_WEEKS,
       cover_image_uri: "",
       weekly_days: DEFAULT_WEEKLY_DAYS,
-      weeks: buildEmptyWeeks(DEFAULT_DURATION_WEEKS, DEFAULT_WEEKLY_DAYS),
+      weeks: buildEmptyWeeks(
+        DEFAULT_DURATION_WEEKS === 0 ? 1 : DEFAULT_DURATION_WEEKS,
+        DEFAULT_WEEKLY_DAYS
+      ),
     }),
     []
   );
@@ -440,7 +443,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             });
           }
 
-          const weeks = weeksRows.map((w) => {
+          let weeks = weeksRows.map((w) => {
             const assignedDays = daysByWeekId[w.id] ?? [];
             const assignedByNum = {};
             for (const d of assignedDays) assignedByNum[d.day_number] = d;
@@ -452,6 +455,10 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
             return { id: w.id, week_number: w.week_number, days };
           });
+
+          if (planRow.duration_weeks === 0 && weeks.length === 0) {
+            weeks = buildEmptyWeeks(1, planRow.weekly_days);
+          }
 
           form.reset(
             {
@@ -480,7 +487,17 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         if (cancelled) return;
         if (raw) {
           try {
-            form.reset(JSON.parse(raw), { keepDefaultValues: true });
+            const parsed = JSON.parse(raw);
+            if (
+              parsed.duration_weeks === 0 &&
+              (!parsed.weeks || parsed.weeks.length === 0)
+            ) {
+              parsed.weeks = buildEmptyWeeks(
+                1,
+                parsed.weekly_days ?? DEFAULT_WEEKLY_DAYS
+              );
+            }
+            form.reset(parsed, { keepDefaultValues: true });
           } catch {}
         }
         setIsLoading(false);
