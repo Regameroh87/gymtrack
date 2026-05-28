@@ -1158,7 +1158,8 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
   const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
 
-  const { data: allExercises = [], isLoading: loadingExercises } = useExercises();
+  const { data: allExercises = [], isLoading: loadingExercises } =
+    useExercises();
   const myExercises = useMemo(
     () => allExercises.filter((e) => e.created_by === userId),
     [allExercises, userId]
@@ -1234,15 +1235,15 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
     activeLib === "planes"
       ? "/planes/builder"
       : activeLib === "sesiones"
-      ? "/biblioteca/sesiones/builder"
-      : "/biblioteca/ejercicios/builder";
+        ? "/biblioteca/sesiones/builder"
+        : "/biblioteca/ejercicios/builder";
 
   const listData =
     activeLib === "planes"
       ? myPlans
       : activeLib === "sesiones"
-      ? mySessions
-      : myExercises;
+        ? mySessions
+        : myExercises;
 
   const isLibLoading = activeLib === "ejercicios" && loadingExercises;
 
@@ -1306,8 +1307,8 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
                 {activeLib === "planes"
                   ? "Todavía no creaste ningún plan.\nTocá + para armar el tuyo."
                   : activeLib === "sesiones"
-                  ? "Todavía no creaste ninguna sesión.\nTocá + para empezar."
-                  : "Todavía no creaste ningún ejercicio.\nTocá + para agregar el primero."}
+                    ? "Todavía no creaste ninguna sesión.\nTocá + para empezar."
+                    : "Todavía no creaste ningún ejercicio.\nTocá + para agregar el primero."}
               </Text>
             </View>
           }
@@ -1396,7 +1397,9 @@ function LibPlanRow({ plan, onEdit, onDelete, isDark }) {
         </Text>
         <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
           {plan.weekly_days} días ·{" "}
-          {plan.duration_weeks === 0 ? "Indefinido" : `${plan.duration_weeks} sem`}
+          {plan.duration_weeks === 0
+            ? "Indefinido"
+            : `${plan.duration_weeks} sem`}
         </Text>
       </View>
       <View className="flex-row gap-2 ml-2">
@@ -1474,10 +1477,7 @@ function LibExerciseRow({ exercise, onEdit, onDelete, isDark }) {
   const imageUrl = exercise.image_uri
     ? exercise.image_uri.startsWith("file://")
       ? exercise.image_uri
-      : getCloudinaryUrl(
-          exercise.image_uri,
-          "w_120,h_120,c_fill,f_auto,q_auto"
-        )
+      : getCloudinaryUrl(exercise.image_uri, "w_120,h_120,c_fill,f_auto,q_auto")
     : null;
 
   return (
