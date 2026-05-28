@@ -85,7 +85,11 @@ export default function UserPlanBuilder() {
     const currentWeeks = form.state.values.weeks ?? [];
     const weeklyDays = form.state.values.weekly_days ?? 3;
     const effectiveWeeks = newDuration === 0 ? 1 : newDuration;
-    const newWeeks = resizeWeeksByDuration(currentWeeks, effectiveWeeks, weeklyDays);
+    const newWeeks = resizeWeeksByDuration(
+      currentWeeks,
+      effectiveWeeks,
+      weeklyDays
+    );
     form.setFieldValue("duration_weeks", newDuration);
     form.setFieldValue("weeks", newWeeks);
   };
@@ -136,7 +140,10 @@ export default function UserPlanBuilder() {
                 validators={{
                   onChange: ({ value }) => {
                     if (!value) return undefined;
-                    const r = z.string().min(3, "Mínimo 3 caracteres").safeParse(value);
+                    const r = z
+                      .string()
+                      .min(3, "Mínimo 3 caracteres")
+                      .safeParse(value);
                     return r.success ? undefined : r.error.errors[0].message;
                   },
                   onSubmit: ({ value }) => {
@@ -147,7 +154,10 @@ export default function UserPlanBuilder() {
                 }}
               >
                 {(field) => (
-                  <FormField label="NOMBRE" error={field.state.meta.errors?.[0]}>
+                  <FormField
+                    label="NOMBRE"
+                    error={field.state.meta.errors?.[0]}
+                  >
                     <StyledTextInput
                       value={field.state.value}
                       onChangeText={field.handleChange}
@@ -214,7 +224,12 @@ export default function UserPlanBuilder() {
               </form.Field>
 
               {/* ── SEMANAS ── */}
-              <form.Subscribe selector={(s) => [s.values.weeks ?? [], s.values.duration_weeks ?? 0]}>
+              <form.Subscribe
+                selector={(s) => [
+                  s.values.weeks ?? [],
+                  s.values.duration_weeks ?? 0,
+                ]}
+              >
                 {([weeks, durationWeeks]) => (
                   <View className="mb-5 mt-2">
                     <Text className="text-ui-text-muted dark:text-ui-text-mutedDark text-xs font-manrope-semi mb-2 uppercase tracking-label">
@@ -236,7 +251,10 @@ export default function UserPlanBuilder() {
 
               {/* ── SUBMIT ── */}
               <form.Subscribe
-                selector={(s) => ({ isDirty: s.isDirty, isSubmitting: s.isSubmitting })}
+                selector={(s) => ({
+                  isDirty: s.isDirty,
+                  isSubmitting: s.isSubmitting,
+                })}
               >
                 {({ isSubmitting }) => (
                   <Pressable
