@@ -3,15 +3,12 @@ import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "@tanstack/react-form";
-import * as Crypto from "expo-crypto";
+import { useQuery } from "@tanstack/react-query";
 import { database } from "../../database";
 import { exercises_base, equipment } from "../../database/schemas";
 import useAsyncStorage from "../../hooks/useAsyncStorage";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 import { eq, and, ne } from "drizzle-orm";
-import { checkNetInfoAndSync } from "../../database/sync";
 import { useEquipmentForm } from "../../hooks/useEquipmentForm";
 
 // Constants
@@ -40,14 +37,7 @@ import { Trash } from "../../../assets/icons";
 import { Image } from "expo-image";
 
 const FormExercise = forwardRef(function FormExercise(
-  {
-    exercise,
-    headerTitle,
-    headerDescription,
-    form,
-    simplified = false,
-    onBack,
-  },
+  { exercise, headerTitle, headerDescription, form, simplified = false },
   ref
 ) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
@@ -164,7 +154,6 @@ const FormExercise = forwardRef(function FormExercise(
           headerDescription ??
           "Completá los datos para agregar un ejercicio al catálogo."
         }
-        onBack={onBack}
       />
 
       {/* ── Form ── */}

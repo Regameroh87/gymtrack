@@ -53,7 +53,10 @@ function SessionRow({ session, isOwner, onEdit, onDelete }) {
   const imageUrl = session.cover_image_uri
     ? session.cover_image_uri.startsWith("file://")
       ? session.cover_image_uri
-      : getCloudinaryUrl(session.cover_image_uri, "w_120,h_120,c_fill,f_auto,q_auto")
+      : getCloudinaryUrl(
+          session.cover_image_uri,
+          "w_120,h_120,c_fill,f_auto,q_auto"
+        )
     : null;
 
   return (
@@ -65,9 +68,7 @@ function SessionRow({ session, isOwner, onEdit, onDelete }) {
           contentFit="cover"
         />
       ) : (
-        <View
-          className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950"
-        >
+        <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
           <Text className="text-lg">💪</Text>
         </View>
       )}
@@ -80,7 +81,8 @@ function SessionRow({ session, isOwner, onEdit, onDelete }) {
           {session.name}
         </Text>
         <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-          {session.exercise_count ?? 0} ejercicio{session.exercise_count !== 1 ? "s" : ""}
+          {session.exercise_count ?? 0} ejercicio
+          {session.exercise_count !== 1 ? "s" : ""}
         </Text>
         {isOwner && <OwnBadge label="Mía" />}
       </View>
@@ -91,7 +93,10 @@ function SessionRow({ session, isOwner, onEdit, onDelete }) {
             onPress={onEdit}
             className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
           >
-            <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
+            <Pencil
+              size={14}
+              color={isDark ? ui.text.mainDark : ui.text.main}
+            />
           </Pressable>
           <Pressable
             onPress={onDelete}
@@ -149,7 +154,10 @@ function ExerciseRow({ exercise, isOwner, onEdit, onDelete }) {
             onPress={onEdit}
             className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
           >
-            <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
+            <Pencil
+              size={14}
+              color={isDark ? ui.text.mainDark : ui.text.main}
+            />
           </Pressable>
           <Pressable
             onPress={onDelete}
@@ -173,7 +181,8 @@ export default function BibliotecaIndex() {
   const [activeTab, setActiveTab] = useState(0);
 
   const { data: allSessions = [], isLoading: loadingSessions } = useSessions();
-  const { data: allExercises = [], isLoading: loadingExercises } = useExercises();
+  const { data: allExercises = [], isLoading: loadingExercises } =
+    useExercises();
 
   const handleDeleteSession = (session) => {
     Alert.alert("Eliminar sesión", `¿Eliminar "${session.name}"?`, [
@@ -277,7 +286,10 @@ export default function BibliotecaIndex() {
         <FlatList
           data={allSessions}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 100 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: insets.bottom + 100,
+          }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View className="py-16 items-center">
@@ -305,7 +317,10 @@ export default function BibliotecaIndex() {
         <FlatList
           data={allExercises}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 100 }}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: insets.bottom + 100,
+          }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View className="py-16 items-center">
