@@ -91,7 +91,8 @@ export default function UserExerciseBuilder() {
         }
 
         queryClient.invalidateQueries({ queryKey: ["exercises"] });
-        if (isEdit) queryClient.invalidateQueries({ queryKey: ["exercise", id] });
+        if (isEdit)
+          queryClient.invalidateQueries({ queryKey: ["exercise", id] });
         checkNetInfoAndSync().catch(() => {});
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -129,6 +130,8 @@ export default function UserExerciseBuilder() {
     <FormExercise
       ref={formRef}
       form={form}
+      simplified
+      onBack={() => router.back()}
       headerTitle={isEdit ? "Editar Ejercicio" : "Nuevo Ejercicio"}
       headerDescription={
         isEdit

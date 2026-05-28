@@ -40,7 +40,7 @@ import { Trash } from "../../../assets/icons";
 import { Image } from "expo-image";
 
 const FormExercise = forwardRef(function FormExercise(
-  { exercise, headerTitle, headerDescription, form },
+  { exercise, headerTitle, headerDescription, form, simplified = false, onBack },
   ref
 ) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
@@ -157,6 +157,7 @@ const FormExercise = forwardRef(function FormExercise(
           headerDescription ??
           "Completá los datos para agregar un ejercicio al catálogo."
         }
+        onBack={onBack}
       />
 
       {/* ── Form ── */}
@@ -218,122 +219,139 @@ const FormExercise = forwardRef(function FormExercise(
         </form.Field>
 
         {/* Categoría + Grupo Muscular */}
-        <View className="flex-row w-full justify-center gap-3">
-          <View className="flex-1">
-            <form.Field
-              name="category"
-              validators={{
-                onSubmit: ({ value }) => {
-                  if (!value) return "La categoría es requerida";
-                  return undefined;
-                },
-              }}
-            >
-              {(field) => (
-                <CustomSelect
-                  label="CATEGORÍA"
-                  options={EXERCISE_CATEGORIES}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  error={field.state.meta.errors?.[0]}
-                />
-              )}
-            </form.Field>
+        {simplified ? (
+          <form.Field
+            name="muscle_group"
+            validators={{
+              onSubmit: ({ value }) =>
+                !value ? "El grupo muscular es requerido" : undefined,
+            }}
+          >
+            {(field) => (
+              <CustomSelect
+                label="GRUPO MUSCULAR"
+                options={MUSCLE_GROUPS}
+                value={field.state.value}
+                onChange={field.handleChange}
+                error={field.state.meta.errors?.[0]}
+              />
+            )}
+          </form.Field>
+        ) : (
+          <View className="flex-row w-full justify-center gap-3">
+            <View className="flex-1">
+              <form.Field
+                name="category"
+                validators={{
+                  onSubmit: ({ value }) =>
+                    !value ? "La categoría es requerida" : undefined,
+                }}
+              >
+                {(field) => (
+                  <CustomSelect
+                    label="CATEGORÍA"
+                    options={EXERCISE_CATEGORIES}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    error={field.state.meta.errors?.[0]}
+                  />
+                )}
+              </form.Field>
+            </View>
+            <View className="flex-1">
+              <form.Field
+                name="muscle_group"
+                validators={{
+                  onSubmit: ({ value }) =>
+                    !value ? "El grupo muscular es requerido" : undefined,
+                }}
+              >
+                {(field) => (
+                  <CustomSelect
+                    label="GRUPO MUSCULAR"
+                    options={MUSCLE_GROUPS}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    error={field.state.meta.errors?.[0]}
+                  />
+                )}
+              </form.Field>
+            </View>
           </View>
-          <View className="flex-1">
-            <form.Field
-              name="muscle_group"
-              validators={{
-                onSubmit: ({ value }) => {
-                  if (!value) return "El grupo muscular es requerido";
-                  return undefined;
-                },
-              }}
-            >
-              {(field) => (
-                <CustomSelect
-                  label="GRUPO MUSCULAR"
-                  options={MUSCLE_GROUPS}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  error={field.state.meta.errors?.[0]}
-                />
-              )}
-            </form.Field>
-          </View>
-        </View>
+        )}
 
         {/* Equipo */}
-        <form.Field name="equipments">
-          {(field) => (
-            <>
-              {!isCreatingEquipment ? (
-                <CustomSelect
-                  label="EQUIPAMIENTO"
-                  options={dbEquipments
-                    .filter(
-                      (eq) =>
-                        !field.state.value.find((e) => e.id === eq.id)
-                    )
-                    .map((eq) => ({
-                      value: eq.id,
-                      label: eq.name,
-                    }))}
-                  value={null}
-                  searchable={true}
-                  onChange={(selectedId) => {
-                    const selectedEq = dbEquipments.find(
-                      (e) => e.id === selectedId
-                    );
-                    if (
-                      selectedEq &&
-                      !field.state.value.find((e) => e.id === selectedId)
-                    ) {
-                      field.handleChange([
-                        ...field.state.value,
-                        {
-                          id: selectedEq.id,
-                          name: selectedEq.name,
-                          image_uri: selectedEq.image_uri,
-                          isNew: false,
-                        },
-                      ]);
-                    }
-                  }}
-                  actionLabel="Crear máquina nueva"
-                  onActionPress={(query) => {
-                    equipmentForm.setFieldValue("name", query);
-                    setIsCreatingEquipment(true);
-                  }}
-                />
-              ) : (
-                <FormEquipment
-                  form={equipmentForm}
-                  dbEquipments={dbEquipments}
-                  onCancel={() => {
-                    equipmentForm.reset();
-                    setIsCreatingEquipment(false);
-                  }}
-                />
-              )}
-              {/* Lista de equipos agregados con FlatList */}
-              {field.state.value.length > 0 && (
-                <View className="mb-2">
-                  <FlatList
-                    data={field.state.value}
-                    renderItem={(props) => renderEquipmentItem(props, field)}
-                    keyExtractor={(_, index) => index.toString()}
-                    className="flex w-full"
-                    numColumns={2}
-                    columnWrapperClassName="mb-3 gap-2 justify-center px-1"
-                    showsVerticalScrollIndicator={false}
-                    scrollEnabled={false}
+        {!simplified && (
+          <form.Field name="equipments">
+            {(field) => (
+              <>
+                {!isCreatingEquipment ? (
+                  <CustomSelect
+                    label="EQUIPAMIENTO"
+                    options={dbEquipments
+                      .filter(
+                        (eq) =>
+                          !field.state.value.find((e) => e.id === eq.id)
+                      )
+                      .map((eq) => ({
+                        value: eq.id,
+                        label: eq.name,
+                      }))}
+                    value={null}
+                    searchable={true}
+                    onChange={(selectedId) => {
+                      const selectedEq = dbEquipments.find(
+                        (e) => e.id === selectedId
+                      );
+                      if (
+                        selectedEq &&
+                        !field.state.value.find((e) => e.id === selectedId)
+                      ) {
+                        field.handleChange([
+                          ...field.state.value,
+                          {
+                            id: selectedEq.id,
+                            name: selectedEq.name,
+                            image_uri: selectedEq.image_uri,
+                            isNew: false,
+                          },
+                        ]);
+                      }
+                    }}
+                    actionLabel="Crear máquina nueva"
+                    onActionPress={(query) => {
+                      equipmentForm.setFieldValue("name", query);
+                      setIsCreatingEquipment(true);
+                    }}
                   />
-                </View>
-              )}
-            </>
-          )}
-        </form.Field>
+                ) : (
+                  <FormEquipment
+                    form={equipmentForm}
+                    dbEquipments={dbEquipments}
+                    onCancel={() => {
+                      equipmentForm.reset();
+                      setIsCreatingEquipment(false);
+                    }}
+                  />
+                )}
+                {field.state.value.length > 0 && (
+                  <View className="mb-2">
+                    <FlatList
+                      data={field.state.value}
+                      renderItem={(props) => renderEquipmentItem(props, field)}
+                      keyExtractor={(_, index) => index.toString()}
+                      className="flex w-full"
+                      numColumns={2}
+                      columnWrapperClassName="mb-3 gap-2 justify-center px-1"
+                      showsVerticalScrollIndicator={false}
+                      scrollEnabled={false}
+                    />
+                  </View>
+                )}
+              </>
+            )}
+          </form.Field>
+        )}
 
         {/* Multimedia */}
         <View className="mt-4">
@@ -352,107 +370,103 @@ const FormExercise = forwardRef(function FormExercise(
             )}
           </form.Field>
 
-          <form.Field
-            name="video_uri"
-            validators={{
-              onSubmit: ({ value }) => {
-                if (!value) {
-                  return "El video es requerido";
-                }
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <View ref={uploadVideoCardRef}>
-                <View
-                  className={`rounded-2xl mb-4 border-l-4 border border-1 ${
-                    field.state.meta.errors?.length > 0
-                      ? "border-red-500 bg-red-50/10"
-                      : "border-brandPrimary-600"
-                  }`}
-                >
-                  <InputUploadVideo
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                  />
+          {!simplified && (
+            <form.Field
+              name="video_uri"
+              validators={{
+                onSubmit: ({ value }) =>
+                  !value ? "El video es requerido" : undefined,
+              }}
+            >
+              {(field) => (
+                <View ref={uploadVideoCardRef}>
+                  <View
+                    className={`rounded-2xl mb-4 border-l-4 border border-1 ${
+                      field.state.meta.errors?.length > 0
+                        ? "border-red-500 bg-red-50/10"
+                        : "border-brandPrimary-600"
+                    }`}
+                  >
+                    <InputUploadVideo
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                    />
+                  </View>
+                  {field.state.meta.errors?.length > 0 && (
+                    <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
+                      {field.state.meta.errors[0]}
+                    </Text>
+                  )}
                 </View>
-                {field.state.meta.errors?.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-[11px] mb-4 ml-4 font-manrope-semi italic">
-                    {field.state.meta.errors[0]}
-                  </Text>
-                )}
-              </View>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
+          )}
 
           {/* Imagen de portada Ejercicio */}
-          <form.Field
-            name="image_uri"
-            validators={{
-              onSubmit: ({ value }) => {
-                if (!value) {
-                  return "La imagen es requerida";
-                }
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <View>
-                <ImagePickerCard
-                  ref={imageCardRef}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  onFocus={() => scrollToCard(imageCardRef)}
-                  error={field.state.meta.errors?.length > 0}
-                />
-                {field.state.meta.errors?.length > 0 && (
-                  <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
-                    {field.state.meta.errors[0]}
-                  </Text>
-                )}
-              </View>
-            )}
-          </form.Field>
+          {!simplified && (
+            <form.Field
+              name="image_uri"
+              validators={{
+                onSubmit: ({ value }) =>
+                  !value ? "La imagen es requerida" : undefined,
+              }}
+            >
+              {(field) => (
+                <View>
+                  <ImagePickerCard
+                    ref={imageCardRef}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    onFocus={() => scrollToCard(imageCardRef)}
+                    error={field.state.meta.errors?.length > 0}
+                  />
+                  {field.state.meta.errors?.length > 0 && (
+                    <Text className="text-red-500 dark:text-red-400 text-[11px] mt-1 ml-1 font-manrope-semi italic">
+                      {field.state.meta.errors[0]}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+          )}
         </View>
 
         {/* Instrucciones */}
-        <View ref={instructionsRef}>
-          <form.Field
-            name="instructions"
-            validators={{
-              onSubmit: ({ value }) => {
-                if (!value) return "Las instrucciones son requeridas";
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <FormField
-                label="INSTRUCCIONES"
-                className="mt-6"
-                error={field.state.meta.errors?.[0]}
-              >
-                <TextInput
-                  value={field.state.value}
-                  onChangeText={field.handleChange}
-                  onFocus={() => scrollToCard(instructionsRef)}
-                  placeholder="Describe los pasos detalladamente..."
-                  placeholderTextColor={ui.text.muted}
-                  multiline
-                  numberOfLines={6}
-                  textAlignVertical="top"
-                  className={`font-manrope rounded-xl min-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm border ${
-                    field.state.meta.errors?.length > 0
-                      ? "border-red-500/50"
-                      : "border-transparent"
-                  }`}
-                />
-              </FormField>
-            )}
-          </form.Field>
-        </View>
+        {!simplified && (
+          <View ref={instructionsRef}>
+            <form.Field
+              name="instructions"
+              validators={{
+                onSubmit: ({ value }) =>
+                  !value ? "Las instrucciones son requeridas" : undefined,
+              }}
+            >
+              {(field) => (
+                <FormField
+                  label="INSTRUCCIONES"
+                  className="mt-6"
+                  error={field.state.meta.errors?.[0]}
+                >
+                  <TextInput
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onFocus={() => scrollToCard(instructionsRef)}
+                    placeholder="Describe los pasos detalladamente..."
+                    placeholderTextColor={ui.text.muted}
+                    multiline
+                    numberOfLines={6}
+                    textAlignVertical="top"
+                    className={`font-manrope rounded-xl min-h-28 p-4 bg-ui-surface-light dark:bg-ui-surface-dark text-ui-text-main dark:text-ui-text-mainDark text-sm border ${
+                      field.state.meta.errors?.length > 0
+                        ? "border-red-500/50"
+                        : "border-transparent"
+                    }`}
+                  />
+                </FormField>
+              )}
+            </form.Field>
+          </View>
+        )}
 
         {/* Toggle Unilateral */}
         <View className="mt-6">
