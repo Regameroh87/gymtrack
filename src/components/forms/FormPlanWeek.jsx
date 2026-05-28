@@ -25,6 +25,7 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-form";
+import { useRouter } from "expo-router";
 
 // Base de datos / hooks
 import { useSessions } from "../../hooks/useSessions";
@@ -35,8 +36,8 @@ import FormsHeader from "../FormsHeader";
 import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
 // Tema y assets
-import { ui } from "../../theme/colors";
-import { ChevronRight, X } from "../../../assets/icons";
+import { brandPrimary, ui } from "../../theme/colors";
+import { ChevronRight, Plus, X } from "../../../assets/icons";
 
 // ─── Tarjeta de día ──────────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
 
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const sessionPickerRef = useRef(null);

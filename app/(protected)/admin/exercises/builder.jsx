@@ -11,12 +11,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
+import { useAuth } from "../../../../src/auth/lib/getSession";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
 export default function AddExerciseScreen() {
   const formRef = useRef(null);
   const queryClient = useQueryClient();
+  const { userId } = useAuth();
   const addExerciseForm = useForm({
     defaultValues: {
       name: "",
@@ -46,6 +48,7 @@ export default function AddExerciseScreen() {
         await database.insert(exercises_base).values({
           id: exerciseId,
           gym_id: GYM_ID,
+          created_by: userId ?? null,
           ...exerciseValues,
         });
 
