@@ -66,18 +66,24 @@ export const fetchActivePlanSummary = async (userId) => {
 
   // 3. Calcular qué semana/día toca:
   //    sin logs => semana 1, día 1; con logs => último log + 1.
+  const isIndefinite = row.plan_duration_weeks === 0;
   let targetWeek = 1;
   let targetDay = 1;
   if (lastLog) {
     targetWeek = lastLog.week_number;
     targetDay = lastLog.day_number + 1;
     if (targetDay > row.plan_weekly_days) {
-      targetWeek += 1;
-      targetDay = 1;
+      if (isIndefinite) {
+        targetWeek = 1;
+        targetDay = 1;
+      } else {
+        targetWeek += 1;
+        targetDay = 1;
+      }
     }
   }
 
-  const isCompleted = targetWeek > row.plan_duration_weeks;
+  const isCompleted = !isIndefinite && targetWeek > row.plan_duration_weeks;
 
   const summary = {
     assignment: {
