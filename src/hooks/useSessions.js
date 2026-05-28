@@ -17,6 +17,7 @@ export const useSessions = () =>
           description: sessions.description,
           level: sessions.level,
           cover_image_uri: sessions.cover_image_uri,
+          created_by: sessions.created_by,
           created_at: sessions.created_at,
           exercise_count: count(session_exercises.id),
         })

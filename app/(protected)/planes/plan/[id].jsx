@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -23,6 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { database } from "../../../../src/database";
 import {
   exercises_base,
+  plan_assignments,
   plan_week_day_exercise_sets,
   plan_week_day_exercises,
   plan_week_days,
@@ -36,12 +38,16 @@ import {
 import { useRecordById } from "../../../../src/hooks/useRecordById";
 import { usePlanAssignments } from "../../../../src/hooks/usePlanAssignments";
 import { useAssignPlan } from "../../../../src/hooks/useAssignPlan";
+import { useAuth } from "../../../../src/auth/lib/getSession";
 
 // Constantes
 import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+
+// Base de datos (sync)
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
 // Tema / assets
 import {
@@ -52,8 +58,10 @@ import {
   ChevronRight,
   Clock,
   Logs,
+  Pencil,
   Play,
   ShieldHalf,
+  Trash,
 } from "../../../../assets/icons";
 
 // ─── Brand colors (Kinetic Precision) ────────────────────────────────────────
@@ -82,8 +90,10 @@ export default function PlanDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
 
+  const { userId } = useAuth();
   const { data: assignments } = usePlanAssignments();
   const { mutate: assignPlan, isPending: isAssigning } = useAssignPlan();
   const alreadyActive = assignments?.currentPlan?.plan_id === id;
@@ -214,6 +224,38 @@ export default function PlanDetail() {
     );
   }
 
+  const isOwner = plan.created_by === userId;
+
+  const handleDelete = () => {
+    Alert.alert(
+      "Eliminar plan",
+      "¿Estás seguro? Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            await database.transaction(async (tx) => {
+              await tx
+                .update(plan_assignments)
+                .set({ sync_status: "deleted" })
+                .where(eq(plan_assignments.plan_id, id));
+              await tx
+                .update(training_plans)
+                .set({ sync_status: "deleted" })
+                .where(eq(training_plans.id, id));
+            });
+            queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+            queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
+            checkNetInfoAndSync();
+            router.back();
+          },
+        },
+      ]
+    );
+  };
+
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
@@ -318,40 +360,88 @@ export default function PlanDetail() {
             <ArrowLeft size={18} color="white" />
           </Pressable>
 
-          {/* Kicker top-right */}
-          <View
-            style={{
-              position: "absolute",
-              top: insets.top + 22,
-              right: 20,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
+          {/* Top-right: botones edit/delete (owner) o kicker (otros) */}
+          {isOwner ? (
             <View
               style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: BRAND_MINT,
-                shadowColor: BRAND_MINT,
-                shadowOpacity: 1,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
-              }}
-            />
-            <Text
-              className="font-manrope-bold uppercase"
-              style={{
-                fontSize: 10,
-                color: BRAND_MINT,
-                letterSpacing: 2.4,
+                position: "absolute",
+                top: insets.top + 10,
+                right: 20,
+                flexDirection: "row",
+                gap: 8,
               }}
             >
-              Rutina
-            </Text>
-          </View>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/planes/builder?id=${id}`);
+                }}
+                className="active:scale-90"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: "rgba(15,13,32,0.6)",
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.18)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Pencil size={16} color="white" />
+              </Pressable>
+              <Pressable
+                onPress={handleDelete}
+                className="active:scale-90"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: "rgba(239,68,68,0.2)",
+                  borderWidth: 1,
+                  borderColor: "rgba(239,68,68,0.35)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Trash size={16} color="#ef4444" />
+              </Pressable>
+            </View>
+          ) : (
+            <View
+              style={{
+                position: "absolute",
+                top: insets.top + 22,
+                right: 20,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: BRAND_MINT,
+                  shadowColor: BRAND_MINT,
+                  shadowOpacity: 1,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 0 },
+                }}
+              />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{
+                  fontSize: 10,
+                  color: BRAND_MINT,
+                  letterSpacing: 2.4,
+                }}
+              >
+                Rutina
+              </Text>
+            </View>
+          )}
 
           {/* Título superpuesto al borde del scrim */}
           <View

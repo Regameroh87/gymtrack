@@ -1,5 +1,5 @@
 import { Tabs, Redirect } from "expo-router";
-import { Barbell, Home, Logs, ShieldHalf } from "../../assets/icons";
+import { Barbell, Home, ListDetails, Logs, ShieldHalf } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { useUserRole } from "../../src/hooks/useUserRole";
 import { View, Text, Pressable } from "react-native";
@@ -91,6 +91,16 @@ export default function ProtectedLayout() {
           }}
         />
 
+        <Tabs.Screen
+          name="biblioteca"
+          options={{
+            title: "Biblioteca",
+            headerShown: false,
+            tabBarIcon: ({ color }) => (
+              <ListDetails color={color} width={24} height={24} />
+            ),
+          }}
+        />
         <Tabs.Screen
           name="admin"
           options={{

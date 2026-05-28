@@ -1,8 +1,8 @@
 import { Stack, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { useForm } from "@tanstack/react-form";
 
-import { buildEmptyWeeks } from "../../../../src/hooks/useTrainingPlanForm";
+import { useTrainingPlanForm } from "../../../../src/hooks/useTrainingPlanForm";
 import { PlanFormProvider } from "../../../../src/contexts/PlanFormContext";
 import { ui } from "../../../../src/theme/colors";
 
@@ -11,22 +11,14 @@ export default function UserPlanBuilderLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const form = useForm({
-    defaultValues: {
-      name: "",
-      objective: "",
-      duration_weeks: 0,
-      weekly_days: 3,
-      weeks: buildEmptyWeeks(1, 3),
-    },
-    onSubmit: async ({ value }) => {
-      console.log("PLAN →", JSON.stringify(value, null, 2));
-      router.back();
-    },
+  const { id } = useLocalSearchParams();
+  const { form, isLoading } = useTrainingPlanForm({
+    id: id ?? null,
+    onSuccess: () => router.back(),
   });
 
   return (
-    <PlanFormProvider value={{ form, planId: null, isLoading: false }}>
+    <PlanFormProvider value={{ form, planId: id ?? null, isLoading }}>
       <Stack
         screenOptions={{
           headerTitle: "",
