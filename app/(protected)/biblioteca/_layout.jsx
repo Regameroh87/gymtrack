@@ -16,6 +16,7 @@ export default function BibliotecaLayout() {
         },
         headerShadowVisible: false,
         headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
+        headercontentStyle: { paddingTop: 0 },
       }}
     />
   );
