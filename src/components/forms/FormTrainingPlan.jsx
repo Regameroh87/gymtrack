@@ -91,7 +91,12 @@ function WeekCard({ weekNumber, summary, onPress, mutedColor, isTemplate }) {
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
-export default function FormTrainingPlan({ form, plan }) {
+export default function FormTrainingPlan({
+  form,
+  plan,
+  hideImage = false,
+  weekPathname = "/admin/plans/builder/[week]",
+}) {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -120,9 +125,9 @@ export default function FormTrainingPlan({ form, plan }) {
   const handleWeekPress = (weekNumber) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
-      pathname: "/admin/plans/builder/[week]",
+      pathname: weekPathname,
       params: { week: String(weekNumber), id: plan ?? "" },
-    }); // arregle el enrutamiento
+    });
   };
 
   // ─── Render ────────────────────────────────────────────────────────────────
@@ -148,17 +153,19 @@ export default function FormTrainingPlan({ form, plan }) {
 
             <View className="px-4 pt-4">
               {/* ─── PORTADA ─── */}
-              <form.Field name="cover_image_uri">
-                {(field) => (
-                  <ImagePickerCard
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    onFocus={field.handleBlur}
-                    title="Imagen de portada"
-                    hint="Una buena portada ayuda a identificar el plan rápidamente."
-                  />
-                )}
-              </form.Field>
+              {!hideImage && (
+                <form.Field name="cover_image_uri">
+                  {(field) => (
+                    <ImagePickerCard
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      onFocus={field.handleBlur}
+                      title="Imagen de portada"
+                      hint="Una buena portada ayuda a identificar el plan rápidamente."
+                    />
+                  )}
+                </form.Field>
+              )}
 
               {/* ─── NOMBRE ─── */}
               <form.Field

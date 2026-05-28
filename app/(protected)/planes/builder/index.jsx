@@ -15,5 +15,12 @@ export default function UserPlanBuilder() {
     );
   }
 
-  return <FormTrainingPlan form={form} plan={planId} />;
+  return (
+    <FormTrainingPlan
+      form={form}
+      plan={planId}
+      hideImage
+      weekPathname="/planes/builder/[week]"
+    />
+  );
 }
