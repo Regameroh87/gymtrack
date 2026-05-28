@@ -40,7 +40,14 @@ import { Trash } from "../../../assets/icons";
 import { Image } from "expo-image";
 
 const FormExercise = forwardRef(function FormExercise(
-  { exercise, headerTitle, headerDescription, form, simplified = false, onBack },
+  {
+    exercise,
+    headerTitle,
+    headerDescription,
+    form,
+    simplified = false,
+    onBack,
+  },
   ref
 ) {
   const [isCreatingEquipment, setIsCreatingEquipment] = useState(false);
@@ -290,8 +297,7 @@ const FormExercise = forwardRef(function FormExercise(
                     label="EQUIPAMIENTO"
                     options={dbEquipments
                       .filter(
-                        (eq) =>
-                          !field.state.value.find((e) => e.id === eq.id)
+                        (eq) => !field.state.value.find((e) => e.id === eq.id)
                       )
                       .map((eq) => ({
                         value: eq.id,
