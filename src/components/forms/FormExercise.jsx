@@ -146,6 +146,7 @@ const FormExercise = forwardRef(function FormExercise(
         scrollOffset.current = e.nativeEvent.contentOffset.y;
       }}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
+      contentContainerStyle={{ padding: 0 }}
     >
       {/* ── Header ── */}
       <FormsHeader
