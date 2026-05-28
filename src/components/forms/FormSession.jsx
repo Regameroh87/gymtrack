@@ -48,7 +48,13 @@ function SectionLabel({ children }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function FormSession({ form, session }) {
+export default function FormSession({
+  form,
+  session,
+  hideImage = false,
+  hideDescription = false,
+  hideLevel = false,
+}) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
@@ -135,55 +141,61 @@ export default function FormSession({ form, session }) {
             </form.Field>
 
             {/* Descripción */}
-            <form.Field name="description">
-              {(field) => (
-                <FormField label="DESCRIPCIÓN">
-                  <TextInput
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    placeholder="Filosofía de la sesión, cómo progresar, notas generales..."
-                    placeholderTextColor={mutedColor}
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                    className="bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope text-sm"
-                    style={{ minHeight: 90 }}
-                  />
-                </FormField>
-              )}
-            </form.Field>
+            {!hideDescription && (
+              <form.Field name="description">
+                {(field) => (
+                  <FormField label="DESCRIPCIÓN">
+                    <TextInput
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      placeholder="Filosofía de la sesión, cómo progresar, notas generales..."
+                      placeholderTextColor={mutedColor}
+                      multiline
+                      numberOfLines={4}
+                      textAlignVertical="top"
+                      className="bg-ui-input-light dark:bg-ui-input-dark border border-ui-input-border rounded-xl p-4 text-ui-text-main dark:text-ui-text-mainDark font-manrope text-sm"
+                      style={{ minHeight: 90 }}
+                    />
+                  </FormField>
+                )}
+              </form.Field>
+            )}
 
             {/* Nivel */}
-            <form.Field
-              name="level"
-              validators={{
-                onSubmit: ({ value }) =>
-                  !value ? "Seleccioná un nivel" : undefined,
-              }}
-            >
-              {(field) => (
-                <CustomSelect
-                  label="NIVEL"
-                  options={SESSION_LEVELS}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  placeholder="Seleccionar nivel..."
-                  error={field.state.meta.errors?.[0]}
-                  searchable={false}
-                  snapPoints={["40%"]}
-                />
-              )}
-            </form.Field>
+            {!hideLevel && (
+              <form.Field
+                name="level"
+                validators={{
+                  onSubmit: ({ value }) =>
+                    !value ? "Seleccioná un nivel" : undefined,
+                }}
+              >
+                {(field) => (
+                  <CustomSelect
+                    label="NIVEL"
+                    options={SESSION_LEVELS}
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    placeholder="Seleccionar nivel..."
+                    error={field.state.meta.errors?.[0]}
+                    searchable={false}
+                    snapPoints={["40%"]}
+                  />
+                )}
+              </form.Field>
+            )}
 
             {/* Imagen de portada */}
-            <form.Field name="cover_image_uri">
-              {(field) => (
-                <ImagePickerCard
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                />
-              )}
-            </form.Field>
+            {!hideImage && (
+              <form.Field name="cover_image_uri">
+                {(field) => (
+                  <ImagePickerCard
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                  />
+                )}
+              </form.Field>
+            )}
           </View>
 
           {/* ─────────────── SECCIÓN B: EJERCICIOS ─────────────── */}

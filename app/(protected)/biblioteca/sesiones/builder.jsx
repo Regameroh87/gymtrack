@@ -22,5 +22,5 @@ export default function UserSessionBuilder() {
     );
   }
 
-  return <FormSession form={form} session={id ?? null} />;
+  return <FormSession form={form} session={id ?? null} hideImage hideDescription hideLevel />;
 }
