@@ -19,7 +19,7 @@ export default function UserPlanBuilder() {
     <FormTrainingPlan
       form={form}
       plan={planId}
-      hideImage
+      simplified
       weekPathname="/planes/builder/[week]"
     />
   );

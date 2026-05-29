@@ -94,7 +94,7 @@ function WeekCard({ weekNumber, summary, onPress, mutedColor, isTemplate }) {
 export default function FormTrainingPlan({
   form,
   plan,
-  hideImage = false,
+  simplified = false,
   weekPathname = "/admin/plans/builder/[week]",
 }) {
   const router = useRouter();
@@ -153,7 +153,7 @@ export default function FormTrainingPlan({
 
             <View className="px-4 pt-4">
               {/* ─── PORTADA ─── */}
-              {!hideImage && (
+              {!simplified && (
                 <form.Field name="cover_image_uri">
                   {(field) => (
                     <ImagePickerCard
@@ -204,44 +204,48 @@ export default function FormTrainingPlan({
               </form.Field>
 
               {/* ─── OBJETIVO ─── */}
-              <form.Field
-                name="objective"
-                validators={{
-                  onSubmit: ({ value }) =>
-                    !value ? "Seleccioná un objetivo" : undefined,
-                }}
-              >
-                {(field) => (
-                  <CustomSelect
-                    label="OBJETIVO"
-                    options={PLAN_OBJECTIVES}
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    placeholder="Seleccionar objetivo..."
-                    error={field.state.meta.errors?.[0]}
-                    searchable={false}
-                    snapPoints={["50%"]}
-                  />
-                )}
-              </form.Field>
+              {!simplified && (
+                <form.Field
+                  name="objective"
+                  validators={{
+                    onSubmit: ({ value }) =>
+                      !value ? "Seleccioná un objetivo" : undefined,
+                  }}
+                >
+                  {(field) => (
+                    <CustomSelect
+                      label="OBJETIVO"
+                      options={PLAN_OBJECTIVES}
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      placeholder="Seleccionar objetivo..."
+                      error={field.state.meta.errors?.[0]}
+                      searchable={false}
+                      snapPoints={["50%"]}
+                    />
+                  )}
+                </form.Field>
+              )}
 
               {/* ─── DESCRIPCIÓN ─── */}
-              <form.Field name="description">
-                {(field) => (
-                  <FormField label="DESCRIPCIÓN (opcional)">
-                    <StyledTextInput
-                      value={field.state.value}
-                      onChangeText={field.handleChange}
-                      placeholder="Enfoque del plan, a quién está dirigido, metodología..."
-                      placeholderTextColor={mutedColor}
-                      multiline
-                      numberOfLines={4}
-                      textAlignVertical="top"
-                      style={{ minHeight: 100 }}
-                    />
-                  </FormField>
-                )}
-              </form.Field>
+              {!simplified && (
+                <form.Field name="description">
+                  {(field) => (
+                    <FormField label="DESCRIPCIÓN (opcional)">
+                      <StyledTextInput
+                        value={field.state.value}
+                        onChangeText={field.handleChange}
+                        placeholder="Enfoque del plan, a quién está dirigido, metodología..."
+                        placeholderTextColor={mutedColor}
+                        multiline
+                        numberOfLines={4}
+                        textAlignVertical="top"
+                        style={{ minHeight: 100 }}
+                      />
+                    </FormField>
+                  )}
+                </form.Field>
+              )}
 
               {/* ─── DURACIÓN ─── */}
               <form.Field name="duration_weeks">
@@ -275,20 +279,22 @@ export default function FormTrainingPlan({
               </form.Field>
 
               {/* ─── NIVEL ─── */}
-              <form.Field name="level">
-                {(field) => (
-                  <CustomSelect
-                    label="NIVEL"
-                    options={PLAN_LEVELS}
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    placeholder="Seleccionar nivel..."
-                    error={field.state.meta.errors?.[0]}
-                    searchable={false}
-                    snapPoints={["40%"]}
-                  />
-                )}
-              </form.Field>
+              {!simplified && (
+                <form.Field name="level">
+                  {(field) => (
+                    <CustomSelect
+                      label="NIVEL"
+                      options={PLAN_LEVELS}
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      placeholder="Seleccionar nivel..."
+                      error={field.state.meta.errors?.[0]}
+                      searchable={false}
+                      snapPoints={["40%"]}
+                    />
+                  )}
+                </form.Field>
+              )}
 
               {/* ─── SEMANAS ─── */}
               <form.Subscribe
