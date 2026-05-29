@@ -1,8 +1,30 @@
-import { View, Text } from "react-native";
+// React Native
+import { Pressable, View, Text } from "react-native";
 
-export default function SectionHeader({ title, subtitle, onBack }) {
+// Librerías externas
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "nativewind";
+
+// Tema y assets
+import { ui } from "../theme/colors";
+import { ArrowLeft } from "../../assets/icons";
+
+export default function FormsHeader({ title, subtitle, onBack }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const insets = useSafeAreaInsets();
+
   return (
-    <View className="px-4">
+    <View className="px-4" style={onBack ? { paddingTop: insets.top } : undefined}>
+      {onBack && (
+        <Pressable
+          onPress={onBack}
+          hitSlop={10}
+          className="mb-3 self-start active:opacity-50"
+        >
+          <ArrowLeft size={22} color={isDark ? ui.text.mainDark : ui.text.main} />
+        </Pressable>
+      )}
       <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
         {title}
       </Text>

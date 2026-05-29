@@ -1,5 +1,5 @@
 // Librerías externas
-import { useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
 // Contexto
@@ -20,6 +20,9 @@ export default function UserPlanWeekEditor() {
     durationWeeks === 0 ? "Semana tipo" : `Semana ${weekNumber}`;
 
   return (
-    <FormPlanWeek form={form} weekNumber={weekNumber} weekTitle={weekTitle} />
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <FormPlanWeek form={form} weekNumber={weekNumber} weekTitle={weekTitle} />
+    </>
   );
 }

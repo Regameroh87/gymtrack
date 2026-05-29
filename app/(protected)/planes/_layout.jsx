@@ -33,6 +33,10 @@ export default function PlanesLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
+      <Stack.Screen
+        name="builder/custom-plan/[week]"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

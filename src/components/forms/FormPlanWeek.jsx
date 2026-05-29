@@ -314,6 +314,7 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
               ? `Asigná una sesión a cada día de "${planName}".`
               : "Asigná una sesión a cada día."
           }
+          onBack={() => router.back()}
         />
 
         <View className="px-4 pt-4">
