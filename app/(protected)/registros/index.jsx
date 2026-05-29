@@ -341,7 +341,7 @@ function EmptyState({ router, insets, onLogPast, activeSession }) {
   const hasActivePlan = !!summary && !summary.isCompleted;
 
   const primary = hasActivePlan
-    ? { label: "Continuar mi plan", route: "/sesion" }
+    ? { label: "Continuar mi plan", route: "/planes" }
     : { label: "Explorar rutinas", route: "/planes" };
 
   return (
