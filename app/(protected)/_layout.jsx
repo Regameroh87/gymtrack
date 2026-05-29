@@ -110,11 +110,10 @@ export default function ProtectedLayout() {
           }}
         />
         <Tabs.Screen
-          name="sesion-active/index"
+          name="sesion-active"
           options={{
             href: null,
-            headerShown: true,
-            title: "",
+            headerShown: false,
           }}
         />
       </Tabs>

@@ -1,12 +1,7 @@
-// React
 import { useCallback, useState } from "react";
-
-// Librerías
 import { useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Debe matchear el formato de phaseKey en app/(protected)/sesion.jsx
-const phaseKey = (dayId) => `gymtrack:session_phase:${dayId}`;
+import { sessionDraftKey } from "./use-session-draft";
 
 export function useActiveSessionPhase(dayId) {
   const [isActive, setIsActive] = useState(false);
@@ -25,10 +20,10 @@ export function useActiveSessionPhase(dayId) {
       }
 
       setIsLoading(true);
-      AsyncStorage.getItem(phaseKey(dayId))
+      AsyncStorage.getItem(sessionDraftKey(dayId))
         .then((saved) => {
           if (cancelled) return;
-          setIsActive(saved === "active");
+          setIsActive(!!saved);
         })
         .catch(() => {
           if (cancelled) return;

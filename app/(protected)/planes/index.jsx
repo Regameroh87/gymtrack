@@ -105,7 +105,7 @@ const CATALOG_TYPES = [
   { key: "sesiones", label: "Sesiones" },
 ];
 
-let _lastTab = "catalogo";
+let _lastTab = "mis_planes";
 
 export default function RutinasTab() {
   const router = useRouter();

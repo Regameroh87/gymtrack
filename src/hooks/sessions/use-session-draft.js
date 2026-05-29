@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const draftKey = (dayId) => `gymtrack:session_draft:${dayId}`;
+export const sessionDraftKey = (dayId) => `gymtrack:session_draft:${dayId}`;
+const draftKey = sessionDraftKey;
 
 export function useSessionDraft(dayId) {
   const [startedAt, setStartedAt] = useState(null); // ms timestamp, base del timer de pared
@@ -48,7 +49,8 @@ export function useSessionDraft(dayId) {
   }, [dayId, isRestored, startedAt, currentIdx, completedSets, setData]);
 
   const clearDraft = useCallback(() => {
-    if (dayId) AsyncStorage.removeItem(draftKey(dayId));
+    if (dayId) return AsyncStorage.removeItem(draftKey(dayId));
+    return Promise.resolve();
   }, [dayId]);
 
   const updateField = useCallback((exId, setId, field, value) => {
