@@ -70,7 +70,7 @@ export default function HeroeCardHome({ image }) {
     ? () => router.push("/planes")
     : () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        router.push("/sesion");
+        router.push("/sesion-active");
       };
 
   return (

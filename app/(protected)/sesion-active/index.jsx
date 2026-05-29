@@ -19,29 +19,29 @@ import { useColorScheme } from "nativewind";
 import { useRouter } from "expo-router";
 
 // Tema / assets
-import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors.js";
+import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
 import {
   Barbell,
   ChevronRight,
   Play,
   X,
   CheckCircle,
-} from "../../assets/icons.jsx";
+} from "../../../assets/icons.jsx";
 
 // Hooks
-import { useActivePlanSummary } from "../../src/hooks/use-active-plan-summary";
-import { usePlanDayExercises } from "../../src/hooks/use-plan-day-exercises";
-import { useSaveSessionLog } from "../../src/hooks/use-save-session-log";
-import { useSessionDraft } from "../../src/hooks/use-session-draft";
+import { useActivePlanSummary } from "../../../src/hooks/use-active-plan-summary";
+import { usePlanDayExercises } from "../../../src/hooks/use-plan-day-exercises";
+import { useSaveSessionLog } from "../../../src/hooks/use-save-session-log";
+import { useSessionDraft } from "../../../src/hooks/use-session-draft";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Utils
-import { formatShortDate } from "../../src/utils/format-date";
-import { getCloudinaryUrl } from "../../src/utils/cloudinary";
+import { formatShortDate } from "../../../src/utils/format-date";
+import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
 
 // Componentes
-import PlanExerciseRow from "../../src/components/cards/plan-exercise-row";
-import VideoPlayerSheet from "../../src/components/videos/VideoPlayerSheet";
+import PlanExerciseRow from "../../../src/components/cards/plan-exercise-row";
+import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";
 
 // Colores JS: solo para gradientes y sombras (no expresables como clase).
 const BRAND_PRIMARY = brandPrimary[700];
