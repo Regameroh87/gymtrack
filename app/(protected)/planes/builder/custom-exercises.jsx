@@ -8,15 +8,15 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
-import { useAuth } from "../../../src/auth/lib/getSession";
-import { database } from "../../../src/database";
+import { useAuth } from "../../../../src/auth/lib/getSession";
+import { database } from "../../../../src/database";
 import {
   exercises_base,
   exercise_equipment,
-} from "../../../src/database/schemas";
-import { checkNetInfoAndSync } from "../../../src/database/sync";
-import FormExercise from "../../../src/components/forms/FormExercise";
-import { brandPrimary } from "../../../src/theme/colors";
+} from "../../../../src/database/schemas";
+import { checkNetInfoAndSync } from "../../../../src/database/sync";
+import FormExercise from "../../../../src/components/forms/FormExercise";
+import { brandPrimary } from "../../../../src/theme/colors";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
