@@ -92,8 +92,18 @@ export default function ProtectedLayout() {
         />
 
         <Tabs.Screen
-          name="biblioteca"
-          options={{ href: null, headerShown: false }}
+          name="sesiones/builder"
+          options={{
+            href: null,
+            headerShown: false,
+          }}
+        />
+        <Tabs.Screen
+          name="ejercicios/builder"
+          options={{
+            href: null,
+            headerShown: false,
+          }}
         />
         <Tabs.Screen
           name="admin"
