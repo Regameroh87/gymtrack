@@ -47,7 +47,9 @@ export const useTrainingPlans = () =>
 
       return plans.map((plan) => ({
         ...plan,
-        creator: plan.created_by ? creators.get(plan.created_by) ?? null : null,
+        creator: plan.created_by
+          ? (creators.get(plan.created_by) ?? null)
+          : null,
       }));
     },
   });
