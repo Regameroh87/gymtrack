@@ -1,5 +1,9 @@
 // React Native
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
+
+// Librerías externas
+import { Stack, useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 
 // Contexto
 import { usePlanFormContext } from "../../../../../src/contexts/PlanFormContext";
@@ -7,11 +11,15 @@ import { usePlanFormContext } from "../../../../../src/contexts/PlanFormContext"
 // Componentes
 import FormTrainingPlan from "../../../../../src/components/forms/FormTrainingPlan";
 
-// Tema
-import { brandPrimary } from "../../../../../src/theme/colors";
+// Tema y assets
+import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ArrowLeft } from "../../../../../assets/icons";
 
 export default function UserPlanBuilder() {
   const { form, planId, isLoading } = usePlanFormContext();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -22,11 +30,29 @@ export default function UserPlanBuilder() {
   }
 
   return (
-    <FormTrainingPlan
-      form={form}
-      plan={planId}
-      simplified
-      weekPathname="/planes/builder/custom-plan/[week]"
-    />
+    <>
+      <Stack.Screen
+        options={{
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.navigate("/planes")}
+              hitSlop={10}
+              className="active:opacity-50"
+            >
+              <ArrowLeft
+                size={22}
+                color={isDark ? ui.text.mainDark : ui.text.main}
+              />
+            </Pressable>
+          ),
+        }}
+      />
+      <FormTrainingPlan
+        form={form}
+        plan={planId}
+        simplified
+        weekPathname="/planes/builder/custom-plan/[week]"
+      />
+    </>
   );
 }
