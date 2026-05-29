@@ -1,9 +1,9 @@
 import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { useSessionForm } from "../../../../src/hooks/useSessionForm";
-import FormSession from "../../../../src/components/forms/FormSession";
-import { brandPrimary } from "../../../../src/theme/colors";
+import { useSessionForm } from "../../../src/hooks/useSessionForm";
+import FormSession from "../../../src/components/forms/FormSession";
+import { brandPrimary } from "../../../src/theme/colors";
 
 export default function UserSessionBuilder() {
   const { id } = useLocalSearchParams();
@@ -22,5 +22,13 @@ export default function UserSessionBuilder() {
     );
   }
 
-  return <FormSession form={form} session={id ?? null} hideImage hideDescription hideLevel />;
+  return (
+    <FormSession
+      form={form}
+      session={id ?? null}
+      hideImage
+      hideDescription
+      hideLevel
+    />
+  );
 }

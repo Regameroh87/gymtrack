@@ -1235,7 +1235,7 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
     activeLib === "planes"
       ? "/planes/builder"
       : activeLib === "sesiones"
-        ? "/biblioteca/sesiones/builder"
+        ? "/sesiones/builder"
         : "/biblioteca/ejercicios/builder";
 
   const listData =
