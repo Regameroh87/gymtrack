@@ -5,7 +5,7 @@ import { useColorScheme } from "nativewind";
 // Tema
 import { ui } from "../../../src/theme/colors";
 
-export default function RutinasLayout() {
+export default function PlanesLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -25,7 +25,14 @@ export default function RutinasLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="plan/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="builder" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="builder"
+        options={{
+          headerShown: true,
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
     </Stack>
   );
 }
