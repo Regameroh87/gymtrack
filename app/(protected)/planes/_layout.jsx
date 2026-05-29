@@ -31,14 +31,14 @@ export default function PlanesLayout() {
           headerShown: false,
         }}
       />
-      <Stack.Screen
+      {/*  <Stack.Screen
         name="builder/custom-exercise"
         options={{
           headerShown: true,
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
         }}
-      />
+      /> */}
       <Stack.Screen
         name="builder"
         options={{
