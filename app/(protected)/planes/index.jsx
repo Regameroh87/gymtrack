@@ -1233,10 +1233,10 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
 
   const fabRoute =
     activeLib === "planes"
-      ? "/builder/custom-plan"
+      ? "planes/builder/custom-plan"
       : activeLib === "sesiones"
-        ? "/builder/custom-session"
-        : "/builder/custom-exercise";
+        ? "planes/builder/custom-session"
+        : "planes/builder/custom-exercise";
 
   const listData =
     activeLib === "planes"
