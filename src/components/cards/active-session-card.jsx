@@ -32,8 +32,7 @@ export default function ActiveSessionCard({ session, currentDay }) {
   const sessionImage = session?.cover_image_uri
     ? {
         uri:
-          getCloudinaryUrl(session.cover_image_uri) ??
-          session.cover_image_uri,
+          getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri,
       }
     : null;
 
@@ -46,9 +45,7 @@ export default function ActiveSessionCard({ session, currentDay }) {
     metaParts.push(`D${currentDay.day_number}`);
   }
   if (exerciseCount) {
-    metaParts.push(
-      `${exerciseCount} ${exerciseCount === 1 ? "EJ." : "EJS."}`
-    );
+    metaParts.push(`${exerciseCount} ${exerciseCount === 1 ? "EJ." : "EJS."}`);
   }
   const meta = metaParts.join(" · ");
 
