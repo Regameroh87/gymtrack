@@ -6,7 +6,7 @@ export default function SesionActiveLayout() {
       screenOptions={{
         headerShown: true,
         animation: "slide_from_right",
-        headerTitle: "Sesión Activa",
+        headerTitle: "",
       }}
     />
   );
