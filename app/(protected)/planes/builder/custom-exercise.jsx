@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { HeaderBackButton } from "@react-navigation/elements";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
@@ -16,13 +18,15 @@ import {
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import FormExercise from "../../../../src/components/forms/FormExercise";
-import { brandPrimary } from "../../../../src/theme/colors";
+import { brandPrimary, ui } from "../../../../src/theme/colors";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
 export default function UserExerciseBuilder() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const formRef = useRef(null);
   const queryClient = useQueryClient();
   const { userId } = useAuth();
@@ -127,17 +131,32 @@ export default function UserExerciseBuilder() {
   }
 
   return (
-    <FormExercise
-      ref={formRef}
-      form={form}
-      simplified
-      onBack={() => router.back()}
-      headerTitle={isEdit ? "Editar Ejercicio" : "Nuevo Ejercicio"}
-      headerDescription={
-        isEdit
-          ? "Modificá los datos del ejercicio."
-          : "Completá los datos para agregar un ejercicio a tu biblioteca."
-      }
-    />
+    <>
+      <Stack.Screen
+        options={{
+          headerLeft: () => (
+            <View style={{ marginLeft: -16 }}>
+              <HeaderBackButton
+                displayMode="minimal"
+                tintColor={isDark ? ui.text.mainDark : ui.text.main}
+                onPress={() => router.back()}
+              />
+            </View>
+          ),
+        }}
+      />
+      <FormExercise
+        ref={formRef}
+        form={form}
+        simplified
+        onBack={() => router.back()}
+        headerTitle={isEdit ? "Editar Ejercicio" : "Nuevo Ejercicio"}
+        headerDescription={
+          isEdit
+            ? "Modificá los datos del ejercicio."
+            : "Completá los datos para agregar un ejercicio a tu biblioteca."
+        }
+      />
+    </>
   );
 }

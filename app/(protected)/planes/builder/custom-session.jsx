@@ -1,13 +1,17 @@
 import { View, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { HeaderBackButton } from "@react-navigation/elements";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 
 import { useSessionForm } from "../../../../src/hooks/useSessionForm";
 import FormSession from "../../../../src/components/forms/FormSession";
-import { brandPrimary } from "../../../../src/theme/colors";
+import { brandPrimary, ui } from "../../../../src/theme/colors";
 
 export default function UserSessionBuilder() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   const { form, isLoading } = useSessionForm({
     id: id ?? null,
@@ -23,12 +27,27 @@ export default function UserSessionBuilder() {
   }
 
   return (
-    <FormSession
-      form={form}
-      session={id ?? null}
-      hideImage
-      hideDescription
-      hideLevel
-    />
+    <>
+      <Stack.Screen
+        options={{
+          headerLeft: () => (
+            <View style={{ marginLeft: -16 }}>
+              <HeaderBackButton
+                displayMode="minimal"
+                tintColor={isDark ? ui.text.mainDark : ui.text.main}
+                onPress={() => router.back()}
+              />
+            </View>
+          ),
+        }}
+      />
+      <FormSession
+        form={form}
+        session={id ?? null}
+        hideImage
+        hideDescription
+        hideLevel
+      />
+    </>
   );
 }

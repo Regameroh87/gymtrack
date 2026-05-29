@@ -1,5 +1,8 @@
 // React Native
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+
+// React Navigation
+import { HeaderBackButton } from "@react-navigation/elements";
 
 // Librerías externas
 import { Stack, useRouter } from "expo-router";
@@ -11,9 +14,8 @@ import { usePlanFormContext } from "../../../../../src/contexts/PlanFormContext"
 // Componentes
 import FormTrainingPlan from "../../../../../src/components/forms/FormTrainingPlan";
 
-// Tema y assets
+// Tema
 import { brandPrimary, ui } from "../../../../../src/theme/colors";
-import { ArrowLeft } from "../../../../../assets/icons";
 
 export default function UserPlanBuilder() {
   const { form, planId, isLoading } = usePlanFormContext();
@@ -34,16 +36,13 @@ export default function UserPlanBuilder() {
       <Stack.Screen
         options={{
           headerLeft: () => (
-            <Pressable
-              onPress={() => router.navigate("/planes")}
-              hitSlop={10}
-              className="active:opacity-50"
-            >
-              <ArrowLeft
-                size={22}
-                color={isDark ? ui.text.mainDark : ui.text.main}
+            <View style={{ marginLeft: -16 }}>
+              <HeaderBackButton
+                displayMode="minimal"
+                tintColor={isDark ? ui.text.mainDark : ui.text.main}
+                onPress={() => router.navigate("/planes")}
               />
-            </Pressable>
+            </View>
           ),
         }}
       />
