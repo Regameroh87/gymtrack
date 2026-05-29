@@ -1,4 +1,10 @@
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { useMemo, useRef, useState, useEffect } from "react";
 
 import { LinearGradient } from "expo-linear-gradient";
