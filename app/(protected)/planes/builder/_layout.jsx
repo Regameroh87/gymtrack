@@ -1,5 +1,5 @@
-// React Native
-import { TouchableOpacity } from "react-native";
+// React Navigation
+import { HeaderBackButton } from "@react-navigation/elements";
 
 // Librerías externas
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -13,7 +13,6 @@ import { PlanFormProvider } from "../../../../src/contexts/PlanFormContext";
 
 // Tema / Assets
 import { ui } from "../../../../src/theme/colors";
-import { ArrowLeft } from "../../../../assets/icons";
 
 export default function PlanBuilderLayout() {
   const { id } = useLocalSearchParams();
@@ -40,6 +39,7 @@ export default function PlanBuilderLayout() {
         screenOptions={{
           headerShown: true,
           headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
           headerShadowVisible: false,
           headerStyle,
           headerTitleStyle,
@@ -49,10 +49,12 @@ export default function PlanBuilderLayout() {
         <Stack.Screen
           name="custom-plan"
           options={{
-            headerLeft: () => (
-              <TouchableOpacity onPress={() => router.back()} className="pr-2">
-                <ArrowLeft size={24} color={headerTintColor} />
-              </TouchableOpacity>
+            headerLeft: (props) => (
+              <HeaderBackButton
+                {...props}
+                label=""
+                onPress={() => router.back()}
+              />
             ),
           }}
         />
