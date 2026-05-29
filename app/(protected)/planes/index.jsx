@@ -105,11 +105,13 @@ const CATALOG_TYPES = [
   { key: "sesiones", label: "Sesiones" },
 ];
 
+let _lastTab = "catalogo";
+
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { userId } = useAuth();
-  const [activeTab, setActiveTab] = useState("catalogo");
+  const [activeTab, setActiveTab] = useState(_lastTab);
   const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
 
@@ -159,6 +161,7 @@ export default function RutinasTab() {
   );
 
   const switchTab = (key) => {
+    _lastTab = key;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActiveTab(key);
   };
