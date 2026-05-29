@@ -45,7 +45,7 @@ export default function PlanBuilderLayout() {
           headerTitleStyle,
           headerTintColor,
         }}
-      />
+      ></Stack>
     </PlanFormProvider>
   );
 }
