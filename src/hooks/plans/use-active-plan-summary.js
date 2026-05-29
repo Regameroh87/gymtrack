@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { and, count, desc, eq } from "drizzle-orm";
 
 // DB
-import { database } from "../database";
+import { database } from "../../database";
 import {
   plan_assignments,
   training_plans,
@@ -12,10 +12,10 @@ import {
   plan_week_day_exercises,
   sessions,
   session_logs,
-} from "../database/schemas";
+} from "../../database/schemas";
 
 // Hooks
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 // Resuelve solo lo que el home necesita: el plan activo + el día que toca
 // según el progreso registrado en session_logs. No arma el árbol completo

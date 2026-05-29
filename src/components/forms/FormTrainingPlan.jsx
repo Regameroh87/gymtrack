@@ -23,7 +23,7 @@ import { PLAN_LEVELS, PLAN_OBJECTIVES } from "../../constants/planOptions";
 import {
   resizeWeeksByDuration,
   resizeWeeksByWeeklyDays,
-} from "../../hooks/useTrainingPlanForm";
+} from "../../hooks/plans/use-training-plan-form";
 
 // Componentes
 import CustomSelect from "../CustomSelect";

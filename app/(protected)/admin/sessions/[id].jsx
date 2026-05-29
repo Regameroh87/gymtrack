@@ -37,8 +37,8 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import {
   useDeleteSession,
   countPlansUsingSession,
-} from "../../../../src/hooks/useDeleteSession";
-import { useRecordById } from "../../../../src/hooks/useRecordById";
+} from "../../../../src/hooks/sessions/use-delete-session";
+import { useRecordById } from "../../../../src/hooks/shared/use-record-by-id";
 
 // Componentes
 import SessionExerciseRow from "../../../../src/components/cards/SessionExerciseRow";

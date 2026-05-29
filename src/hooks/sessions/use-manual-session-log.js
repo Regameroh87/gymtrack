@@ -4,11 +4,11 @@ import { eq } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 
 // Base de datos
-import { database } from "../database";
-import { session_logs, session_set_logs } from "../database/schemas";
+import { database } from "../../database";
+import { session_logs, session_set_logs } from "../../database/schemas";
 
 // Hooks
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 

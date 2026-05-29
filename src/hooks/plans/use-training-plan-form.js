@@ -1,5 +1,7 @@
+// React
 import { useEffect, useMemo, useRef, useState } from "react";
 
+// Librerías externas
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useForm, useStore } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,47 +10,26 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
-import { database } from "../database";
+// Base de datos
+import { database } from "../../database";
 import {
-  custom_plans,
-  custom_plan_weeks,
-  custom_plan_week_days,
-  custom_plan_week_day_exercises,
-  custom_plan_week_day_exercise_sets,
-  custom_sessions,
-  custom_session_exercises,
   exercises_base,
-} from "../database/schemas";
-import { supabase } from "../database/supabase";
-import { checkNetInfoAndSync } from "../database/sync";
+  plan_week_day_exercise_sets,
+  plan_week_day_exercises,
+  plan_week_days,
+  plan_weeks,
+  session_exercises,
+  sessions,
+  training_plans,
+} from "../../database/schemas";
+import { supabase } from "../../database/supabase";
+import { checkNetInfoAndSync } from "../../database/sync";
 
-// Re-export helpers shared with FormTrainingPlan
-export { buildEmptyWeeks, resizeWeeksByDuration, resizeWeeksByWeeklyDays } from "./useTrainingPlanForm";
+// Constantes
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+const DRAFT_KEY = "training_plan_form_draft";
 
-const DRAFT_KEY = "custom_training_plan_form_draft";
-const DEFAULT_DURATION_WEEKS = 0;
-const DEFAULT_WEEKLY_DAYS = 3;
-
-const makeEmptyDay = (dayNumber) => ({
-  id: Crypto.randomUUID(),
-  day_number: dayNumber,
-  session_id: null,
-  session_name: null,
-  exercises: [],
-});
-
-const makeEmptyWeek = (weekNumber, weeklyDays) => ({
-  id: Crypto.randomUUID(),
-  week_number: weekNumber,
-  days: Array.from({ length: weeklyDays }, (_, i) => makeEmptyDay(i + 1)),
-});
-
-const buildEmptyWeeksLocal = (durationWeeks, weeklyDays) =>
-  Array.from({ length: durationWeeks }, (_, i) =>
-    makeEmptyWeek(i + 1, weeklyDays)
-  );
-
-const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => {
+const persistWeeks = async (planId, weeks, now, db = database) => {
   const weeksRows = [];
   const daysRows = [];
   const exercisesRows = [];
@@ -57,7 +38,6 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
   for (const week of weeks) {
     weeksRows.push({
       id: week.id,
-      user_id: userId,
       plan_id: planId,
       week_number: week.week_number,
       created_at: now,
@@ -70,7 +50,6 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
 
       daysRows.push({
         id: day.id,
-        user_id: userId,
         week_id: week.id,
         day_number: day.day_number,
         session_id: day.session_id,
@@ -85,7 +64,6 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
 
         exercisesRows.push({
           id: ex.id,
-          user_id: userId,
           week_day_id: day.id,
           session_exercise_id: ex.session_exercise_id,
           position: ex.position,
@@ -103,7 +81,6 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
           const cfg = configs[s];
           setsRows.push({
             id: cfg.id ?? Crypto.randomUUID(),
-            user_id: userId,
             exercise_id: ex.id,
             set_number: s + 1,
             reps_min: cfg.reps_min ?? null,
@@ -121,13 +98,66 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
     }
   }
 
-  if (weeksRows.length) await db.insert(custom_plan_weeks).values(weeksRows);
-  if (daysRows.length) await db.insert(custom_plan_week_days).values(daysRows);
-  if (exercisesRows.length) await db.insert(custom_plan_week_day_exercises).values(exercisesRows);
-  if (setsRows.length) await db.insert(custom_plan_week_day_exercise_sets).values(setsRows);
+  if (weeksRows.length) await db.insert(plan_weeks).values(weeksRows);
+  if (daysRows.length) await db.insert(plan_week_days).values(daysRows);
+  if (exercisesRows.length)
+    await db.insert(plan_week_day_exercises).values(exercisesRows);
+  if (setsRows.length)
+    await db.insert(plan_week_day_exercise_sets).values(setsRows);
 };
 
-export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
+const DEFAULT_DURATION_WEEKS = 0;
+const DEFAULT_WEEKLY_DAYS = 3;
+
+const makeEmptyDay = (dayNumber) => ({
+  id: Crypto.randomUUID(),
+  day_number: dayNumber,
+  session_id: null,
+  session_name: null,
+  exercises: [],
+});
+
+const makeEmptyWeek = (weekNumber, weeklyDays) => ({
+  id: Crypto.randomUUID(),
+  week_number: weekNumber,
+  days: Array.from({ length: weeklyDays }, (_, i) => makeEmptyDay(i + 1)),
+});
+
+export const buildEmptyWeeks = (durationWeeks, weeklyDays) =>
+  Array.from({ length: durationWeeks }, (_, i) =>
+    makeEmptyWeek(i + 1, weeklyDays)
+  );
+
+export const resizeWeeksByDuration = (
+  currentWeeks,
+  newDuration,
+  weeklyDays
+) => {
+  if (newDuration === currentWeeks.length) return currentWeeks;
+  if (newDuration > currentWeeks.length) {
+    const extras = Array.from(
+      { length: newDuration - currentWeeks.length },
+      (_, i) => makeEmptyWeek(currentWeeks.length + i + 1, weeklyDays)
+    );
+    return [...currentWeeks, ...extras];
+  }
+  return currentWeeks.slice(0, newDuration);
+};
+
+export const resizeWeeksByWeeklyDays = (currentWeeks, newWeeklyDays) =>
+  currentWeeks.map((week) => {
+    if (week.days.length === newWeeklyDays) return week;
+    if (newWeeklyDays > week.days.length) {
+      const extras = Array.from(
+        { length: newWeeklyDays - week.days.length },
+        (_, i) => makeEmptyDay(week.days.length + i + 1)
+      );
+      return { ...week, days: [...week.days, ...extras] };
+    }
+    return { ...week, days: week.days.slice(0, newWeeklyDays) };
+  });
+
+export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
   const saveTimerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -141,7 +171,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       duration_weeks: DEFAULT_DURATION_WEEKS,
       cover_image_uri: "",
       weekly_days: DEFAULT_WEEKLY_DAYS,
-      weeks: buildEmptyWeeksLocal(
+      weeks: buildEmptyWeeks(
         DEFAULT_DURATION_WEEKS === 0 ? 1 : DEFAULT_DURATION_WEEKS,
         DEFAULT_WEEKLY_DAYS
       ),
@@ -162,7 +192,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       if (id) {
         await database.transaction(async (tx) => {
           await tx
-            .update(custom_plans)
+            .update(training_plans)
             .set({
               name: value.name.trim(),
               description: value.description?.trim() || null,
@@ -174,51 +204,53 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               updated_at: now,
               sync_status: "pending",
             })
-            .where(eq(custom_plans.id, id));
+            .where(eq(training_plans.id, id));
 
           const oldWeekRows = await tx
-            .select({ id: custom_plan_weeks.id })
-            .from(custom_plan_weeks)
-            .where(eq(custom_plan_weeks.plan_id, id));
+            .select({ id: plan_weeks.id })
+            .from(plan_weeks)
+            .where(eq(plan_weeks.plan_id, id));
           const oldWeekIds = oldWeekRows.map((w) => w.id);
 
           if (oldWeekIds.length) {
             const oldDayRows = await tx
-              .select({ id: custom_plan_week_days.id })
-              .from(custom_plan_week_days)
-              .where(inArray(custom_plan_week_days.week_id, oldWeekIds));
+              .select({ id: plan_week_days.id })
+              .from(plan_week_days)
+              .where(inArray(plan_week_days.week_id, oldWeekIds));
             const oldDayIds = oldDayRows.map((d) => d.id);
 
             if (oldDayIds.length) {
               const oldExRows = await tx
-                .select({ id: custom_plan_week_day_exercises.id })
-                .from(custom_plan_week_day_exercises)
-                .where(inArray(custom_plan_week_day_exercises.week_day_id, oldDayIds));
+                .select({ id: plan_week_day_exercises.id })
+                .from(plan_week_day_exercises)
+                .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
               const oldExIds = oldExRows.map((e) => e.id);
 
               if (oldExIds.length) {
                 await tx
-                  .delete(custom_plan_week_day_exercise_sets)
-                  .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, oldExIds));
+                  .delete(plan_week_day_exercise_sets)
+                  .where(
+                    inArray(plan_week_day_exercise_sets.exercise_id, oldExIds)
+                  );
               }
               await tx
-                .delete(custom_plan_week_day_exercises)
-                .where(inArray(custom_plan_week_day_exercises.week_day_id, oldDayIds));
+                .delete(plan_week_day_exercises)
+                .where(inArray(plan_week_day_exercises.week_day_id, oldDayIds));
             }
             await tx
-              .delete(custom_plan_week_days)
-              .where(inArray(custom_plan_week_days.week_id, oldWeekIds));
+              .delete(plan_week_days)
+              .where(inArray(plan_week_days.week_id, oldWeekIds));
           }
-          await tx.delete(custom_plan_weeks).where(eq(custom_plan_weeks.plan_id, id));
-          await persistCustomWeeks(id, userId, value.weeks, now, tx);
+          await tx.delete(plan_weeks).where(eq(plan_weeks.plan_id, id));
+          await persistWeeks(id, value.weeks, now, tx);
         });
       } else {
         const planId = Crypto.randomUUID();
 
         await database.transaction(async (tx) => {
-          await tx.insert(custom_plans).values({
+          await tx.insert(training_plans).values({
             id: planId,
-            user_id: userId,
+            gym_id: GYM_ID,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             objective: value.objective || null,
@@ -226,18 +258,19 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             duration_weeks: value.duration_weeks,
             cover_image_uri: value.cover_image_uri || null,
             weekly_days: value.weekly_days,
+            created_by: userId,
             created_at: now,
             updated_at: now,
             sync_status: "pending",
           });
 
-          await persistCustomWeeks(planId, userId, value.weeks, now, tx);
+          await persistWeeks(planId, value.weeks, now, tx);
         });
 
         await AsyncStorage.removeItem(DRAFT_KEY);
       }
 
-      queryClient.invalidateQueries({ queryKey: ["custom_plans"] });
+      queryClient.invalidateQueries({ queryKey: ["training_plans"] });
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Toast.show({
@@ -260,22 +293,25 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
       (async () => {
         try {
+          //Me quedo con el plan
           const [planRow] = await database
             .select()
-            .from(custom_plans)
-            .where(eq(custom_plans.id, id));
+            .from(training_plans)
+            .where(eq(training_plans.id, id));
 
           if (cancelled) return;
+          // si no hay plan vuelvo
           if (!planRow) {
             setIsLoading(false);
             return;
           }
 
+          //Me quedo con las semanas ordenadas
           const weeksRows = await database
             .select()
-            .from(custom_plan_weeks)
-            .where(eq(custom_plan_weeks.plan_id, id))
-            .orderBy(asc(custom_plan_weeks.week_number));
+            .from(plan_weeks)
+            .where(eq(plan_weeks.plan_id, id))
+            .orderBy(asc(plan_weeks.week_number));
 
           if (cancelled) return;
 
@@ -285,16 +321,16 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           if (weekIds.length) {
             daysRows = await database
               .select({
-                id: custom_plan_week_days.id,
-                week_id: custom_plan_week_days.week_id,
-                day_number: custom_plan_week_days.day_number,
-                session_id: custom_plan_week_days.session_id,
-                session_name: custom_sessions.name,
+                id: plan_week_days.id,
+                week_id: plan_week_days.week_id,
+                day_number: plan_week_days.day_number,
+                session_id: plan_week_days.session_id,
+                session_name: sessions.name,
               })
-              .from(custom_plan_week_days)
-              .leftJoin(custom_sessions, eq(custom_plan_week_days.session_id, custom_sessions.id))
-              .where(inArray(custom_plan_week_days.week_id, weekIds))
-              .orderBy(asc(custom_plan_week_days.day_number));
+              .from(plan_week_days)
+              .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
+              .where(inArray(plan_week_days.week_id, weekIds))
+              .orderBy(asc(plan_week_days.day_number));
           }
 
           if (cancelled) return;
@@ -305,30 +341,34 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           if (dayIds.length) {
             exRows = await database
               .select({
-                id: custom_plan_week_day_exercises.id,
-                week_day_id: custom_plan_week_day_exercises.week_day_id,
-                session_exercise_id: custom_plan_week_day_exercises.session_exercise_id,
-                exercise_id: custom_session_exercises.exercise_id,
+                id: plan_week_day_exercises.id,
+                week_day_id: plan_week_day_exercises.week_day_id,
+                session_exercise_id:
+                  plan_week_day_exercises.session_exercise_id,
+                exercise_id: session_exercises.exercise_id,
                 exercise_name: exercises_base.name,
                 exercise_muscle_group: exercises_base.muscle_group,
-                position: custom_plan_week_day_exercises.position,
-                prescription_mode: custom_plan_week_day_exercises.prescription_mode,
-                rest_seconds: custom_plan_week_day_exercises.rest_seconds,
-                intensity_mode: custom_plan_week_day_exercises.intensity_mode,
-                tempo: custom_plan_week_day_exercises.tempo,
-                notes: custom_plan_week_day_exercises.notes,
+                position: plan_week_day_exercises.position,
+                prescription_mode: plan_week_day_exercises.prescription_mode,
+                rest_seconds: plan_week_day_exercises.rest_seconds,
+                intensity_mode: plan_week_day_exercises.intensity_mode,
+                tempo: plan_week_day_exercises.tempo,
+                notes: plan_week_day_exercises.notes,
               })
-              .from(custom_plan_week_day_exercises)
+              .from(plan_week_day_exercises)
               .leftJoin(
-                custom_session_exercises,
-                eq(custom_plan_week_day_exercises.session_exercise_id, custom_session_exercises.id)
+                session_exercises,
+                eq(
+                  plan_week_day_exercises.session_exercise_id,
+                  session_exercises.id
+                )
               )
               .leftJoin(
                 exercises_base,
-                eq(custom_session_exercises.exercise_id, exercises_base.id)
+                eq(session_exercises.exercise_id, exercises_base.id)
               )
-              .where(inArray(custom_plan_week_day_exercises.week_day_id, dayIds))
-              .orderBy(asc(custom_plan_week_day_exercises.position));
+              .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
+              .orderBy(asc(plan_week_day_exercises.position));
           }
 
           if (cancelled) return;
@@ -339,9 +379,9 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           if (exIds.length) {
             setRows = await database
               .select()
-              .from(custom_plan_week_day_exercise_sets)
-              .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, exIds))
-              .orderBy(asc(custom_plan_week_day_exercise_sets.set_number));
+              .from(plan_week_day_exercise_sets)
+              .where(inArray(plan_week_day_exercise_sets.exercise_id, exIds))
+              .orderBy(asc(plan_week_day_exercise_sets.set_number));
           }
 
           if (cancelled) return;
@@ -417,7 +457,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           });
 
           if (planRow.duration_weeks === 0 && weeks.length === 0) {
-            weeks = buildEmptyWeeksLocal(1, planRow.weekly_days);
+            weeks = buildEmptyWeeks(1, planRow.weekly_days);
           }
 
           form.reset(
@@ -437,7 +477,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           setIsLoading(false);
         } catch (e) {
           if (!cancelled) {
-            console.error("Error hydrating custom plan form:", e);
+            console.error("Error hydrating plan form:", e);
             setIsLoading(false);
           }
         }
@@ -452,7 +492,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               parsed.duration_weeks === 0 &&
               (!parsed.weeks || parsed.weeks.length === 0)
             ) {
-              parsed.weeks = buildEmptyWeeksLocal(
+              parsed.weeks = buildEmptyWeeks(
                 1,
                 parsed.weekly_days ?? DEFAULT_WEEKLY_DAYS
               );

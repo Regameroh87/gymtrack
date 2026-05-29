@@ -28,8 +28,8 @@ import { useStore } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 
 // Base de datos / hooks
-import { useSessions } from "../../hooks/useSessions";
-import { fetchSessionExercises } from "../../hooks/useSessionExercises";
+import { useSessions } from "../../hooks/sessions/use-sessions";
+import { fetchSessionExercises } from "../../hooks/sessions/use-session-exercises";
 
 // Componentes
 import FormsHeader from "../FormsHeader";

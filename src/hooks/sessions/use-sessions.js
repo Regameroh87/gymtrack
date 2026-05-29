@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { desc, count, eq, ne } from "drizzle-orm";
 
 // Base de datos
-import { database } from "../database";
-import { sessions, session_exercises } from "../database/schemas";
+import { database } from "../../database";
+import { sessions, session_exercises } from "../../database/schemas";
 
 export const useSessions = () =>
   useQuery({

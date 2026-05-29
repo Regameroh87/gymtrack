@@ -34,11 +34,11 @@ import {
 import { checkNetInfoAndSync } from "../../../src/database/sync";
 
 // Hooks
-import { useTrainingPlans } from "../../../src/hooks/useTrainingPlans";
-import { useSessions } from "../../../src/hooks/useSessions";
-import { useExercises } from "../../../src/hooks/useExercises";
-import { usePlanAssignments } from "../../../src/hooks/usePlanAssignments";
-import { useDropPlan } from "../../../src/hooks/useAssignPlan";
+import { useTrainingPlans } from "../../../src/hooks/plans/use-training-plans";
+import { useSessions } from "../../../src/hooks/sessions/use-sessions";
+import { useExercises } from "../../../src/hooks/exercises/use-exercises";
+import { usePlanAssignments } from "../../../src/hooks/plans/use-plan-assignments";
+import { useDropPlan } from "../../../src/hooks/plans/use-assign-plan";
 import { useAuth } from "../../../src/auth/lib/getSession";
 
 // Utilidades

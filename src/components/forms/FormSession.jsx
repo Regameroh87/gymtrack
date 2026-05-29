@@ -20,7 +20,7 @@ import { database } from "../../database";
 import { exercises_base } from "../../database/schemas";
 
 // Hooks
-import useAsyncStorage from "../../hooks/useAsyncStorage";
+import useAsyncStorage from "../../hooks/shared/use-async-storage";
 
 // Constantes
 import { SESSION_LEVELS } from "../../constants/sessionOptions";

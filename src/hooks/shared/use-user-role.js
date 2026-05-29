@@ -1,5 +1,5 @@
 // Librerías externas
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 const STAFF_ROLES = ["owner", "admin", "coach"];
 

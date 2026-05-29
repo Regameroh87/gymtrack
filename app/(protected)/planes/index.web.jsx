@@ -8,9 +8,9 @@ import { LinearGradient } from "expo-linear-gradient";
 
 // Auth / Hooks
 import { useAuth } from "../../../src/auth/lib/getSession.jsx";
-import { useTrainingPlans } from "../../../src/hooks/useTrainingPlans.js";
-import { usePlanAssignments } from "../../../src/hooks/usePlanAssignments.js";
-import { useDropPlan } from "../../../src/hooks/useAssignPlan.js";
+import { useTrainingPlans } from "../../../src/hooks/plans/use-training-plans.js";
+import { usePlanAssignments } from "../../../src/hooks/plans/use-plan-assignments.js";
+import { useDropPlan } from "../../../src/hooks/plans/use-assign-plan.js";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary.js";

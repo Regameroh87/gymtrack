@@ -5,9 +5,9 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 
 // Base de datos
-import { database } from "../database";
-import { equipment } from "../database/schemas";
-import { checkNetInfoAndSync } from "../database/sync";
+import { database } from "../../database";
+import { equipment } from "../../database/schemas";
+import { checkNetInfoAndSync } from "../../database/sync";
 
 // Constantes
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;

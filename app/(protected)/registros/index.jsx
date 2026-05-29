@@ -16,9 +16,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 // Hooks
-import { useSessionLogs } from "../../../src/hooks/useSessionLogs";
-import { useActivePlanSummary } from "../../../src/hooks/use-active-plan-summary";
-import { useActiveSessionPhase } from "../../../src/hooks/use-active-session-phase";
+import { useSessionLogs } from "../../../src/hooks/sessions/use-session-logs";
+import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
+import { useActiveSessionPhase } from "../../../src/hooks/sessions/use-active-session-phase";
 
 // Utilidades
 import {

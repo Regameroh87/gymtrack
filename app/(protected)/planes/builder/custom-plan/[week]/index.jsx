@@ -3,8 +3,8 @@ import { useStore } from "@tanstack/react-form";
 
 import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
 import FormPlanWeek from "../../../../../../src/components/forms/FormPlanWeek";
-import { useCustomSessions } from "../../../../../../src/hooks/useCustomSessions";
-import { fetchCustomSessionExercises } from "../../../../../../src/hooks/useCustomSessionExercises";
+import { useCustomSessions } from "../../../../../../src/hooks/sessions/use-custom-sessions";
+import { fetchCustomSessionExercises } from "../../../../../../src/hooks/sessions/use-custom-session-exercises";
 
 export default function UserPlanWeekEditor() {
   const { week } = useLocalSearchParams();

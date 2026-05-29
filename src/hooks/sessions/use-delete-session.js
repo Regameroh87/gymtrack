@@ -3,15 +3,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eq, inArray, and, ne, sql } from "drizzle-orm";
 
 // Base de datos
-import { database } from "../database";
+import { database } from "../../database";
 import {
   sessions,
   session_exercises,
   plan_week_days,
   plan_week_day_exercises,
   plan_weeks,
-} from "../database/schemas";
-import { checkNetInfoAndSync } from "../database/sync";
+} from "../../database/schemas";
+import { checkNetInfoAndSync } from "../../database/sync";
 
 // Cuenta cuántos planes distintos usan esta sesión (excluye los ya marcados deleted).
 export const countPlansUsingSession = async (sessionId) => {

@@ -5,7 +5,7 @@ import { View, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 // Hooks
-import { useSessionForm } from "../../../../src/hooks/useSessionForm";
+import { useSessionForm } from "../../../../src/hooks/sessions/use-session-form";
 
 // Componentes
 import FormSession from "../../../../src/components/forms/FormSession";

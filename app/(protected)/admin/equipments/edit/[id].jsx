@@ -12,7 +12,7 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { eq } from "drizzle-orm";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRecordById } from "../../../../../src/hooks/useRecordById";
+import { useRecordById } from "../../../../../src/hooks/shared/use-record-by-id";
 
 export default function EditEquipmentScreen() {
   const router = useRouter();

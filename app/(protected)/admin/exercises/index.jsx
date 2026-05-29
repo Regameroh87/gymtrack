@@ -29,7 +29,7 @@ import {
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
 // Hooks
-import { useExercises } from "../../../../src/hooks/useExercises";
+import { useExercises } from "../../../../src/hooks/exercises/use-exercises";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";

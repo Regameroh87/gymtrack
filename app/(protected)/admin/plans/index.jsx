@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 // Hooks
-import { useTrainingPlans } from "../../../../src/hooks/useTrainingPlans";
+import { useTrainingPlans } from "../../../../src/hooks/plans/use-training-plans";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";

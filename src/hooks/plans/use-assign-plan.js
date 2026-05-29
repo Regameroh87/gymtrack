@@ -4,12 +4,12 @@ import { eq, and } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 
 // DB
-import { database } from "../database";
-import { plan_assignments } from "../database/schemas";
-import { checkNetInfoAndSync } from "../database/sync";
+import { database } from "../../database";
+import { plan_assignments } from "../../database/schemas";
+import { checkNetInfoAndSync } from "../../database/sync";
 
 // Hooks
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 

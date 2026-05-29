@@ -19,9 +19,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Hooks
-import { useSessions } from "../../../src/hooks/useSessions";
-import { useSessionExercises } from "../../../src/hooks/useSessionExercises";
-import { useCreateManualLog } from "../../../src/hooks/useManualSessionLog";
+import { useSessions } from "../../../src/hooks/sessions/use-sessions";
+import { useSessionExercises } from "../../../src/hooks/sessions/use-session-exercises";
+import { useCreateManualLog } from "../../../src/hooks/sessions/use-manual-session-log";
 
 // Utilidades
 import { WEEKDAYS_ES, formatRelativeDay } from "../../../src/utils/format-date";

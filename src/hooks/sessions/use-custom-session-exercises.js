@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { asc, eq } from "drizzle-orm";
 
-import { database } from "../database";
-import { custom_session_exercises, exercises_base } from "../database/schemas";
+import { database } from "../../database";
+import { custom_session_exercises, exercises_base } from "../../database/schemas";
 
 export const fetchCustomSessionExercises = (sessionId) =>
   database

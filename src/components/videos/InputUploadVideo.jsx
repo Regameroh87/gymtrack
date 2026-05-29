@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Pressable, Text, Alert, View, Animated } from "react-native";
 import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
-import { useMediaPicker } from "../../hooks/useMediaPicker";
+import { useMediaPicker } from "../../hooks/ui/use-media-picker";
 import { brandPrimary, ui } from "../../theme/colors";
 import {
   saveMediaLocally,

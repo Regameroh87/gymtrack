@@ -1,7 +1,5 @@
-// React
 import { useEffect } from "react";
 
-// Librerías externas
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { asc, eq, inArray } from "drizzle-orm";
@@ -9,24 +7,19 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
-// Base de datos
-import { database } from "../database";
+import { database } from "../../database";
 import {
+  custom_sessions,
+  custom_session_exercises,
+  custom_plan_week_days,
+  custom_plan_week_day_exercises,
+  custom_plan_week_day_exercise_sets,
   exercises_base,
-  plan_week_day_exercise_sets,
-  plan_week_day_exercises,
-  plan_week_days,
-  session_exercises,
-  sessions,
-} from "../database/schemas";
-import { supabase } from "../database/supabase";
-import { checkNetInfoAndSync } from "../database/sync";
+} from "../../database/schemas";
+import { supabase } from "../../database/supabase";
+import { checkNetInfoAndSync } from "../../database/sync";
 
-// Constantes
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
-
-
-export const useSessionForm = ({ id = null, onSuccess } = {}) => {
+export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
 
   const form = useForm({
@@ -45,12 +38,11 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
         const userId = session?.user?.id ?? null;
 
         if (id) {
-          // ── EDICIÓN ──
           await database.transaction(async (tx) => {
             const now = new Date().toISOString();
 
             await tx
-              .update(sessions)
+              .update(custom_sessions)
               .set({
                 name: value.name.trim(),
                 description: value.description?.trim() || null,
@@ -59,13 +51,12 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
                 updated_at: now,
                 sync_status: "pending",
               })
-              .where(eq(sessions.id, id));
+              .where(eq(custom_sessions.id, id));
 
-            // Preservar IDs existentes para no romper FKs en plan_week_day_exercises
             const existingSEs = await tx
-              .select({ id: session_exercises.id, exercise_id: session_exercises.exercise_id })
-              .from(session_exercises)
-              .where(eq(session_exercises.session_id, id));
+              .select({ id: custom_session_exercises.id, exercise_id: custom_session_exercises.exercise_id })
+              .from(custom_session_exercises)
+              .where(eq(custom_session_exercises.session_id, id));
 
             const existingMap = new Map(existingSEs.map((se) => [se.exercise_id, se.id]));
             const newExerciseIds = new Set(value.exercises.map((ex) => ex.exercise_id));
@@ -83,54 +74,54 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
             const addedSEs = newSEs.filter((se) => se.isNew);
 
-            // Borrar ejercicios removidos: cascada a plan_week_day_exercises y sus sets
             if (removedSEIds.length) {
               const planExRows = await tx
-                .select({ id: plan_week_day_exercises.id })
-                .from(plan_week_day_exercises)
-                .where(inArray(plan_week_day_exercises.session_exercise_id, removedSEIds));
+                .select({ id: custom_plan_week_day_exercises.id })
+                .from(custom_plan_week_day_exercises)
+                .where(inArray(custom_plan_week_day_exercises.session_exercise_id, removedSEIds));
               const planExIds = planExRows.map((r) => r.id);
               if (planExIds.length) {
                 await tx
-                  .delete(plan_week_day_exercise_sets)
-                  .where(inArray(plan_week_day_exercise_sets.exercise_id, planExIds));
+                  .delete(custom_plan_week_day_exercise_sets)
+                  .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, planExIds));
                 await tx
-                  .delete(plan_week_day_exercises)
-                  .where(inArray(plan_week_day_exercises.id, planExIds));
+                  .delete(custom_plan_week_day_exercises)
+                  .where(inArray(custom_plan_week_day_exercises.id, planExIds));
               }
               await tx
-                .delete(session_exercises)
-                .where(inArray(session_exercises.id, removedSEIds));
+                .delete(custom_session_exercises)
+                .where(inArray(custom_session_exercises.id, removedSEIds));
             }
 
-            // Upsert: actualizar posición de existentes, insertar nuevos
             for (const se of newSEs) {
               if (se.isNew) {
-                await tx.insert(session_exercises).values({
+                await tx.insert(custom_session_exercises).values({
                   id: se.id,
+                  user_id: userId,
                   session_id: id,
                   exercise_id: se.exercise_id,
                   position: se.position,
+                  exercise_source: "base",
                 });
               } else {
                 await tx
-                  .update(session_exercises)
+                  .update(custom_session_exercises)
                   .set({ position: se.position })
-                  .where(eq(session_exercises.id, se.id));
+                  .where(eq(custom_session_exercises.id, se.id));
               }
             }
 
-            // Sincronizar ejercicios nuevos a todos los plan_week_days que usan esta sesión
             if (addedSEs.length) {
               const affectedDays = await tx
-                .select({ id: plan_week_days.id })
-                .from(plan_week_days)
-                .where(eq(plan_week_days.session_id, id));
+                .select({ id: custom_plan_week_days.id })
+                .from(custom_plan_week_days)
+                .where(eq(custom_plan_week_days.session_id, id));
 
               if (affectedDays.length) {
                 const newPlanExRows = affectedDays.flatMap((day) =>
                   addedSEs.map((se) => ({
                     id: Crypto.randomUUID(),
+                    user_id: userId,
                     week_day_id: day.id,
                     session_exercise_id: se.id,
                     position: se.position,
@@ -144,37 +135,37 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
                     sync_status: "pending",
                   }))
                 );
-                await tx.insert(plan_week_day_exercises).values(newPlanExRows);
+                await tx.insert(custom_plan_week_day_exercises).values(newPlanExRows);
               }
             }
           });
 
-          queryClient.invalidateQueries({ queryKey: ["sessions"] });
-          queryClient.invalidateQueries({ queryKey: ["session", id] });
+          queryClient.invalidateQueries({ queryKey: ["custom_sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["custom_session", id] });
         } else {
-          // ── CREACIÓN ──
           const sessionId = Crypto.randomUUID();
 
-          await database.insert(sessions).values({
+          await database.insert(custom_sessions).values({
             id: sessionId,
-            gym_id: GYM_ID,
+            user_id: userId,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             level: value.level || null,
             cover_image_uri: value.cover_image_uri || null,
-            created_by: userId,
           });
 
           for (const [idx, ex] of value.exercises.entries()) {
-            await database.insert(session_exercises).values({
+            await database.insert(custom_session_exercises).values({
               id: Crypto.randomUUID(),
+              user_id: userId,
               session_id: sessionId,
               exercise_id: ex.exercise_id,
               position: idx,
+              exercise_source: "base",
             });
           }
 
-          queryClient.invalidateQueries({ queryKey: ["sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["custom_sessions"] });
           form.reset();
         }
 
@@ -190,7 +181,7 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
         if (onSuccess) onSuccess();
       } catch (error) {
-        console.error("Error al guardar sesión:", error);
+        console.error("Error al guardar sesión custom:", error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         Toast.show({
           type: "error",
@@ -204,31 +195,31 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
   });
 
   const { data: editData, isLoading } = useQuery({
-    queryKey: ["session-edit", id],
+    queryKey: ["custom_session_edit", id],
     enabled: !!id,
     queryFn: async () => {
       const [session] = await database
         .select()
-        .from(sessions)
-        .where(eq(sessions.id, id));
+        .from(custom_sessions)
+        .where(eq(custom_sessions.id, id));
 
       if (!session) return null;
 
       const exercises = await database
         .select({
-          id: session_exercises.id,
-          exercise_id: session_exercises.exercise_id,
+          id: custom_session_exercises.id,
+          exercise_id: custom_session_exercises.exercise_id,
           name: exercises_base.name,
           muscle_group: exercises_base.muscle_group,
           image_uri: exercises_base.image_uri,
         })
-        .from(session_exercises)
-        .innerJoin(
+        .from(custom_session_exercises)
+        .leftJoin(
           exercises_base,
-          eq(session_exercises.exercise_id, exercises_base.id)
+          eq(custom_session_exercises.exercise_id, exercises_base.id)
         )
-        .where(eq(session_exercises.session_id, id))
-        .orderBy(asc(session_exercises.position));
+        .where(eq(custom_session_exercises.session_id, id))
+        .orderBy(asc(custom_session_exercises.position));
 
       return {
         name: session.name ?? "",

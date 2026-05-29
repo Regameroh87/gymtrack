@@ -32,7 +32,7 @@ import {
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
 // Hooks
-import { useRecordById } from "../../../../src/hooks/useRecordById";
+import { useRecordById } from "../../../../src/hooks/shared/use-record-by-id";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";

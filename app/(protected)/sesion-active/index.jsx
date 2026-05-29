@@ -29,10 +29,10 @@ import {
 } from "../../../assets/icons.jsx";
 
 // Hooks
-import { useActivePlanSummary } from "../../../src/hooks/use-active-plan-summary";
-import { usePlanDayExercises } from "../../../src/hooks/use-plan-day-exercises";
-import { useSaveSessionLog } from "../../../src/hooks/use-save-session-log";
-import { useSessionDraft } from "../../../src/hooks/use-session-draft";
+import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
+import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
+import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-log";
+import { useSessionDraft } from "../../../src/hooks/sessions/use-session-draft";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Utils

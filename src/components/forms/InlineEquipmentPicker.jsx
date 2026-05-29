@@ -2,7 +2,7 @@ import { View, Pressable, ActivityIndicator } from "react-native";
 import { useState, forwardRef } from "react";
 import { Photo } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
-import { useMediaPicker } from "../../hooks/useMediaPicker";
+import { useMediaPicker } from "../../hooks/ui/use-media-picker";
 import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
 import { Image } from "expo-image";
 

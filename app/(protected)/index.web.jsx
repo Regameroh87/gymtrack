@@ -8,10 +8,10 @@ import { LinearGradient } from "expo-linear-gradient";
 
 // Auth
 import { useAuth } from "../../src/auth/lib/getSession.jsx";
-import { useUserRole } from "../../src/hooks/useUserRole.js";
+import { useUserRole } from "../../src/hooks/shared/use-user-role.js";
 
 // Hooks
-import { useSessionLogs } from "../../src/hooks/useSessionLogs.js";
+import { useSessionLogs } from "../../src/hooks/sessions/use-session-logs.js";
 
 // Utilidades
 import { formatDuration } from "../../src/utils/format-date.js";

@@ -3,16 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import { and, count, countDistinct, desc, eq, ne } from "drizzle-orm";
 
 // Base de datos
-import { database } from "../database";
+import { database } from "../../database";
 import {
   session_logs,
   session_set_logs,
   sessions,
   training_plans,
-} from "../database/schemas";
+} from "../../database/schemas";
 
 // Hooks
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 // Trae todos los entrenamientos registrados del usuario, ordenados del más
 // reciente al más antiguo, con el nombre de la sesión / plan y un resumen de

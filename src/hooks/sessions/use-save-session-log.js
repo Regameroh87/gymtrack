@@ -3,9 +3,9 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
-import { database } from "../database";
-import { session_logs, session_set_logs } from "../database/schemas";
-import { useAuth } from "../auth/lib/getSession";
+import { database } from "../../database";
+import { session_logs, session_set_logs } from "../../database/schemas";
+import { useAuth } from "../../auth/lib/getSession";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 

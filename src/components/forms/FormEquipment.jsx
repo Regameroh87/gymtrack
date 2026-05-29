@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 
 // Hooks & Utils
 import { useTheme } from "../../theme/theme";
-import { useMediaPicker } from "../../hooks/useMediaPicker";
+import { useMediaPicker } from "../../hooks/ui/use-media-picker";
 import handlePickImage from "../../utils/handlePickImage";
 import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 

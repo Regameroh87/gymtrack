@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { asc, eq, inArray } from "drizzle-orm";
 
 // DB
-import { database } from "../database";
+import { database } from "../../database";
 import {
   plan_week_day_exercises,
   plan_week_day_exercise_sets,
   session_exercises,
   exercises_base,
-} from "../database/schemas";
+} from "../../database/schemas";
 
 // Trae los ejercicios prescritos de un día del plan (plan_week_day) con sus
 // series anidadas. weekDayId proviene de currentDay.id de useActivePlanSummary.

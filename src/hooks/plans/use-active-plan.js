@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { eq, and, asc, inArray } from "drizzle-orm";
 
 // DB
-import { database } from "../database";
+import { database } from "../../database";
 import {
   plan_assignments,
   training_plans,
@@ -14,10 +14,10 @@ import {
   session_exercises,
   exercises_base,
   sessions,
-} from "../database/schemas";
+} from "../../database/schemas";
 
 // Hooks
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 // Arma el plan activo del usuario con semanas/días/ejercicios/series anidados.
 // Devuelve null si el usuario no tiene asignación activa.

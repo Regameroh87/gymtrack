@@ -3,7 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 // Hooks
-import { useCustomTrainingPlanForm } from "../../../../src/hooks/useCustomTrainingPlanForm";
+import { useCustomTrainingPlanForm } from "../../../../src/hooks/plans/use-custom-training-plan-form";
 
 // Contexto
 import { PlanFormProvider } from "../../../../src/contexts/PlanFormContext";

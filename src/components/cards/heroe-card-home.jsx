@@ -17,7 +17,7 @@ import { brandPrimary, brandSecondary, gradient, ui } from "../../theme/colors";
 import { ChevronRight, Barbell, ClipboardList } from "../../../assets/icons";
 
 // ── Hooks ──
-import { useActivePlanSummary } from "../../hooks/use-active-plan-summary";
+import { useActivePlanSummary } from "../../hooks/plans/use-active-plan-summary";
 
 // ── Utils ──
 import { getCloudinaryUrl } from "../../utils/cloudinary";

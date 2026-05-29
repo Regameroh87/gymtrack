@@ -16,7 +16,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 // Hooks
-import { useSessions } from "../../../../src/hooks/useSessions";
+import { useSessions } from "../../../../src/hooks/sessions/use-sessions";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";

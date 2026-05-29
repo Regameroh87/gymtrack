@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { desc, count, eq, ne } from "drizzle-orm";
 
-import { database } from "../database";
-import { custom_sessions, custom_session_exercises } from "../database/schemas";
+import { database } from "../../database";
+import { custom_sessions, custom_session_exercises } from "../../database/schemas";
 
 export const useCustomSessions = () =>
   useQuery({

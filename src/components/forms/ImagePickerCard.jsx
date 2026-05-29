@@ -3,7 +3,7 @@ import { useState } from "react";
 import { forwardRef } from "react";
 import { Photo, Upload, Link } from "../../../assets/icons";
 import { brandSecondary } from "../../theme/colors";
-import { useMediaPicker } from "../../hooks/useMediaPicker";
+import { useMediaPicker } from "../../hooks/ui/use-media-picker";
 
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
 import { useTheme } from "../../theme/theme";

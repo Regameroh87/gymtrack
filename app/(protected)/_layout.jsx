@@ -1,7 +1,7 @@
 import { Tabs, Redirect } from "expo-router";
 import { Barbell, Home, Logs, ShieldHalf } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
-import { useUserRole } from "../../src/hooks/useUserRole";
+import { useUserRole } from "../../src/hooks/shared/use-user-role";
 import { View, Text, Pressable } from "react-native";
 import { useColorScheme } from "nativewind";
 import { ui, brandPrimary } from "../../src/theme/colors";

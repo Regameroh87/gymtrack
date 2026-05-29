@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { desc, ne } from "drizzle-orm";
 
 // Base de datos
-import { database } from "../database";
-import { training_plans } from "../database/schemas";
-import { supabase } from "../database/supabase";
+import { database } from "../../database";
+import { training_plans } from "../../database/schemas";
+import { supabase } from "../../database/supabase";
 
 const fetchCreators = async (ids) => {
   if (ids.length === 0) return new Map();

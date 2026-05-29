@@ -1,13 +1,13 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
-import { eq, ne, desc, and, inArray } from "drizzle-orm";
+import { eq, ne, desc, and } from "drizzle-orm";
 
 // DB
-import { database } from "../database";
-import { plan_assignments, training_plans } from "../database/schemas";
+import { database } from "../../database";
+import { plan_assignments, training_plans } from "../../database/schemas";
 
 // Hooks
-import { useAuth } from "../auth/lib/getSession";
+import { useAuth } from "../../auth/lib/getSession";
 
 export const usePlanAssignments = () => {
   const { userId } = useAuth();

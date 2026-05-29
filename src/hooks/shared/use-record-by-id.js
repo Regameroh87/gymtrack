@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { eq } from "drizzle-orm";
 
-import { database } from "../database";
+import { database } from "../../database";
 
 export function useRecordById(queryKey, table, id, options = {}) {
   return useQuery({

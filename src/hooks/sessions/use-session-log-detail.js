@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { asc, eq } from "drizzle-orm";
 
 // Base de datos
-import { database } from "../database";
+import { database } from "../../database";
 import {
   exercises_base,
   session_logs,
   session_set_logs,
   sessions,
   training_plans,
-} from "../database/schemas";
+} from "../../database/schemas";
 
 // Trae un registro de entrenamiento con todas sus series agrupadas por
 // ejercicio (preservando el orden en que aparecen las series).

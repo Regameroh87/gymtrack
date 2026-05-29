@@ -35,9 +35,9 @@ import {
 } from "../../../../src/database/schemas";
 
 // Hooks
-import { useRecordById } from "../../../../src/hooks/useRecordById";
-import { usePlanAssignments } from "../../../../src/hooks/usePlanAssignments";
-import { useAssignPlan } from "../../../../src/hooks/useAssignPlan";
+import { useRecordById } from "../../../../src/hooks/shared/use-record-by-id";
+import { usePlanAssignments } from "../../../../src/hooks/plans/use-plan-assignments";
+import { useAssignPlan } from "../../../../src/hooks/plans/use-assign-plan";
 import { useAuth } from "../../../../src/auth/lib/getSession";
 
 // Constantes

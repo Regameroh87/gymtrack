@@ -14,8 +14,8 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Hooks
-import { useSessionLogDetail } from "../../../src/hooks/useSessionLogDetail";
-import { useDeleteSessionLog } from "../../../src/hooks/useManualSessionLog";
+import { useSessionLogDetail } from "../../../src/hooks/sessions/use-session-log-detail";
+import { useDeleteSessionLog } from "../../../src/hooks/sessions/use-manual-session-log";
 
 // Utilidades
 import {
