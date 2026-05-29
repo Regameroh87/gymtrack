@@ -25,6 +25,7 @@ import m0020 from './0020_panoramic_magneto.sql';
 import m0021 from './0021_lyrical_black_widow.sql';
 import m0022 from './0022_plain_wildside.sql';
 import m0023 from './0023_add_created_by_to_exercises.sql';
+import m0024 from './0024_custom_tables.sql';
 
   export default {
     journal,
@@ -52,7 +53,8 @@ m0019,
 m0020,
 m0021,
 m0022,
-m0023
+m0023,
+m0024
     }
   }
   

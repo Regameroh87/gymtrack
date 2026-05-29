@@ -15,6 +15,14 @@ import {
   training_plans,
   session_logs,
   session_set_logs,
+  custom_exercises,
+  custom_sessions,
+  custom_session_exercises,
+  custom_plans,
+  custom_plan_weeks,
+  custom_plan_week_days,
+  custom_plan_week_day_exercises,
+  custom_plan_week_day_exercise_sets,
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, ne, or, and, inArray, isNotNull } from "drizzle-orm";
@@ -44,6 +52,14 @@ const TABLE_QUERY_KEYS = {
   plan_week_day_exercise_sets: [["training_plans"], ["training_plan"]],
   session_logs: [["session_logs"], ["sessions"]],
   session_set_logs: [["session_logs"], ["sessions"]],
+  custom_exercises: [["custom_exercises"], ["custom_exercise"]],
+  custom_sessions: [["custom_sessions"], ["custom_session"]],
+  custom_session_exercises: [["custom_sessions"], ["custom_session"]],
+  custom_plans: [["custom_plans"], ["custom_plan"]],
+  custom_plan_weeks: [["custom_plans"], ["custom_plan"]],
+  custom_plan_week_days: [["custom_plans"], ["custom_plan"]],
+  custom_plan_week_day_exercises: [["custom_plans"], ["custom_plan"]],
+  custom_plan_week_day_exercise_sets: [["custom_plans"], ["custom_plan"]],
 };
 
 function invalidateQueriesForTable(tableName) {
@@ -61,6 +77,11 @@ const COMPOSITE_UNIQUE_COLUMNS = {
   plan_week_day_exercises: ["week_day_id", "session_exercise_id"],
   plan_week_day_exercise_sets: ["exercise_id", "set_number"],
   session_set_logs: ["session_log_id", "exercise_id", "set_number"],
+  custom_session_exercises: ["session_id", "exercise_id"],
+  custom_plan_weeks: ["plan_id", "week_number"],
+  custom_plan_week_days: ["week_id", "day_number"],
+  custom_plan_week_day_exercises: ["week_day_id", "session_exercise_id"],
+  custom_plan_week_day_exercise_sets: ["exercise_id", "set_number"],
 };
 
 async function pullTableChanges(
@@ -1295,6 +1316,696 @@ export async function pushSessionSetLogsChanges() {
   }
 }
 
+async function cascadeDeleteCustomPlanLocally(planId) {
+  const weekIds = (
+    await database
+      .select({ id: custom_plan_weeks.id })
+      .from(custom_plan_weeks)
+      .where(eq(custom_plan_weeks.plan_id, planId))
+  ).map((w) => w.id);
+
+  if (weekIds.length) {
+    const dayIds = (
+      await database
+        .select({ id: custom_plan_week_days.id })
+        .from(custom_plan_week_days)
+        .where(inArray(custom_plan_week_days.week_id, weekIds))
+    ).map((d) => d.id);
+
+    if (dayIds.length) {
+      const exIds = (
+        await database
+          .select({ id: custom_plan_week_day_exercises.id })
+          .from(custom_plan_week_day_exercises)
+          .where(inArray(custom_plan_week_day_exercises.week_day_id, dayIds))
+      ).map((e) => e.id);
+
+      if (exIds.length) {
+        await database
+          .delete(custom_plan_week_day_exercise_sets)
+          .where(
+            inArray(custom_plan_week_day_exercise_sets.exercise_id, exIds)
+          );
+      }
+      await database
+        .delete(custom_plan_week_day_exercises)
+        .where(inArray(custom_plan_week_day_exercises.week_day_id, dayIds));
+    }
+    await database
+      .delete(custom_plan_week_days)
+      .where(inArray(custom_plan_week_days.week_id, weekIds));
+  }
+  await database
+    .delete(custom_plan_weeks)
+    .where(eq(custom_plan_weeks.plan_id, planId));
+  await database
+    .delete(custom_plans)
+    .where(eq(custom_plans.id, planId));
+}
+
+async function cleanOrphanedCustomPlanChildren() {
+  const planIds = new Set(
+    (await database.select({ id: custom_plans.id }).from(custom_plans)).map(
+      (r) => r.id
+    )
+  );
+  const allWeeks = await database
+    .select({ id: custom_plan_weeks.id, plan_id: custom_plan_weeks.plan_id })
+    .from(custom_plan_weeks);
+  const orphanWeekIds = allWeeks
+    .filter((w) => !planIds.has(w.plan_id))
+    .map((w) => w.id);
+  if (orphanWeekIds.length) {
+    await database
+      .delete(custom_plan_weeks)
+      .where(inArray(custom_plan_weeks.id, orphanWeekIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanWeekIds.length} semana(s) custom huérfana(s) eliminada(s)`
+    );
+  }
+
+  const weekIds = new Set(
+    (
+      await database.select({ id: custom_plan_weeks.id }).from(custom_plan_weeks)
+    ).map((r) => r.id)
+  );
+  const allDays = await database
+    .select({
+      id: custom_plan_week_days.id,
+      week_id: custom_plan_week_days.week_id,
+    })
+    .from(custom_plan_week_days);
+  const orphanDayIds = allDays
+    .filter((d) => !weekIds.has(d.week_id))
+    .map((d) => d.id);
+  if (orphanDayIds.length) {
+    await database
+      .delete(custom_plan_week_days)
+      .where(inArray(custom_plan_week_days.id, orphanDayIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanDayIds.length} día(s) custom huérfano(s) eliminado(s)`
+    );
+  }
+
+  const dayIds = new Set(
+    (
+      await database
+        .select({ id: custom_plan_week_days.id })
+        .from(custom_plan_week_days)
+    ).map((r) => r.id)
+  );
+  const allExercises = await database
+    .select({
+      id: custom_plan_week_day_exercises.id,
+      week_day_id: custom_plan_week_day_exercises.week_day_id,
+    })
+    .from(custom_plan_week_day_exercises);
+  const orphanExIds = allExercises
+    .filter((e) => !dayIds.has(e.week_day_id))
+    .map((e) => e.id);
+  if (orphanExIds.length) {
+    await database
+      .delete(custom_plan_week_day_exercise_sets)
+      .where(
+        inArray(custom_plan_week_day_exercise_sets.exercise_id, orphanExIds)
+      );
+    await database
+      .delete(custom_plan_week_day_exercises)
+      .where(inArray(custom_plan_week_day_exercises.id, orphanExIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanExIds.length} ejercicio(s) custom huérfano(s) eliminado(s)`
+    );
+  }
+
+  const exIds = new Set(
+    (
+      await database
+        .select({ id: custom_plan_week_day_exercises.id })
+        .from(custom_plan_week_day_exercises)
+    ).map((r) => r.id)
+  );
+  const allSets = await database
+    .select({
+      id: custom_plan_week_day_exercise_sets.id,
+      exercise_id: custom_plan_week_day_exercise_sets.exercise_id,
+    })
+    .from(custom_plan_week_day_exercise_sets);
+  const orphanSetIds = allSets
+    .filter((s) => !exIds.has(s.exercise_id))
+    .map((s) => s.id);
+  if (orphanSetIds.length) {
+    await database
+      .delete(custom_plan_week_day_exercise_sets)
+      .where(inArray(custom_plan_week_day_exercise_sets.id, orphanSetIds));
+    console.log(
+      `🧹 [CLEANUP] ${orphanSetIds.length} set(s) custom huérfano(s) eliminado(s)`
+    );
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Ejercicios Custom del usuario
+ */
+export async function pushCustomExercisesChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_exercises)
+    .where(
+      or(
+        eq(custom_exercises.sync_status, "pending"),
+        eq(custom_exercises.sync_status, "dirty"),
+        eq(custom_exercises.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("custom_exercises")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(custom_exercises)
+          .where(eq(custom_exercises.id, row.id));
+        console.log(`✅ [PUSH] custom_exercise "${row.name}" eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando custom_exercise "${row.name}":`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    if (row.image_uri && row.image_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.image_uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.image_uri);
+          row.image_uri = public_id;
+          await database
+            .update(custom_exercises)
+            .set({ image_uri: public_id })
+            .where(eq(custom_exercises.id, row.id));
+        }
+      } catch (err) {
+        console.error(
+          `❌ [PUSH] Error subiendo imagen custom_exercise "${row.name}":`,
+          err.message
+        );
+      }
+    }
+
+    if (row.video_uri && row.video_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.video_uri,
+          uploadPreset: "gymtrack_videos",
+          typeFile: "video",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.video_uri);
+          row.video_uri = public_id;
+          await database
+            .update(custom_exercises)
+            .set({ video_uri: public_id })
+            .where(eq(custom_exercises.id, row.id));
+        }
+      } catch (err) {
+        console.error(
+          `❌ [PUSH] Error subiendo video custom_exercise "${row.name}":`,
+          err.message
+        );
+      }
+    }
+
+    const { sync_status, updated_at, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("custom_exercises")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(custom_exercises)
+        .set({ sync_status: "synced" })
+        .where(eq(custom_exercises.id, row.id));
+      console.log(`✅ [PUSH] custom_exercise "${row.name}" sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo custom_exercise "${row.name}":`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Sesiones Custom del usuario
+ */
+export async function pushCustomSessionsChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_sessions)
+    .where(
+      or(
+        eq(custom_sessions.sync_status, "pending"),
+        eq(custom_sessions.sync_status, "dirty"),
+        eq(custom_sessions.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_sessions: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("custom_sessions")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(custom_sessions)
+          .where(eq(custom_sessions.id, row.id));
+        console.log(`✅ [PUSH] custom_session "${row.name}" eliminada`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando custom_session "${row.name}":`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.cover_image_uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.cover_image_uri);
+          row.cover_image_uri = public_id;
+          await database
+            .update(custom_sessions)
+            .set({ cover_image_uri: public_id })
+            .where(eq(custom_sessions.id, row.id));
+        }
+      } catch (err) {
+        console.error(
+          `❌ [PUSH] Error subiendo imagen custom_session "${row.name}":`,
+          err.message
+        );
+      }
+    }
+
+    const { sync_status, updated_at, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("custom_sessions")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(custom_sessions)
+        .set({ sync_status: "synced" })
+        .where(eq(custom_sessions.id, row.id));
+      console.log(`✅ [PUSH] custom_session "${row.name}" sincronizada`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo custom_session "${row.name}":`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Ejercicios de Sesión Custom
+ */
+export async function pushCustomSessionExercisesChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_session_exercises)
+    .where(
+      or(
+        eq(custom_session_exercises.sync_status, "pending"),
+        eq(custom_session_exercises.sync_status, "dirty"),
+        eq(custom_session_exercises.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_session_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (const row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("custom_session_exercises")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await database
+          .delete(custom_session_exercises)
+          .where(eq(custom_session_exercises.id, row.id));
+        console.log(
+          `✅ [PUSH] custom_session_exercise (id: ${row.id}) eliminado`
+        );
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando custom_session_exercise (id: ${row.id}):`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    const { sync_status, updated_at, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("custom_session_exercises")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(custom_session_exercises)
+        .set({ sync_status: "synced" })
+        .where(eq(custom_session_exercises.id, row.id));
+      console.log(
+        `✅ [PUSH] custom_session_exercise (id: ${row.id}) sincronizado`
+      );
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo custom_session_exercise (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Planes Custom del usuario
+ */
+export async function pushCustomPlansChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_plans)
+    .where(
+      or(
+        eq(custom_plans.sync_status, "pending"),
+        eq(custom_plans.sync_status, "dirty"),
+        eq(custom_plans.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_plans: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  for (let row of localChanges) {
+    if (row.sync_status === "deleted") {
+      const { error } = await supabase
+        .from("custom_plans")
+        .delete()
+        .eq("id", row.id);
+      if (!error) {
+        await cascadeDeleteCustomPlanLocally(row.id);
+        console.log(`✅ [PUSH] custom_plan "${row.name}" eliminado`);
+      } else {
+        console.error(
+          `❌ [PUSH] Error eliminando custom_plan "${row.name}":`,
+          error.message
+        );
+      }
+      continue;
+    }
+
+    if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
+      try {
+        const { public_id } = await uploadFileToCloudinary({
+          fileUri: row.cover_image_uri,
+          uploadPreset: "gymtrack_images",
+          typeFile: "image",
+        });
+        if (public_id) {
+          await deleteMediaLocally(row.cover_image_uri);
+          row.cover_image_uri = public_id;
+          await database
+            .update(custom_plans)
+            .set({ cover_image_uri: public_id })
+            .where(eq(custom_plans.id, row.id));
+        }
+      } catch (err) {
+        console.error(
+          `❌ [PUSH] Error subiendo imagen custom_plan "${row.name}":`,
+          err.message
+        );
+      }
+    }
+
+    const { sync_status, updated_at, ...restOfRow } = row;
+    const { error } = await supabase
+      .from("custom_plans")
+      .upsert(restOfRow, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(custom_plans)
+        .set({ sync_status: "synced" })
+        .where(eq(custom_plans.id, row.id));
+      console.log(`✅ [PUSH] custom_plan "${row.name}" sincronizado`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo custom_plan "${row.name}":`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Semanas de Plan Custom
+ */
+export async function pushCustomPlanWeeksChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_plan_weeks)
+    .where(
+      or(
+        eq(custom_plan_weeks.sync_status, "pending"),
+        eq(custom_plan_weeks.sync_status, "dirty"),
+        eq(custom_plan_weeks.sync_status, "deleted")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_plan_weeks: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const deletedRows = localChanges.filter((r) => r.sync_status === "deleted");
+  const pendingRows = localChanges.filter((r) => r.sync_status !== "deleted");
+
+  for (const row of deletedRows) {
+    const { error } = await supabase
+      .from("custom_plan_weeks")
+      .delete()
+      .eq("id", row.id);
+    if (!error) {
+      await database
+        .delete(custom_plan_weeks)
+        .where(eq(custom_plan_weeks.id, row.id));
+      console.log(`✅ [PUSH] custom_plan_week (id: ${row.id}) eliminada`);
+    } else {
+      console.error(
+        `❌ [PUSH] Error eliminando custom_plan_week (id: ${row.id}):`,
+        error.message
+      );
+    }
+  }
+
+  const byPlan = {};
+  for (const row of pendingRows) {
+    if (!byPlan[row.plan_id]) byPlan[row.plan_id] = [];
+    byPlan[row.plan_id].push(row);
+  }
+
+  for (const [plan_id, rows] of Object.entries(byPlan)) {
+    const { error: deleteError } = await supabase
+      .from("custom_plan_weeks")
+      .delete()
+      .eq("plan_id", plan_id);
+    if (deleteError) {
+      console.error(
+        `❌ [PUSH] Error limpiando semanas custom remotas (plan_id: ${plan_id}):`,
+        deleteError.message
+      );
+      continue;
+    }
+
+    const rowsToUpsert = rows.map(
+      ({ sync_status, updated_at, ...rest }) => rest
+    );
+    const { error } = await supabase
+      .from("custom_plan_weeks")
+      .upsert(rowsToUpsert, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(custom_plan_weeks)
+        .set({ sync_status: "synced" })
+        .where(eq(custom_plan_weeks.plan_id, plan_id));
+      console.log(
+        `✅ [PUSH] custom_plan_weeks (plan_id: ${plan_id}) sincronizadas (${rows.length})`
+      );
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo custom_plan_weeks (plan_id: ${plan_id}):`,
+        error.message
+      );
+    }
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Días de Plan Custom
+ */
+export async function pushCustomPlanWeekDaysChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_plan_week_days)
+    .where(
+      or(
+        eq(custom_plan_week_days.sync_status, "pending"),
+        eq(custom_plan_week_days.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_plan_week_days: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("custom_plan_week_days")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(custom_plan_week_days)
+      .set({ sync_status: "synced" })
+      .where(
+        inArray(
+          custom_plan_week_days.id,
+          localChanges.map((r) => r.id)
+        )
+      );
+    console.log(
+      `✅ [PUSH] custom_plan_week_days: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(
+      `❌ [PUSH] Error subiendo custom_plan_week_days:`,
+      error.message
+    );
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Ejercicios de Día de Plan Custom
+ */
+export async function pushCustomPlanWeekDayExercisesChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_plan_week_day_exercises)
+    .where(
+      or(
+        eq(custom_plan_week_day_exercises.sync_status, "pending"),
+        eq(custom_plan_week_day_exercises.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_plan_week_day_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("custom_plan_week_day_exercises")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(custom_plan_week_day_exercises)
+      .set({ sync_status: "synced" })
+      .where(
+        inArray(
+          custom_plan_week_day_exercises.id,
+          localChanges.map((r) => r.id)
+        )
+      );
+    console.log(
+      `✅ [PUSH] custom_plan_week_day_exercises: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(
+      `❌ [PUSH] Error subiendo custom_plan_week_day_exercises:`,
+      error.message
+    );
+  }
+}
+
+/**
+ * PUSH: Sube cambios locales de Series de Plan Custom
+ */
+export async function pushCustomPlanWeekDayExerciseSetsChanges() {
+  const localChanges = await database
+    .select()
+    .from(custom_plan_week_day_exercise_sets)
+    .where(
+      or(
+        eq(custom_plan_week_day_exercise_sets.sync_status, "pending"),
+        eq(custom_plan_week_day_exercise_sets.sync_status, "dirty")
+      )
+    );
+  if (localChanges.length === 0) return;
+  console.log(
+    `⬆️  [PUSH] custom_plan_week_day_exercise_sets: ${localChanges.length} cambio(s) pendiente(s)`
+  );
+
+  const rowsToUpsert = localChanges.map(
+    ({ sync_status, updated_at, ...rest }) => rest
+  );
+  const { error } = await supabase
+    .from("custom_plan_week_day_exercise_sets")
+    .upsert(rowsToUpsert, { onConflict: "id" });
+  if (!error) {
+    await database
+      .update(custom_plan_week_day_exercise_sets)
+      .set({ sync_status: "synced" })
+      .where(
+        inArray(
+          custom_plan_week_day_exercise_sets.id,
+          localChanges.map((r) => r.id)
+        )
+      );
+    console.log(
+      `✅ [PUSH] custom_plan_week_day_exercise_sets: ${localChanges.length} registro(s) sincronizado(s)`
+    );
+  } else {
+    console.error(
+      `❌ [PUSH] Error subiendo custom_plan_week_day_exercise_sets:`,
+      error.message
+    );
+  }
+}
+
 export async function syncWithSupabase(
   tablesToSync = [
     "exercises_base",
@@ -1310,6 +2021,14 @@ export async function syncWithSupabase(
     "plan_week_day_exercise_sets",
     "session_logs",
     "session_set_logs",
+    "custom_exercises",
+    "custom_sessions",
+    "custom_session_exercises",
+    "custom_plans",
+    "custom_plan_weeks",
+    "custom_plan_week_days",
+    "custom_plan_week_day_exercises",
+    "custom_plan_week_day_exercise_sets",
   ]
 ) {
   if (isSyncing) {
@@ -1337,7 +2056,18 @@ export async function syncWithSupabase(
       "sessions",
       "training_plans",
     ]);
-    const USER_SCOPED_TABLES = new Set(["session_logs", "plan_assignments"]);
+    const USER_SCOPED_TABLES = new Set([
+      "session_logs",
+      "plan_assignments",
+      "custom_exercises",
+      "custom_sessions",
+      "custom_session_exercises",
+      "custom_plans",
+      "custom_plan_weeks",
+      "custom_plan_week_days",
+      "custom_plan_week_day_exercises",
+      "custom_plan_week_day_exercise_sets",
+    ]);
 
     for (const table of tablesToSync) {
       const syncKey = `${LAST_SYNC_KEY}_${table}`;
@@ -1359,6 +2089,18 @@ export async function syncWithSupabase(
         schemaTable = plan_week_day_exercise_sets;
       else if (table === "session_logs") schemaTable = session_logs;
       else if (table === "session_set_logs") schemaTable = session_set_logs;
+      else if (table === "custom_exercises") schemaTable = custom_exercises;
+      else if (table === "custom_sessions") schemaTable = custom_sessions;
+      else if (table === "custom_session_exercises")
+        schemaTable = custom_session_exercises;
+      else if (table === "custom_plans") schemaTable = custom_plans;
+      else if (table === "custom_plan_weeks") schemaTable = custom_plan_weeks;
+      else if (table === "custom_plan_week_days")
+        schemaTable = custom_plan_week_days;
+      else if (table === "custom_plan_week_day_exercises")
+        schemaTable = custom_plan_week_day_exercises;
+      else if (table === "custom_plan_week_day_exercise_sets")
+        schemaTable = custom_plan_week_day_exercise_sets;
 
       if (schemaTable) {
         const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
@@ -1389,6 +2131,7 @@ export async function syncWithSupabase(
     // Borra hijos locales cuyo padre ya no existe (cualquier sync_status).
     // Previene errores de FK en el push cuando un padre fue eliminado remotamente.
     await cleanOrphanedPlanChildren();
+    await cleanOrphanedCustomPlanChildren();
 
     // --- UPLOAD PHASE ---
     if (tablesToSync.includes("exercises_base")) {
@@ -1429,6 +2172,30 @@ export async function syncWithSupabase(
     }
     if (tablesToSync.includes("session_set_logs")) {
       await pushSessionSetLogsChanges();
+    }
+    if (tablesToSync.includes("custom_exercises")) {
+      await pushCustomExercisesChanges();
+    }
+    if (tablesToSync.includes("custom_sessions")) {
+      await pushCustomSessionsChanges();
+    }
+    if (tablesToSync.includes("custom_session_exercises")) {
+      await pushCustomSessionExercisesChanges();
+    }
+    if (tablesToSync.includes("custom_plans")) {
+      await pushCustomPlansChanges();
+    }
+    if (tablesToSync.includes("custom_plan_weeks")) {
+      await pushCustomPlanWeeksChanges();
+    }
+    if (tablesToSync.includes("custom_plan_week_days")) {
+      await pushCustomPlanWeekDaysChanges();
+    }
+    if (tablesToSync.includes("custom_plan_week_day_exercises")) {
+      await pushCustomPlanWeekDayExercisesChanges();
+    }
+    if (tablesToSync.includes("custom_plan_week_day_exercise_sets")) {
+      await pushCustomPlanWeekDayExerciseSetsChanges();
     }
     console.log(`✅ [SYNC] Sincronización completada`);
     return { success: true };
