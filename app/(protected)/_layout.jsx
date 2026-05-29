@@ -90,21 +90,6 @@ export default function ProtectedLayout() {
             ),
           }}
         />
-
-        <Tabs.Screen
-          name="sesiones/builder"
-          options={{
-            href: null,
-            headerShown: false,
-          }}
-        />
-        <Tabs.Screen
-          name="ejercicios/builder"
-          options={{
-            href: null,
-            headerShown: false,
-          }}
-        />
         <Tabs.Screen
           name="admin"
           options={{
@@ -126,13 +111,6 @@ export default function ProtectedLayout() {
         />
         <Tabs.Screen
           name="sesion"
-          options={{
-            href: null,
-            headerShown: false,
-          }}
-        />
-        <Tabs.Screen
-          name="sesiones"
           options={{
             href: null,
             headerShown: false,
