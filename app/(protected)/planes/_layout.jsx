@@ -27,11 +27,11 @@ export default function PlanesLayout() {
       <Stack.Screen name="plan/[id]" options={{ headerShown: false }} />
       <Stack.Screen
         name="builder/custom-plan/index"
-        options={{ headerTitle: "", headerBackButtonDisplayMode: "minimal" }}
+        options={{ title: "", headerBackButtonDisplayMode: "minimal" }}
       />
       <Stack.Screen
         name="builder/custom-plan/[week]/index"
-        options={{ headerTitle: "", headerBackButtonDisplayMode: "minimal" }}
+        options={{ title: "", headerBackButtonDisplayMode: "minimal" }}
       />
     </Stack>
   );
