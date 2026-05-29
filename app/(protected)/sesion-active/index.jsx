@@ -50,7 +50,7 @@ export default function SesionPreview() {
         setDraftChecked(true);
       }
     });
-  }, [currentDay?.id]);
+  }, [currentDay?.id, router]);
 
   const handleVideoPress = ({ url, title }) => {
     setActiveVideo({ url, title });
@@ -124,10 +124,7 @@ export default function SesionPreview() {
   }
 
   return (
-    <View
-      className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-      style={{ paddingTop: insets.top }}
-    >
+    <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
       <ScrollView
         contentContainerStyle={{
           paddingBottom: insets.bottom + 36,
