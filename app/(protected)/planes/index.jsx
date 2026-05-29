@@ -1317,7 +1317,9 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
               return (
                 <LibPlanRow
                   plan={item}
-                  onEdit={() => router.push(`/planes/builder?id=${item.id}`)}
+                  onEdit={() =>
+                    router.push(`/planes/builder/custom-plan?id=${item.id}`)
+                  }
                   onDelete={() => handleDeletePlan(item)}
                   isDark={isDark}
                 />
