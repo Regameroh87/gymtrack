@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const sessionDraftKey = (dayId) => `gymtrack:session_draft:${dayId}`;
+export const sessionDraftPrefix = "gymtrack:session_draft:";
+export const sessionDraftKey = (dayId) => `${sessionDraftPrefix}${dayId}`;
 const draftKey = sessionDraftKey;
 
 export function useSessionDraft(dayId) {

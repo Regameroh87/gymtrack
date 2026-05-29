@@ -46,7 +46,7 @@ export default function SesionPreview() {
     if (!currentDay?.id) return;
     AsyncStorage.getItem(sessionDraftKey(currentDay.id)).then((raw) => {
       if (raw) {
-        router.replace("/(protected)/sesion-active/activa");
+        router.replace("/(protected)/sesion-active/active");
       } else {
         setDraftChecked(true);
       }

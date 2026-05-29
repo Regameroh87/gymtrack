@@ -73,6 +73,7 @@ export const useSaveSessionLog = () => {
       queryClient.invalidateQueries({
         queryKey: ["plan_assignments", "active", "summary", userId],
       });
+      queryClient.invalidateQueries({ queryKey: ["active_session_draft"] });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Toast.show({
         type: "success",

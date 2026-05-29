@@ -1,11 +1,12 @@
 // ── React Native ──
+import { useCallback } from "react";
 import { Pressable, Text, View } from "react-native";
 
 // ── Expo ──
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 
 // ── Navigation / Theme ──
 import { useTheme } from "../../theme/theme";
@@ -18,6 +19,7 @@ import { ChevronRight, Barbell, ClipboardList } from "../../../assets/icons";
 
 // ── Hooks ──
 import { useActivePlanSummary } from "../../hooks/plans/use-active-plan-summary";
+import { useActiveSessionDraft } from "../../hooks/sessions/use-active-session-draft";
 
 // ── Utils ──
 import { getCloudinaryUrl } from "../../utils/cloudinary";
@@ -28,6 +30,15 @@ export default function HeroeCardHome({ image }) {
   const now = new Date();
 
   const { data: summary, isPending } = useActivePlanSummary();
+  const { data: draft, refetch: refetchDraft } = useActiveSessionDraft();
+
+  // Tabs mantiene el Home montado, así que releemos el draft al recuperar foco
+  // (cubre iniciar, finalizar y abandonar sesión sin remount).
+  useFocusEffect(
+    useCallback(() => {
+      refetchDraft();
+    }, [refetchDraft])
+  );
 
   const BRAND_PRIMARY = brandPrimary[700];
   const BRAND_MINT = brandSecondary[400];
@@ -51,6 +62,10 @@ export default function HeroeCardHome({ image }) {
   // Plan completado o sin día configurado — no hay nada que mostrar
   if (!hasNoPlan && !currentDay) return null;
 
+  // Hay una sesión a medias guardada justo para el día que toca
+  const hasDraft =
+    !hasNoPlan && !!draft && String(draft.dayId) === String(currentDay.id);
+
   // Datos del plan activo (solo cuando hasNoPlan es false)
   const session = currentDay?.session ?? null;
   const objective = summary?.plan?.objective ?? "Entrenamiento";
@@ -70,7 +85,10 @@ export default function HeroeCardHome({ image }) {
     ? () => router.push("/planes")
     : () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        router.push("/sesion-active");
+        // Con draft saltamos directo a la activa; sin draft, al preview.
+        router.push(
+          hasDraft ? "/sesion-active/active" : "/sesion-active"
+        );
       };
 
   return (
@@ -155,7 +173,7 @@ export default function HeroeCardHome({ image }) {
                       : "text-brandSecondary-700 dark:text-brandSecondary-400"
                   }`}
                 >
-                  {hasNoPlan ? "SIN PLAN" : "PRÓXIMA"}
+                  {hasNoPlan ? "SIN PLAN" : hasDraft ? "EN CURSO" : "PRÓXIMA"}
                 </Text>
               </View>
             </View>
@@ -288,7 +306,11 @@ export default function HeroeCardHome({ image }) {
                     <View className="bg-brandPrimary-700 w-2 h-2 rounded-md" />
                   </View>
                   <Text className="text-xs tracking-[1.5px] font-manrope-bold uppercase text-ui-text-main dark:text-ui-text-mainDark">
-                    {hasNoPlan ? "Ver planes" : "Iniciar sesión"}
+                    {hasNoPlan
+                      ? "Ver planes"
+                      : hasDraft
+                        ? "Continuar sesión"
+                        : "Iniciar sesión"}
                   </Text>
                 </View>
                 <View
