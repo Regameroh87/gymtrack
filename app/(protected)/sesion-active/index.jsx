@@ -16,13 +16,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColorScheme } from "nativewind";
 
 import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
-import { ChevronRight, Youtube, Play, Barbell } from "../../../assets/icons.jsx";
+import {
+  ChevronRight,
+  Youtube,
+  Play,
+  Barbell,
+} from "../../../assets/icons.jsx";
 
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
 import { sessionDraftKey } from "../../../src/hooks/sessions/use-session-draft";
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
 import { formatShortDate } from "../../../src/utils/format-date";
+import Screen from "../../../src/components/Screen.jsx";
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";
 
 const BRAND_PRIMARY = brandPrimary[700];
@@ -50,145 +56,168 @@ function ExerciseMiniCard({ exercise, position, onVideoPress, isDark }) {
   const seriesLabel = `${exercise.sets.length} ${exercise.sets.length === 1 ? "serie" : "series"}`;
 
   return (
-    <View
-      style={{
-        width: CARD_W,
-        borderRadius: 18,
-        overflow: "hidden",
-        backgroundColor: isDark ? "#1a1828" : "#f5f4fb",
-        borderWidth: 0.5,
-        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(15,13,32,0.08)",
-      }}
-    >
-      {/* Thumbnail */}
-      <View style={{ height: CARD_W * 0.72, position: "relative" }}>
-        {imageUri ? (
-          <Image
-            source={{ uri: imageUri }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-          />
-        ) : (
-          <View
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: MINT + "18",
-            }}
-          >
-            <Text
+    <Screen safe>
+      <View
+        style={{
+          width: CARD_W,
+          borderRadius: 18,
+          overflow: "hidden",
+          backgroundColor: isDark ? "#1a1828" : "#f5f4fb",
+          borderWidth: 0.5,
+          borderColor: isDark
+            ? "rgba(255,255,255,0.08)"
+            : "rgba(15,13,32,0.08)",
+        }}
+      >
+        {/* Thumbnail */}
+        <View style={{ height: CARD_W * 0.72, position: "relative" }}>
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+            />
+          ) : (
+            <View
               style={{
-                fontFamily: "PlusJakartaSans_700Bold",
-                fontSize: 24,
-                color: isDark ? MINT : brandSecondary[700],
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: MINT + "18",
               }}
             >
-              {position}
-            </Text>
-          </View>
-        )}
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 24,
+                  color: isDark ? MINT : brandSecondary[700],
+                }}
+              >
+                {position}
+              </Text>
+            </View>
+          )}
 
-        {imageUri && (
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.5)"]}
-            style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 36 }}
-          />
-        )}
-
-        {videoLink ? (
-          <Pressable
-            onPress={() =>
-              onVideoPress?.({ url: videoLink.url, title: exercise.exercise_name })
-            }
-            hitSlop={8}
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              width: 28,
-              height: 28,
-              borderRadius: 14,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor:
-                videoLink.kind === "youtube" ? "rgba(255,0,0,0.22)" : MINT + "33",
-              borderWidth: 1,
-              borderColor:
-                videoLink.kind === "youtube" ? "rgba(255,0,0,0.7)" : MINT + "99",
-            }}
-          >
-            {videoLink.kind === "youtube" ? (
-              <Youtube size={12} color="#ff4d4d" />
-            ) : (
-              <Play size={11} color={MINT} />
-            )}
-          </Pressable>
-        ) : null}
-
-        {!imageUri && (
-          <View
-            style={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              width: 22,
-              height: 22,
-              borderRadius: 11,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,13,32,0.06)",
-            }}
-          >
-            <Text
+          {imageUri && (
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.5)"]}
               style={{
-                fontFamily: "Manrope_700Bold",
-                fontSize: 10,
-                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(15,13,32,0.4)",
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 36,
+              }}
+            />
+          )}
+
+          {videoLink ? (
+            <Pressable
+              onPress={() =>
+                onVideoPress?.({
+                  url: videoLink.url,
+                  title: exercise.exercise_name,
+                })
+              }
+              hitSlop={8}
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                width: 28,
+                height: 28,
+                borderRadius: 14,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor:
+                  videoLink.kind === "youtube"
+                    ? "rgba(255,0,0,0.22)"
+                    : MINT + "33",
+                borderWidth: 1,
+                borderColor:
+                  videoLink.kind === "youtube"
+                    ? "rgba(255,0,0,0.7)"
+                    : MINT + "99",
               }}
             >
-              {position}
-            </Text>
-          </View>
-        )}
-      </View>
+              {videoLink.kind === "youtube" ? (
+                <Youtube size={12} color="#ff4d4d" />
+              ) : (
+                <Play size={11} color={MINT} />
+              )}
+            </Pressable>
+          ) : null}
 
-      {/* Info */}
-      <View style={{ padding: 10, gap: 2 }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontFamily: "PlusJakartaSans_700Bold",
-            fontSize: 13,
-            color: isDark ? "#f5f4fb" : "#0f0d20",
-          }}
-        >
-          {exercise.exercise_name}
-        </Text>
-        {exercise.exercise_muscle ? (
+          {!imageUri && (
+            <View
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                width: 22,
+                height: 22,
+                borderRadius: 11,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(15,13,32,0.06)",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Manrope_700Bold",
+                  fontSize: 10,
+                  color: isDark
+                    ? "rgba(255,255,255,0.4)"
+                    : "rgba(15,13,32,0.4)",
+                }}
+              >
+                {position}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Info */}
+        <View style={{ padding: 10, gap: 2 }}>
           <Text
             numberOfLines={1}
             style={{
-              fontFamily: "Manrope_600SemiBold",
-              fontSize: 11,
-              color: isDark ? "rgba(255,255,255,0.45)" : "rgba(15,13,32,0.45)",
+              fontFamily: "PlusJakartaSans_700Bold",
+              fontSize: 13,
+              color: isDark ? "#f5f4fb" : "#0f0d20",
             }}
           >
-            {exercise.exercise_muscle}
+            {exercise.exercise_name}
           </Text>
-        ) : null}
-        <Text
-          style={{
-            fontFamily: "Manrope_700Bold",
-            fontSize: 11,
-            color: isDark ? MINT : brandSecondary[700],
-            marginTop: 1,
-          }}
-        >
-          {seriesLabel}
-        </Text>
+          {exercise.exercise_muscle ? (
+            <Text
+              numberOfLines={1}
+              style={{
+                fontFamily: "Manrope_600SemiBold",
+                fontSize: 11,
+                color: isDark
+                  ? "rgba(255,255,255,0.45)"
+                  : "rgba(15,13,32,0.45)",
+              }}
+            >
+              {exercise.exercise_muscle}
+            </Text>
+          ) : null}
+          <Text
+            style={{
+              fontFamily: "Manrope_700Bold",
+              fontSize: 11,
+              color: isDark ? MINT : brandSecondary[700],
+              marginTop: 1,
+            }}
+          >
+            {seriesLabel}
+          </Text>
+        </View>
       </View>
-    </View>
+    </Screen>
   );
 }
 
@@ -249,7 +278,11 @@ export default function SesionOverview() {
 
   const dateLabel = formatShortDate();
 
-  if (loadingSummary || (currentDay && loadingExercises) || (!draftChecked && currentDay)) {
+  if (
+    loadingSummary ||
+    (currentDay && loadingExercises) ||
+    (!draftChecked && currentDay)
+  ) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <ActivityIndicator size="large" color={BRAND_PRIMARY} />
@@ -329,7 +362,13 @@ export default function SesionOverview() {
             }}
           >
             {/* Top: plan badge + fecha */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <View
                 style={{
                   paddingHorizontal: 10,
@@ -387,11 +426,21 @@ export default function SesionOverview() {
                   { value: `${session.estimatedMinutes}'`, label: "min" },
                   {
                     value: `${session.exercises.length}`,
-                    label: session.exercises.length === 1 ? "ejercicio" : "ejercicios",
+                    label:
+                      session.exercises.length === 1
+                        ? "ejercicio"
+                        : "ejercicios",
                   },
                   { value: `${totalSets}`, label: "series" },
                 ].map((stat, i) => (
-                  <View key={i} style={{ flexDirection: "row", alignItems: "baseline", gap: 4 }}>
+                  <View
+                    key={i}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "baseline",
+                      gap: 4,
+                    }}
+                  >
                     <Text
                       style={{
                         fontFamily: "PlusJakartaSans_700Bold",
@@ -420,7 +469,14 @@ export default function SesionOverview() {
 
         {/* ── Mini-cards grid 2 columnas ── */}
         <View style={{ paddingHorizontal: H_PAD }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 14,
+            }}
+          >
             <View
               style={{
                 width: 16,
@@ -444,12 +500,21 @@ export default function SesionOverview() {
               style={{
                 flex: 1,
                 height: 1,
-                backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(15,13,32,0.06)",
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(15,13,32,0.06)",
               }}
             />
           </View>
 
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: GAP, marginBottom: 28 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: GAP,
+              marginBottom: 28,
+            }}
+          >
             {session.exercises.map((ex, idx) => (
               <ExerciseMiniCard
                 key={ex.id}
