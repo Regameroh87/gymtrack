@@ -1,5 +1,5 @@
 // Librerías externas
-import { Stack, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
 // Contexto
