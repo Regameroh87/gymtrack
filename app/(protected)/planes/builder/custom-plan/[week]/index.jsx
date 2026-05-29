@@ -21,7 +21,6 @@ export default function UserPlanWeekEditor() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: false }} />
       <FormPlanWeek form={form} weekNumber={weekNumber} weekTitle={weekTitle} />
     </>
   );

@@ -234,7 +234,12 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
       days: w.days.map((d, i) =>
         i !== dayIdx
           ? d
-          : { ...d, session_id: session.id, session_name: session.name, exercises }
+          : {
+              ...d,
+              session_id: session.id,
+              session_name: session.name,
+              exercises,
+            }
       ),
     }));
 
@@ -314,7 +319,6 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
               ? `Asigná una sesión a cada día de "${planName}".`
               : "Asigná una sesión a cada día."
           }
-          onBack={() => router.back()}
         />
 
         <View className="px-4 pt-4">
@@ -368,7 +372,9 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+          backgroundColor: isDark
+            ? ui.surfaceSecondary.dark
+            : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -389,13 +395,17 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
             placeholder="Buscar sesión..."
             placeholderTextColor={mutedColor}
             style={{
-              backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+              backgroundColor: isDark
+                ? ui.surfaceSecondary.dark
+                : ui.surfaceSecondary.light,
               color: isDark ? ui.text.mainDark : ui.text.main,
               padding: 14,
               borderRadius: 12,
               fontFamily: "Manrope_400Regular",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+              borderColor: isDark
+                ? "rgba(255,255,255,0.05)"
+                : "rgba(0,0,0,0.05)",
             }}
           />
         </View>
@@ -449,7 +459,9 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
               <Pressable
                 onPress={() => handleSessionSelect(session)}
                 className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${
-                  isSelected ? "border-brandPrimary-500/20" : "border-transparent"
+                  isSelected
+                    ? "border-brandPrimary-500/20"
+                    : "border-transparent"
                 }`}
                 style={{
                   backgroundColor: isSelected
@@ -469,7 +481,9 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
                   {session.name}
                 </Text>
                 {isSelected && (
-                  <Text className="text-brandPrimary-600 font-manrope-bold">✓</Text>
+                  <Text className="text-brandPrimary-600 font-manrope-bold">
+                    ✓
+                  </Text>
                 )}
               </Pressable>
             );
@@ -489,7 +503,9 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+          backgroundColor: isDark
+            ? ui.surfaceSecondary.dark
+            : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -560,7 +576,9 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
           borderTopRightRadius: 24,
         }}
         handleIndicatorStyle={{
-          backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+          backgroundColor: isDark
+            ? ui.surfaceSecondary.dark
+            : ui.surfaceSecondary.light,
           width: 40,
           height: 4,
           borderRadius: 2,
@@ -571,10 +589,14 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
           <>
             <View
               className="px-6 pt-4 pb-3"
-              style={{ borderBottomWidth: 1, borderBottomColor: ui.input.border }}
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: ui.input.border,
+              }}
             >
               <Text className="text-xs font-manrope-semi uppercase tracking-label text-ui-text-muted dark:text-ui-text-mutedDark">
-                Día {prescriptionDay.day_number} · {weekTitle ?? `Semana ${weekNumber}`}
+                Día {prescriptionDay.day_number} ·{" "}
+                {weekTitle ?? `Semana ${weekNumber}`}
               </Text>
               <Text className="text-xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark mt-0.5">
                 {prescriptionDay.session_name}
