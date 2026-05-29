@@ -34,9 +34,7 @@ export default function PlanBuilderLayout() {
           headerShadowVisible: false,
           headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
         }}
-      >
-        <Stack.Screen name="[week]/index" />
-      </Stack>
+      />
     </PlanFormProvider>
   );
 }
