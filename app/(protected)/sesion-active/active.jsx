@@ -26,14 +26,14 @@ import {
   CheckCircle,
 } from "../../../assets/icons.jsx";
 
-import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
-import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
-import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-log";
-import { useSessionDraft } from "../../../src/hooks/sessions/use-session-draft";
+import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary.js";
+import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises.js";
+import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-log.js";
+import { useSessionDraft } from "../../../src/hooks/sessions/use-session-draft.js";
 
-import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "../../../src/utils/cloudinary.js";
 
-import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";
+import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet.jsx";
 
 const BRAND_PRIMARY = brandPrimary[700];
 const BRAND_PRIMARY_DEEP = brandPrimary[600];
