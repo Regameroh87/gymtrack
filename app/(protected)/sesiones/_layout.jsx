@@ -5,7 +5,7 @@ import { useColorScheme } from "nativewind";
 // Tema
 import { ui } from "../../../src/theme/colors";
 
-export default function RutinasLayout() {
+export default function SesionesLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -23,8 +23,6 @@ export default function RutinasLayout() {
         headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="plan/[id]" options={{ headerShown: false }} />
       <Stack.Screen
         name="builder"
         options={{

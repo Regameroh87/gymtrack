@@ -131,6 +131,13 @@ export default function ProtectedLayout() {
             headerShown: false,
           }}
         />
+        <Tabs.Screen
+          name="sesiones"
+          options={{
+            href: null,
+            headerShown: false,
+          }}
+        />
       </Tabs>
     </BottomSheetModalProvider>
   );

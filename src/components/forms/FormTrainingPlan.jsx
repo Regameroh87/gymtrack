@@ -142,7 +142,7 @@ export default function FormTrainingPlan({
         className="flex-1"
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 0 }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
           <View>
