@@ -1,8 +1,12 @@
+// Librerías externas
 import { useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
-import { usePlanFormContext } from "../../../../../src/contexts/PlanFormContext";
-import FormPlanWeek from "../../../../../src/components/forms/FormPlanWeek";
+// Contexto
+import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
+
+// Componentes
+import FormPlanWeek from "../../../../../../src/components/forms/FormPlanWeek";
 
 export default function UserPlanWeekEditor() {
   const { week } = useLocalSearchParams();

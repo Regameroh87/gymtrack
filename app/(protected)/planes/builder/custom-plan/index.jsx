@@ -1,8 +1,14 @@
+// React Native
 import { ActivityIndicator, View } from "react-native";
 
-import { usePlanFormContext } from "../../../../src/contexts/PlanFormContext";
-import FormTrainingPlan from "../../../../src/components/forms/FormTrainingPlan";
-import { brandPrimary } from "../../../../src/theme/colors";
+// Contexto
+import { usePlanFormContext } from "../../../../../src/contexts/PlanFormContext";
+
+// Componentes
+import FormTrainingPlan from "../../../../../src/components/forms/FormTrainingPlan";
+
+// Tema
+import { brandPrimary } from "../../../../../src/theme/colors";
 
 export default function UserPlanBuilder() {
   const { form, planId, isLoading } = usePlanFormContext();
@@ -20,7 +26,7 @@ export default function UserPlanBuilder() {
       form={form}
       plan={planId}
       simplified
-      weekPathname="/planes/builder/[week]"
+      weekPathname="/planes/builder/custom-plan/[week]"
     />
   );
 }
