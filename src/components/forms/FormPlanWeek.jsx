@@ -102,7 +102,14 @@ function DayCard({ day, onPress, onClear, mutedColor }) {
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
-export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
+export default function FormPlanWeek({
+  form,
+  weekNumber,
+  weekTitle,
+  sessionsHook,
+  fetchExercisesFn,
+  sessionExercisesQueryKey,
+}) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
@@ -118,7 +125,7 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
   const [prescriptionDayIdx, setPrescriptionDayIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: availableSessions = [] } = useSessions();
+  const { data: availableSessions = [] } = (sessionsHook ?? useSessions)();
 
   const weeks = useStore(form.store, (s) => s.values.weeks ?? []);
   const planName = useStore(form.store, (s) => s.values.name ?? "");
@@ -200,8 +207,8 @@ export default function FormPlanWeek({ form, weekNumber, weekTitle }) {
     let rawExercises = [];
     try {
       rawExercises = await queryClient.fetchQuery({
-        queryKey: ["session_exercises", session.id],
-        queryFn: () => fetchSessionExercises(session.id),
+        queryKey: [sessionExercisesQueryKey ?? "session_exercises", session.id],
+        queryFn: () => (fetchExercisesFn ?? fetchSessionExercises)(session.id),
       });
     } catch {
       rawExercises = [];

@@ -1,12 +1,10 @@
-// Librerías externas
 import { useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
-// Contexto
 import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
-
-// Componentes
 import FormPlanWeek from "../../../../../../src/components/forms/FormPlanWeek";
+import { useCustomSessions } from "../../../../../../src/hooks/useCustomSessions";
+import { fetchCustomSessionExercises } from "../../../../../../src/hooks/useCustomSessionExercises";
 
 export default function UserPlanWeekEditor() {
   const { week } = useLocalSearchParams();
@@ -20,8 +18,13 @@ export default function UserPlanWeekEditor() {
     durationWeeks === 0 ? "Semana tipo" : `Semana ${weekNumber}`;
 
   return (
-    <>
-      <FormPlanWeek form={form} weekNumber={weekNumber} weekTitle={weekTitle} />
-    </>
+    <FormPlanWeek
+      form={form}
+      weekNumber={weekNumber}
+      weekTitle={weekTitle}
+      sessionsHook={useCustomSessions}
+      fetchExercisesFn={fetchCustomSessionExercises}
+      sessionExercisesQueryKey="custom_session_exercises"
+    />
   );
 }

@@ -3,7 +3,7 @@ import { HeaderBackButton } from "@react-navigation/elements";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
-import { useSessionForm } from "../../../../src/hooks/useSessionForm";
+import { useCustomSessionForm } from "../../../../src/hooks/useCustomSessionForm";
 import FormSession from "../../../../src/components/forms/FormSession";
 import { brandPrimary, ui } from "../../../../src/theme/colors";
 
@@ -13,7 +13,7 @@ export default function UserSessionBuilder() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
-  const { form, isLoading } = useSessionForm({
+  const { form, isLoading } = useCustomSessionForm({
     id: id ?? null,
     onSuccess: () => router.back(),
   });

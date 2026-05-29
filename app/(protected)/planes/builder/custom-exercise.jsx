@@ -12,15 +12,10 @@ import Toast from "react-native-toast-message";
 
 import { useAuth } from "../../../../src/auth/lib/getSession";
 import { database } from "../../../../src/database";
-import {
-  exercises_base,
-  exercise_equipment,
-} from "../../../../src/database/schemas";
+import { custom_exercises } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import FormExercise from "../../../../src/components/forms/FormExercise";
 import { brandPrimary, ui } from "../../../../src/theme/colors";
-
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
 export default function UserExerciseBuilder() {
   const { id } = useLocalSearchParams();
@@ -33,13 +28,13 @@ export default function UserExerciseBuilder() {
   const isEdit = !!id;
 
   const { data: existing, isLoading: loadingExisting } = useQuery({
-    queryKey: ["exercise", id],
+    queryKey: ["custom_exercise", id],
     enabled: isEdit,
     queryFn: async () => {
       const [ex] = await database
         .select()
-        .from(exercises_base)
-        .where(eq(exercises_base.id, id));
+        .from(custom_exercises)
+        .where(eq(custom_exercises.id, id));
       return ex ?? null;
     },
   });
@@ -71,32 +66,21 @@ export default function UserExerciseBuilder() {
 
         if (isEdit) {
           await database
-            .update(exercises_base)
-            .set({ ...exerciseValues, updated_at: new Date().toISOString() })
-            .where(eq(exercises_base.id, id));
+            .update(custom_exercises)
+            .set({ ...exerciseValues, updated_at: new Date().toISOString(), sync_status: "pending" })
+            .where(eq(custom_exercises.id, id));
         } else {
           const exerciseId = Crypto.randomUUID();
-          await database.insert(exercises_base).values({
+          await database.insert(custom_exercises).values({
             id: exerciseId,
-            gym_id: GYM_ID,
-            created_by: userId ?? null,
+            user_id: userId,
             ...exerciseValues,
           });
-
-          if (value.equipments?.length > 0) {
-            for (const eq of value.equipments) {
-              await database.insert(exercise_equipment).values({
-                id: Crypto.randomUUID(),
-                exercise_id: exerciseId,
-                equipment_id: eq.id,
-              });
-            }
-          }
         }
 
-        queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        queryClient.invalidateQueries({ queryKey: ["custom_exercises"] });
         if (isEdit)
-          queryClient.invalidateQueries({ queryKey: ["exercise", id] });
+          queryClient.invalidateQueries({ queryKey: ["custom_exercise", id] });
         checkNetInfoAndSync().catch(() => {});
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

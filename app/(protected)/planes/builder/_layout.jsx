@@ -3,7 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 // Hooks
-import { useTrainingPlanForm } from "../../../../src/hooks/useTrainingPlanForm";
+import { useCustomTrainingPlanForm } from "../../../../src/hooks/useCustomTrainingPlanForm";
 
 // Contexto
 import { PlanFormProvider } from "../../../../src/contexts/PlanFormContext";
@@ -16,7 +16,7 @@ export default function PlanBuilderLayout() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { form, isLoading } = useTrainingPlanForm({
+  const { form, isLoading } = useCustomTrainingPlanForm({
     id: id ?? null,
     onSuccess: () => router.back(),
   });
