@@ -24,6 +24,7 @@ import { sessionDraftKey } from "../../../src/hooks/sessions/use-session-draft";
 import { formatShortDate } from "../../../src/utils/format-date";
 import PlanExerciseRow from "../../../src/components/cards/plan-exercise-row";
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";
+import Screen from "../../../src/components/Screen.jsx";
 
 export default function SesionPreview() {
   const router = useRouter();
@@ -124,128 +125,130 @@ export default function SesionPreview() {
   }
 
   return (
-    <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
-      <ScrollView
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 36,
-          paddingHorizontal: 20,
-        }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Header editorial ── */}
-        <View className="pt-2 mb-7">
-          <View className="flex-row items-center gap-1.5 mb-5">
-            <View className="w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
-            <View className="w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/40 dark:bg-brandSecondary-400/40" />
-          </View>
-
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.4px] text-brandSecondary-700 dark:text-brandSecondary-400">
-              Sesión de hoy
-            </Text>
-            <Text className="font-jakarta-bold text-[10px] tracking-[2px] text-ui-text-muted dark:text-ui-text-mutedDark">
-              {dateLabel}
-            </Text>
-          </View>
-
-          <View className="self-start mb-3.5 px-2.5 py-1 rounded-[9px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
-            <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.8px] text-brandPrimary-700">
-              {session.planName}
-              {session.weekNumber ? ` · Semana ${session.weekNumber}` : ""}
-              {` · ${session.dayLabel}`}
-            </Text>
-          </View>
-
-          <Text
-            className="font-jakarta-bold text-[28px] leading-8 tracking-[-0.8px] text-ui-text-main dark:text-ui-text-mainDark"
-            numberOfLines={2}
-          >
-            {session.sessionName}
-          </Text>
-        </View>
-
-        {/* ── Stats ── */}
-        <View className="flex-row gap-2.5 mb-8">
-          {[
-            { value: `${session.exercises.length}`, label: "ejercicios" },
-            { value: `${session.estimatedMinutes}'`, label: "est." },
-            { value: `${totalSets}`, label: "series" },
-          ].map((stat, i) => (
-            <View
-              key={i}
-              className="flex-1 items-center py-4 rounded-[18px] border bg-ui-surface-light dark:bg-ui-surface-dark border-ui-text-main/8 dark:border-white/8"
-            >
-              <Text className="font-jakarta-bold text-2xl leading-7 tracking-[-0.6px] text-ui-text-main dark:text-ui-text-mainDark">
-                {stat.value}
-              </Text>
-              <Text className="font-manrope-bold uppercase mt-1 text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
-                {stat.label}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ── Lista de ejercicios ── */}
-        <View className="flex-row items-center gap-2 mb-4">
-          <View className="w-4 h-0.5 rounded-[1px] bg-brandSecondary-400" />
-          <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
-            Ejercicios
-          </Text>
-          <View className="flex-1 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
-        </View>
-
-        <View className="gap-2.5">
-          {session.exercises.map((ex, idx) => (
-            <PlanExerciseRow
-              key={ex.id}
-              exercise={ex}
-              position={idx + 1}
-              onVideoPress={handleVideoPress}
-            />
-          ))}
-        </View>
-
-        {/* ── CTA: Iniciar sesión ── */}
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            router.replace("/(protected)/sesion-active/activa");
+    <Screen safe>
+      <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
+        <ScrollView
+          contentContainerStyle={{
+            paddingBottom: insets.bottom + 36,
+            paddingHorizontal: 20,
           }}
-          className="active:opacity-90 mt-7"
+          showsVerticalScrollIndicator={false}
         >
-          <LinearGradient
-            colors={[brandPrimary[700], brandPrimary[600]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              borderRadius: 22,
-              paddingVertical: 20,
-              paddingHorizontal: 26,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              shadowColor: brandPrimary[700],
-              shadowOpacity: 0.55,
-              shadowRadius: 22,
-              shadowOffset: { width: 0, height: 8 },
-              elevation: 12,
-            }}
-          >
-            <Text className="font-jakarta-bold text-[17px] tracking-[-0.3px] text-white">
-              Iniciar sesión
-            </Text>
-            <View className="w-[38px] h-[38px] rounded-full items-center justify-center bg-white/20">
-              <Play size={17} color="white" />
+          {/* ── Header editorial ── */}
+          <View className="pt-2 mb-7">
+            <View className="flex-row items-center gap-1.5 mb-5">
+              <View className="w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
+              <View className="w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/40 dark:bg-brandSecondary-400/40" />
             </View>
-          </LinearGradient>
-        </Pressable>
-      </ScrollView>
 
-      <VideoPlayerSheet
-        sheetRef={videoSheetRef}
-        videoUrl={activeVideo?.url}
-        title={activeVideo?.title}
-      />
-    </View>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.4px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                Sesión de hoy
+              </Text>
+              <Text className="font-jakarta-bold text-[10px] tracking-[2px] text-ui-text-muted dark:text-ui-text-mutedDark">
+                {dateLabel}
+              </Text>
+            </View>
+
+            <View className="self-start mb-3.5 px-2.5 py-1 rounded-[9px] border bg-brandPrimary-700/[8%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/25 dark:border-brandPrimary-700/40">
+              <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.8px] text-brandPrimary-700">
+                {session.planName}
+                {session.weekNumber ? ` · Semana ${session.weekNumber}` : ""}
+                {` · ${session.dayLabel}`}
+              </Text>
+            </View>
+
+            <Text
+              className="font-jakarta-bold text-[28px] leading-8 tracking-[-0.8px] text-ui-text-main dark:text-ui-text-mainDark"
+              numberOfLines={2}
+            >
+              {session.sessionName}
+            </Text>
+          </View>
+
+          {/* ── Stats ── */}
+          <View className="flex-row gap-2.5 mb-8">
+            {[
+              { value: `${session.exercises.length}`, label: "ejercicios" },
+              { value: `${session.estimatedMinutes}'`, label: "est." },
+              { value: `${totalSets}`, label: "series" },
+            ].map((stat, i) => (
+              <View
+                key={i}
+                className="flex-1 items-center py-4 rounded-[18px] border bg-ui-surface-light dark:bg-ui-surface-dark border-ui-text-main/8 dark:border-white/8"
+              >
+                <Text className="font-jakarta-bold text-2xl leading-7 tracking-[-0.6px] text-ui-text-main dark:text-ui-text-mainDark">
+                  {stat.value}
+                </Text>
+                <Text className="font-manrope-bold uppercase mt-1 text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
+                  {stat.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* ── Lista de ejercicios ── */}
+          <View className="flex-row items-center gap-2 mb-4">
+            <View className="w-4 h-0.5 rounded-[1px] bg-brandSecondary-400" />
+            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
+              Ejercicios
+            </Text>
+            <View className="flex-1 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
+          </View>
+
+          <View className="gap-2.5">
+            {session.exercises.map((ex, idx) => (
+              <PlanExerciseRow
+                key={ex.id}
+                exercise={ex}
+                position={idx + 1}
+                onVideoPress={handleVideoPress}
+              />
+            ))}
+          </View>
+
+          {/* ── CTA: Iniciar sesión ── */}
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+              router.replace("/(protected)/sesion-active/activa");
+            }}
+            className="active:opacity-90 mt-7"
+          >
+            <LinearGradient
+              colors={[brandPrimary[700], brandPrimary[600]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                borderRadius: 22,
+                paddingVertical: 20,
+                paddingHorizontal: 26,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                shadowColor: brandPrimary[700],
+                shadowOpacity: 0.55,
+                shadowRadius: 22,
+                shadowOffset: { width: 0, height: 8 },
+                elevation: 12,
+              }}
+            >
+              <Text className="font-jakarta-bold text-[17px] tracking-[-0.3px] text-white">
+                Iniciar sesión
+              </Text>
+              <View className="w-[38px] h-[38px] rounded-full items-center justify-center bg-white/20">
+                <Play size={17} color="white" />
+              </View>
+            </LinearGradient>
+          </Pressable>
+        </ScrollView>
+
+        <VideoPlayerSheet
+          sheetRef={videoSheetRef}
+          videoUrl={activeVideo?.url}
+          title={activeVideo?.title}
+        />
+      </View>
+    </Screen>
   );
 }
