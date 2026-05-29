@@ -212,7 +212,7 @@ export default function SesionActiva() {
 
   return (
     <Screen safe>
-      <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
+      <View className="flex-1 pb-20 bg-ui-background-light dark:bg-ui-background-dark">
         {/* ── Top bar ── */}
         <View className="flex-row items-center justify-between px-5 pb-3.5">
           <Pressable
