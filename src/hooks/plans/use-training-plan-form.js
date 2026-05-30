@@ -271,9 +271,17 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       }
 
       queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+      // El preview de la rutina del plan activo (home) cuelga de este prefijo.
+      queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       if (id) {
+        // Preview admin (admin/plans/[id])
         queryClient.invalidateQueries({ queryKey: ["training_plan", id] });
         queryClient.invalidateQueries({ queryKey: ["plan_detail_weeks", id] });
+        // Preview miembro (planes/plan/[id])
+        queryClient.invalidateQueries({ queryKey: ["training_plan_detail", id] });
+        queryClient.invalidateQueries({
+          queryKey: ["plan_detail_weeks_user", id],
+        });
       }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
