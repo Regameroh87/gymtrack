@@ -1074,6 +1074,23 @@ export async function pushPlanWeeksChanges() {
 }
 
 /**
+ * Devuelve el subconjunto de `ids` cuyas filas en `schemaTable` ya están
+ * `synced` (es decir, llegaron a Supabase). Se usa para no subir filas hijas
+ * cuyo padre todavía no está en el servidor y así evitar violaciones de FK
+ * (p. ej. una serie cuyo plan_week_day_exercise aún no se sincronizó).
+ */
+async function getSyncedIds(schemaTable, ids) {
+  if (!ids.length) return new Set();
+  const rows = await database
+    .select({ id: schemaTable.id })
+    .from(schemaTable)
+    .where(
+      and(inArray(schemaTable.id, ids), eq(schemaTable.sync_status, "synced"))
+    );
+  return new Set(rows.map((r) => r.id));
+}
+
+/**
  * PUSH: Sube cambios locales de Días de Semana de Plan
  *
  * Las eliminaciones las maneja el CASCADE de plan_weeks en Supabase.
@@ -1089,11 +1106,26 @@ export async function pushPlanWeekDaysChanges() {
       )
     );
   if (localChanges.length === 0) return;
+
+  // Solo subir días cuya semana padre ya esté en el servidor; si el push de la
+  // semana falló o quedó pendiente, diferimos para el próximo sync.
+  const syncedWeeks = await getSyncedIds(
+    plan_weeks,
+    localChanges.map((r) => r.week_id)
+  );
+  const pushable = localChanges.filter((r) => syncedWeeks.has(r.week_id));
+  const deferred = localChanges.length - pushable.length;
+  if (deferred > 0) {
+    console.warn(
+      `⏳ [PUSH] plan_week_days: ${deferred} día(s) diferido(s) — su semana padre aún no está sincronizada`
+    );
+  }
+  if (pushable.length === 0) return;
   console.log(
-    `⬆️  [PUSH] plan_week_days: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] plan_week_days: ${pushable.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
+  const rowsToUpsert = pushable.map(
     ({ sync_status, updated_at, ...rest }) => rest
   );
   const { error } = await supabase
@@ -1106,11 +1138,11 @@ export async function pushPlanWeekDaysChanges() {
       .where(
         inArray(
           plan_week_days.id,
-          localChanges.map((r) => r.id)
+          pushable.map((r) => r.id)
         )
       );
     console.log(
-      `✅ [PUSH] plan_week_days: ${localChanges.length} registro(s) sincronizado(s)`
+      `✅ [PUSH] plan_week_days: ${pushable.length} registro(s) sincronizado(s)`
     );
   } else {
     console.error(`❌ [PUSH] Error subiendo plan_week_days:`, error.message);
@@ -1133,11 +1165,35 @@ export async function pushPlanWeekDayExercisesChanges() {
       )
     );
   if (localChanges.length === 0) return;
+
+  // Solo subir ejercicios cuyos dos padres ya estén en el servidor: el día del
+  // plan (week_day_id) y el ejercicio de rutina (session_exercise_id). Si
+  // alguno aún no se sincronizó, diferimos para evitar violar sus FK.
+  const syncedDays = await getSyncedIds(
+    plan_week_days,
+    localChanges.map((r) => r.week_day_id)
+  );
+  const syncedSessionExercises = await getSyncedIds(
+    session_exercises,
+    localChanges.map((r) => r.session_exercise_id)
+  );
+  const pushable = localChanges.filter(
+    (r) =>
+      syncedDays.has(r.week_day_id) &&
+      syncedSessionExercises.has(r.session_exercise_id)
+  );
+  const deferred = localChanges.length - pushable.length;
+  if (deferred > 0) {
+    console.warn(
+      `⏳ [PUSH] plan_week_day_exercises: ${deferred} ejercicio(s) diferido(s) — su día o su ejercicio de rutina aún no está sincronizado`
+    );
+  }
+  if (pushable.length === 0) return;
   console.log(
-    `⬆️  [PUSH] plan_week_day_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] plan_week_day_exercises: ${pushable.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
+  const rowsToUpsert = pushable.map(
     ({ sync_status, updated_at, ...rest }) => rest
   );
   const { error } = await supabase
@@ -1150,11 +1206,11 @@ export async function pushPlanWeekDayExercisesChanges() {
       .where(
         inArray(
           plan_week_day_exercises.id,
-          localChanges.map((r) => r.id)
+          pushable.map((r) => r.id)
         )
       );
     console.log(
-      `✅ [PUSH] plan_week_day_exercises: ${localChanges.length} registro(s) sincronizado(s)`
+      `✅ [PUSH] plan_week_day_exercises: ${pushable.length} registro(s) sincronizado(s)`
     );
   } else {
     console.error(
@@ -1180,11 +1236,30 @@ export async function pushPlanWeekDayExerciseSetsChanges() {
       )
     );
   if (localChanges.length === 0) return;
+
+  // Solo subir series cuyo ejercicio padre (exercise_id → plan_week_day_exercises)
+  // ya esté en el servidor. Evita la violación de la FK
+  // plan_week_day_exercise_sets_exercise_id_fkey cuando el push del ejercicio
+  // padre falló o quedó pendiente; se reintenta en el próximo sync.
+  const syncedExercises = await getSyncedIds(
+    plan_week_day_exercises,
+    localChanges.map((r) => r.exercise_id)
+  );
+  const pushable = localChanges.filter((r) =>
+    syncedExercises.has(r.exercise_id)
+  );
+  const deferred = localChanges.length - pushable.length;
+  if (deferred > 0) {
+    console.warn(
+      `⏳ [PUSH] plan_week_day_exercise_sets: ${deferred} serie(s) diferida(s) — su ejercicio padre aún no está sincronizado`
+    );
+  }
+  if (pushable.length === 0) return;
   console.log(
-    `⬆️  [PUSH] plan_week_day_exercise_sets: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] plan_week_day_exercise_sets: ${pushable.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
+  const rowsToUpsert = pushable.map(
     ({ sync_status, updated_at, ...rest }) => rest
   );
   const { error } = await supabase
@@ -1197,11 +1272,11 @@ export async function pushPlanWeekDayExerciseSetsChanges() {
       .where(
         inArray(
           plan_week_day_exercise_sets.id,
-          localChanges.map((r) => r.id)
+          pushable.map((r) => r.id)
         )
       );
     console.log(
-      `✅ [PUSH] plan_week_day_exercise_sets: ${localChanges.length} registro(s) sincronizado(s)`
+      `✅ [PUSH] plan_week_day_exercise_sets: ${pushable.length} registro(s) sincronizado(s)`
     );
   } else {
     console.error(
@@ -1936,11 +2011,24 @@ export async function pushCustomPlanWeekDaysChanges() {
       )
     );
   if (localChanges.length === 0) return;
+
+  const syncedWeeks = await getSyncedIds(
+    custom_plan_weeks,
+    localChanges.map((r) => r.week_id)
+  );
+  const pushable = localChanges.filter((r) => syncedWeeks.has(r.week_id));
+  const deferred = localChanges.length - pushable.length;
+  if (deferred > 0) {
+    console.warn(
+      `⏳ [PUSH] custom_plan_week_days: ${deferred} día(s) diferido(s) — su semana padre aún no está sincronizada`
+    );
+  }
+  if (pushable.length === 0) return;
   console.log(
-    `⬆️  [PUSH] custom_plan_week_days: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] custom_plan_week_days: ${pushable.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
+  const rowsToUpsert = pushable.map(
     ({ sync_status, updated_at, ...rest }) => rest
   );
   const { error } = await supabase
@@ -1953,11 +2041,11 @@ export async function pushCustomPlanWeekDaysChanges() {
       .where(
         inArray(
           custom_plan_week_days.id,
-          localChanges.map((r) => r.id)
+          pushable.map((r) => r.id)
         )
       );
     console.log(
-      `✅ [PUSH] custom_plan_week_days: ${localChanges.length} registro(s) sincronizado(s)`
+      `✅ [PUSH] custom_plan_week_days: ${pushable.length} registro(s) sincronizado(s)`
     );
   } else {
     console.error(
@@ -1981,11 +2069,32 @@ export async function pushCustomPlanWeekDayExercisesChanges() {
       )
     );
   if (localChanges.length === 0) return;
+
+  const syncedDays = await getSyncedIds(
+    custom_plan_week_days,
+    localChanges.map((r) => r.week_day_id)
+  );
+  const syncedSessionExercises = await getSyncedIds(
+    custom_session_exercises,
+    localChanges.map((r) => r.session_exercise_id)
+  );
+  const pushable = localChanges.filter(
+    (r) =>
+      syncedDays.has(r.week_day_id) &&
+      syncedSessionExercises.has(r.session_exercise_id)
+  );
+  const deferred = localChanges.length - pushable.length;
+  if (deferred > 0) {
+    console.warn(
+      `⏳ [PUSH] custom_plan_week_day_exercises: ${deferred} ejercicio(s) diferido(s) — su día o su ejercicio de sesión aún no está sincronizado`
+    );
+  }
+  if (pushable.length === 0) return;
   console.log(
-    `⬆️  [PUSH] custom_plan_week_day_exercises: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] custom_plan_week_day_exercises: ${pushable.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
+  const rowsToUpsert = pushable.map(
     ({ sync_status, updated_at, ...rest }) => rest
   );
   const { error } = await supabase
@@ -1998,11 +2107,11 @@ export async function pushCustomPlanWeekDayExercisesChanges() {
       .where(
         inArray(
           custom_plan_week_day_exercises.id,
-          localChanges.map((r) => r.id)
+          pushable.map((r) => r.id)
         )
       );
     console.log(
-      `✅ [PUSH] custom_plan_week_day_exercises: ${localChanges.length} registro(s) sincronizado(s)`
+      `✅ [PUSH] custom_plan_week_day_exercises: ${pushable.length} registro(s) sincronizado(s)`
     );
   } else {
     console.error(
@@ -2026,11 +2135,26 @@ export async function pushCustomPlanWeekDayExerciseSetsChanges() {
       )
     );
   if (localChanges.length === 0) return;
+
+  const syncedExercises = await getSyncedIds(
+    custom_plan_week_day_exercises,
+    localChanges.map((r) => r.exercise_id)
+  );
+  const pushable = localChanges.filter((r) =>
+    syncedExercises.has(r.exercise_id)
+  );
+  const deferred = localChanges.length - pushable.length;
+  if (deferred > 0) {
+    console.warn(
+      `⏳ [PUSH] custom_plan_week_day_exercise_sets: ${deferred} serie(s) diferida(s) — su ejercicio padre aún no está sincronizado`
+    );
+  }
+  if (pushable.length === 0) return;
   console.log(
-    `⬆️  [PUSH] custom_plan_week_day_exercise_sets: ${localChanges.length} cambio(s) pendiente(s)`
+    `⬆️  [PUSH] custom_plan_week_day_exercise_sets: ${pushable.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
+  const rowsToUpsert = pushable.map(
     ({ sync_status, updated_at, ...rest }) => rest
   );
   const { error } = await supabase
@@ -2043,11 +2167,11 @@ export async function pushCustomPlanWeekDayExerciseSetsChanges() {
       .where(
         inArray(
           custom_plan_week_day_exercise_sets.id,
-          localChanges.map((r) => r.id)
+          pushable.map((r) => r.id)
         )
       );
     console.log(
-      `✅ [PUSH] custom_plan_week_day_exercise_sets: ${localChanges.length} registro(s) sincronizado(s)`
+      `✅ [PUSH] custom_plan_week_day_exercise_sets: ${pushable.length} registro(s) sincronizado(s)`
     );
   } else {
     console.error(
