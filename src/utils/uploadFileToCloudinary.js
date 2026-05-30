@@ -20,12 +20,12 @@ export const uploadFileToCloudinary = async ({
   data.append("tags", "pending_approval"); //etiqueta para que el admin pueda filtrar los archivos que estan pendientes de aprobacion
   const URL = `https://api.cloudinary.com/v1_1/${cloudName}/${typeFile}/upload`;
 
+  // No seteamos "Content-Type" manualmente: con un body FormData, React Native
+  // genera el header con el boundary correcto (multipart/form-data; boundary=...).
+  // Forzarlo a mano deja la petición sin boundary y provoca "Network request failed".
   const response = await fetch(URL, {
     method: "POST",
     body: data,
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
   });
 
   const result = await response.json();

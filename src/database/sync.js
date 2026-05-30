@@ -584,6 +584,10 @@ export async function pushSessionsChanges() {
           `❌ [PUSH] Error subiendo imagen de rutina "${row.name}":`,
           err.message
         );
+        // No sincronizamos la fila con una URI local ("file://"): sería inútil
+        // para otros dispositivos. Dejamos sync_status pendiente para reintentar
+        // la subida en el próximo sync.
+        continue;
       }
     }
 
