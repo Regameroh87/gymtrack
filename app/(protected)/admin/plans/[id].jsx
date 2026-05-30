@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Base de datos
@@ -273,7 +273,9 @@ export default function PlanDetail() {
       const weeksRows = await database
         .select()
         .from(plan_weeks)
-        .where(eq(plan_weeks.plan_id, id))
+        .where(
+          and(eq(plan_weeks.plan_id, id), ne(plan_weeks.sync_status, "deleted"))
+        )
         .orderBy(asc(plan_weeks.week_number));
 
       if (!weeksRows.length) return [];
@@ -290,7 +292,12 @@ export default function PlanDetail() {
         })
         .from(plan_week_days)
         .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
-        .where(inArray(plan_week_days.week_id, weekIds))
+        .where(
+          and(
+            inArray(plan_week_days.week_id, weekIds),
+            ne(plan_week_days.sync_status, "deleted")
+          )
+        )
         .orderBy(asc(plan_week_days.day_number));
 
       const dayIds = daysRows.map((d) => d.id);
@@ -317,7 +324,12 @@ export default function PlanDetail() {
             exercises_base,
             eq(session_exercises.exercise_id, exercises_base.id)
           )
-          .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
+          .where(
+            and(
+              inArray(plan_week_day_exercises.week_day_id, dayIds),
+              ne(plan_week_day_exercises.sync_status, "deleted")
+            )
+          )
           .orderBy(asc(plan_week_day_exercises.position));
       }
 

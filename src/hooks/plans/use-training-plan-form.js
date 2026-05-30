@@ -271,6 +271,10 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       }
 
       queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+      if (id) {
+        queryClient.invalidateQueries({ queryKey: ["training_plan", id] });
+        queryClient.invalidateQueries({ queryKey: ["plan_detail_weeks", id] });
+      }
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Toast.show({
