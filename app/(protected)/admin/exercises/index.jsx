@@ -18,13 +18,15 @@ import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../../../../src/database";
 import {
   exercises_base,
   exercise_equipment,
+  session_exercises,
+  plan_week_day_exercises,
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
@@ -76,16 +78,52 @@ export default function ExercisesList() {
           style: "destructive",
           onPress: async () => {
             try {
-              await database
-                .update(exercises_base)
-                .set({ sync_status: "deleted" })
-                .where(eq(exercises_base.id, item.id));
-              await database
-                .update(exercise_equipment)
-                .set({ sync_status: "deleted" })
-                .where(eq(exercise_equipment.exercise_id, item.id));
-              queryClient.invalidateQueries(["exercises"]);
-              queryClient.invalidateQueries(["exercise_equipment"]);
+              await database.transaction(async (tx) => {
+                const now = new Date().toISOString();
+
+                // session_exercises que referencian este ejercicio
+                const sessionExerciseIds = (
+                  await tx
+                    .select({ id: session_exercises.id })
+                    .from(session_exercises)
+                    .where(eq(session_exercises.exercise_id, item.id))
+                ).map((r) => r.id);
+
+                // Cascade local: plan_week_day_exercises que dependen de esos
+                // session_exercises y los propios session_exercises.
+                if (sessionExerciseIds.length) {
+                  await tx
+                    .update(plan_week_day_exercises)
+                    .set({ sync_status: "deleted", updated_at: now })
+                    .where(
+                      inArray(
+                        plan_week_day_exercises.session_exercise_id,
+                        sessionExerciseIds
+                      )
+                    );
+                  await tx
+                    .update(session_exercises)
+                    .set({ sync_status: "deleted", updated_at: now })
+                    .where(inArray(session_exercises.id, sessionExerciseIds));
+                }
+
+                await tx
+                  .update(exercise_equipment)
+                  .set({ sync_status: "deleted", updated_at: now })
+                  .where(eq(exercise_equipment.exercise_id, item.id));
+
+                await tx
+                  .update(exercises_base)
+                  .set({ sync_status: "deleted", updated_at: now })
+                  .where(eq(exercises_base.id, item.id));
+              });
+
+              queryClient.invalidateQueries({ queryKey: ["exercises"] });
+              queryClient.invalidateQueries({ queryKey: ["exercise_equipment"] });
+              queryClient.invalidateQueries({ queryKey: ["sessions"] });
+              queryClient.invalidateQueries({ queryKey: ["session"] });
+              queryClient.invalidateQueries({ queryKey: ["session_exercises"] });
+              queryClient.invalidateQueries({ queryKey: ["training_plans"] });
               checkNetInfoAndSync();
 
               Toast.show({

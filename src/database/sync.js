@@ -331,6 +331,31 @@ export async function pushExercisesChanges() {
         .eq("exercise_id", row.id);
 
       if (count > 0) {
+        // ¿Esas referencias remotas tienen contraparte local en cola de borrado?
+        // El borrado del ejercicio en la UI marca sus session_exercises como
+        // "deleted"; éstos se eliminan más abajo en este mismo sync
+        // (pushSessionExercisesChanges). Si TODAS las referencias locales están
+        // en cola de borrado, dejamos el ejercicio en "deleted" para reintentar
+        // su eliminación en el próximo sync. Sólo restauramos si hay alguna
+        // referencia local activa (uso real, p.ej. agregada desde otro device).
+        const localRefs = await database
+          .select({ sync_status: session_exercises.sync_status })
+          .from(session_exercises)
+          .where(eq(session_exercises.exercise_id, row.id));
+        const hasActiveRef = localRefs.some(
+          (r) => r.sync_status !== "deleted"
+        );
+        const hasPendingDeletion = localRefs.some(
+          (r) => r.sync_status === "deleted"
+        );
+
+        if (hasPendingDeletion && !hasActiveRef) {
+          console.log(
+            `⏳ [PUSH] "${row.name}" en uso en ${count} sesión(es) cuyas referencias están en cola de borrado — se reintentará tras eliminarlas.`
+          );
+          continue;
+        }
+
         console.warn(
           `⚠️  [PUSH] No se puede eliminar "${row.name}": está en uso en ${count} sesión(es). Se restaura localmente.`
         );

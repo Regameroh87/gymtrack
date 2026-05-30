@@ -12,7 +12,7 @@ import { useRef, useState } from "react";
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and, ne } from "drizzle-orm";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -120,7 +120,12 @@ export default function SessionDetail() {
           exercises_base,
           eq(session_exercises.exercise_id, exercises_base.id)
         )
-        .where(eq(session_exercises.session_id, id))
+        .where(
+          and(
+            eq(session_exercises.session_id, id),
+            ne(session_exercises.sync_status, "deleted")
+          )
+        )
         .orderBy(asc(session_exercises.position)),
   });
 

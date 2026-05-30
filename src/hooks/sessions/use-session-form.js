@@ -4,7 +4,7 @@ import { useEffect } from "react";
 // Librerías externas
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -227,7 +227,12 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
           exercises_base,
           eq(session_exercises.exercise_id, exercises_base.id)
         )
-        .where(eq(session_exercises.session_id, id))
+        .where(
+          and(
+            eq(session_exercises.session_id, id),
+            ne(session_exercises.sync_status, "deleted")
+          )
+        )
         .orderBy(asc(session_exercises.position));
 
       return {
