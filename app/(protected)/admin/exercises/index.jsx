@@ -29,6 +29,7 @@ import {
   plan_week_day_exercises,
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
+import { supabase } from "../../../../src/database/supabase";
 
 // Hooks
 import { useExercises } from "../../../../src/hooks/exercises/use-exercises";
@@ -67,10 +68,28 @@ export default function ExercisesList() {
     [search, exercises]
   );
 
-  const handleDelete = (item) => {
+  const handleDelete = async (item) => {
+    // Historial de series registrado por los usuarios para este ejercicio.
+    // Es data por-usuario; consultamos el total remoto para avisar al admin.
+    let logsCount = 0;
+    try {
+      const { count } = await supabase
+        .from("session_set_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("exercise_id", item.id);
+      logsCount = count ?? 0;
+    } catch (err) {
+      console.error("No se pudo verificar el historial del ejercicio:", err);
+    }
+
+    const message =
+      logsCount > 0
+        ? `"${item.name}" tiene ${logsCount} serie(s) registrada(s) en el historial de entrenamientos. Si lo eliminás, ese historial se borrará y el ejercicio se quitará de las sesiones que lo usan. ¿Continuar?`
+        : `¿Estás seguro que deseas eliminar "${item.name}"? También se quitará de las sesiones que lo usen.`;
+
     Alert.alert(
       "Eliminar Ejercicio",
-      `¿Estás seguro que deseas eliminar "${item.name}"?`,
+      message,
       [
         { text: "Cancelar", style: "cancel" },
         {

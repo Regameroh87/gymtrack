@@ -366,6 +366,28 @@ export async function pushExercisesChanges() {
         continue;
       }
 
+      // El historial de series (session_set_logs) referencia exercises_base con
+      // ON DELETE NO ACTION, así que bloquearía el borrado. Es data por-usuario:
+      // el admin no tiene los logs de los demás localmente, por eso el borrado
+      // remoto se hace acá (RLS deshabilitada lo permite). Los devices de cada
+      // usuario reconcilian sus logs locales en el próximo pull.
+      const { error: setLogsError } = await supabase
+        .from("session_set_logs")
+        .delete()
+        .eq("exercise_id", row.id);
+
+      if (setLogsError) {
+        console.error(
+          `❌ [PUSH] Error eliminando historial de "${row.name}":`,
+          setLogsError.message
+        );
+        continue; // Reintentar en el próximo sync; no borramos el ejercicio aún.
+      }
+      // Limpiar también el historial local del propio admin para consistencia.
+      await database
+        .delete(session_set_logs)
+        .where(eq(session_set_logs.exercise_id, row.id));
+
       const { error } = await supabase
         .from("exercises_base")
         .delete()
