@@ -11,6 +11,8 @@ import {
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { and, asc, eq, inArray, ne } from "drizzle-orm";
@@ -43,9 +45,12 @@ import {
   SESSION_LEVELS,
 } from "../../../../src/constants/sessionOptions";
 
+// Utils
+import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+
 // Tema / assets
 import { brandPrimary, ui } from "../../../../src/theme/colors";
-import { Pencil, Trash } from "../../../../assets/icons";
+import { Barbell, Pencil, Trash } from "../../../../assets/icons";
 
 // ─── Constantes de display ────────────────────────────────────────────────────
 
@@ -151,6 +156,9 @@ function ExerciseRow({ exercise, index, accent }) {
 function DayCard({ day, accent }) {
   const exCount = day.exercises.length;
   const hasSession = !!day.session_name;
+  const imageUri = day.cover_image_uri
+    ? (getCloudinaryUrl(day.cover_image_uri) ?? day.cover_image_uri)
+    : null;
 
   return (
     <View className="mb-2.5 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark overflow-hidden">
@@ -163,24 +171,27 @@ function DayCard({ day, accent }) {
             : null
         }
       >
-        <View
-          className="w-10 h-10 rounded-xl items-center justify-center mr-3"
-          style={{ backgroundColor: accent + "18" }}
-        >
-          <Text
-            className="text-[9px] font-manrope-semi uppercase"
-            style={{ color: accent }}
-          >
-            Día
-          </Text>
-          <Text
-            className="text-sm font-jakarta-bold leading-tight"
-            style={{ color: accent }}
-          >
-            {day.day_number}
-          </Text>
+        <View className="w-11 h-11 rounded-xl overflow-hidden mr-3 relative">
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+            />
+          ) : (
+            <LinearGradient
+              colors={[accent + "cc", accent]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            >
+              <View className="opacity-30 -rotate-12">
+                <Barbell size={20} color="white" />
+              </View>
+            </LinearGradient>
+          )}
         </View>
-        <View className="flex-1">
+        <View className="flex-1 mr-3">
           <Text
             className={`text-sm font-jakarta-semi ${hasSession ? "text-ui-text-main dark:text-ui-text-mainDark" : "text-ui-text-muted dark:text-ui-text-mutedDark"}`}
             numberOfLines={1}
@@ -191,6 +202,24 @@ function DayCard({ day, accent }) {
             {exCount === 0
               ? "Sin ejercicios"
               : `${exCount} ejercicio${exCount !== 1 ? "s" : ""}`}
+          </Text>
+        </View>
+        {/* Indicador de día al extremo derecho */}
+        <View
+          className="items-center justify-center px-2.5 py-1 rounded-lg shrink-0"
+          style={{ backgroundColor: accent + "18" }}
+        >
+          <Text
+            className="text-[8px] font-manrope-semi uppercase tracking-wider"
+            style={{ color: accent }}
+          >
+            Día
+          </Text>
+          <Text
+            className="text-base font-jakarta-bold leading-tight"
+            style={{ color: accent }}
+          >
+            {day.day_number}
           </Text>
         </View>
       </View>
@@ -289,6 +318,7 @@ export default function PlanDetail() {
           day_number: plan_week_days.day_number,
           session_id: plan_week_days.session_id,
           session_name: sessions.name,
+          cover_image_uri: sessions.cover_image_uri,
         })
         .from(plan_week_days)
         .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
