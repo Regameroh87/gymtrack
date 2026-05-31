@@ -38,7 +38,7 @@ const OBJECTIVE_LABELS = {
   rehabilitacion: "Rehabilitación",
 };
 
-const TrainingPlanCard = ({ plan, onPress }) => {
+const TrainingPlanCard = ({ plan, onPress, isDraft = false }) => {
   const config =
     OBJECTIVE_CONFIG[plan.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const { Icon } = config;
@@ -66,12 +66,18 @@ const TrainingPlanCard = ({ plan, onPress }) => {
       >
         {/* ── Contenido izquierdo ── */}
         <View className="flex-1 px-4 py-4 justify-between gap-2">
-          {/* Objetivo */}
-          {objectiveLabel && (
+          {/* Objetivo / Badge borrador */}
+          {isDraft ? (
+            <View className="self-start px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30">
+              <Text className="font-manrope-bold text-[10px] uppercase tracking-wider text-amber-500">
+                Borrador
+              </Text>
+            </View>
+          ) : objectiveLabel ? (
             <Text className="font-manrope-semi text-[11px] text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-label">
               {objectiveLabel}
             </Text>
-          )}
+          ) : null}
 
           {/* Nombre */}
           <Text

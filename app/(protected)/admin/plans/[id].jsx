@@ -35,6 +35,7 @@ import { checkNetInfoAndSync } from "../../../../src/database/sync";
 
 // Hooks
 import { useRecordById } from "../../../../src/hooks/shared/use-record-by-id";
+import { useTogglePlanPublish } from "../../../../src/hooks/plans/plan-publish";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
@@ -50,7 +51,7 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
 // Tema / assets
 import { brandPrimary, ui } from "../../../../src/theme/colors";
-import { Barbell, Pencil, Trash } from "../../../../assets/icons";
+import { Barbell, Pencil, Trash, Upload } from "../../../../assets/icons";
 
 // ─── Constantes de display ────────────────────────────────────────────────────
 
@@ -426,6 +427,9 @@ export default function PlanDetail() {
     },
   });
 
+  const { mutate: togglePublish, isPending: isTogglingPublish } =
+    useTogglePlanPublish();
+
   const handleDelete = () => {
     Alert.alert(
       "Eliminar plan",
@@ -524,6 +528,38 @@ export default function PlanDetail() {
               {plan.description}
             </Text>
           ) : null}
+        </View>
+
+        {/* ── Estado de publicación ── */}
+        <View className="px-5 mb-4">
+          <Pressable
+            disabled={isTogglingPublish}
+            onPress={() =>
+              togglePublish({ id, publish: !plan.is_published })
+            }
+            className="active:opacity-70"
+          >
+            {plan.is_published ? (
+              <View className="flex-row items-center self-start gap-2 px-3 py-1.5 rounded-xl bg-brandPrimary-500/10 border border-brandPrimary-500/25">
+                <View className="w-2 h-2 rounded-full bg-brandPrimary-500" />
+                <Text className="font-manrope-bold text-[12px] text-brandPrimary-500 dark:text-brandPrimary-400 uppercase tracking-wider">
+                  Publicado · Tocá para despublicar
+                </Text>
+              </View>
+            ) : (
+              <LinearGradient
+                colors={[brandPrimary[600], brandPrimary[500]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                className="flex-row items-center self-start gap-2 px-3 py-1.5 rounded-xl"
+              >
+                <Upload size={13} color="white" />
+                <Text className="font-manrope-bold text-[12px] text-white uppercase tracking-wider">
+                  {isTogglingPublish ? "Publicando…" : "Publicar plan"}
+                </Text>
+              </LinearGradient>
+            )}
+          </Pressable>
         </View>
 
         {/* ── Stats ── */}

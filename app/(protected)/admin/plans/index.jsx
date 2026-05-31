@@ -27,7 +27,7 @@ import ButtonAddPill from "../../../../src/components/buttons/ButtonAddPill";
 import { brandPrimary } from "../../../../src/theme/colors";
 import { ClipboardList, Plus } from "../../../../assets/icons";
 
-function AnimatedCard({ plan, onPress, scrollY, containerY }) {
+function AnimatedCard({ plan, onPress, scrollY, containerY, isDraft = false }) {
   const cardY = useSharedValue(0);
   const cardHeight = useSharedValue(1);
 
@@ -53,7 +53,7 @@ function AnimatedCard({ plan, onPress, scrollY, containerY }) {
 
   return (
     <Animated.View style={animatedStyle} onLayout={onLayout}>
-      <TrainingPlanCard plan={plan} onPress={onPress} />
+      <TrainingPlanCard plan={plan} onPress={onPress} isDraft={isDraft} />
     </Animated.View>
   );
 }
@@ -141,20 +141,51 @@ export default function PlansList() {
           </View>
         ) : (
           <View
-            className="px-5 gap-5"
+            className="px-5"
             onLayout={(e) => {
               containerY.value = e.nativeEvent.layout.y;
             }}
           >
-            {plans.map((plan) => (
-              <AnimatedCard
-                key={plan.id}
-                plan={plan}
-                scrollY={scrollY}
-                containerY={containerY}
-                onPress={(p) => router.push(`/admin/plans/${p.id}`)}
-              />
-            ))}
+            {/* ── Publicados ── */}
+            {published.length > 0 && (
+              <View className="mb-6">
+                <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-3 text-brandPrimary-500 dark:text-brandPrimary-400">
+                  Publicados · {published.length}
+                </Text>
+                <View className="gap-5">
+                  {published.map((plan) => (
+                    <AnimatedCard
+                      key={plan.id}
+                      plan={plan}
+                      scrollY={scrollY}
+                      containerY={containerY}
+                      onPress={(p) => router.push(`/admin/plans/${p.id}`)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* ── Borradores ── */}
+            {drafts.length > 0 && (
+              <View className="mb-6">
+                <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-3 text-ui-text-muted dark:text-ui-text-mutedDark">
+                  Borradores · {drafts.length}
+                </Text>
+                <View className="gap-5">
+                  {drafts.map((plan) => (
+                    <AnimatedCard
+                      key={plan.id}
+                      plan={plan}
+                      scrollY={scrollY}
+                      containerY={containerY}
+                      onPress={(p) => router.push(`/admin/plans/${p.id}`)}
+                      isDraft
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
         )}
       </Animated.ScrollView>
