@@ -1,4 +1,4 @@
-CREATE TABLE `custom_exercises` (
+CREATE TABLE IF NOT EXISTS `custom_exercises` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE `custom_exercises` (
 	`sync_status` text DEFAULT 'pending' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `custom_plan_week_day_exercise_sets` (
+CREATE TABLE IF NOT EXISTS `custom_plan_week_day_exercise_sets` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`exercise_id` text NOT NULL,
@@ -31,8 +31,8 @@ CREATE TABLE `custom_plan_week_day_exercise_sets` (
 	FOREIGN KEY (`exercise_id`) REFERENCES `custom_plan_week_day_exercises`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `custom_plan_week_day_exercise_sets_exercise_id_set_number_unique` ON `custom_plan_week_day_exercise_sets` (`exercise_id`,`set_number`);--> statement-breakpoint
-CREATE TABLE `custom_plan_week_day_exercises` (
+CREATE UNIQUE INDEX IF NOT EXISTS `custom_plan_week_day_exercise_sets_exercise_id_set_number_unique` ON `custom_plan_week_day_exercise_sets` (`exercise_id`,`set_number`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `custom_plan_week_day_exercises` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`week_day_id` text NOT NULL,
@@ -50,8 +50,8 @@ CREATE TABLE `custom_plan_week_day_exercises` (
 	FOREIGN KEY (`session_exercise_id`) REFERENCES `custom_session_exercises`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `custom_plan_week_day_exercises_week_day_id_session_exercise_id_unique` ON `custom_plan_week_day_exercises` (`week_day_id`,`session_exercise_id`);--> statement-breakpoint
-CREATE TABLE `custom_plan_week_days` (
+CREATE UNIQUE INDEX IF NOT EXISTS `custom_plan_week_day_exercises_week_day_id_session_exercise_id_unique` ON `custom_plan_week_day_exercises` (`week_day_id`,`session_exercise_id`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `custom_plan_week_days` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`week_id` text NOT NULL,
@@ -64,8 +64,8 @@ CREATE TABLE `custom_plan_week_days` (
 	FOREIGN KEY (`week_id`) REFERENCES `custom_plan_weeks`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `custom_plan_week_days_week_id_day_number_unique` ON `custom_plan_week_days` (`week_id`,`day_number`);--> statement-breakpoint
-CREATE TABLE `custom_plan_weeks` (
+CREATE UNIQUE INDEX IF NOT EXISTS `custom_plan_week_days_week_id_day_number_unique` ON `custom_plan_week_days` (`week_id`,`day_number`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `custom_plan_weeks` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`plan_id` text NOT NULL,
@@ -76,8 +76,8 @@ CREATE TABLE `custom_plan_weeks` (
 	FOREIGN KEY (`plan_id`) REFERENCES `custom_plans`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `custom_plan_weeks_plan_id_week_number_unique` ON `custom_plan_weeks` (`plan_id`,`week_number`);--> statement-breakpoint
-CREATE TABLE `custom_plans` (
+CREATE UNIQUE INDEX IF NOT EXISTS `custom_plan_weeks_plan_id_week_number_unique` ON `custom_plan_weeks` (`plan_id`,`week_number`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `custom_plans` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE `custom_plans` (
 	`sync_status` text DEFAULT 'pending' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `custom_session_exercises` (
+CREATE TABLE IF NOT EXISTS `custom_session_exercises` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`session_id` text NOT NULL,
@@ -105,8 +105,8 @@ CREATE TABLE `custom_session_exercises` (
 	FOREIGN KEY (`session_id`) REFERENCES `custom_sessions`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `custom_session_exercises_session_id_exercise_id_unique` ON `custom_session_exercises` (`session_id`,`exercise_id`);--> statement-breakpoint
-CREATE TABLE `custom_sessions` (
+CREATE UNIQUE INDEX IF NOT EXISTS `custom_session_exercises_session_id_exercise_id_unique` ON `custom_session_exercises` (`session_id`,`exercise_id`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `custom_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
