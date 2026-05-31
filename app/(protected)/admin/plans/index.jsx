@@ -1,6 +1,6 @@
 // React Native
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 // Librerías externas
 import { useRouter } from "expo-router";
@@ -64,6 +64,9 @@ export default function PlansList() {
   const { data: plans = [], isLoading } = useTrainingPlans();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);
+
+  const published = useMemo(() => plans.filter((p) => p.is_published), [plans]);
+  const drafts = useMemo(() => plans.filter((p) => !p.is_published), [plans]);
 
   const scrollHandler = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;

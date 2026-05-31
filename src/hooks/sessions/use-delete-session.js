@@ -12,6 +12,7 @@ import {
   plan_weeks,
 } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { planIdsUsingSessions, recomputePlanPublishState } from "../plans/plan-publish";
 
 // Cuenta cuántos planes distintos usan esta sesión (excluye los ya marcados deleted).
 export const countPlansUsingSession = async (sessionId) => {
@@ -33,6 +34,9 @@ export const useDeleteSession = () => {
 
   return useMutation({
     mutationFn: async (id) => {
+      // Capturar planes afectados antes de que la txn pise session_id
+      const affectedPlanIds = await planIdsUsingSessions([id]);
+
       await database.transaction(async (tx) => {
         // IDs de session_exercises de esta sesión
         const sessionExerciseIds = (
@@ -85,10 +89,14 @@ export const useDeleteSession = () => {
           })
           .where(eq(sessions.id, id));
       });
+
+      return affectedPlanIds;
     },
-    onSuccess: (_, id) => {
+    onSuccess: (affectedPlanIds, id) => {
+      recomputePlanPublishState(affectedPlanIds).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+      });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["training_plans"] });
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       queryClient.removeQueries({ queryKey: ["session", id] });
       checkNetInfoAndSync();

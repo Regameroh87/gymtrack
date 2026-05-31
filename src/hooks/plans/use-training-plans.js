@@ -1,6 +1,6 @@
 // Librerías externas
 import { useQuery } from "@tanstack/react-query";
-import { desc, ne } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../../database";
@@ -20,10 +20,13 @@ const fetchCreators = async (ids) => {
   return new Map(data.map((profile) => [profile.id, profile]));
 };
 
-export const useTrainingPlans = () =>
+export const useTrainingPlans = ({ publishedOnly = false } = {}) =>
   useQuery({
-    queryKey: ["training_plans"],
+    queryKey: ["training_plans", publishedOnly],
     queryFn: async () => {
+      const conds = [ne(training_plans.sync_status, "deleted")];
+      if (publishedOnly) conds.push(eq(training_plans.is_published, true));
+
       const plans = await database
         .select({
           id: training_plans.id,
@@ -33,11 +36,12 @@ export const useTrainingPlans = () =>
           weekly_days: training_plans.weekly_days,
           duration_weeks: training_plans.duration_weeks,
           cover_image_uri: training_plans.cover_image_uri,
+          is_published: training_plans.is_published,
           created_by: training_plans.created_by,
           created_at: training_plans.created_at,
         })
         .from(training_plans)
-        .where(ne(training_plans.sync_status, "deleted"))
+        .where(and(...conds))
         .orderBy(desc(training_plans.created_at));
 
       const creatorIds = [

@@ -108,6 +108,7 @@ export const training_plans = sqliteTable("training_plans", {
   weekly_days: integer("weekly_days").notNull().default(3),
   duration_weeks: integer("duration_weeks").notNull().default(8),
   cover_image_uri: text("cover_image_uri"),
+  is_published: integer("is_published", { mode: "boolean" }).notNull().default(false),
   created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()

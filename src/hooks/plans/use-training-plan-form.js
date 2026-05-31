@@ -24,6 +24,7 @@ import {
 } from "../../database/schemas";
 import { supabase } from "../../database/supabase";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { recomputePlanPublishState } from "./plan-publish";
 
 // Constantes
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
@@ -258,6 +259,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             duration_weeks: value.duration_weeks,
             cover_image_uri: value.cover_image_uri || null,
             weekly_days: value.weekly_days,
+            is_published: false,
             created_by: userId,
             created_at: now,
             updated_at: now,
@@ -269,6 +271,9 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
         await AsyncStorage.removeItem(DRAFT_KEY);
       }
+
+      // Recompute: al editar un plan publicado, si quedó incompleto lo degrada
+      if (id) await recomputePlanPublishState([id]);
 
       queryClient.invalidateQueries({ queryKey: ["training_plans"] });
       // El preview de la rutina del plan activo (home) cuelga de este prefijo.

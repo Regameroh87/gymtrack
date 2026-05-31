@@ -10,7 +10,9 @@
       "Bash(npm install *)",
       "Bash(npm rebuild *)",
       "Bash(Remove-Item -Force \".codegraph/codegraph.db.lock\" -ErrorAction SilentlyContinue)",
-      "mcp__claude_ai_Supabase__list_tables"
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(npx drizzle-kit *)",
+      "mcp__supabase__apply_migration"
     ]
   }
 }

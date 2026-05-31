@@ -292,7 +292,7 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
 
 // ─── Tab: Catálogo ───────────────────────────────────────────────────────────
 function CatalogoContent({ router }) {
-  const { data: plans = [], isLoading } = useTrainingPlans();
+  const { data: plans = [], isLoading } = useTrainingPlans({ publishedOnly: true });
   const [activeObjective, setActiveObjective] = useState(null);
 
   const availableObjectives = useMemo(() => {

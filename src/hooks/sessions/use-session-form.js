@@ -21,6 +21,7 @@ import {
 } from "../../database/schemas";
 import { supabase } from "../../database/supabase";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { planIdsUsingSessions, recomputePlanPublishState } from "../plans/plan-publish";
 
 // Constantes
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
@@ -46,6 +47,9 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
         if (id) {
           // ── EDICIÓN ──
+          // Capturar planes afectados antes de la txn (por si se quitan ejercicios)
+          const affectedPlanIds = await planIdsUsingSessions([id]);
+
           await database.transaction(async (tx) => {
             const now = new Date().toISOString();
 
@@ -149,8 +153,14 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
             }
           });
 
+          // Recompute: si se quitaron ejercicios, algún plan publicado puede haber quedado incompleto
+          if (affectedPlanIds.length) {
+            await recomputePlanPublishState(affectedPlanIds);
+          }
+
           queryClient.invalidateQueries({ queryKey: ["sessions"] });
           queryClient.invalidateQueries({ queryKey: ["session", id] });
+          queryClient.invalidateQueries({ queryKey: ["training_plans"] });
         } else {
           // ── CREACIÓN ──
           const sessionId = Crypto.randomUUID();

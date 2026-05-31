@@ -115,7 +115,7 @@ export default function RutinasTab() {
   const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
 
-  const { data: plans = [], isLoading: plansLoading } = useTrainingPlans();
+  const { data: plans = [], isLoading: plansLoading } = useTrainingPlans({ publishedOnly: true });
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
 
   const filteredSessions = useMemo(

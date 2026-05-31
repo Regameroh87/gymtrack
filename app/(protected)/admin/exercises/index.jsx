@@ -30,6 +30,7 @@ import {
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import { supabase } from "../../../../src/database/supabase";
+import { planIdsUsingSessionExercises, recomputePlanPublishState } from "../../../../src/hooks/plans/plan-publish";
 
 // Hooks
 import { useExercises } from "../../../../src/hooks/exercises/use-exercises";
@@ -97,6 +98,15 @@ export default function ExercisesList() {
           style: "destructive",
           onPress: async () => {
             try {
+              // Capturar session_exercise IDs antes de la txn para resolver planes afectados
+              const sessionExerciseIdsForPlans = (
+                await database
+                  .select({ id: session_exercises.id })
+                  .from(session_exercises)
+                  .where(eq(session_exercises.exercise_id, item.id))
+              ).map((r) => r.id);
+              const affectedPlanIds = await planIdsUsingSessionExercises(sessionExerciseIdsForPlans);
+
               await database.transaction(async (tx) => {
                 const now = new Date().toISOString();
 
@@ -136,6 +146,8 @@ export default function ExercisesList() {
                   .set({ sync_status: "deleted", updated_at: now })
                   .where(eq(exercises_base.id, item.id));
               });
+
+              await recomputePlanPublishState(affectedPlanIds);
 
               queryClient.invalidateQueries({ queryKey: ["exercises"] });
               queryClient.invalidateQueries({ queryKey: ["exercise_equipment"] });
