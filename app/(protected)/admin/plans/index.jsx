@@ -1,6 +1,6 @@
 // React Native
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 // Librerías externas
 import { useRouter } from "expo-router";
@@ -58,15 +58,22 @@ function AnimatedCard({ plan, onPress, scrollY, containerY, isDraft = false }) {
   );
 }
 
+const TABS = [
+  { key: "published", label: "Publicados" },
+  { key: "drafts", label: "Borradores" },
+];
+
 export default function PlansList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data: plans = [], isLoading } = useTrainingPlans();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);
+  const [activeTab, setActiveTab] = useState("published");
 
   const published = useMemo(() => plans.filter((p) => p.is_published), [plans]);
   const drafts = useMemo(() => plans.filter((p) => !p.is_published), [plans]);
+  const visiblePlans = activeTab === "published" ? published : drafts;
 
   const scrollHandler = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
@@ -79,8 +86,8 @@ export default function PlansList() {
 
   return (
     <Screen>
-      {/* Header sticky */}
-      <View className="px-6 pt-4 pb-5 flex-row items-end justify-between">
+      {/* Header */}
+      <View className="px-6 pt-4 pb-4 flex-row items-end justify-between">
         <View>
           <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
             Gestión de Entrenamientos
@@ -88,15 +95,60 @@ export default function PlansList() {
           <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
             Planes
           </Text>
-          {plans.length > 0 && (
-            <Text className="text-[11px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest mt-1">
-              {plans.length} {plans.length === 1 ? "plan" : "planes"}
-            </Text>
-          )}
         </View>
 
         <ButtonAddPill onPress={handleNew} />
       </View>
+
+      {/* Segmented control */}
+      {!isLoading && plans.length > 0 && (
+        <View className="mx-6 mb-4 flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
+          {TABS.map((tab) => {
+            const count = tab.key === "published" ? published.length : drafts.length;
+            const isActive = activeTab === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setActiveTab(tab.key);
+                }}
+                className="flex-1 py-2 rounded-[9px] flex-row items-center justify-center"
+                style={isActive ? { backgroundColor: brandPrimary[500] } : undefined}
+              >
+                <Text
+                  className={`text-[13px] font-jakarta-semi ${
+                    isActive
+                      ? "text-white"
+                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                  }`}
+                >
+                  {tab.label}
+                </Text>
+                {count > 0 && (
+                  <View
+                    className={`ml-1.5 min-w-[18px] h-[18px] rounded-full items-center justify-center px-1 ${
+                      isActive
+                        ? "bg-white/20"
+                        : "bg-ui-input-border dark:bg-ui-surface-dark"
+                    }`}
+                  >
+                    <Text
+                      className={`text-[11px] font-manrope-semi ${
+                        isActive
+                          ? "text-white"
+                          : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                      }`}
+                    >
+                      {count}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
 
       <Animated.ScrollView
         contentContainerStyle={{
@@ -139,6 +191,20 @@ export default function PlansList() {
               </LinearGradient>
             </Pressable>
           </View>
+        ) : visiblePlans.length === 0 ? (
+          <View className="mx-5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-8 items-center">
+            <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-brandPrimary-50 dark:bg-brandPrimary-950">
+              <ClipboardList size={32} color={brandPrimary[600]} />
+            </View>
+            <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
+              {activeTab === "published" ? "Sin planes publicados" : "Sin borradores"}
+            </Text>
+            <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 max-w-[240px]">
+              {activeTab === "published"
+                ? "Publicá un plan para que aparezca aquí."
+                : "Los planes sin publicar aparecerán aquí."}
+            </Text>
+          </View>
         ) : (
           <View
             className="px-5"
@@ -146,46 +212,18 @@ export default function PlansList() {
               containerY.value = e.nativeEvent.layout.y;
             }}
           >
-            {/* ── Publicados ── */}
-            {published.length > 0 && (
-              <View className="mb-6">
-                <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-3 text-brandPrimary-500 dark:text-brandPrimary-400">
-                  Publicados · {published.length}
-                </Text>
-                <View className="gap-5">
-                  {published.map((plan) => (
-                    <AnimatedCard
-                      key={plan.id}
-                      plan={plan}
-                      scrollY={scrollY}
-                      containerY={containerY}
-                      onPress={(p) => router.push(`/admin/plans/${p.id}`)}
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* ── Borradores ── */}
-            {drafts.length > 0 && (
-              <View className="mb-6">
-                <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-3 text-ui-text-muted dark:text-ui-text-mutedDark">
-                  Borradores · {drafts.length}
-                </Text>
-                <View className="gap-5">
-                  {drafts.map((plan) => (
-                    <AnimatedCard
-                      key={plan.id}
-                      plan={plan}
-                      scrollY={scrollY}
-                      containerY={containerY}
-                      onPress={(p) => router.push(`/admin/plans/${p.id}`)}
-                      isDraft
-                    />
-                  ))}
-                </View>
-              </View>
-            )}
+            <View className="gap-5">
+              {visiblePlans.map((plan) => (
+                <AnimatedCard
+                  key={plan.id}
+                  plan={plan}
+                  scrollY={scrollY}
+                  containerY={containerY}
+                  onPress={(p) => router.push(`/admin/plans/${p.id}`)}
+                  isDraft={!plan.is_published}
+                />
+              ))}
+            </View>
           </View>
         )}
       </Animated.ScrollView>
