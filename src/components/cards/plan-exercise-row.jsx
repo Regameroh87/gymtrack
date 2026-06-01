@@ -17,7 +17,7 @@ import {
 } from "../../database/schemas";
 
 // Utils
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
 
 // Tema / assets
 import { brandSecondary } from "../../theme/colors";
@@ -75,6 +75,7 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
       const rows = await database
         .select({
           name: equipmentTable.name,
+          image_uri: equipmentTable.image_uri,
           sync_status: exerciseEquipmentTable.sync_status,
         })
         .from(exerciseEquipmentTable)
@@ -265,30 +266,58 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
                 Equipamiento
               </Text>
               <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-                {equipmentList.map((item, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: isDark
-                        ? "rgba(255,255,255,0.12)"
-                        : "rgba(15,13,32,0.12)",
-                      backgroundColor: isDark
-                        ? "rgba(255,255,255,0.05)"
-                        : "rgba(15,13,32,0.04)",
-                    }}
-                  >
-                    <Text
-                      className="text-ui-text-main dark:text-ui-text-mainDark font-manrope"
-                      style={{ fontSize: 12 }}
+                {equipmentList.map((item, i) => {
+                  const equipImgUri = item.image_uri
+                    ? (getCloudinaryUrl(item.image_uri) ??
+                        (!item.image_uri.startsWith("file://")
+                          ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${item.image_uri}`
+                          : null))
+                    : null;
+                  return (
+                    <View
+                      key={i}
+                      className="flex-row items-center"
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        gap: 6,
+                        borderColor: isDark
+                          ? "rgba(255,255,255,0.12)"
+                          : "rgba(15,13,32,0.12)",
+                        backgroundColor: isDark
+                          ? "rgba(255,255,255,0.05)"
+                          : "rgba(15,13,32,0.04)",
+                      }}
                     >
-                      {item.name}
-                    </Text>
-                  </View>
-                ))}
+                      {equipImgUri ? (
+                        <Image
+                          source={{ uri: equipImgUri }}
+                          style={{ width: 20, height: 20, borderRadius: 4 }}
+                          contentFit="cover"
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            width: 20,
+                            height: 20,
+                            borderRadius: 4,
+                            backgroundColor: isDark
+                              ? "rgba(255,255,255,0.08)"
+                              : "rgba(15,13,32,0.08)",
+                          }}
+                        />
+                      )}
+                      <Text
+                        className="text-ui-text-main dark:text-ui-text-mainDark font-manrope"
+                        style={{ fontSize: 12 }}
+                      >
+                        {item.name}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             </View>
           )}
