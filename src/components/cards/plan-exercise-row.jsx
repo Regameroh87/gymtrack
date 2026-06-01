@@ -6,6 +6,15 @@ import { useState } from "react";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
+import { useQuery } from "@tanstack/react-query";
+import { eq } from "drizzle-orm";
+
+// DB
+import { database } from "../../database";
+import {
+  exercise_equipment as exerciseEquipmentTable,
+  equipment as equipmentTable,
+} from "../../database/schemas";
 
 // Utils
 import { getCloudinaryUrl } from "../../utils/cloudinary";
@@ -57,6 +66,27 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
     : null;
   const videoLink = resolveVideoLink(exercise);
   const summary = buildSummary(exercise);
+
+  const { data: equipmentList = [] } = useQuery({
+    queryKey: ["plan_row_equipment", exercise.base_exercise_id],
+    enabled: expanded && !!exercise.base_exercise_id,
+    staleTime: 1000 * 60 * 5,
+    queryFn: async () => {
+      const rows = await database
+        .select({
+          name: equipmentTable.name,
+          sync_status: exerciseEquipmentTable.sync_status,
+        })
+        .from(exerciseEquipmentTable)
+        .innerJoin(
+          equipmentTable,
+          eq(exerciseEquipmentTable.equipment_id, equipmentTable.id)
+        )
+        .where(eq(exerciseEquipmentTable.exercise_id, exercise.base_exercise_id))
+        .execute();
+      return rows.filter((r) => r.sync_status !== "deleted");
+    },
+  });
 
   const handleToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -219,6 +249,94 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
           >
             {exercise.exercise_instructions || "Sin instrucciones cargadas."}
           </Text>
+
+          {/* Equipamiento */}
+          {equipmentList.length > 0 && (
+            <View style={{ marginTop: 14 }}>
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.2,
+                  marginBottom: 6,
+                  color: isDark ? MINT : brandSecondary[700],
+                }}
+              >
+                Equipamiento
+              </Text>
+              <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                {equipmentList.map((item, i) => (
+                  <View
+                    key={i}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: isDark
+                        ? "rgba(255,255,255,0.12)"
+                        : "rgba(15,13,32,0.12)",
+                      backgroundColor: isDark
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(15,13,32,0.04)",
+                    }}
+                  >
+                    <Text
+                      className="text-ui-text-main dark:text-ui-text-mainDark font-manrope"
+                      style={{ fontSize: 12 }}
+                    >
+                      {item.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* YouTube */}
+          {exercise.youtube_video_url ? (
+            <View style={{ marginTop: 14 }}>
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.2,
+                  marginBottom: 6,
+                  color: isDark ? MINT : brandSecondary[700],
+                }}
+              >
+                Video
+              </Text>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  onVideoPress?.({
+                    url: exercise.youtube_video_url,
+                    kind: "youtube",
+                    title: exercise.exercise_name,
+                  });
+                }}
+                className="active:opacity-70 flex-row items-center self-start"
+                style={{
+                  gap: 8,
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: "#ff000044",
+                  backgroundColor: "#ff000011",
+                }}
+              >
+                <Youtube size={14} color="#ff4d4d" />
+                <Text
+                  className="font-manrope-semi"
+                  style={{ fontSize: 12, color: "#ff4d4d" }}
+                >
+                  Ver en YouTube
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       )}
     </View>
