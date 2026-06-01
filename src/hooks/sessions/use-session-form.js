@@ -161,6 +161,16 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
           queryClient.invalidateQueries({ queryKey: ["sessions"] });
           queryClient.invalidateQueries({ queryKey: ["session", id] });
           queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+
+          // Refrescar el detalle de cada plan afectado: header (is_published) y rutina.
+          for (const planId of affectedPlanIds) {
+            queryClient.invalidateQueries({
+              queryKey: ["training_plan", planId],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["plan_detail_weeks", planId],
+            });
+          }
         } else {
           // ── CREACIÓN ──
           const sessionId = Crypto.randomUUID();

@@ -155,6 +155,17 @@ export default function ExercisesList() {
               queryClient.invalidateQueries({ queryKey: ["session"] });
               queryClient.invalidateQueries({ queryKey: ["session_exercises"] });
               queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+
+              // Refrescar el detalle de cada plan afectado: header (is_published) y rutina.
+              for (const planId of affectedPlanIds) {
+                queryClient.invalidateQueries({
+                  queryKey: ["training_plan", planId],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["plan_detail_weeks", planId],
+                });
+              }
+
               checkNetInfoAndSync();
 
               Toast.show({

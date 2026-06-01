@@ -92,13 +92,25 @@ export const useDeleteSession = () => {
 
       return affectedPlanIds;
     },
-    onSuccess: (affectedPlanIds, id) => {
-      recomputePlanPublishState(affectedPlanIds).then(() => {
-        queryClient.invalidateQueries({ queryKey: ["training_plans"] });
-      });
+    onSuccess: async (affectedPlanIds, id) => {
+      // Esperar el recompute antes de invalidar/sincronizar: garantiza que el
+      // plan ya quedó en borrador en BD antes de refrescar las vistas y de
+      // empujar el cambio al servidor (evita ventanas donde se ve publicado).
+      await recomputePlanPublishState(affectedPlanIds);
+
+      queryClient.invalidateQueries({ queryKey: ["training_plans"] });
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       queryClient.removeQueries({ queryKey: ["session", id] });
+
+      // Refrescar el detalle de cada plan afectado: header (is_published) y rutina.
+      for (const planId of affectedPlanIds) {
+        queryClient.invalidateQueries({ queryKey: ["training_plan", planId] });
+        queryClient.invalidateQueries({
+          queryKey: ["plan_detail_weeks", planId],
+        });
+      }
+
       checkNetInfoAndSync();
     },
   });
