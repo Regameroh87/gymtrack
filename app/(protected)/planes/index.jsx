@@ -1014,9 +1014,13 @@ function PlanTile({ plan, index = 0, onPress }) {
             }}
           />
           <PlanStat
-            value={plan.duration_weeks ?? 0}
-            primaryLabel={plan.duration_weeks === 1 ? "semana" : "semanas"}
-            secondaryLabel="de duración"
+            value={plan.duration_weeks || "∞"}
+            primaryLabel={plan.duration_weeks
+              ? plan.duration_weeks === 1
+                ? "semana"
+                : "semanas"
+              : "sin duración"}
+            secondaryLabel={plan.duration_weeks ? "de duración" : "fija"}
           />
         </View>
 
@@ -1388,9 +1392,7 @@ function LibPlanRow({ plan, onEdit, onDelete, isDark }) {
         </Text>
         <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
           {plan.weekly_days} días ·{" "}
-          {plan.duration_weeks === 0
-            ? "Indefinido"
-            : `${plan.duration_weeks} sem`}
+          {plan.duration_weeks ? `${plan.duration_weeks} sem` : "Flexible"}
         </Text>
       </View>
       <View className="flex-row gap-2 ml-2">

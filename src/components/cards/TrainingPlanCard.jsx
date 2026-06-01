@@ -93,7 +93,7 @@ const TrainingPlanCard = ({ plan, onPress, isDraft = false }) => {
               <View className="flex-row items-center gap-1">
                 <Calendar size={12} color="rgba(196,190,230,0.65)" />
                 <Text className="font-manrope-bold text-[12px] text-ui-text-muted dark:text-ui-text-mutedDark">
-                  {plan.duration_weeks} sem
+                  {plan.duration_weeks ? `${plan.duration_weeks} sem` : "Flexible"}
                 </Text>
               </View>
               <View className="flex-row items-center gap-1">
