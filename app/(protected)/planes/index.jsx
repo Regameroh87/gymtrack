@@ -25,8 +25,10 @@ import { eq } from "drizzle-orm";
 // Base de datos
 import { database } from "../../../src/database";
 import {
-  exercises_base,
-  exercise_equipment,
+  custom_exercises,
+  custom_plans,
+  custom_session_exercises,
+  custom_sessions,
   sessions,
   session_exercises,
   training_plans,
@@ -35,8 +37,10 @@ import { checkNetInfoAndSync } from "../../../src/database/sync";
 
 // Hooks
 import { useTrainingPlans } from "../../../src/hooks/plans/use-training-plans";
+import { useCustomPlans } from "../../../src/hooks/plans/use-custom-plans";
 import { useSessions } from "../../../src/hooks/sessions/use-sessions";
-import { useExercises } from "../../../src/hooks/exercises/use-exercises";
+import { useCustomSessions } from "../../../src/hooks/sessions/use-custom-sessions";
+import { useCustomExercises } from "../../../src/hooks/exercises/use-custom-exercises";
 import { usePlanAssignments } from "../../../src/hooks/plans/use-plan-assignments";
 import { useDropPlan } from "../../../src/hooks/plans/use-assign-plan";
 import { useAuth } from "../../../src/auth/lib/getSession";
@@ -151,15 +155,6 @@ export default function RutinasTab() {
     [plans, activeObjective]
   );
 
-  const myPlans = useMemo(
-    () => plans.filter((p) => p.created_by === userId),
-    [plans, userId]
-  );
-  const mySessions = useMemo(
-    () => sessions.filter((s) => s.created_by === userId),
-    [sessions, userId]
-  );
-
   const switchTab = (key) => {
     _lastTab = key;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -190,7 +185,7 @@ export default function RutinasTab() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push("/planes/builder");
+              router.push("/planes/builder/custom-plan");
             }}
             className="mt-1 active:scale-[0.95]"
           >
@@ -259,9 +254,6 @@ export default function RutinasTab() {
         />
       ) : activeTab === "biblioteca" ? (
         <BibliotecaContent
-          myPlans={myPlans}
-          mySessions={mySessions}
-          userId={userId}
           router={router}
           insets={insets}
         />
@@ -1155,18 +1147,15 @@ function PlanStat({ value, primaryLabel, secondaryLabel }) {
 
 // ─── Tab: Biblioteca ──────────────────────────────────────────────────────────
 
-function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
+function BibliotecaContent({ router, insets }) {
   const [activeLib, setActiveLib] = useState("planes");
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
 
-  const { data: allExercises = [], isLoading: loadingExercises } =
-    useExercises();
-  const myExercises = useMemo(
-    () => allExercises.filter((e) => e.created_by === userId),
-    [allExercises, userId]
-  );
+  const { data: myPlans = [], isLoading: loadingPlans } = useCustomPlans();
+  const { data: mySessions = [], isLoading: loadingSessions } = useCustomSessions();
+  const { data: myExercises = [], isLoading: loadingExercises } = useCustomExercises();
 
   const handleDeletePlan = (plan) => {
     Alert.alert("Eliminar plan", `¿Eliminar "${plan.name}"?`, [
@@ -1176,10 +1165,10 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
         style: "destructive",
         onPress: async () => {
           await database
-            .update(training_plans)
+            .update(custom_plans)
             .set({ sync_status: "deleted" })
-            .where(eq(training_plans.id, plan.id));
-          queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+            .where(eq(custom_plans.id, plan.id));
+          queryClient.invalidateQueries({ queryKey: ["custom_plans"] });
           checkNetInfoAndSync().catch(() => {});
         },
       },
@@ -1195,15 +1184,15 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
         onPress: async () => {
           await database.transaction(async (tx) => {
             await tx
-              .update(session_exercises)
+              .update(custom_session_exercises)
               .set({ sync_status: "deleted" })
-              .where(eq(session_exercises.session_id, session.id));
+              .where(eq(custom_session_exercises.session_id, session.id));
             await tx
-              .update(sessions)
+              .update(custom_sessions)
               .set({ sync_status: "deleted" })
-              .where(eq(sessions.id, session.id));
+              .where(eq(custom_sessions.id, session.id));
           });
-          queryClient.invalidateQueries({ queryKey: ["sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["custom_sessions"] });
           checkNetInfoAndSync().catch(() => {});
         },
       },
@@ -1217,17 +1206,11 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
         text: "Eliminar",
         style: "destructive",
         onPress: async () => {
-          await database.transaction(async (tx) => {
-            await tx
-              .update(exercise_equipment)
-              .set({ sync_status: "deleted" })
-              .where(eq(exercise_equipment.exercise_id, exercise.id));
-            await tx
-              .update(exercises_base)
-              .set({ sync_status: "deleted" })
-              .where(eq(exercises_base.id, exercise.id));
-          });
-          queryClient.invalidateQueries({ queryKey: ["exercises"] });
+          await database
+            .update(custom_exercises)
+            .set({ sync_status: "deleted" })
+            .where(eq(custom_exercises.id, exercise.id));
+          queryClient.invalidateQueries({ queryKey: ["custom_exercises"] });
           checkNetInfoAndSync().catch(() => {});
         },
       },
@@ -1248,7 +1231,10 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
         ? mySessions
         : myExercises;
 
-  const isLibLoading = activeLib === "ejercicios" && loadingExercises;
+  const isLibLoading =
+    (activeLib === "planes" && loadingPlans) ||
+    (activeLib === "sesiones" && loadingSessions) ||
+    (activeLib === "ejercicios" && loadingExercises);
 
   return (
     <View className="flex-1">
@@ -1334,7 +1320,7 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
                   session={item}
                   onEdit={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push(`/biblioteca/sesiones/builder?id=${item.id}`);
+                    router.push(`/planes/builder/custom-session?id=${item.id}`);
                   }}
                   onDelete={() => handleDeleteSession(item)}
                   isDark={isDark}
@@ -1346,7 +1332,7 @@ function BibliotecaContent({ myPlans, mySessions, userId, router, insets }) {
                 exercise={item}
                 onEdit={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/biblioteca/ejercicios/builder?id=${item.id}`);
+                  router.push(`/planes/builder/custom-exercise?id=${item.id}`);
                 }}
                 onDelete={() => handleDeleteExercise(item)}
                 isDark={isDark}

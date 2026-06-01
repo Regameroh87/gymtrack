@@ -83,7 +83,7 @@ export default function RutinasWeb() {
 
             {activeTab === "mis_planes" && (
               <Pressable
-                onPress={() => router.push("/planes/builder")}
+                onPress={() => router.push("/planes/builder/custom-plan")}
                 className="flex-row items-center gap-2 px-4 py-[11px] rounded-2xl bg-brandPrimary-600"
                 style={({ hovered, pressed }) => ({
                   cursor: "pointer",

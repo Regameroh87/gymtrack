@@ -9,7 +9,6 @@ import {
   View,
 } from "react-native";
 import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -24,7 +23,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { database } from "../../../../src/database";
 import {
   exercises_base,
-  plan_assignments,
   plan_week_day_exercise_sets,
   plan_week_day_exercises,
   plan_week_days,
@@ -46,14 +44,10 @@ import { SESSION_OBJECTIVES } from "../../../../src/constants/sessionOptions";
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 
-// Base de datos (sync)
-import { checkNetInfoAndSync } from "../../../../src/database/sync";
-
 // Tema / assets
 import {
   ArrowLeft,
   Barbell,
-  Calendar,
   ChartBar,
   ChevronRight,
   Clock,
@@ -90,7 +84,6 @@ export default function PlanDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
 
   const { userId } = useAuth();
@@ -224,37 +217,7 @@ export default function PlanDetail() {
     );
   }
 
-  const isOwner = plan.created_by === userId;
-
-  const handleDelete = () => {
-    Alert.alert(
-      "Eliminar plan",
-      "¿Estás seguro? Esta acción no se puede deshacer.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            await database.transaction(async (tx) => {
-              await tx
-                .update(plan_assignments)
-                .set({ sync_status: "deleted" })
-                .where(eq(plan_assignments.plan_id, id));
-              await tx
-                .update(training_plans)
-                .set({ sync_status: "deleted" })
-                .where(eq(training_plans.id, id));
-            });
-            queryClient.invalidateQueries({ queryKey: ["training_plans"] });
-            queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
-            checkNetInfoAndSync();
-            router.back();
-          },
-        },
-      ]
-    );
-  };
+  const isOwner = false;
 
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
