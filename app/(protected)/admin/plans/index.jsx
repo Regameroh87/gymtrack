@@ -104,7 +104,8 @@ export default function PlansList() {
       {!isLoading && plans.length > 0 && (
         <View className="mx-6 mb-4 flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
           {TABS.map((tab) => {
-            const count = tab.key === "published" ? published.length : drafts.length;
+            const count =
+              tab.key === "published" ? published.length : drafts.length;
             const isActive = activeTab === tab.key;
             return (
               <Pressable
@@ -114,7 +115,9 @@ export default function PlansList() {
                   setActiveTab(tab.key);
                 }}
                 className="flex-1 py-2 rounded-[9px] flex-row items-center justify-center"
-                style={isActive ? { backgroundColor: brandPrimary[500] } : undefined}
+                style={
+                  isActive ? { backgroundColor: brandPrimary[500] } : undefined
+                }
               >
                 <Text
                   className={`text-[13px] font-jakarta-semi ${
@@ -197,7 +200,9 @@ export default function PlansList() {
               <ClipboardList size={32} color={brandPrimary[600]} />
             </View>
             <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark text-center mb-2">
-              {activeTab === "published" ? "Sin planes publicados" : "Sin borradores"}
+              {activeTab === "published"
+                ? "Sin planes publicados"
+                : "Sin borradores"}
             </Text>
             <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5 max-w-[240px]">
               {activeTab === "published"
