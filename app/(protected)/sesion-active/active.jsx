@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
-import { useRouter } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 
 import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
 import {
@@ -213,54 +213,67 @@ export default function SesionActiva() {
   }
 
   return (
-    <Screen safe>
-      <View className="flex-1 pb-20 bg-ui-background-light dark:bg-ui-background-dark">
-        {/* ── Top bar ── */}
-        <View className="flex-row items-center justify-between px-5 pb-3.5">
-          <View className="flex-row items-center gap-2">
-            {Platform.OS === "ios" && (
+    <Screen>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerShadowVisible: false,
+          headerTitleAlign: "center",
+          headerStyle: {
+            backgroundColor: isDark ? ui.background.dark : ui.background.light,
+          },
+          headerLeft: () => (
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              {Platform.OS === "ios" && (
+                <Pressable
+                  onPress={() => router.back()}
+                  hitSlop={12}
+                  className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+                >
+                  <ArrowLeft size={16} color={mutedIcon} />
+                </Pressable>
+              )}
               <Pressable
-                onPress={() => router.back()}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowExitConfirm(true);
+                }}
                 hitSlop={12}
                 className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
               >
-                <ArrowLeft size={16} color={mutedIcon} />
+                <X size={16} color={mutedIcon} />
               </Pressable>
-            )}
-
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setShowExitConfirm(true);
-              }}
-              hitSlop={12}
-              className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-            >
-              <X size={16} color={mutedIcon} />
-            </Pressable>
-          </View>
-
-          <View className="flex-row items-center gap-1.5">
-            <View
-              className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
-              style={{
-                shadowColor: BRAND_MINT,
-                shadowOpacity: 0.9,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
-              }}
-            />
-            <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
-              Sesión en curso
-            </Text>
-          </View>
-
-          <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[14%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/40 dark:border-brandPrimary-700/40">
-            <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
-              {timerStr}
-            </Text>
-          </View>
-        </View>
+            </View>
+          ),
+          headerTitle: () => (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: BRAND_MINT,
+                  shadowColor: BRAND_MINT,
+                  shadowOpacity: 0.9,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 0 },
+                }}
+              />
+              <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                Sesión en curso
+              </Text>
+            </View>
+          ),
+          headerRight: () => (
+            <View className="px-[11px] py-[5px] rounded-[10px] border bg-brandPrimary-700/[14%] dark:bg-brandPrimary-700/[15%] border-brandPrimary-700/40">
+              <Text className="font-jakarta-bold text-[13px] tracking-[1px] text-brandPrimary-700">
+                {timerStr}
+              </Text>
+            </View>
+          ),
+        }}
+      />
+      <View className="flex-1 pb-20 bg-ui-background-light dark:bg-ui-background-dark">
 
         {/* ── Progress bar ── */}
         <View className="mx-5 h-[3px] rounded-[2px] bg-ui-text-main/[6%] dark:bg-white/[6%]">

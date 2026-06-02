@@ -11,7 +11,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter, Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 import { brandPrimary, ui } from "../../../src/theme/colors.js";
@@ -130,10 +130,16 @@ export default function SesionPreview() {
   }
 
   return (
-    <Screen safe>
-      <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
-        {Platform.OS === "ios" && (
-          <View className="flex-row items-center px-5 pt-1 pb-1">
+    <Screen safe={Platform.OS !== "ios"}>
+      <Stack.Screen
+        options={{
+          headerShown: Platform.OS === "ios",
+          headerShadowVisible: false,
+          headerTitle: "",
+          headerStyle: {
+            backgroundColor: isDark ? ui.background.dark : ui.background.light,
+          },
+          headerLeft: () => (
             <Pressable
               onPress={() => router.back()}
               hitSlop={12}
@@ -141,9 +147,10 @@ export default function SesionPreview() {
             >
               <ArrowLeft size={16} color={mutedIcon} />
             </Pressable>
-          </View>
-        )}
-
+          ),
+        }}
+      />
+      <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
         <ScrollView
           contentContainerStyle={{
             paddingBottom: insets.bottom + 36,
