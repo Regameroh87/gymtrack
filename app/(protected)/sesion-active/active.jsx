@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  Platform,
 } from "react-native";
 import { useState, useEffect, useMemo, useRef } from "react";
 import Screen from "../../../src/components/Screen.jsx";
@@ -217,13 +218,15 @@ export default function SesionActiva() {
         {/* ── Top bar ── */}
         <View className="flex-row items-center justify-between px-5 pb-3.5">
           <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={() => router.back()}
-              hitSlop={12}
-              className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-            >
-              <ArrowLeft size={16} color={mutedIcon} />
-            </Pressable>
+            {Platform.OS === "ios" && (
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={12}
+                className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+              >
+                <ArrowLeft size={16} color={mutedIcon} />
+              </Pressable>
+            )}
 
             <Pressable
               onPress={() => {

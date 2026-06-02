@@ -4,6 +4,7 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { useCallback, useMemo, useRef, useState } from "react";
 
@@ -131,15 +132,17 @@ export default function SesionPreview() {
   return (
     <Screen safe>
       <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
-        <View className="flex-row items-center px-5 pt-1 pb-1">
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={12}
-            className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-          >
-            <ArrowLeft size={16} color={mutedIcon} />
-          </Pressable>
-        </View>
+        {Platform.OS === "ios" && (
+          <View className="flex-row items-center px-5 pt-1 pb-1">
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={12}
+              className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+            >
+              <ArrowLeft size={16} color={mutedIcon} />
+            </Pressable>
+          </View>
+        )}
 
         <ScrollView
           contentContainerStyle={{
