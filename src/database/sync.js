@@ -153,6 +153,25 @@ async function pullTableChanges(
           continue;
         }
       }
+      // Antes de insertar, eliminar cualquier fila local con el mismo composite
+      // key pero distinto id. Pasa cuando un día/semana del plan cambia de UUID
+      // en el servidor (p. ej. un slot vacío re-llenado con makeEmptyDay) y la
+      // reconciliación de borrados —que corre más abajo— todavía no eliminó la
+      // fila vieja. Las filas con cambios locales (pending/dirty/deleted) ya se
+      // saltearon arriba vía lockedCompositeKeys, así que esto solo toca filas
+      // "synced" obsoletas.
+      if (compositeUniqueColumns) {
+        await database
+          .delete(schemaTable)
+          .where(
+            and(
+              ...compositeUniqueColumns.map((c) =>
+                eq(schemaTable[c], remoteRow[c])
+              ),
+              ne(schemaTable.id, remoteRow.id)
+            )
+          );
+      }
       remoteRow.sync_status = "synced";
       await database.insert(schemaTable).values(remoteRow).onConflictDoUpdate({
         target: schemaTable.id,
