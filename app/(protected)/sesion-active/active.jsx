@@ -411,13 +411,13 @@ export default function SesionActiva() {
           </Text>
 
           {/* Ticks decorativos */}
-          <View className="absolute top-[18px] left-5 w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
-          <View className="absolute top-[18px] left-[52px] w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40" />
+          <View className="absolute top-[15px] left-5 w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
+          <View className="absolute top-[15px] left-[52px] w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40" />
 
           {/* Header: músculo · índice */}
           <View
             className="flex-row items-center justify-between"
-            style={{ paddingHorizontal: 20, paddingTop: 32 }}
+            style={{ paddingHorizontal: 20, paddingTop: 26 }}
           >
             <View className="px-[9px] py-[4px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
               <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
@@ -446,8 +446,8 @@ export default function SesionActiva() {
             className="flex-row"
             style={{
               paddingHorizontal: 20,
-              paddingTop: 16,
-              paddingBottom: 22,
+              paddingTop: 12,
+              paddingBottom: 16,
               gap: 16,
             }}
           >
@@ -485,7 +485,7 @@ export default function SesionActiva() {
                 colors={[BRAND_MINT, BRAND_PRIMARY]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: 96, height: 96, borderRadius: 20, padding: 2 }}
+                style={{ width: 84, height: 84, borderRadius: 18, padding: 2 }}
               >
                 <View className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center rounded-[16px] overflow-hidden">
                   {coverUrl ? (
