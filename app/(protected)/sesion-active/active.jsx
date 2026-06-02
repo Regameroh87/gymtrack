@@ -18,7 +18,12 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useRouter, Stack } from "expo-router";
 
-import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
+import {
+  brandPrimary,
+  brandSecondary,
+  ui,
+  gradient,
+} from "../../../src/theme/colors.js";
 import { HeaderBackButton } from "@react-navigation/elements";
 
 import {
@@ -74,6 +79,19 @@ export default function SesionActiva() {
   // ── Colores crudos desde el theme (no expresables como clase Tailwind) ──
   const placeholderColor = isDark ? ui.placeholder.dark : ui.placeholder.light;
   const checkOnMint = isDark ? ui.text.main : ui.surface.light;
+  const onPrimary = ui.surface.light; // blanco para íconos sobre el degradado
+  const ghostNumberColor = isDark
+    ? ui.decor.ghostNumber.dark
+    : ui.decor.ghostNumber.light;
+  const mintHaloColors = isDark
+    ? gradient.mintHalo.dark
+    : gradient.mintHalo.light;
+  const primaryHaloColors = isDark
+    ? gradient.primaryHalo.dark
+    : gradient.primaryHalo.light;
+  const placeholderGradientColors = isDark
+    ? gradient.sessionPlaceholder.dark
+    : gradient.sessionPlaceholder.light;
 
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
@@ -340,96 +358,182 @@ export default function SesionActiva() {
           </ScrollView>
         </View>
 
-        {/* ── Cabecera del ejercicio ── */}
+        {/* ── Cabecera del ejercicio (lenguaje de la card de la home) ── */}
         <View
-          className="mx-5 mb-3 rounded-3xl border border-ui-text-main/8 dark:border-white/8 bg-ui-surface-light dark:bg-ui-surface-dark p-5"
+          className="mx-5 mb-3 rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-ui-text-main/8 dark:border-white/8"
           style={{
             shadowColor: BRAND_PRIMARY,
-            shadowOpacity: 0.1,
-            shadowRadius: 20,
-            shadowOffset: { width: 0, height: 8 },
-            elevation: 5,
+            shadowOpacity: 0.18,
+            shadowRadius: 24,
+            shadowOffset: { width: 0, height: 10 },
+            elevation: 10,
           }}
         >
-          {/* Meta: índice + músculo · peso · video */}
-          <View className="flex-row items-center justify-between mb-5">
-            <View className="flex-row items-center gap-2.5">
-              <Text className="font-jakarta-bold text-[13px] tracking-[0.5px] text-brandPrimary-700">
-                {String(currentIdx + 1).padStart(2, "0")}
-                <Text className="text-ui-text-muted dark:text-ui-text-mutedDark">
-                  /{String(session.exercises.length).padStart(2, "0")}
-                </Text>
+          {/* Halos de fondo */}
+          <LinearGradient
+            colors={mintHaloColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0.7, y: 0.8 }}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 200,
+              height: 200,
+            }}
+          />
+          <LinearGradient
+            colors={primaryHaloColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              position: "absolute",
+              right: 0,
+              bottom: 0,
+              width: 240,
+              height: 170,
+            }}
+          />
+
+          {/* Número editorial gigante (textura, 4-5%) */}
+          <Text
+            className="absolute font-jakarta-bold"
+            style={{
+              top: -28,
+              right: -8,
+              fontSize: 150,
+              lineHeight: 150,
+              letterSpacing: -6,
+              color: ghostNumberColor,
+            }}
+          >
+            {String(currentIdx + 1).padStart(2, "0")}
+          </Text>
+
+          {/* Ticks decorativos */}
+          <View className="absolute top-[18px] left-5 w-7 h-[3px] rounded-sm bg-brandSecondary-400" />
+          <View className="absolute top-[18px] left-[52px] w-2.5 h-[3px] rounded-sm bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40" />
+
+          {/* Header: músculo · índice */}
+          <View
+            className="flex-row items-center justify-between"
+            style={{ paddingHorizontal: 20, paddingTop: 32 }}
+          >
+            <View className="px-[9px] py-[4px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
+              <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                {exercise.exercise_muscle || "—"}
               </Text>
-              <View className="w-px h-3.5 bg-ui-text-main/10 dark:bg-white/15" />
-              <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
-                <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
-                  {exercise.exercise_muscle || "—"}
-                </Text>
-              </View>
             </View>
-            <View className="flex-row items-center gap-2">
-              <View className="flex-row items-center gap-1 px-[9px] py-[3px] rounded-lg border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
-                <Barbell size={11} color={mutedIcon} />
-                <Text className="font-manrope-bold text-[11px] tracking-[0.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
-                  {refWeightLabel(exercise)}
-                </Text>
-              </View>
-              {exercise.video_uri && (
-                <Pressable
-                  onPress={() => {
-                    setActiveVideo({
-                      url:
-                        getCloudinaryUrl(exercise.video_uri) ??
-                        exercise.video_uri,
-                      title: exercise.exercise_name,
-                    });
-                    videoSheetRef.current?.present();
-                  }}
-                  hitSlop={10}
-                  className="w-8 h-8 rounded-full items-center justify-center border bg-brandSecondary-400/[22%] dark:bg-brandSecondary-400/[18%] border-brandSecondary-400/40 dark:border-brandSecondary-400/30 active:opacity-60"
-                  style={{
-                    shadowColor: BRAND_MINT,
-                    shadowOpacity: 0.4,
-                    shadowRadius: 8,
-                    shadowOffset: { width: 0, height: 0 },
-                  }}
-                >
-                  <Play size={12} color={BRAND_MINT} />
-                </Pressable>
-              )}
+            <View className="flex-row items-center gap-1.5">
+              <View
+                className="w-2 h-2 rounded-full bg-brandSecondary-400"
+                style={{
+                  shadowColor: BRAND_MINT,
+                  shadowOpacity: 0.9,
+                  shadowRadius: 5,
+                  shadowOffset: { width: 0, height: 0 },
+                }}
+              />
+              <Text className="font-jakarta-bold text-xs tracking-[2px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                {String(currentIdx + 1).padStart(2, "0")} /{" "}
+                {String(session.exercises.length).padStart(2, "0")}
+              </Text>
             </View>
           </View>
 
-          {/* Título editorial + thumbnail opcional */}
-          <View className="flex-row items-center gap-4">
-            {coverUrl && (
-              <Image
-                source={{ uri: coverUrl }}
-                contentFit="cover"
-                transition={180}
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 18,
-                  shadowColor: BRAND_PRIMARY,
-                  shadowOpacity: 0.18,
-                  shadowRadius: 9,
-                  shadowOffset: { width: 0, height: 3 },
-                }}
-              />
-            )}
+          {/* Body: título + visual enmarcado */}
+          <View
+            className="flex-row"
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 16,
+              paddingBottom: 22,
+              gap: 16,
+            }}
+          >
+            <View className="flex-1 justify-center gap-2">
+              <Text
+                className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark tracking-tight"
+                numberOfLines={3}
+                style={{ fontSize: 26, lineHeight: 31 }}
+              >
+                {exercise.exercise_name}
+              </Text>
+              <View className="flex-row items-center gap-1.5">
+                <Barbell size={12} color={mutedIcon} />
+                <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-[13px]">
+                  {exercise.sets.length}{" "}
+                  {exercise.sets.length === 1 ? "serie" : "series"} ·{" "}
+                  {refWeightLabel(exercise)}
+                </Text>
+              </View>
+            </View>
 
-            <Text
-              className="flex-1 font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
-              numberOfLines={3}
-              style={{
-                fontSize: 29,
-                lineHeight: 33,
-                letterSpacing: -1.1,
+            <Pressable
+              disabled={!exercise.video_uri}
+              onPress={() => {
+                setActiveVideo({
+                  url:
+                    getCloudinaryUrl(exercise.video_uri) ?? exercise.video_uri,
+                  title: exercise.exercise_name,
+                });
+                videoSheetRef.current?.present();
               }}
+              className="active:opacity-90"
             >
-              {exercise.exercise_name}
-            </Text>
+              <LinearGradient
+                colors={[BRAND_MINT, BRAND_PRIMARY]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ width: 96, height: 96, borderRadius: 20, padding: 2 }}
+              >
+                <View className="flex-1 bg-brandPrimary-50 dark:bg-ui-surface-dim items-center justify-center rounded-[16px] overflow-hidden">
+                  {coverUrl ? (
+                    <Image
+                      source={{ uri: coverUrl }}
+                      contentFit="cover"
+                      transition={180}
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  ) : (
+                    <>
+                      <LinearGradient
+                        colors={placeholderGradientColors}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                        }}
+                      />
+                      <Barbell
+                        size={40}
+                        color={isDark ? ui.icon.onDark : ui.icon.onLight}
+                      />
+                    </>
+                  )}
+
+                  {exercise.video_uri && (
+                    <View className="absolute inset-0 items-center justify-center">
+                      <View
+                        className="w-9 h-9 rounded-full items-center justify-center bg-brandPrimary-700/90"
+                        style={{
+                          shadowColor: BRAND_PRIMARY,
+                          shadowOpacity: 0.5,
+                          shadowRadius: 8,
+                          shadowOffset: { width: 0, height: 2 },
+                        }}
+                      >
+                        <Play size={14} color={onPrimary} />
+                      </View>
+                    </View>
+                  )}
+                </View>
+              </LinearGradient>
+            </Pressable>
           </View>
         </View>
 
