@@ -1,6 +1,7 @@
 // React Native
 import { View, Text, useWindowDimensions } from "react-native";
 import { useState, useCallback } from "react";
+import { useSheetBackHandler } from "../../hooks/use-sheet-back-handler";
 
 // Librerías externas
 import { BottomSheetModal, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
@@ -47,6 +48,7 @@ export default function VideoPlayerSheet({ sheetRef, videoUrl, title }) {
   const { width } = useWindowDimensions();
 
   const [isOpen, setIsOpen] = useState(false);
+  useSheetBackHandler(sheetRef, isOpen);
 
   const videoHeight = Math.round((width * 9) / 16);
 

@@ -1,4 +1,5 @@
-import React, { useCallback } from "react";
+import React, { useState, useCallback } from "react";
+import { useSheetBackHandler } from "../../hooks/use-sheet-back-handler";
 import { View, Text, Pressable } from "react-native";
 import {
   BottomSheetModal,
@@ -64,6 +65,9 @@ export default function ExerciseDetailSheet({
     []
   );
 
+  const [isOpen, setIsOpen] = useState(false);
+  useSheetBackHandler(sheetRef, isOpen);
+
   const imageUrl = exercise?.image_uri
     ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
     : null;
@@ -75,6 +79,7 @@ export default function ExerciseDetailSheet({
       ref={sheetRef}
       snapPoints={SNAP_POINTS}
       backdropComponent={renderBackdrop}
+      onChange={(index) => setIsOpen(index >= 0)}
       backgroundStyle={{
         backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
         borderTopLeftRadius: 24,

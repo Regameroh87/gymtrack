@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
-import { useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useSheetBackHandler } from "../../hooks/use-sheet-back-handler";
 
 import { BottomSheetModal, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
@@ -13,6 +14,9 @@ const HEADER_HEIGHT = 56;
 export default function EquipmentImageSheet({ sheetRef, imageUri, name }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  const [isOpen, setIsOpen] = useState(false);
+  useSheetBackHandler(sheetRef, isOpen);
 
   const renderBackdrop = useCallback(
     (props) => (
@@ -31,6 +35,7 @@ export default function EquipmentImageSheet({ sheetRef, imageUri, name }) {
       snapPoints={SNAP_POINTS}
       enableDynamicSizing={false}
       backdropComponent={renderBackdrop}
+      onChange={(index) => setIsOpen(index >= 0)}
       backgroundStyle={{
         backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
         borderTopLeftRadius: 24,
