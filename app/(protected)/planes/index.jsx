@@ -29,9 +29,6 @@ import {
   custom_plans,
   custom_session_exercises,
   custom_sessions,
-  sessions,
-  session_exercises,
-  training_plans,
 } from "../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../src/database/sync";
 
@@ -119,7 +116,9 @@ export default function RutinasTab() {
   const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
 
-  const { data: plans = [], isLoading: plansLoading } = useTrainingPlans({ publishedOnly: true });
+  const { data: plans = [], isLoading: plansLoading } = useTrainingPlans({
+    publishedOnly: true,
+  });
   const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
 
   const filteredSessions = useMemo(
@@ -253,10 +252,7 @@ export default function RutinasTab() {
           onBrowseCatalog={() => switchTab("catalogo")}
         />
       ) : activeTab === "biblioteca" ? (
-        <BibliotecaContent
-          router={router}
-          insets={insets}
-        />
+        <BibliotecaContent router={router} insets={insets} />
       ) : (
         <CatalogoContent
           plans={filteredPlans}
@@ -1015,11 +1011,13 @@ function PlanTile({ plan, index = 0, onPress }) {
           />
           <PlanStat
             value={plan.duration_weeks || "∞"}
-            primaryLabel={plan.duration_weeks
-              ? plan.duration_weeks === 1
-                ? "semana"
-                : "semanas"
-              : "sin duración"}
+            primaryLabel={
+              plan.duration_weeks
+                ? plan.duration_weeks === 1
+                  ? "semana"
+                  : "semanas"
+                : "sin duración"
+            }
             secondaryLabel={plan.duration_weeks ? "de duración" : "fija"}
           />
         </View>
@@ -1158,8 +1156,10 @@ function BibliotecaContent({ router, insets }) {
   const queryClient = useQueryClient();
 
   const { data: myPlans = [], isLoading: loadingPlans } = useCustomPlans();
-  const { data: mySessions = [], isLoading: loadingSessions } = useCustomSessions();
-  const { data: myExercises = [], isLoading: loadingExercises } = useCustomExercises();
+  const { data: mySessions = [], isLoading: loadingSessions } =
+    useCustomSessions();
+  const { data: myExercises = [], isLoading: loadingExercises } =
+    useCustomExercises();
 
   const handleDeletePlan = (plan) => {
     Alert.alert("Eliminar plan", `¿Eliminar "${plan.name}"?`, [

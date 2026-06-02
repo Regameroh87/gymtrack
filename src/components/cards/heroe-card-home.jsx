@@ -86,7 +86,7 @@ export default function HeroeCardHome({ image }) {
     : () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         // Con draft saltamos directo a la activa; sin draft, al preview.
-        router.push(
+        router.navigate(
           hasDraft ? "/sesion-active/active" : "/sesion-active"
         );
       };

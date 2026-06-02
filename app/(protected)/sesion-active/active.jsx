@@ -207,7 +207,7 @@ export default function SesionActiva() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     await clearDraft();
     setShowExitConfirm(false);
-    router.replace("/(protected)/sesion-active");
+    router.back();
   }
 
   return (
