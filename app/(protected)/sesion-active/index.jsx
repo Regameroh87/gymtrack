@@ -5,21 +5,20 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { brandPrimary, ui } from "../../../src/theme/colors.js";
 import { Barbell, Play } from "../../../assets/icons.jsx";
 
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
-import { sessionDraftKey } from "../../../src/hooks/sessions/use-session-draft";
+import { useActiveSessionDraft } from "../../../src/hooks/sessions/use-active-session-draft";
 
 import { formatShortDate } from "../../../src/utils/format-date";
 import PlanExerciseRow from "../../../src/components/cards/plan-exercise-row";
@@ -40,18 +39,10 @@ export default function SesionPreview() {
   const videoSheetRef = useRef(null);
   const [activeVideo, setActiveVideo] = useState(null);
 
-  // Si hay un draft en curso, salta directo a la sesión activa
-  const [draftChecked, setDraftChecked] = useState(false);
-  useEffect(() => {
-    if (!currentDay?.id) return;
-    AsyncStorage.getItem(sessionDraftKey(currentDay.id)).then((raw) => {
-      if (raw) {
-        router.replace("/(protected)/sesion-active/active");
-      } else {
-        setDraftChecked(true);
-      }
-    });
-  }, [currentDay?.id, router]);
+  // Sesión a medias (draft) del día que toca: mismo criterio que la card del home
+  const { data: draft } = useActiveSessionDraft();
+  const hasDraft =
+    !!draft && !!currentDay && String(draft.dayId) === String(currentDay.id);
 
   const handleVideoPress = ({ url, title }) => {
     setActiveVideo({ url, title });
@@ -83,11 +74,7 @@ export default function SesionPreview() {
 
   const dateLabel = formatShortDate();
 
-  if (
-    loadingSummary ||
-    (currentDay && loadingExercises) ||
-    (!draftChecked && currentDay)
-  ) {
+  if (loadingSummary || (currentDay && loadingExercises)) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <ActivityIndicator size="large" color={brandPrimary[700]} />
@@ -143,7 +130,7 @@ export default function SesionPreview() {
 
             <View className="flex-row items-center justify-between mb-4">
               <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.4px] text-brandSecondary-700 dark:text-brandSecondary-400">
-                Sesión de hoy
+                {hasDraft ? "En curso" : "Sesión de hoy"}
               </Text>
               <Text className="font-jakarta-bold text-[10px] tracking-[2px] text-ui-text-muted dark:text-ui-text-mutedDark">
                 {dateLabel}
@@ -234,7 +221,7 @@ export default function SesionPreview() {
               }}
             >
               <Text className="font-jakarta-bold text-[17px] tracking-[-0.3px] text-white">
-                Iniciar sesión
+                {hasDraft ? "Continuar sesión" : "Iniciar sesión"}
               </Text>
               <View className="w-[38px] h-[38px] rounded-full items-center justify-center bg-white/20">
                 <Play size={17} color="white" />
