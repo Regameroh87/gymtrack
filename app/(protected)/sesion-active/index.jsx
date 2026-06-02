@@ -23,6 +23,7 @@ import { useActiveSessionDraft } from "../../../src/hooks/sessions/use-active-se
 import { formatShortDate } from "../../../src/utils/format-date";
 import PlanExerciseRow from "../../../src/components/cards/plan-exercise-row";
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";
+import EquipmentImageSheet from "../../../src/components/images/EquipmentImageSheet";
 import Screen from "../../../src/components/Screen.jsx";
 
 export default function SesionPreview() {
@@ -39,6 +40,9 @@ export default function SesionPreview() {
   const videoSheetRef = useRef(null);
   const [activeVideo, setActiveVideo] = useState(null);
 
+  const equipmentSheetRef = useRef(null);
+  const [activeEquipment, setActiveEquipment] = useState(null);
+
   // Sesión a medias (draft) del día que toca: mismo criterio que la card del home
   const { data: draft, refetch: refetchDraft } = useActiveSessionDraft();
   const hasDraft =
@@ -53,6 +57,11 @@ export default function SesionPreview() {
   const handleVideoPress = ({ url, title }) => {
     setActiveVideo({ url, title });
     videoSheetRef.current?.present();
+  };
+
+  const handleEquipmentPress = ({ uri, name }) => {
+    setActiveEquipment({ uri, name });
+    equipmentSheetRef.current?.present();
   };
 
   const session = useMemo(() => {
@@ -196,6 +205,7 @@ export default function SesionPreview() {
                 exercise={ex}
                 position={idx + 1}
                 onVideoPress={handleVideoPress}
+                onEquipmentPress={handleEquipmentPress}
               />
             ))}
           </View>
@@ -240,6 +250,11 @@ export default function SesionPreview() {
           sheetRef={videoSheetRef}
           videoUrl={activeVideo?.url}
           title={activeVideo?.title}
+        />
+        <EquipmentImageSheet
+          sheetRef={equipmentSheetRef}
+          imageUri={activeEquipment?.uri}
+          name={activeEquipment?.name}
         />
       </View>
     </Screen>

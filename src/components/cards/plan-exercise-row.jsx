@@ -56,7 +56,7 @@ function buildSummary(exercise) {
 
 // ─── Fila desplegable de un ejercicio prescrito ─────────────────────────────
 
-export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
+export default function PlanExerciseRow({ exercise, position, onVideoPress, onEquipmentPress }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const [expanded, setExpanded] = useState(false);
@@ -273,24 +273,8 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
                           ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${item.image_uri}`
                           : null))
                     : null;
-                  return (
-                    <View
-                      key={i}
-                      className="flex-row items-center"
-                      style={{
-                        paddingHorizontal: 8,
-                        paddingVertical: 5,
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        gap: 6,
-                        borderColor: isDark
-                          ? "rgba(255,255,255,0.12)"
-                          : "rgba(15,13,32,0.12)",
-                        backgroundColor: isDark
-                          ? "rgba(255,255,255,0.05)"
-                          : "rgba(15,13,32,0.04)",
-                      }}
-                    >
+                  const chipContent = (
+                    <>
                       {equipImgUri ? (
                         <Image
                           source={{ uri: equipImgUri }}
@@ -315,6 +299,42 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress }) {
                       >
                         {item.name}
                       </Text>
+                    </>
+                  );
+
+                  const chipStyle = {
+                    paddingHorizontal: 8,
+                    paddingVertical: 5,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    gap: 6,
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.12)"
+                      : "rgba(15,13,32,0.12)",
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(15,13,32,0.04)",
+                  };
+
+                  return equipImgUri ? (
+                    <Pressable
+                      key={i}
+                      className="flex-row items-center active:opacity-70"
+                      style={chipStyle}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        onEquipmentPress?.({ uri: equipImgUri, name: item.name });
+                      }}
+                    >
+                      {chipContent}
+                    </Pressable>
+                  ) : (
+                    <View
+                      key={i}
+                      className="flex-row items-center"
+                      style={chipStyle}
+                    >
+                      {chipContent}
                     </View>
                   );
                 })}
