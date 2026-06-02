@@ -1,5 +1,6 @@
 import "../global.css";
 import "../src/theme/nativewind";
+import { useKeepAwake } from "expo-keep-awake";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -39,6 +40,8 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  if (__DEV__) useKeepAwake();
+
   const { colorScheme } = useColorScheme();
 
   const [fontsLoaded, fontError] = useFonts({
