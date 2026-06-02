@@ -5,12 +5,12 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 import { brandPrimary, ui } from "../../../src/theme/colors.js";
@@ -40,9 +40,15 @@ export default function SesionPreview() {
   const [activeVideo, setActiveVideo] = useState(null);
 
   // Sesión a medias (draft) del día que toca: mismo criterio que la card del home
-  const { data: draft } = useActiveSessionDraft();
+  const { data: draft, refetch: refetchDraft } = useActiveSessionDraft();
   const hasDraft =
     !!draft && !!currentDay && String(draft.dayId) === String(currentDay.id);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchDraft();
+    }, [refetchDraft])
+  );
 
   const handleVideoPress = ({ url, title }) => {
     setActiveVideo({ url, title });
