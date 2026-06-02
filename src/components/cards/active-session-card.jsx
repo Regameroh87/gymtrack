@@ -50,8 +50,14 @@ export default function ActiveSessionCard({ session, currentDay }) {
   const meta = metaParts.join(" · ");
 
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push("/sesion");
+    //Aca debo verificar si hay sesion
+    if (meta) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      router.navigate("/sesion");
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      router.navigate("/(protected)/sesion-active/active");
+    }
   };
 
   return (

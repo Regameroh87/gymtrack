@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   Platform,
 } from "react-native";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -47,6 +47,14 @@ export default function SesionPreview() {
   const { data: draft, refetch: refetchDraft } = useActiveSessionDraft();
   const hasDraft =
     !!draft && !!currentDay && String(draft.dayId) === String(currentDay.id);
+
+  const hasAutoRedirected = useRef(false);
+  useEffect(() => {
+    if (hasDraft && !hasAutoRedirected.current) {
+      hasAutoRedirected.current = true;
+      router.push("/(protected)/sesion-active/active");
+    }
+  }, [hasDraft]);
 
   useFocusEffect(
     useCallback(() => {
@@ -227,7 +235,7 @@ export default function SesionPreview() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              router.navigate("/(protected)/sesion-active/active");
+              router.push("/(protected)/sesion-active/active");
             }}
             className="active:opacity-90 mt-7"
           >
