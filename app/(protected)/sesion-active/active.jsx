@@ -197,7 +197,7 @@ export default function SesionActiva() {
         elapsed,
       });
       await clearDraft();
-      router.dismissAll();
+      if (router.canDismiss()) router.dismissAll();
       router.navigate("/(protected)/registros");
     } catch {
       Alert.alert(
@@ -211,7 +211,7 @@ export default function SesionActiva() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     await clearDraft();
     setShowExitConfirm(false);
-    router.dismissAll();
+    if (router.canDismiss()) router.dismissAll();
     router.navigate("/(protected)");
   }
 

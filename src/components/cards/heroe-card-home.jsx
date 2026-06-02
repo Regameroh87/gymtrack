@@ -85,7 +85,13 @@ export default function HeroeCardHome({ image }) {
     ? () => router.push("/planes")
     : () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        router.navigate("/(protected)/sesion-active");
+        // Con sesión a medias vamos directo a la activa (el preview queda
+        // debajo por la ruta ancla); sin draft entramos por el preview.
+        router.navigate(
+          hasDraft
+            ? "/(protected)/sesion-active/active"
+            : "/(protected)/sesion-active"
+        );
       };
 
   return (
