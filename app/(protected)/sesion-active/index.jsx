@@ -227,7 +227,7 @@ export default function SesionPreview() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              router.push("/(protected)/sesion-active/active");
+              router.navigate("/(protected)/sesion-active/active");
             }}
             className="active:opacity-90 mt-7"
           >
