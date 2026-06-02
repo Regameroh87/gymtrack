@@ -13,7 +13,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Screen from "../../../src/components/Screen.jsx";
 
 import { LinearGradient } from "expo-linear-gradient";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useRouter, Stack } from "expo-router";
@@ -72,7 +71,6 @@ function refWeightLabel(exercise) {
 
 export default function SesionActiva() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
@@ -246,7 +244,7 @@ export default function SesionActiva() {
           ),
         }}
       />
-      <View className="flex-1 pb-20 bg-ui-background-light dark:bg-ui-background-dark">
+      <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
         {/* ── Top bar ── */}
         <View className="flex-row items-center justify-between px-5 pb-3">
           <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
@@ -436,151 +434,85 @@ export default function SesionActiva() {
         {/* ── Series (scrollables) ── */}
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+          contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
-          <View className="mx-5 mb-4 rounded-b-3xl overflow-hidden border-b border-l border-r border-ui-text-main/8 dark:border-white/8 bg-ui-surface-light dark:bg-ui-surface-dark px-5 pt-5 pb-5 gap-4">
+          <View className="mx-5 mb-4 gap-3">
             {exercise.sets.map((set, si) => {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
               const data = setData[key] ?? {};
+              const intensityLabel =
+                exercise.intensity_mode === "rpe" && set.rpe != null
+                  ? `RPE ${set.rpe}`
+                  : exercise.intensity_mode === "rir" && set.rir != null
+                    ? `RIR ${set.rir}`
+                    : null;
               return (
-                <View key={set.id} className="gap-2.5">
-                  <View className="flex-row items-center gap-2">
-                    <Text
-                      className={`font-manrope-bold uppercase text-[11px] tracking-[1.2px] w-6 ${
-                        done
-                          ? "text-brandSecondary-700 dark:text-brandSecondary-400"
-                          : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                      }`}
-                    >
-                      S{si + 1}
-                    </Text>
-
+                <View
+                  key={set.id}
+                  className={`rounded-2xl border p-3.5 ${
+                    done
+                      ? "bg-brandSecondary-400/[8%] border-brandSecondary-400/30"
+                      : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-text-main/8 dark:border-white/8"
+                  }`}
+                >
+                  {/* Fila 1 · identidad de la serie */}
+                  <View className="flex-row items-center gap-3">
                     <View
-                      className={`px-[9px] py-1 rounded-lg border ${
+                      className={`w-9 h-9 rounded-xl items-center justify-center border ${
                         done
-                          ? "bg-transparent border-transparent"
-                          : "bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/30 dark:border-brandSecondary-400/20"
+                          ? "bg-brandSecondary-400 border-brandSecondary-400"
+                          : "bg-brandSecondary-400/[10%] dark:bg-brandSecondary-400/[12%] border-brandSecondary-700/20 dark:border-brandSecondary-400/20"
                       }`}
+                      style={
+                        done
+                          ? {
+                              shadowColor: BRAND_MINT,
+                              shadowOpacity: 0.5,
+                              shadowRadius: 9,
+                              shadowOffset: { width: 0, height: 2 },
+                            }
+                          : undefined
+                      }
                     >
                       <Text
-                        className={`font-manrope-bold text-xs ${
+                        className={`font-jakarta-bold text-[15px] ${
                           done
-                            ? "text-ui-text-main/[22%] dark:text-white/[22%]"
+                            ? ""
                             : "text-brandSecondary-700 dark:text-brandSecondary-400"
                         }`}
+                        style={done ? { color: checkOnMint } : undefined}
                       >
-                        {setTargetLabel(set, exercise.prescription_mode)}
+                        {si + 1}
                       </Text>
                     </View>
 
-                    {exercise.intensity_mode === "rpe" && set.rpe != null && (
-                      <View
-                        className={`px-[9px] py-1 rounded-lg border ${
-                          done
-                            ? "bg-transparent border-transparent"
-                            : "bg-brandPrimary-700/[16%] border-brandPrimary-700/30 dark:border-brandPrimary-700/20"
-                        }`}
-                      >
-                        <Text
-                          className={`font-manrope-bold text-xs ${
-                            done
-                              ? "text-ui-text-main/[22%] dark:text-white/[22%]"
-                              : "text-brandPrimary-700"
-                          }`}
-                        >
-                          RPE {set.rpe}
+                    <View className="flex-1">
+                      <Text className="font-manrope-bold uppercase text-[10px] tracking-[1.6px] text-ui-text-muted dark:text-ui-text-mutedDark mb-0.5">
+                        Serie {si + 1}
+                      </Text>
+                      <View className="flex-row items-center gap-1.5">
+                        <Text className="font-jakarta-bold text-[14px] tracking-[-0.2px] text-ui-text-main dark:text-ui-text-mainDark">
+                          {setTargetLabel(set, exercise.prescription_mode)}
                         </Text>
+                        {intensityLabel && (
+                          <>
+                            <Text className="font-manrope text-[12px] text-ui-text-muted dark:text-ui-text-mutedDark">
+                              ·
+                            </Text>
+                            <Text className="font-manrope-bold text-[12px] text-brandPrimary-700">
+                              {intensityLabel}
+                            </Text>
+                          </>
+                        )}
                       </View>
-                    )}
-
-                    {exercise.intensity_mode === "rir" && set.rir != null && (
-                      <View
-                        className={`px-[9px] py-1 rounded-lg border ${
-                          done
-                            ? "bg-transparent border-transparent"
-                            : "bg-brandPrimary-700/[16%] border-brandPrimary-700/30 dark:border-brandPrimary-700/20"
-                        }`}
-                      >
-                        <Text
-                          className={`font-manrope-bold text-xs ${
-                            done
-                              ? "text-ui-text-main/[22%] dark:text-white/[22%]"
-                              : "text-brandPrimary-700"
-                          }`}
-                        >
-                          RIR {set.rir}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View className="flex-row items-center gap-2 ml-8">
-                    {!isDuration && (
-                      <>
-                        <TextInput
-                          value={data.reps ?? ""}
-                          onChangeText={(v) =>
-                            updateField(exercise.id, set.id, "reps", v)
-                          }
-                          keyboardType="number-pad"
-                          editable={!done}
-                          selectTextOnFocus
-                          placeholder={
-                            set.reps_max != null
-                              ? String(set.reps_max)
-                              : set.reps_min != null
-                                ? String(set.reps_min)
-                                : "—"
-                          }
-                          placeholderTextColor={
-                            isDark
-                              ? "rgba(255,255,255,0.2)"
-                              : "rgba(15,13,32,0.22)"
-                          }
-                          className={`w-[44px] px-2 py-[7px] rounded-[10px] border font-jakarta-semi text-[14px] text-center ${
-                            done
-                              ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
-                              : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[22%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
-                          }`}
-                        />
-                        <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
-                          reps
-                        </Text>
-                      </>
-                    )}
-
-                    <TextInput
-                      value={data.weight ?? ""}
-                      onChangeText={(v) =>
-                        updateField(exercise.id, set.id, "weight", v)
-                      }
-                      keyboardType="decimal-pad"
-                      editable={!done}
-                      selectTextOnFocus
-                      placeholder={
-                        set.weight_kg != null ? String(set.weight_kg) : "—"
-                      }
-                      placeholderTextColor={
-                        isDark ? "rgba(255,255,255,0.2)" : "rgba(15,13,32,0.22)"
-                      }
-                      className={`w-[56px] px-2.5 py-[7px] rounded-[10px] border font-jakarta-semi text-[15px] text-center ${
-                        done
-                          ? "bg-transparent border-transparent text-ui-text-main/[22%] dark:text-white/[22%]"
-                          : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[22%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
-                      }`}
-                    />
-                    <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark">
-                      kg
-                    </Text>
-
-                    <View className="flex-1" />
+                    </View>
 
                     <Pressable
                       onPress={() => toggleSet(exercise.id, set.id)}
                       hitSlop={10}
-                      className={`w-[34px] h-[34px] rounded-[17px] items-center justify-center border-[1.5px] active:opacity-70 ${
+                      className={`w-9 h-9 rounded-full items-center justify-center border-[1.5px] active:opacity-70 ${
                         done
                           ? "bg-brandSecondary-400 border-brandSecondary-400"
                           : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[30%] dark:border-white/15"
@@ -596,25 +528,78 @@ export default function SesionActiva() {
                           : undefined
                       }
                     >
-                      {done && (
-                        <CheckCircle
-                          size={18}
-                          color={isDark ? "#0f0d20" : "#ffffff"}
-                        />
-                      )}
+                      {done && <CheckCircle size={19} color={checkOnMint} />}
                     </Pressable>
                   </View>
 
+                  <View className="h-px my-3 bg-ui-text-main/[6%] dark:bg-white/[6%]" />
+
+                  {/* Fila 2 · registro */}
+                  <View className="flex-row items-end gap-3">
+                    {!isDuration && (
+                      <View className="flex-1">
+                        <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark mb-1.5">
+                          Reps
+                        </Text>
+                        <TextInput
+                          value={data.reps ?? ""}
+                          onChangeText={(v) =>
+                            updateField(exercise.id, set.id, "reps", v)
+                          }
+                          keyboardType="number-pad"
+                          editable={!done}
+                          selectTextOnFocus
+                          placeholder={
+                            set.reps_max != null
+                              ? String(set.reps_max)
+                              : set.reps_min != null
+                                ? String(set.reps_min)
+                                : "—"
+                          }
+                          placeholderTextColor={placeholderColor}
+                          className={`px-3 py-2.5 rounded-xl border font-jakarta-semi text-[16px] text-center ${
+                            done
+                              ? "bg-transparent border-ui-text-main/8 dark:border-white/8 text-ui-text-main/[35%] dark:text-white/[35%]"
+                              : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[14%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                          }`}
+                        />
+                      </View>
+                    )}
+
+                    <View className="flex-1">
+                      <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark mb-1.5">
+                        Peso (kg)
+                      </Text>
+                      <TextInput
+                        value={data.weight ?? ""}
+                        onChangeText={(v) =>
+                          updateField(exercise.id, set.id, "weight", v)
+                        }
+                        keyboardType="decimal-pad"
+                        editable={!done}
+                        selectTextOnFocus
+                        placeholder={
+                          set.weight_kg != null ? String(set.weight_kg) : "—"
+                        }
+                        placeholderTextColor={placeholderColor}
+                        className={`px-3 py-2.5 rounded-xl border font-jakarta-semi text-[16px] text-center ${
+                          done
+                            ? "bg-transparent border-ui-text-main/8 dark:border-white/8 text-ui-text-main/[35%] dark:text-white/[35%]"
+                            : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[14%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                        }`}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Fila 3 · nota */}
                   <TextInput
                     value={data.notes ?? ""}
                     onChangeText={(v) =>
                       updateField(exercise.id, set.id, "notes", v)
                     }
-                    placeholder="Nota de la serie..."
-                    placeholderTextColor={
-                      isDark ? "rgba(255,255,255,0.18)" : "rgba(15,13,32,0.2)"
-                    }
-                    className="ml-8 px-3 py-1.5 rounded-[9px] border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                    placeholder="+ Nota de la serie"
+                    placeholderTextColor={placeholderColor}
+                    className="mt-2.5 px-3 py-2 rounded-xl border font-manrope text-xs bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/8 dark:border-white/8 text-ui-text-main dark:text-ui-text-mainDark"
                   />
                 </View>
               );
@@ -728,12 +713,12 @@ export default function SesionActiva() {
         >
           <View
             className="flex-1 justify-end"
-            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            style={{ backgroundColor: ui.overlay.scrim }}
           >
             <View
               className="mx-4 mb-8 rounded-3xl border border-ui-text-main/8 dark:border-white/10 bg-ui-surface-light dark:bg-ui-surface-dark p-5"
               style={{
-                shadowColor: "#000",
+                shadowColor: ui.overlay.shadow,
                 shadowOpacity: 0.3,
                 shadowRadius: 24,
                 shadowOffset: { width: 0, height: -4 },
@@ -790,12 +775,12 @@ export default function SesionActiva() {
         >
           <View
             className="flex-1 justify-end"
-            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            style={{ backgroundColor: ui.overlay.scrim }}
           >
             <View
               className="mx-4 mb-8 rounded-3xl border border-ui-text-main/8 dark:border-white/10 bg-ui-surface-light dark:bg-ui-surface-dark p-5"
               style={{
-                shadowColor: "#000",
+                shadowColor: ui.overlay.shadow,
                 shadowOpacity: 0.3,
                 shadowRadius: 24,
                 shadowOffset: { width: 0, height: -4 },
