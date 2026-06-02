@@ -15,7 +15,7 @@ import { useFocusEffect, useRouter, Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 import { brandPrimary, ui } from "../../../src/theme/colors.js";
-import { ArrowLeft, Barbell, Play } from "../../../assets/icons.jsx";
+import { Barbell, Play } from "../../../assets/icons.jsx";
 
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
@@ -136,18 +136,11 @@ export default function SesionPreview() {
           headerShown: Platform.OS === "ios",
           headerShadowVisible: false,
           headerTitle: "",
+          headerBackVisible: true,
+          headerBackTitle: "",
           headerStyle: {
             backgroundColor: isDark ? ui.background.dark : ui.background.light,
           },
-          headerLeft: () => (
-            <Pressable
-              onPress={() => router.back()}
-              hitSlop={12}
-              className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-            >
-              <ArrowLeft size={16} color={mutedIcon} />
-            </Pressable>
-          ),
         }}
       />
       <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
