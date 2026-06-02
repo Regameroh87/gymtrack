@@ -18,12 +18,7 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useRouter, Stack } from "expo-router";
 
-import {
-  brandPrimary,
-  brandSecondary,
-  ui,
-  gradient,
-} from "../../../src/theme/colors.js";
+import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
 import { HeaderBackButton } from "@react-navigation/elements";
 
 import {
@@ -77,17 +72,8 @@ export default function SesionActiva() {
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
 
   // ── Colores crudos desde el theme (no expresables como clase Tailwind) ──
-  const headerGradient = isDark
-    ? gradient.exerciseHeader.dark
-    : gradient.exerciseHeader.light;
-  const ghostNumberColor = isDark
-    ? ui.decor.ghostNumber.dark
-    : ui.decor.ghostNumber.light;
   const placeholderColor = isDark ? ui.placeholder.dark : ui.placeholder.light;
   const checkOnMint = isDark ? ui.text.main : ui.surface.light;
-  const coverPlaceholder = isDark
-    ? gradient.sessionPlaceholder.dark
-    : gradient.sessionPlaceholder.light;
 
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
@@ -356,97 +342,38 @@ export default function SesionActiva() {
 
         {/* ── Cabecera del ejercicio ── */}
         <View
-          className="mx-5 mb-3 rounded-3xl overflow-hidden border border-ui-text-main/8 dark:border-white/8"
+          className="mx-5 mb-3 rounded-3xl border border-ui-text-main/8 dark:border-white/8 bg-ui-surface-light dark:bg-ui-surface-dark p-5"
           style={{
             shadowColor: BRAND_PRIMARY,
-            shadowOpacity: 0.12,
-            shadowRadius: 22,
+            shadowOpacity: 0.1,
+            shadowRadius: 20,
             shadowOffset: { width: 0, height: 8 },
-            elevation: 6,
+            elevation: 5,
           }}
         >
-          <LinearGradient
-            colors={headerGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ padding: 20, paddingBottom: 22 }}
-          >
-            <Text
-              className="absolute font-jakarta-bold"
-              style={{
-                right: 14,
-                top: -8,
-                fontSize: 108,
-                lineHeight: 108,
-                color: ghostNumberColor,
-              }}
-            >
-              {String(currentIdx + 1).padStart(2, "0")}
-            </Text>
-
-            <View className="flex-row items-center justify-between mb-3">
+          {/* Meta: índice + músculo · peso · video */}
+          <View className="flex-row items-center justify-between mb-5">
+            <View className="flex-row items-center gap-2.5">
+              <Text className="font-jakarta-bold text-[13px] tracking-[0.5px] text-brandPrimary-700">
+                {String(currentIdx + 1).padStart(2, "0")}
+                <Text className="text-ui-text-muted dark:text-ui-text-mutedDark">
+                  /{String(session.exercises.length).padStart(2, "0")}
+                </Text>
+              </Text>
+              <View className="w-px h-3.5 bg-ui-text-main/10 dark:bg-white/15" />
               <View className="px-[9px] py-[3px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
                 <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
                   {exercise.exercise_muscle || "—"}
                 </Text>
               </View>
+            </View>
+            <View className="flex-row items-center gap-2">
               <View className="flex-row items-center gap-1 px-[9px] py-[3px] rounded-lg border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10">
                 <Barbell size={11} color={mutedIcon} />
                 <Text className="font-manrope-bold text-[11px] tracking-[0.4px] text-ui-text-muted dark:text-ui-text-mutedDark">
                   {refWeightLabel(exercise)}
                 </Text>
               </View>
-            </View>
-
-            <View className="flex-row items-center gap-3.5">
-              <View
-                className="w-[60px] h-[60px] rounded-2xl overflow-hidden border border-ui-text-main/[6%] dark:border-white/10"
-                style={{
-                  shadowColor: BRAND_PRIMARY,
-                  shadowOpacity: 0.2,
-                  shadowRadius: 10,
-                  shadowOffset: { width: 0, height: 4 },
-                  elevation: 5,
-                }}
-              >
-                {coverUrl ? (
-                  <Image
-                    source={{ uri: coverUrl }}
-                    contentFit="cover"
-                    transition={180}
-                    style={{ width: "100%", height: "100%" }}
-                  />
-                ) : (
-                  <LinearGradient
-                    colors={coverPlaceholder}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      flex: 1,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Barbell
-                      size={22}
-                      color={isDark ? BRAND_MINT : BRAND_PRIMARY}
-                    />
-                  </LinearGradient>
-                )}
-              </View>
-
-              <Text
-                className="flex-1 font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
-                numberOfLines={2}
-                style={{
-                  fontSize: 21,
-                  lineHeight: 26,
-                  letterSpacing: -0.6,
-                }}
-              >
-                {exercise.exercise_name}
-              </Text>
-
               {exercise.video_uri && (
                 <Pressable
                   onPress={() => {
@@ -471,7 +398,39 @@ export default function SesionActiva() {
                 </Pressable>
               )}
             </View>
-          </LinearGradient>
+          </View>
+
+          {/* Título editorial + thumbnail opcional */}
+          <View className="flex-row items-center gap-4">
+            {coverUrl && (
+              <Image
+                source={{ uri: coverUrl }}
+                contentFit="cover"
+                transition={180}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 18,
+                  shadowColor: BRAND_PRIMARY,
+                  shadowOpacity: 0.18,
+                  shadowRadius: 9,
+                  shadowOffset: { width: 0, height: 3 },
+                }}
+              />
+            )}
+
+            <Text
+              className="flex-1 font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
+              numberOfLines={3}
+              style={{
+                fontSize: 29,
+                lineHeight: 33,
+                letterSpacing: -1.1,
+              }}
+            >
+              {exercise.exercise_name}
+            </Text>
+          </View>
         </View>
 
         {/* ── Series (scrollables) ── */}
