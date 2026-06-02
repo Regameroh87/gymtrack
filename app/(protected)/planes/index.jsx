@@ -90,8 +90,8 @@ const LEVEL_FILTERS = [
 ];
 
 const MAIN_TABS = [
-  { key: "catalogo", label: "Catálogo" },
   { key: "mis_planes", label: "Mis Planes" },
+  { key: "catalogo", label: "Catálogo" },
   { key: "biblioteca", label: "Biblioteca" },
 ];
 
@@ -111,7 +111,7 @@ let _lastTab = "mis_planes";
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { userId } = useAuth();
+
   const [activeTab, setActiveTab] = useState(_lastTab);
   const [catalogType, setCatalogType] = useState("planes");
   const [activeLevel, setActiveLevel] = useState(null);
