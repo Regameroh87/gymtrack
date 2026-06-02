@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import Screen from "../../../src/components/Screen.jsx";
 
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useRouter, Stack } from "expo-router";
@@ -84,6 +85,9 @@ export default function SesionActiva() {
     : ui.decor.ghostNumber.light;
   const placeholderColor = isDark ? ui.placeholder.dark : ui.placeholder.light;
   const checkOnMint = isDark ? ui.text.main : ui.surface.light;
+  const coverPlaceholder = isDark
+    ? gradient.sessionPlaceholder.dark
+    : gradient.sessionPlaceholder.light;
 
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
@@ -165,6 +169,9 @@ export default function SesionActiva() {
   const canPrev = currentIdx > 0;
   const canNext = currentIdx < session.exercises.length - 1;
   const isDuration = (exercise.prescription_mode ?? "reps") === "duration";
+  const coverUrl = exercise.image_uri
+    ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
+    : null;
 
   const totalSets = session.exercises.reduce((s, ex) => s + ex.sets.length, 0);
   const doneCount = completedSets.size;
@@ -391,14 +398,50 @@ export default function SesionActiva() {
               </View>
             </View>
 
-            <View className="flex-row items-end justify-between">
-              <Text
-                className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
+            <View className="flex-row items-center gap-3.5">
+              <View
+                className="w-[60px] h-[60px] rounded-2xl overflow-hidden border border-ui-text-main/[6%] dark:border-white/10"
                 style={{
-                  flex: 1,
-                  fontSize: 24,
-                  lineHeight: 30,
-                  letterSpacing: -0.7,
+                  shadowColor: BRAND_PRIMARY,
+                  shadowOpacity: 0.2,
+                  shadowRadius: 10,
+                  shadowOffset: { width: 0, height: 4 },
+                  elevation: 5,
+                }}
+              >
+                {coverUrl ? (
+                  <Image
+                    source={{ uri: coverUrl }}
+                    contentFit="cover"
+                    transition={180}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                ) : (
+                  <LinearGradient
+                    colors={coverPlaceholder}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Barbell
+                      size={22}
+                      color={isDark ? BRAND_MINT : BRAND_PRIMARY}
+                    />
+                  </LinearGradient>
+                )}
+              </View>
+
+              <Text
+                className="flex-1 font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
+                numberOfLines={2}
+                style={{
+                  fontSize: 21,
+                  lineHeight: 26,
+                  letterSpacing: -0.6,
                 }}
               >
                 {exercise.exercise_name}
