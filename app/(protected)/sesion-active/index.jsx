@@ -14,7 +14,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 import { brandPrimary, ui } from "../../../src/theme/colors.js";
-import { Barbell, Play } from "../../../assets/icons.jsx";
+import { ArrowLeft, Barbell, Play } from "../../../assets/icons.jsx";
 
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
@@ -31,6 +31,7 @@ export default function SesionPreview() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
 
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
@@ -75,7 +76,8 @@ export default function SesionPreview() {
     return {
       planName: summary.plan.name,
       dayLabel: `Día ${currentDay.day_number}`,
-      weekNumber: summary.plan.duration_weeks === 0 ? null : currentDay.week_number,
+      weekNumber:
+        summary.plan.duration_weeks === 0 ? null : currentDay.week_number,
       sessionName: currentDay.session?.name ?? summary.plan.name,
       exercises: dayExercises,
       estimatedMinutes,
@@ -129,6 +131,16 @@ export default function SesionPreview() {
   return (
     <Screen safe>
       <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
+        <View className="flex-row items-center px-5 pt-1 pb-1">
+          <Pressable
+            onPress={() => router.back()}
+            hitSlop={12}
+            className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+          >
+            <ArrowLeft size={16} color={mutedIcon} />
+          </Pressable>
+        </View>
+
         <ScrollView
           contentContainerStyle={{
             paddingBottom: insets.bottom + 36,
@@ -214,7 +226,7 @@ export default function SesionPreview() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              router.push("/(protected)/sesion-active/active");
+              router.navigate("/(protected)/sesion-active/active");
             }}
             className="active:opacity-90 mt-7"
           >

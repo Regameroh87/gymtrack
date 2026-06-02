@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 
 import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
 import {
+  ArrowLeft,
   Barbell,
   ChevronRight,
   Play,
@@ -215,16 +216,26 @@ export default function SesionActiva() {
       <View className="flex-1 pb-20 bg-ui-background-light dark:bg-ui-background-dark">
         {/* ── Top bar ── */}
         <View className="flex-row items-center justify-between px-5 pb-3.5">
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowExitConfirm(true);
-            }}
-            hitSlop={12}
-            className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-          >
-            <X size={16} color={mutedIcon} />
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={12}
+              className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+            >
+              <ArrowLeft size={16} color={mutedIcon} />
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowExitConfirm(true);
+              }}
+              hitSlop={12}
+              className="w-9 h-9 rounded-full items-center justify-center border bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/10 dark:border-white/10 active:opacity-60"
+            >
+              <X size={16} color={mutedIcon} />
+            </Pressable>
+          </View>
 
           <View className="flex-row items-center gap-1.5">
             <View
