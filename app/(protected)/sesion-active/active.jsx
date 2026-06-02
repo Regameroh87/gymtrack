@@ -197,8 +197,7 @@ export default function SesionActiva() {
         elapsed,
       });
       await clearDraft();
-      if (router.canDismiss()) router.dismissAll();
-      router.navigate("/(protected)/registros");
+      router.replace("/(protected)/registros");
     } catch {
       Alert.alert(
         "No se pudo guardar",
@@ -211,7 +210,6 @@ export default function SesionActiva() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     await clearDraft();
     setShowExitConfirm(false);
-    if (router.canDismiss()) router.dismissAll();
     router.navigate("/(protected)");
   }
 

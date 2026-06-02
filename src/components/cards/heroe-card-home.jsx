@@ -85,13 +85,14 @@ export default function HeroeCardHome({ image }) {
     ? () => router.push("/planes")
     : () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        // Con sesión a medias vamos directo a la activa (el preview queda
-        // debajo por la ruta ancla); sin draft entramos por el preview.
-        router.navigate(
-          hasDraft
-            ? "/(protected)/sesion-active/active"
-            : "/(protected)/sesion-active"
-        );
+        // Entramos por el preview; con sesión a medias empujamos la activa
+        // encima con push (frame de stack normal). Evitamos navigate directo a
+        // active, que dejaría ese destino en el historial y reaparecería como
+        // una active fantasma al salir del preview hacia el home.
+        router.navigate("/(protected)/sesion-active");
+        if (hasDraft) {
+          router.push("/(protected)/sesion-active/active");
+        }
       };
 
   return (
