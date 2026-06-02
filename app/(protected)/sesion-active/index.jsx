@@ -75,7 +75,7 @@ export default function SesionPreview() {
     return {
       planName: summary.plan.name,
       dayLabel: `Día ${currentDay.day_number}`,
-      weekNumber: currentDay.week_number,
+      weekNumber: summary.plan.duration_weeks === 0 ? null : currentDay.week_number,
       sessionName: currentDay.session?.name ?? summary.plan.name,
       exercises: dayExercises,
       estimatedMinutes,
