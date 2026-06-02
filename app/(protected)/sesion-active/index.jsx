@@ -32,8 +32,6 @@ export default function SesionPreview() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
-
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
   const { data: dayExercises = [], isLoading: loadingExercises } =
@@ -229,7 +227,7 @@ export default function SesionPreview() {
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-              router.navigate("/(protected)/sesion-active/active");
+              router.push("/(protected)/sesion-active/active");
             }}
             className="active:opacity-90 mt-7"
           >
