@@ -69,6 +69,18 @@ export const ui = {
     light: "#6e6b8a", // same as text.muted
     dark: "#334155", // slate-700
   },
+  // ── Overlays / scrims (modales, sombras base) ──
+  overlay: {
+    scrim: "rgba(0,0,0,0.6)", // fondo oscuro detrás de modales
+    shadow: "#000000", // shadowColor base de las cards modales
+  },
+  // ── Decorativos (tipografía fantasma, marcas de agua) ──
+  decor: {
+    ghostNumber: {
+      light: "rgba(15,13,32,0.04)",
+      dark: "rgba(255,255,255,0.05)",
+    },
+  },
   // ── 3. Colores de íconos SVG (no expresables como clase Tailwind) ──
   icon: {
     onDark: "rgba(255,255,255,0.4)",
@@ -82,6 +94,11 @@ export const ui = {
 
 export const gradient = {
   primary: ["#3023cd", "#4a44e4"],
+  // ── Degradado de la cabecera del ejercicio (mint → indigo → transparente) ──
+  exerciseHeader: {
+    light: ["rgba(42,232,204,0.11)", "rgba(74,68,228,0.06)", "rgba(0,0,0,0)"],
+    dark: ["rgba(42,232,204,0.18)", "rgba(74,68,228,0.12)", "rgba(0,0,0,0)"],
+  },
   previewYoutube: {
     light: ["#c5caff", "#eef0ff"], // brandPrimary 200 → 50
     dark: ["#312e81", "#0f172a"], // indigo-900 → slate-900

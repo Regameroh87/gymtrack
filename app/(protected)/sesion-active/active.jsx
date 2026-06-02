@@ -18,7 +18,12 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useRouter, Stack } from "expo-router";
 
-import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
+import {
+  brandPrimary,
+  brandSecondary,
+  ui,
+  gradient,
+} from "../../../src/theme/colors.js";
 import { HeaderBackButton } from "@react-navigation/elements";
 
 import {
@@ -71,6 +76,16 @@ export default function SesionActiva() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
+
+  // ── Colores crudos desde el theme (no expresables como clase Tailwind) ──
+  const headerGradient = isDark
+    ? gradient.exerciseHeader.dark
+    : gradient.exerciseHeader.light;
+  const ghostNumberColor = isDark
+    ? ui.decor.ghostNumber.dark
+    : ui.decor.ghostNumber.light;
+  const placeholderColor = isDark ? ui.placeholder.dark : ui.placeholder.light;
+  const checkOnMint = isDark ? ui.text.main : ui.surface.light;
 
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
@@ -336,7 +351,7 @@ export default function SesionActiva() {
 
         {/* ── Cabecera del ejercicio ── */}
         <View
-          className="mx-5 rounded-t-3xl overflow-hidden border-t border-l border-r border-ui-text-main/8 dark:border-white/8"
+          className="mx-5 mb-3 rounded-3xl overflow-hidden border border-ui-text-main/8 dark:border-white/8"
           style={{
             shadowColor: BRAND_PRIMARY,
             shadowOpacity: 0.12,
@@ -346,11 +361,7 @@ export default function SesionActiva() {
           }}
         >
           <LinearGradient
-            colors={[
-              isDark ? "rgba(42,232,204,0.18)" : "rgba(42,232,204,0.11)",
-              isDark ? "rgba(74,68,228,0.12)" : "rgba(74,68,228,0.06)",
-              "rgba(0,0,0,0)",
-            ]}
+            colors={headerGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ padding: 20, paddingBottom: 22 }}
@@ -362,9 +373,7 @@ export default function SesionActiva() {
                 top: -8,
                 fontSize: 108,
                 lineHeight: 108,
-                color: isDark
-                  ? "rgba(255,255,255,0.05)"
-                  : "rgba(15,13,32,0.04)",
+                color: ghostNumberColor,
               }}
             >
               {String(currentIdx + 1).padStart(2, "0")}
@@ -409,20 +418,8 @@ export default function SesionActiva() {
                     videoSheetRef.current?.present();
                   }}
                   hitSlop={10}
-                  className="active:opacity-60"
+                  className="w-8 h-8 rounded-full items-center justify-center border bg-brandSecondary-400/[22%] dark:bg-brandSecondary-400/[18%] border-brandSecondary-400/40 dark:border-brandSecondary-400/30 active:opacity-60"
                   style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: isDark
-                      ? "rgba(42,232,204,0.18)"
-                      : "rgba(42,232,204,0.22)",
-                    borderWidth: 1,
-                    borderColor: isDark
-                      ? "rgba(42,232,204,0.3)"
-                      : "rgba(42,232,204,0.4)",
                     shadowColor: BRAND_MINT,
                     shadowOpacity: 0.4,
                     shadowRadius: 8,
@@ -434,8 +431,6 @@ export default function SesionActiva() {
               )}
             </View>
           </LinearGradient>
-
-          <View className="mx-5 h-px bg-ui-text-main/[6%] dark:bg-white/[6%]" />
         </View>
 
         {/* ── Series (scrollables) ── */}
