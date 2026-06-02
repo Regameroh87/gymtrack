@@ -114,6 +114,10 @@ export default function ProtectedLayout() {
           options={{
             href: null,
             headerShown: false,
+            // Al perder foco (finalizar/abandonar y volver al home), reseteamos
+            // el stack interno a `index` (preview). Sin esto, el tab recuerda que
+            // quedó en `active` y reaparece una sesión fantasma al reentrar.
+            popToTopOnBlur: true,
           }}
         />
       </Tabs>
