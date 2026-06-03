@@ -3,8 +3,14 @@ import { useStore } from "@tanstack/react-form";
 
 import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
 import FormPlanWeek from "../../../../../../src/components/forms/FormPlanWeek";
-import { useCustomSessions } from "../../../../../../src/hooks/sessions/use-custom-sessions";
+import { useAllSessions } from "../../../../../../src/hooks/sessions/use-all-sessions";
 import { fetchCustomSessionExercises } from "../../../../../../src/hooks/sessions/use-custom-session-exercises";
+import { fetchSessionExercises } from "../../../../../../src/hooks/sessions/use-session-exercises";
+
+const fetchExercisesFnMap = {
+  gym: fetchSessionExercises,
+  custom: fetchCustomSessionExercises,
+};
 
 export default function UserPlanWeekEditor() {
   const { week } = useLocalSearchParams();
@@ -22,9 +28,8 @@ export default function UserPlanWeekEditor() {
       form={form}
       weekNumber={weekNumber}
       weekTitle={weekTitle}
-      sessionsHook={useCustomSessions}
-      fetchExercisesFn={fetchCustomSessionExercises}
-      sessionExercisesQueryKey="custom_session_exercises"
+      sessionsHook={useAllSessions}
+      fetchExercisesFnMap={fetchExercisesFnMap}
     />
   );
 }

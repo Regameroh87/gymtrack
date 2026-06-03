@@ -18,7 +18,6 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 // Hooks
 import { useSessionLogs } from "../../../src/hooks/sessions/use-session-logs";
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
-import { useActiveSessionPhase } from "../../../src/hooks/sessions/use-active-session-phase";
 
 // Utilidades
 import {
@@ -29,7 +28,6 @@ import {
 
 // Componentes
 import Screen from "../../../src/components/Screen";
-import ActiveSessionCard from "../../../src/components/cards/active-session-card";
 
 // Tema / assets
 import { brandPrimary } from "../../../src/theme/colors";
@@ -69,16 +67,6 @@ export default function RegistrosTab() {
 
   const { data: logs = [], isLoading } = useSessionLogs();
   const { data: summary } = useActivePlanSummary();
-  const { isActive: hasActiveSession } = useActiveSessionPhase(
-    summary?.currentDay?.id
-  );
-  const activeSession =
-    hasActiveSession && summary?.currentDay
-      ? {
-          session: summary.currentDay.session,
-          currentDay: summary.currentDay,
-        }
-      : null;
 
   // Agrupa los logs por mes; vienen ya ordenados del más reciente al más viejo.
   const sections = useMemo(() => {
@@ -142,7 +130,6 @@ export default function RegistrosTab() {
           router={router}
           insets={insets}
           onLogPast={goToNew}
-          activeSession={activeSession}
         />
       ) : (
         <SectionList
@@ -157,14 +144,6 @@ export default function RegistrosTab() {
           }}
           ListHeaderComponent={
             <View>
-              {activeSession ? (
-                <View className="mb-5">
-                  <ActiveSessionCard
-                    session={activeSession.session}
-                    currentDay={activeSession.currentDay}
-                  />
-                </View>
-              ) : null}
               <View className="flex-row gap-3 mb-6">
                 <StatTile
                   value={logs.length}
@@ -334,7 +313,7 @@ function StatTile({ value, label, accent }) {
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
-function EmptyState({ router, insets, onLogPast, activeSession }) {
+function EmptyState({ router, insets, onLogPast }) {
   // Si el usuario tiene un plan activo en curso, el CTA primario lo lleva a
   // continuar ese plan; si no, lo lleva a explorar el catálogo de rutinas.
   const { data: summary } = useActivePlanSummary();
@@ -349,14 +328,6 @@ function EmptyState({ router, insets, onLogPast, activeSession }) {
       className="flex-1 px-6 items-center justify-center"
       style={{ paddingBottom: insets.bottom + 24 }}
     >
-      {activeSession ? (
-        <View className="w-full mb-5">
-          <ActiveSessionCard
-            session={activeSession.session}
-            currentDay={activeSession.currentDay}
-          />
-        </View>
-      ) : null}
       <View
         className="rounded-3xl overflow-hidden w-full"
         style={{

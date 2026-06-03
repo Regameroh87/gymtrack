@@ -108,6 +108,7 @@ export default function FormPlanWeek({
   weekTitle,
   sessionsHook,
   fetchExercisesFn,
+  fetchExercisesFnMap,
   sessionExercisesQueryKey,
 }) {
   const { colorScheme } = useColorScheme();
@@ -206,9 +207,17 @@ export default function FormPlanWeek({
 
     let rawExercises = [];
     try {
+      let fetchFn, qKey;
+      if (fetchExercisesFnMap && session.source) {
+        fetchFn = fetchExercisesFnMap[session.source];
+        qKey = session.source === "custom" ? "custom_session_exercises" : "session_exercises";
+      } else {
+        fetchFn = fetchExercisesFn ?? fetchSessionExercises;
+        qKey = sessionExercisesQueryKey ?? "session_exercises";
+      }
       rawExercises = await queryClient.fetchQuery({
-        queryKey: [sessionExercisesQueryKey ?? "session_exercises", session.id],
-        queryFn: () => (fetchExercisesFn ?? fetchSessionExercises)(session.id),
+        queryKey: [qKey, session.id],
+        queryFn: () => fetchFn(session.id),
       });
     } catch {
       rawExercises = [];
@@ -478,15 +487,23 @@ export default function FormPlanWeek({
                       : ui.surfaceSecondary.light,
                 }}
               >
-                <Text
-                  className={`text-base font-manrope ${
-                    isSelected
-                      ? "text-brandPrimary-600 font-manrope-bold"
-                      : "text-ui-text-main dark:text-ui-text-mainDark"
-                  }`}
-                >
-                  {session.name}
-                </Text>
+                <View className="flex-1 mr-2">
+                  <Text
+                    className={`text-base font-manrope ${
+                      isSelected
+                        ? "text-brandPrimary-600 font-manrope-bold"
+                        : "text-ui-text-main dark:text-ui-text-mainDark"
+                    }`}
+                    numberOfLines={1}
+                  >
+                    {session.name}
+                  </Text>
+                  {session.source === "gym" && (
+                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+                      Del gym
+                    </Text>
+                  )}
+                </View>
                 {isSelected && (
                   <Text className="text-brandPrimary-600 font-manrope-bold">
                     ✓
