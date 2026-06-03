@@ -18,7 +18,9 @@
       "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/database/sync.js'\\);console.log\\('sync.js OK'\\)\")",
       "Bash(npx --no-install eslint --fix src/database/sync.js src/hooks/sessions/use-session-log-detail.js src/hooks/sessions/use-manual-session-log.js src/hooks/plans/use-active-plan-summary.js \"app/\\(protected\\)/admin/exercises/index.jsx\" src/database/schemas.js)",
       "Bash(echo \"exit: $?\")",
-      "Bash(npx --no-install eslint app/_layout.jsx)"
+      "Bash(npx --no-install eslint app/_layout.jsx)",
+      "Bash(curl -s -m 5 \"http://192.168.1.72:8081/status\")",
+      "Bash(lsof -nP -iTCP:8081 -sTCP:LISTEN)"
     ]
   }
 }
