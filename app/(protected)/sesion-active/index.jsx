@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useFocusEffect, useRouter, Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
+import { HeaderBackButton } from "@react-navigation/elements";
 
 import { brandPrimary, ui } from "../../../src/theme/colors.js";
 import { Barbell, Play } from "../../../assets/icons.jsx";
@@ -32,6 +33,7 @@ export default function SesionPreview() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
   const { data: dayExercises = [], isLoading: loadingExercises } =
@@ -134,11 +136,15 @@ export default function SesionPreview() {
           headerShown: Platform.OS === "ios",
           headerShadowVisible: false,
           headerTitle: "",
-          headerBackVisible: true,
-          headerBackTitle: "",
           headerStyle: {
             backgroundColor: isDark ? ui.background.dark : ui.background.light,
           },
+          headerLeft: () => (
+            <HeaderBackButton
+              onPress={() => router.back()}
+              tintColor={mutedIcon}
+            />
+          ),
         }}
       />
       <View className="flex-1 bg-ui-background-light dark:bg-ui-background-dark">
