@@ -24,8 +24,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../src/lib/queryClient";
 import { useInitDatabase } from "../src/database";
-import { syncWithSupabase, startSyncListener } from "../src/database/sync";
-import { View, Text } from "react-native";
+import {
+  syncWithSupabase,
+  startSyncListener,
+  checkNetInfoAndSync,
+} from "../src/database/sync";
+import { View, Text, AppState } from "react-native";
 import Screen from "../src/components/Screen";
 import { useColorScheme } from "nativewind";
 import {
@@ -66,6 +70,23 @@ export default function RootLayout() {
       startSyncListener();
     }
   }, [success]);
+
+  // Sincroniza al traer la app al frente (background → active). El sync de
+  // arranque corre una sola vez por proceso, así que sin esto un dispositivo ya
+  // abierto no se entera de cambios hechos en otro device hasta un cold start.
+  const appState = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextState === "active"
+      ) {
+        checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, []);
 
   // Se oculta el Splash cuando las fuentes están listas (o fallaron)
   useEffect(() => {
