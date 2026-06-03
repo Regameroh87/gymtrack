@@ -329,12 +329,7 @@ function EmptyState({ router, insets, onLogPast }) {
       style={{ paddingBottom: insets.bottom + 24 }}
     >
       <View
-        className="rounded-3xl overflow-hidden w-full"
-        style={{
-          backgroundColor: SURFACE,
-          borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.07)",
-        }}
+        className="rounded-3xl overflow-hidden w-full bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
       >
         {/* Halo mint superior */}
         <LinearGradient

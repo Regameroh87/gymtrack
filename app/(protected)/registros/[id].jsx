@@ -39,8 +39,6 @@ import {
 
 // Firma visual Editorial Pass
 const BRAND_MINT = "#2DD4BF";
-const SURFACE = "#0F0D20";
-const SUB_SURFACE = "rgba(255,255,255,0.04)";
 
 function resolveLabels(log) {
   if (log.plan_id && log.plan_name) {
@@ -209,12 +207,7 @@ export default function RegistroDetalle() {
               Series por grupo
             </Text>
             <View
-              className="rounded-2xl overflow-hidden"
-              style={{
-                backgroundColor: SURFACE,
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.07)",
-              }}
+              className="rounded-2xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
             >
               {seriesByGroup.map(([group, count], i) => (
                 <View key={group}>
@@ -257,13 +250,8 @@ export default function RegistroDetalle() {
         {/* ── Ejercicios ── */}
         {log.exercises.length === 0 ? (
           <View
-            className="rounded-2xl items-center"
-            style={{
-              backgroundColor: SURFACE,
-              borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.07)",
-              padding: 28,
-            }}
+            className="rounded-2xl items-center bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
+            style={{ padding: 28 }}
           >
             <Text
               className="font-manrope text-center"
@@ -318,12 +306,7 @@ export default function RegistroDetalle() {
 function ExerciseBlock({ exercise, index }) {
   return (
     <View
-      className="rounded-2xl overflow-hidden"
-      style={{
-        backgroundColor: SURFACE,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.07)",
-      }}
+      className="rounded-2xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
     >
       {/* Header */}
       <View
@@ -360,12 +343,8 @@ function ExerciseBlock({ exercise, index }) {
 
       {/* Encabezado de columnas */}
       <View
-        className="flex-row"
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 8,
-          backgroundColor: SUB_SURFACE,
-        }}
+        className="flex-row bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark"
+        style={{ paddingHorizontal: 16, paddingVertical: 8 }}
       >
         <ColLabel text="Serie" width={56} />
         <ColLabel text="Peso" flex />
@@ -450,8 +429,7 @@ function BackButton({ onPress }) {
     <View className="px-5 pt-2 pb-3">
       <Pressable
         onPress={onPress}
-        className="w-10 h-10 rounded-xl items-center justify-center active:opacity-60"
-        style={{ backgroundColor: SUB_SURFACE }}
+        className="w-10 h-10 rounded-xl items-center justify-center active:opacity-60 bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark"
       >
         <ArrowLeft size={18} color="white" />
       </Pressable>
@@ -462,14 +440,8 @@ function BackButton({ onPress }) {
 function MetricTile({ icon, value, label }) {
   return (
     <View
-      className="flex-1 rounded-2xl"
-      style={{
-        backgroundColor: SURFACE,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.07)",
-        paddingVertical: 12,
-        paddingHorizontal: 10,
-      }}
+      className="flex-1 rounded-2xl bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
+      style={{ paddingVertical: 12, paddingHorizontal: 10 }}
     >
       {icon ? <View className="mb-1.5">{icon}</View> : null}
       <Text
