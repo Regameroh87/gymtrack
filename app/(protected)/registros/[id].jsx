@@ -31,7 +31,6 @@ import Screen from "../../../src/components/Screen";
 // Tema / assets
 import { brandPrimary } from "../../../src/theme/colors";
 import {
-  ArrowLeft,
   Barbell,
   Calendar,
   Clock,
@@ -46,7 +45,9 @@ function resolveLabels(log) {
     return {
       title: log.session_name ?? log.plan_name,
       kicker: `${log.plan_name}${
-        log.week_number ? ` · SEM ${log.week_number}` : ""
+        log.week_number && log.plan_duration_weeks !== 0
+          ? ` · SEM ${log.week_number}`
+          : ""
       }${log.day_number ? ` D${log.day_number}` : ""}`,
     };
   }
@@ -421,19 +422,6 @@ function ExerciseBlock({ exercise, index }) {
 }
 
 // ─── Auxiliares ───────────────────────────────────────────────────────────────
-
-function BackButton({ onPress }) {
-  return (
-    <View className="px-5 pt-2 pb-3">
-      <Pressable
-        onPress={onPress}
-        className="w-10 h-10 rounded-xl items-center justify-center active:opacity-60 bg-ui-surfaceSecondary-light dark:bg-ui-surfaceSecondary-dark"
-      >
-        <ArrowLeft size={18} color="white" />
-      </Pressable>
-    </View>
-  );
-}
 
 function MetricTile({ icon, value, label }) {
   return (

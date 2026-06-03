@@ -28,6 +28,7 @@ export const fetchSessionLogDetail = async (logId) => {
       session_level: sessions.level,
       session_cover: sessions.cover_image_uri,
       plan_name: training_plans.name,
+      plan_duration_weeks: training_plans.duration_weeks,
     })
     .from(session_logs)
     .leftJoin(sessions, eq(session_logs.session_id, sessions.id))

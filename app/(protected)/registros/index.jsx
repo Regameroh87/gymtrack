@@ -51,7 +51,9 @@ function resolveLogLabels(log) {
     return {
       title: log.session_name ?? log.plan_name,
       kicker: `${log.plan_name}${
-        log.week_number ? ` · SEM ${log.week_number}` : ""
+        log.week_number && log.plan_duration_weeks !== 0
+          ? ` · SEM ${log.week_number}`
+          : ""
       }${log.day_number ? ` D${log.day_number}` : ""}`,
     };
   }
