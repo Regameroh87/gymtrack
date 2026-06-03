@@ -488,14 +488,24 @@ export default function PlanDetail() {
               paddingHorizontal: 4,
             }}
           >
-            <StatBlock value={plan.duration_weeks} label="Semanas" />
-            <Divider />
-            <StatBlock value={plan.weekly_days} label="Días/sem" />
-            <Divider />
-            <StatBlock
-              value={plan.duration_weeks * plan.weekly_days}
-              label="Total días"
-            />
+            {plan.duration_weeks ? (
+              <>
+                <StatBlock value={plan.duration_weeks} label="Semanas" />
+                <Divider />
+                <StatBlock value={plan.weekly_days} label="Días/sem" />
+                <Divider />
+                <StatBlock
+                  value={plan.duration_weeks * plan.weekly_days}
+                  label="Total días"
+                />
+              </>
+            ) : (
+              <>
+                <StatBlock value="∞" label="Flexible" />
+                <Divider />
+                <StatBlock value={plan.weekly_days} label="Días/sem" />
+              </>
+            )}
           </View>
         </View>
 

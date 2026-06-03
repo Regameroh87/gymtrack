@@ -441,15 +441,25 @@ export default function CustomPlanDetail() {
               paddingHorizontal: 4,
             }}
           >
-            <StatBlock value={plan.duration_weeks} label="Semanas" isDark={isDark} />
-            <Divider isDark={isDark} />
-            <StatBlock value={plan.weekly_days} label="Días/sem" isDark={isDark} />
-            <Divider isDark={isDark} />
-            <StatBlock
-              value={plan.duration_weeks * plan.weekly_days}
-              label="Total días"
-              isDark={isDark}
-            />
+            {plan.duration_weeks ? (
+              <>
+                <StatBlock value={plan.duration_weeks} label="Semanas" isDark={isDark} />
+                <Divider isDark={isDark} />
+                <StatBlock value={plan.weekly_days} label="Días/sem" isDark={isDark} />
+                <Divider isDark={isDark} />
+                <StatBlock
+                  value={plan.duration_weeks * plan.weekly_days}
+                  label="Total días"
+                  isDark={isDark}
+                />
+              </>
+            ) : (
+              <>
+                <StatBlock value="∞" label="Flexible" isDark={isDark} />
+                <Divider isDark={isDark} />
+                <StatBlock value={plan.weekly_days} label="Días/sem" isDark={isDark} />
+              </>
+            )}
           </View>
         </View>
 
