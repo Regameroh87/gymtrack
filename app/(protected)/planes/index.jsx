@@ -312,8 +312,6 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
       }
     : null;
 
-  const assignedByCoach = currentPlan && currentPlan.assigned_by !== userId;
-
   return (
     <ScrollView
       contentContainerStyle={{
@@ -331,28 +329,11 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
 
       {planObj ? (
         <View className="mb-6">
-          {assignedByCoach && (
-            <View className="flex-row items-center gap-2 mb-2 px-1">
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: BRAND_MINT,
-                }}
-              />
-              <Text
-                className="font-manrope-bold uppercase"
-                style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 1.6 }}
-              >
-                Asignado por tu entrenador
-              </Text>
-            </View>
-          )}
           <PlanTile
             plan={planObj}
             index={0}
             onPress={() => router.push(`/planes/plan/${currentPlan.plan_id}`)}
+            assignerName={currentPlan.assigner_name}
           />
           <Pressable
             disabled={isDropping}
@@ -454,6 +435,20 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                       {"  ·  "}
                       {item.status === "dropped" ? "Abandonado" : "Completado"}
                     </Text>
+                    {item.assigner_name && (
+                      <View
+                        className="flex-row items-center"
+                        style={{ gap: 4, marginTop: 3 }}
+                      >
+                        <ShieldHalf size={8} color={BRAND_MINT} />
+                        <Text
+                          className="font-manrope-semi"
+                          style={{ fontSize: 10, color: BRAND_MINT }}
+                        >
+                          Por {item.assigner_name}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   <ChevronRight size={14} color="rgba(255,255,255,0.25)" />
                 </View>
@@ -726,7 +721,7 @@ function SesionesSection({
 
 // ─── Componentes auxiliares ──────────────────────────────────────────────────
 
-function PlanTile({ plan, index = 0, onPress }) {
+function PlanTile({ plan, index = 0, onPress, assignerName = null }) {
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
   const { Icon } = config;
 
@@ -830,21 +825,30 @@ function PlanTile({ plan, index = 0, onPress }) {
           }}
         />
 
-        {/* ── Header row: kicker + creador ── */}
+        {/* ── Header row: kicker ── */}
         <View
           className="flex-row items-center justify-between"
           style={{ paddingHorizontal: 20, paddingTop: 32, gap: 12 }}
         >
-          <Text
-            className="font-manrope-bold uppercase"
-            style={{
-              fontSize: 10,
-              color: BRAND_MINT,
-              letterSpacing: 2.4,
-            }}
-          >
-            El Programa
-          </Text>
+          {assignerName ? (
+            <View className="flex-row items-center" style={{ gap: 5 }}>
+              <ShieldHalf size={9} color={BRAND_MINT} />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.4 }}
+                numberOfLines={1}
+              >
+                Asignado por {assignerName}
+              </Text>
+            </View>
+          ) : (
+            <Text
+              className="font-manrope-bold uppercase"
+              style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.4 }}
+            >
+              El Programa
+            </Text>
+          )}
         </View>
 
         {/* ── Body: título + imagen ── */}

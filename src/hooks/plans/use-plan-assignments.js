@@ -4,6 +4,7 @@ import { eq, ne, desc, and } from "drizzle-orm";
 
 // DB
 import { database } from "../../database";
+import { supabase } from "../../database/supabase";
 import { plan_assignments, training_plans } from "../../database/schemas";
 
 // Hooks
@@ -44,8 +45,31 @@ export const usePlanAssignments = () => {
         )
         .orderBy(desc(plan_assignments.created_at));
 
+      // Obtener nombres de asignadores externos (no el propio usuario)
+      const assignerIds = [
+        ...new Set(
+          rows
+            .filter((r) => r.assigned_by && r.assigned_by !== userId)
+            .map((r) => r.assigned_by)
+        ),
+      ];
+      const assignerMap = {};
+      if (assignerIds.length) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, name, last_name")
+          .in("id", assignerIds);
+        (data ?? []).forEach((p) => {
+          assignerMap[p.id] = [p.name, p.last_name].filter(Boolean).join(" ");
+        });
+      }
+
       const withPlan = rows.map((r) => ({
         ...r,
+        assigner_name:
+          r.assigned_by && r.assigned_by !== userId
+            ? (assignerMap[r.assigned_by] ?? null)
+            : null,
         plan: {
           name: r.plan_name,
           cover_image_uri: r.plan_cover,
