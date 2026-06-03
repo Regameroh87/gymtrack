@@ -627,8 +627,8 @@ function ExerciseForm({ exercise, index, onUpdateSet, onAddSet, onRemoveSet }) {
         }}
       >
         <Text style={colLabel(44)}>Serie</Text>
-        <Text style={colLabel(null, true)}>Reps</Text>
         <Text style={colLabel(null, true)}>Peso (kg)</Text>
+        <Text style={colLabel(null, true)}>Reps</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -663,21 +663,6 @@ function ExerciseForm({ exercise, index, onUpdateSet, onAddSet, onRemoveSet }) {
             </View>
           </View>
 
-          {/* Reps */}
-          <View style={{ flex: 1, paddingRight: 8 }}>
-            <TextInput
-              value={set.reps}
-              onChangeText={(t) =>
-                onUpdateSet(index, setIdx, "reps", t.replace(/[^0-9]/g, ""))
-              }
-              keyboardType="number-pad"
-              placeholder="—"
-              placeholderTextColor="rgba(255,255,255,0.2)"
-              className="font-jakarta-bold text-white rounded-lg"
-              style={cellInput}
-            />
-          </View>
-
           {/* Peso */}
           <View style={{ flex: 1, paddingRight: 8 }}>
             <TextInput
@@ -686,6 +671,21 @@ function ExerciseForm({ exercise, index, onUpdateSet, onAddSet, onRemoveSet }) {
                 onUpdateSet(index, setIdx, "weight", t.replace(/[^0-9.]/g, ""))
               }
               keyboardType="decimal-pad"
+              placeholder="—"
+              placeholderTextColor="rgba(255,255,255,0.2)"
+              className="font-jakarta-bold text-white rounded-lg"
+              style={cellInput}
+            />
+          </View>
+
+          {/* Reps */}
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <TextInput
+              value={set.reps}
+              onChangeText={(t) =>
+                onUpdateSet(index, setIdx, "reps", t.replace(/[^0-9]/g, ""))
+              }
+              keyboardType="number-pad"
               placeholder="—"
               placeholderTextColor="rgba(255,255,255,0.2)"
               className="font-jakarta-bold text-white rounded-lg"

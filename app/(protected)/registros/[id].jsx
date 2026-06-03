@@ -309,8 +309,8 @@ function ExerciseBlock({ exercise, index }) {
         }}
       >
         <ColLabel text="Serie" width={56} />
-        <ColLabel text="Reps" flex />
         <ColLabel text="Peso" flex />
+        <ColLabel text="Reps" flex />
       </View>
 
       {/* Filas de series */}
@@ -338,12 +338,6 @@ function ExerciseBlock({ exercise, index }) {
               </View>
             </View>
             <Text
-              className="font-jakarta-bold text-white flex-1"
-              style={{ fontSize: 15 }}
-            >
-              {set.reps}
-            </Text>
-            <Text
               className="font-jakarta-bold flex-1"
               style={{
                 fontSize: 15,
@@ -351,6 +345,12 @@ function ExerciseBlock({ exercise, index }) {
               }}
             >
               {set.weight_kg ? `${set.weight_kg} kg` : "—"}
+            </Text>
+            <Text
+              className="font-jakarta-bold text-white flex-1"
+              style={{ fontSize: 15 }}
+            >
+              {set.reps}
             </Text>
           </View>
 

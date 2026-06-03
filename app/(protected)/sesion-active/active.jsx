@@ -642,6 +642,30 @@ export default function SesionActiva() {
 
                   {/* Fila 2 · registro */}
                   <View className="flex-row items-end gap-3">
+                    <View className="flex-1">
+                      <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark mb-1.5">
+                        Peso (kg)
+                      </Text>
+                      <TextInput
+                        value={data.weight ?? ""}
+                        onChangeText={(v) =>
+                          updateField(exercise.id, set.id, "weight", v)
+                        }
+                        keyboardType="decimal-pad"
+                        editable={!done}
+                        selectTextOnFocus
+                        placeholder={
+                          set.weight_kg != null ? String(set.weight_kg) : "—"
+                        }
+                        placeholderTextColor={placeholderColor}
+                        className={`px-3 py-2.5 rounded-xl border font-jakarta-semi text-[16px] text-center ${
+                          done
+                            ? "bg-transparent border-ui-text-main/8 dark:border-white/8 text-ui-text-main/[35%] dark:text-white/[35%]"
+                            : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[14%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
+                        }`}
+                      />
+                    </View>
+
                     {!isDuration && (
                       <View className="flex-1">
                         <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark mb-1.5">
@@ -671,30 +695,6 @@ export default function SesionActiva() {
                         />
                       </View>
                     )}
-
-                    <View className="flex-1">
-                      <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.4px] text-ui-text-muted dark:text-ui-text-mutedDark mb-1.5">
-                        Peso (kg)
-                      </Text>
-                      <TextInput
-                        value={data.weight ?? ""}
-                        onChangeText={(v) =>
-                          updateField(exercise.id, set.id, "weight", v)
-                        }
-                        keyboardType="decimal-pad"
-                        editable={!done}
-                        selectTextOnFocus
-                        placeholder={
-                          set.weight_kg != null ? String(set.weight_kg) : "—"
-                        }
-                        placeholderTextColor={placeholderColor}
-                        className={`px-3 py-2.5 rounded-xl border font-jakarta-semi text-[16px] text-center ${
-                          done
-                            ? "bg-transparent border-ui-text-main/8 dark:border-white/8 text-ui-text-main/[35%] dark:text-white/[35%]"
-                            : "bg-ui-input-light dark:bg-ui-input-dark border-ui-text-main/[14%] dark:border-white/10 text-ui-text-main dark:text-ui-text-mainDark"
-                        }`}
-                      />
-                    </View>
                   </View>
 
                   {/* Fila 3 · nota */}
