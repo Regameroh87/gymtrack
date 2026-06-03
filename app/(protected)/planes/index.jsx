@@ -1310,6 +1310,9 @@ function BibliotecaContent({ router, insets }) {
               return (
                 <LibPlanRow
                   plan={item}
+                  onPress={() =>
+                    router.push(`/planes/custom-plan/${item.id}`)
+                  }
                   onEdit={() =>
                     router.push(`/planes/builder/custom-plan?id=${item.id}`)
                   }
@@ -1377,9 +1380,15 @@ function BibliotecaContent({ router, insets }) {
 
 // ─── Filas de biblioteca ──────────────────────────────────────────────────────
 
-function LibPlanRow({ plan, onEdit, onDelete, isDark }) {
+function LibPlanRow({ plan, onPress, onEdit, onDelete, isDark }) {
   return (
-    <View className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+    <Pressable
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress?.();
+      }}
+      className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:scale-[0.98]"
+    >
       <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
         <Barbell size={20} color={brandPrimary[500]} />
       </View>
@@ -1397,19 +1406,25 @@ function LibPlanRow({ plan, onEdit, onDelete, isDark }) {
       </View>
       <View className="flex-row gap-2 ml-2">
         <Pressable
-          onPress={onEdit}
+          onPress={(e) => {
+            e.stopPropagation?.();
+            onEdit();
+          }}
           className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
         >
           <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
         </Pressable>
         <Pressable
-          onPress={onDelete}
+          onPress={(e) => {
+            e.stopPropagation?.();
+            onDelete();
+          }}
           className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
         >
           <Trash size={14} color="#ef4444" />
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 }
 

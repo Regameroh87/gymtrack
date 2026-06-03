@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useMemo } from "react";
 
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -114,6 +115,21 @@ export default function RegistroDetalle() {
   const { title, kicker } = resolveLabels(log);
   const date = new Date(log.completed_at);
 
+  const volumeByGroup = useMemo(() => {
+    const map = new Map();
+    for (const ex of log.exercises) {
+      const group = ex.muscle_group ?? "Otros";
+      const vol = ex.sets.reduce(
+        (acc, s) => acc + (s.weight_kg ?? 0) * s.reps,
+        0
+      );
+      map.set(group, (map.get(group) ?? 0) + vol);
+    }
+    return [...map.entries()]
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1]);
+  }, [log.exercises]);
+
   return (
     <Screen safe>
       <BackButton onPress={() => router.back()} />
@@ -181,19 +197,66 @@ export default function RegistroDetalle() {
             value={String(log.exercises.length)}
             label={log.exercises.length === 1 ? "Ejercicio" : "Ejercicios"}
           />
-          <MetricTile
-            value={String(log.totalSets)}
-            label={log.totalSets === 1 ? "Serie" : "Series"}
-          />
-          <MetricTile
-            value={
-              log.totalVolume > 0
-                ? `${Math.round(log.totalVolume).toLocaleString("es")}`
-                : "—"
-            }
-            label="Volumen kg"
-          />
         </View>
+
+        {/* ── Volumen por grupo muscular ── */}
+        {volumeByGroup.length > 0 && (
+          <View className="mb-7">
+            <Text
+              className="font-manrope-bold uppercase mb-3"
+              style={{
+                fontSize: 10,
+                letterSpacing: 1.8,
+                color: "rgba(255,255,255,0.4)",
+              }}
+            >
+              Volumen por grupo
+            </Text>
+            <View
+              className="rounded-2xl overflow-hidden"
+              style={{
+                backgroundColor: SURFACE,
+                borderWidth: 1,
+                borderColor: "rgba(255,255,255,0.07)",
+              }}
+            >
+              {volumeByGroup.map(([group, vol], i) => (
+                <View key={group}>
+                  <View
+                    className="flex-row items-center justify-between"
+                    style={{ paddingHorizontal: 16, paddingVertical: 12 }}
+                  >
+                    <Text
+                      className="font-manrope-bold uppercase"
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: 1.2,
+                        color: "rgba(255,255,255,0.6)",
+                      }}
+                    >
+                      {group}
+                    </Text>
+                    <Text
+                      className="font-jakarta-bold"
+                      style={{ fontSize: 15, color: BRAND_MINT }}
+                    >
+                      {Math.round(vol).toLocaleString("es")} kg
+                    </Text>
+                  </View>
+                  {i < volumeByGroup.length - 1 && (
+                    <View
+                      style={{
+                        height: 1,
+                        backgroundColor: "rgba(255,255,255,0.05)",
+                        marginHorizontal: 16,
+                      }}
+                    />
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* ── Ejercicios ── */}
         {log.exercises.length === 0 ? (
