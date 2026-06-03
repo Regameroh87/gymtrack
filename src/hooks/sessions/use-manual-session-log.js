@@ -75,6 +75,8 @@ export const useCreateManualLog = () => {
       // se calcula a partir de los session_logs).
       queryClient.invalidateQueries({ queryKey: ["session_logs"] });
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
+      // Sube el log al toque si hay conexión; si no, queda pending para el próximo sync.
+      checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
     },
   });
 };

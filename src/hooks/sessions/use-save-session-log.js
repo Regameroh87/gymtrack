@@ -5,6 +5,7 @@ import Toast from "react-native-toast-message";
 
 import { database } from "../../database";
 import { session_logs, session_set_logs } from "../../database/schemas";
+import { checkNetInfoAndSync } from "../../database/sync";
 import { useAuth } from "../../auth/lib/getSession";
 
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
@@ -81,6 +82,9 @@ export const useSaveSessionLog = () => {
         text2: "Tu entrenamiento quedó registrado.",
         position: "bottom",
       });
+      // Sube el log al toque si hay conexión (igual que el resto de los flujos de
+      // escritura); si no, queda pending para el próximo sync.
+      checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
     },
   });
 };
