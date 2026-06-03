@@ -1,8 +1,6 @@
 // React Native
 import {
   ActivityIndicator,
-  Alert,
-  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,41 +16,22 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useColorScheme } from "nativewind";
-import { useQueryClient } from "@tanstack/react-query";
-import { eq } from "drizzle-orm";
-
-// Base de datos
-import { database } from "../../../src/database";
-import {
-  custom_exercises,
-  custom_session_exercises,
-  custom_sessions,
-} from "../../../src/database/schemas";
-import { checkNetInfoAndSync } from "../../../src/database/sync";
 
 // Hooks
 import { useTrainingPlans } from "../../../src/hooks/plans/use-training-plans";
 import { useCustomPlans } from "../../../src/hooks/plans/use-custom-plans";
-import { useSessions } from "../../../src/hooks/sessions/use-sessions";
-import { useCustomSessions } from "../../../src/hooks/sessions/use-custom-sessions";
-import { useCustomExercises } from "../../../src/hooks/exercises/use-custom-exercises";
 import { usePlanAssignments } from "../../../src/hooks/plans/use-plan-assignments";
+import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
 import { useDropPlan } from "../../../src/hooks/plans/use-assign-plan";
-import { useAuth } from "../../../src/auth/lib/getSession";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
 
-// Constantes
-import { SESSION_LEVELS } from "../../../src/constants/sessionOptions";
-
 // Componentes
 import Screen from "../../../src/components/Screen";
-import SessionCard from "../../../src/components/cards/SessionCard";
 
 // Tema / assets
-import { brandPrimary, ui } from "../../../src/theme/colors";
+import { brandPrimary } from "../../../src/theme/colors";
 import {
   Barbell,
   Calendar,
@@ -60,11 +39,11 @@ import {
   ChevronRight,
   ClipboardList,
   Clock,
+  ListDetails,
   Logs,
   Pencil,
   Plus,
   ShieldHalf,
-  Trash,
 } from "../../../assets/icons";
 
 const OBJECTIVE_CONFIG = {
@@ -83,88 +62,24 @@ const BRAND_PRIMARY = "#4A44E4";
 const BRAND_MINT = "#2DD4BF";
 const BRAND_FALLBACK_GRADIENT = ["#0C0B14", "#1e1b4b", "#3023cd"];
 
-const LEVEL_FILTERS = [
-  { key: null, label: "Todos" },
-  ...SESSION_LEVELS.map((l) => ({ key: l.value, label: l.label })),
-];
-
 const MAIN_TABS = [
-  { key: "mis_planes", label: "Mis Planes" },
-  { key: "catalogo", label: "Catálogo" },
-  { key: "biblioteca", label: "Biblioteca" },
+  { key: "mi_plan", label: "Mi Plan" },
+  { key: "explorar", label: "Explorar" },
 ];
 
-const LIB_TABS = [
-  { key: "planes", label: "Planes" },
-  { key: "sesiones", label: "Sesiones" },
-  { key: "ejercicios", label: "Ejercicios" },
-];
-
-const CATALOG_TYPES = [
-  { key: "planes", label: "Planes" },
-  { key: "sesiones", label: "Sesiones" },
-];
-
-let _lastTab = "mis_planes";
+let _lastTab = "mi_plan";
 
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   const [activeTab, setActiveTab] = useState(_lastTab);
-  const [catalogType, setCatalogType] = useState("planes");
-  const [activeLevel, setActiveLevel] = useState(null);
-
-  const { data: plans = [], isLoading: plansLoading } = useTrainingPlans({
-    publishedOnly: true,
-  });
-  const { data: sessions = [], isLoading: sessionsLoading } = useSessions();
-
-  const filteredSessions = useMemo(
-    () =>
-      activeLevel === null
-        ? sessions
-        : sessions.filter((s) => s.level === activeLevel),
-    [sessions, activeLevel]
-  );
-
-  const availableLevelFilters = useMemo(() => {
-    const usedLevels = new Set(sessions.map((s) => s.level).filter(Boolean));
-    return LEVEL_FILTERS.filter((f) => f.key === null || usedLevels.has(f.key));
-  }, [sessions]);
-
-  const [activeObjective, setActiveObjective] = useState(null);
-
-  const availableObjectiveFilters = useMemo(() => {
-    const usedObjs = new Set(plans.map((p) => p.objective).filter(Boolean));
-    return [
-      { key: null, label: "Todos" },
-      ...Object.entries(OBJECTIVE_CONFIG)
-        .filter(([key]) => usedObjs.has(key))
-        .map(([key, cfg]) => ({ key, label: cfg.label })),
-    ];
-  }, [plans]);
-
-  const filteredPlans = useMemo(
-    () =>
-      activeObjective === null
-        ? plans
-        : plans.filter((p) => p.objective === activeObjective),
-    [plans, activeObjective]
-  );
 
   const switchTab = (key) => {
     _lastTab = key;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActiveTab(key);
   };
-
-  const isLoading =
-    activeTab === "catalogo"
-      ? catalogType === "planes"
-        ? plansLoading
-        : sessionsLoading
-      : false;
 
   return (
     <Screen safe>
@@ -179,24 +94,16 @@ export default function RutinasTab() {
           </Text>
         </View>
 
-        {activeTab === "mis_planes" && (
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              router.push("/planes/builder/custom-plan");
-            }}
-            className="mt-1 active:scale-[0.95]"
-          >
-            <LinearGradient
-              colors={[brandPrimary[600], brandPrimary[500]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              className="w-10 h-10 rounded-xl items-center justify-center"
-            >
-              <Plus size={18} color="white" />
-            </LinearGradient>
-          </Pressable>
-        )}
+        {/* Acceso a Mi biblioteca (sesiones y ejercicios) */}
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push("/planes/biblioteca");
+          }}
+          className="mt-1 w-10 h-10 rounded-xl items-center justify-center bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:scale-[0.95]"
+        >
+          <ListDetails size={18} color={brandPrimary[500]} />
+        </Pressable>
       </View>
 
       {/* Main Tabs */}
@@ -240,53 +147,24 @@ export default function RutinasTab() {
       </View>
 
       {/* Contenido */}
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={brandPrimary[500]} />
-        </View>
-      ) : activeTab === "mis_planes" ? (
+      {activeTab === "mi_plan" ? (
         <MisPlanesContent
           router={router}
           insets={insets}
-          onBrowseCatalog={() => switchTab("catalogo")}
+          onBrowseCatalog={() => switchTab("explorar")}
         />
-      ) : activeTab === "biblioteca" ? (
-        <BibliotecaContent router={router} insets={insets} />
       ) : (
-        <CatalogoContent
-          plans={filteredPlans}
-          sessions={filteredSessions}
-          allSessions={sessions}
-          catalogType={catalogType}
-          onTypeChange={(t) => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setCatalogType(t);
-          }}
-          levelFilters={availableLevelFilters}
-          activeLevel={activeLevel}
-          onLevelChange={(level) => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveLevel(level);
-          }}
-          objectiveFilters={availableObjectiveFilters}
-          activeObjective={activeObjective}
-          onObjectiveChange={(obj) => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveObjective(obj);
-          }}
-          router={router}
-          insets={insets}
-        />
+        <ExplorarContent router={router} insets={insets} />
       )}
     </Screen>
   );
 }
 
-// ─── Tab: Mis Planes ──────────────────────────────────────────────────────────
+// ─── Tab: Mi Plan ─────────────────────────────────────────────────────────────
 
 function MisPlanesContent({ router, insets, onBrowseCatalog }) {
-  const { userId } = useAuth();
   const { data: assignments, isLoading } = usePlanAssignments();
+  const { data: summary } = useActivePlanSummary();
   const { mutate: dropPlan, isPending: isDropping } = useDropPlan();
 
   const currentPlan = assignments?.currentPlan ?? null;
@@ -302,15 +180,31 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
 
   const planObj = currentPlan
     ? {
-        id: currentPlan.is_custom ? currentPlan.custom_plan_id : currentPlan.plan_id,
+        id: currentPlan.is_custom
+          ? currentPlan.custom_plan_id
+          : currentPlan.plan_id,
         name: currentPlan.plan_name ?? currentPlan.custom_plan_name,
-        cover_image_uri: currentPlan.plan_cover ?? currentPlan.custom_plan_cover,
-        objective: currentPlan.plan_objective ?? currentPlan.custom_plan_objective,
+        cover_image_uri:
+          currentPlan.plan_cover ?? currentPlan.custom_plan_cover,
+        objective:
+          currentPlan.plan_objective ?? currentPlan.custom_plan_objective,
         level: currentPlan.plan_level ?? currentPlan.custom_plan_level,
-        weekly_days: currentPlan.plan_weekly_days ?? currentPlan.custom_plan_weekly_days,
-        duration_weeks: currentPlan.plan_duration_weeks ?? currentPlan.custom_plan_duration_weeks,
+        weekly_days:
+          currentPlan.plan_weekly_days ?? currentPlan.custom_plan_weekly_days,
+        duration_weeks:
+          currentPlan.plan_duration_weeks ??
+          currentPlan.custom_plan_duration_weeks,
         is_custom: currentPlan.is_custom,
       }
+    : null;
+
+  // Progreso "Semana X / Y" — solo disponible para planes de catálogo.
+  const weekNumber = summary?.currentDay?.week_number ?? null;
+  const totalWeeks = summary?.plan?.duration_weeks ?? null;
+  const progressLabel = weekNumber
+    ? totalWeeks
+      ? `Semana ${weekNumber} / ${totalWeeks}`
+      : `Semana ${weekNumber}`
     : null;
 
   return (
@@ -330,16 +224,68 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
 
       {planObj ? (
         <View className="mb-6">
-          <PlanTile
-            plan={planObj}
-            index={0}
-            onPress={() =>
-              currentPlan.is_custom
-                ? router.push(`/planes/custom-plan/${currentPlan.custom_plan_id}`)
-                : router.push(`/planes/plan/${currentPlan.plan_id}`)
-            }
-            assignerName={currentPlan.assigner_name}
-          />
+          {/* Strip "Siguiendo" + progreso */}
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: BRAND_MINT,
+                }}
+              />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{ fontSize: 11, color: BRAND_MINT, letterSpacing: 2 }}
+              >
+                Siguiendo
+              </Text>
+            </View>
+            {progressLabel && (
+              <View
+                className="rounded-full px-3 py-1"
+                style={{
+                  backgroundColor: "rgba(74,68,228,0.14)",
+                  borderWidth: 1,
+                  borderColor: "rgba(74,68,228,0.4)",
+                }}
+              >
+                <Text
+                  className="font-manrope-bold"
+                  style={{ fontSize: 11, color: brandPrimary[400] }}
+                >
+                  {progressLabel}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Tile con anillo gradiente para diferenciar el activo */}
+          <View
+            className="rounded-[26px] overflow-hidden"
+            style={{ padding: 1.5 }}
+          >
+            <LinearGradient
+              colors={[BRAND_MINT, brandPrimary[500]]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <PlanTile
+              plan={planObj}
+              index={0}
+              onPress={() =>
+                currentPlan.is_custom
+                  ? router.push(
+                      `/planes/custom-plan/${currentPlan.custom_plan_id}`
+                    )
+                  : router.push(`/planes/plan/${currentPlan.plan_id}`)
+              }
+              assignerName={currentPlan.assigner_name}
+            />
+          </View>
+
           <Pressable
             disabled={isDropping}
             onPress={() => dropPlan({ assignmentId: currentPlan.id })}
@@ -374,7 +320,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
               </Text>
             </View>
             <Text className="font-manrope text-[13px] text-ui-text-muted dark:text-ui-text-mutedDark leading-5 mb-4">
-              Elegí un plan del catálogo y empezá a entrenar con estructura.
+              Elegí un plan y empezá a entrenar con estructura.
             </Text>
             <Pressable
               onPress={onBrowseCatalog}
@@ -384,7 +330,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                 className="font-jakarta-semi text-[13px]"
                 style={{ color: brandPrimary[500] }}
               >
-                Explorar catálogo del gym
+                Explorar planes
               </Text>
               <Text
                 className="font-jakarta-semi text-[13px]"
@@ -433,7 +379,9 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                       className="font-jakarta-semi text-[14px] text-white"
                       numberOfLines={1}
                     >
-                      {item.plan_name ?? item.custom_plan_name ?? "Plan eliminado"}
+                      {item.plan_name ??
+                        item.custom_plan_name ??
+                        "Plan eliminado"}
                     </Text>
                     <Text
                       className="font-manrope text-[12px] mt-0.5"
@@ -470,267 +418,218 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
   );
 }
 
-// ─── Tab: Catálogo ────────────────────────────────────────────────────────────
+// ─── Tab: Explorar ────────────────────────────────────────────────────────────
 
-function CatalogoContent({
-  plans,
-  sessions,
-  allSessions,
-  catalogType,
-  onTypeChange,
-  levelFilters,
-  activeLevel,
-  onLevelChange,
-  objectiveFilters,
-  activeObjective,
-  onObjectiveChange,
-  router,
-  insets,
-}) {
-  return (
-    <Animated.ScrollView
-      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Toggle Planes / Sesiones */}
-      <View className="px-6 pt-4 pb-1">
-        <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
-          {CATALOG_TYPES.map((type) => {
-            const isActive = catalogType === type.key;
-            return (
-              <Pressable
-                key={type.key}
-                onPress={() => onTypeChange(type.key)}
-                className="flex-1 items-center py-2 rounded-lg active:opacity-70"
-                style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
-              >
-                <Text
-                  className={`font-jakarta-semi text-[13px] ${
-                    isActive
-                      ? "text-white"
-                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                  }`}
-                >
-                  {type.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+const ORIGIN_TABS = [
+  { key: "gym", label: "Del gym" },
+  { key: "mios", label: "Míos" },
+];
 
-      {catalogType === "planes" ? (
-        <PlanesSection
-          plans={plans}
-          objectiveFilters={objectiveFilters}
-          activeObjective={activeObjective}
-          onObjectiveChange={onObjectiveChange}
-          router={router}
-        />
-      ) : (
-        <SesionesSection
-          sessions={sessions}
-          allSessions={allSessions}
-          levelFilters={levelFilters}
-          activeLevel={activeLevel}
-          onLevelChange={onLevelChange}
-          router={router}
-        />
-      )}
-    </Animated.ScrollView>
+function ExplorarContent({ router, insets }) {
+  const [origin, setOrigin] = useState("gym");
+  const [activeObjective, setActiveObjective] = useState(null);
+
+  const { data: gymPlans = [], isLoading: gymLoading } = useTrainingPlans({
+    publishedOnly: true,
+  });
+  const { data: myPlans = [], isLoading: myLoading } = useCustomPlans();
+
+  const availableObjectiveFilters = useMemo(() => {
+    const usedObjs = new Set(gymPlans.map((p) => p.objective).filter(Boolean));
+    return [
+      { key: null, label: "Todos" },
+      ...Object.entries(OBJECTIVE_CONFIG)
+        .filter(([key]) => usedObjs.has(key))
+        .map(([key, cfg]) => ({ key, label: cfg.label })),
+    ];
+  }, [gymPlans]);
+
+  const filteredGym = useMemo(
+    () =>
+      activeObjective === null
+        ? gymPlans
+        : gymPlans.filter((p) => p.objective === activeObjective),
+    [gymPlans, activeObjective]
   );
-}
 
-// ─── Sección Planes ───────────────────────────────────────────────────────────
+  const isLoading = origin === "gym" ? gymLoading : myLoading;
+  const list = origin === "gym" ? filteredGym : myPlans;
+  const isMine = origin === "mios";
 
-function PlanesSection({
-  plans,
-  objectiveFilters,
-  activeObjective,
-  onObjectiveChange,
-  router,
-}) {
-  const hasPlans = plans.length > 0 || activeObjective !== null;
-
-  if (!hasPlans && objectiveFilters.length <= 1) {
-    return (
-      <View className="px-6 pt-5">
-        <EmptyCard
-          icon={<ClipboardList size={28} color={brandPrimary[600]} />}
-          title="Sin planes disponibles"
-          description="El gym todavía no publicó planes de entrenamiento."
-        />
-      </View>
-    );
-  }
+  const setOriginTab = (key) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setOrigin(key);
+  };
 
   return (
-    <>
-      {/* Filtro por objetivo */}
-      {objectiveFilters.length > 1 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 24,
-            paddingTop: 16,
-            paddingBottom: 20,
-          }}
-        >
-          <View className="flex-row gap-2">
-            {objectiveFilters.map((filter) => {
-              const isActive = activeObjective === filter.key;
+    <View className="flex-1">
+      <Animated.ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Chips de origen */}
+        <View className="px-6 pt-4 pb-1">
+          <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
+            {ORIGIN_TABS.map((tab) => {
+              const isActive = origin === tab.key;
               return (
                 <Pressable
-                  key={filter.key ?? "all"}
-                  onPress={() => onObjectiveChange(filter.key)}
-                  className="active:scale-[0.95]"
+                  key={tab.key}
+                  onPress={() => setOriginTab(tab.key)}
+                  className="flex-1 items-center py-2 rounded-lg active:opacity-70"
+                  style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
                 >
-                  {isActive ? (
-                    <LinearGradient
-                      colors={[brandPrimary[600], brandPrimary[500]]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      className="px-4 py-2 rounded-full"
-                    >
-                      <Text className="text-white font-jakarta-semi text-[12px]">
-                        {filter.label}
-                      </Text>
-                    </LinearGradient>
-                  ) : (
-                    <View className="px-4 py-2 rounded-full border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
-                      <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi text-[12px]">
-                        {filter.label}
-                      </Text>
-                    </View>
-                  )}
+                  <Text
+                    className={`font-jakarta-semi text-[13px] ${
+                      isActive
+                        ? "text-white"
+                        : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                    }`}
+                  >
+                    {tab.label}
+                  </Text>
                 </Pressable>
               );
             })}
           </View>
-        </ScrollView>
-      )}
-
-      {plans.length === 0 ? (
-        <View className="px-6 py-4 items-center">
-          <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-            No hay planes para este objetivo.
-          </Text>
         </View>
-      ) : (
-        <View className="px-6" style={{ gap: 18 }}>
-          {plans.map((plan, i) => (
-            <Animated.View
-              key={plan.id}
-              entering={FadeInDown.delay(i * 80).springify()}
-            >
-              <PlanTile
-                plan={plan}
-                index={i}
-                onPress={(p) => router.push(`/planes/plan/${p.id}`)}
+
+        {/* Filtro por objetivo — solo "Del gym" */}
+        {!isMine && availableObjectiveFilters.length > 1 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 24,
+              paddingTop: 16,
+              paddingBottom: 20,
+            }}
+          >
+            <View className="flex-row gap-2">
+              {availableObjectiveFilters.map((filter) => {
+                const isActive = activeObjective === filter.key;
+                return (
+                  <Pressable
+                    key={filter.key ?? "all"}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setActiveObjective(filter.key);
+                    }}
+                    className="active:scale-[0.95]"
+                  >
+                    {isActive ? (
+                      <LinearGradient
+                        colors={[brandPrimary[600], brandPrimary[500]]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        className="px-4 py-2 rounded-full"
+                      >
+                        <Text className="text-white font-jakarta-semi text-[12px]">
+                          {filter.label}
+                        </Text>
+                      </LinearGradient>
+                    ) : (
+                      <View className="px-4 py-2 rounded-full border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+                        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi text-[12px]">
+                          {filter.label}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+        )}
+
+        {isLoading ? (
+          <View className="pt-16 items-center">
+            <ActivityIndicator color={brandPrimary[500]} />
+          </View>
+        ) : list.length === 0 ? (
+          <View className="px-6 pt-5">
+            {isMine ? (
+              <EmptyCard
+                icon={<Pencil size={28} color={brandPrimary[600]} />}
+                title="Sin planes propios"
+                description="Todavía no creaste ningún plan. Tocá + para armar el tuyo."
               />
-            </Animated.View>
-          ))}
-        </View>
-      )}
-    </>
-  );
-}
+            ) : (
+              <EmptyCard
+                icon={<ClipboardList size={28} color={brandPrimary[600]} />}
+                title="Sin planes disponibles"
+                description="El gym todavía no publicó planes de entrenamiento."
+              />
+            )}
+          </View>
+        ) : (
+          <View
+            className="px-6"
+            style={{ gap: 18, paddingTop: isMine ? 16 : 0 }}
+          >
+            {list.map((plan, i) => (
+              <Animated.View
+                key={plan.id}
+                entering={FadeInDown.delay(i * 80).springify()}
+              >
+                <PlanTile
+                  plan={plan}
+                  index={i}
+                  isCustom={isMine}
+                  onPress={(p) =>
+                    isMine
+                      ? router.push(`/planes/custom-plan/${p.id}`)
+                      : router.push(`/planes/plan/${p.id}`)
+                  }
+                />
+              </Animated.View>
+            ))}
+          </View>
+        )}
+      </Animated.ScrollView>
 
-// ─── Sección Sesiones ─────────────────────────────────────────────────────────
-
-function SesionesSection({
-  sessions,
-  allSessions,
-  levelFilters,
-  activeLevel,
-  onLevelChange,
-  router,
-}) {
-  if (allSessions.length === 0) {
-    return (
-      <View className="px-6 pt-5">
-        <EmptyCard
-          icon={<Barbell size={28} color={brandPrimary[600]} />}
-          title="Sin sesiones disponibles"
-          description="El gym todavía no publicó sesiones de entrenamiento."
-        />
-      </View>
-    );
-  }
-
-  return (
-    <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingTop: 16,
-          paddingBottom: 20,
+      {/* FAB — único punto de creación de plan */}
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          router.push("/planes/builder/custom-plan");
+        }}
+        style={{
+          position: "absolute",
+          right: 20,
+          bottom: insets.bottom + 24,
+          height: 52,
+          borderRadius: 26,
+          paddingHorizontal: 20,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          backgroundColor: brandPrimary[500],
+          shadowColor: brandPrimary[500],
+          shadowOpacity: 0.4,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 8,
         }}
       >
-        <View className="flex-row gap-2">
-          {levelFilters.map((filter) => {
-            const isActive = activeLevel === filter.key;
-            return (
-              <Pressable
-                key={filter.key ?? "all"}
-                onPress={() => onLevelChange(filter.key)}
-                className="active:scale-[0.95]"
-              >
-                {isActive ? (
-                  <LinearGradient
-                    colors={[brandPrimary[600], brandPrimary[500]]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    className="px-4 py-2 rounded-full"
-                  >
-                    <Text className="text-white font-jakarta-semi text-[12px]">
-                      {filter.label}
-                    </Text>
-                  </LinearGradient>
-                ) : (
-                  <View className="px-4 py-2 rounded-full border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
-                    <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi text-[12px]">
-                      {filter.label}
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
-
-      {sessions.length === 0 ? (
-        <View className="px-6 py-4 items-center">
-          <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-            No hay sesiones para este nivel.
-          </Text>
-        </View>
-      ) : (
-        <View className="px-6 gap-4">
-          {sessions.map((session, i) => (
-            <Animated.View
-              key={session.id}
-              entering={FadeInDown.delay(i * 70).springify()}
-            >
-              <SessionCard
-                session={session}
-                onPress={(s) => router.push(`/planes/sesion/${s.id}`)}
-              />
-            </Animated.View>
-          ))}
-        </View>
-      )}
-    </>
+        <Plus size={20} color="white" />
+        <Text className="font-jakarta-bold text-[14px] text-white">
+          Crear plan
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
 // ─── Componentes auxiliares ──────────────────────────────────────────────────
 
-function PlanTile({ plan, index = 0, onPress, assignerName = null, isCustom = false }) {
+function PlanTile({
+  plan,
+  index = 0,
+  onPress,
+  assignerName = null,
+  isCustom = false,
+}) {
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
   const { Icon } = config;
 
@@ -1164,345 +1063,6 @@ function PlanStat({ value, primaryLabel, secondaryLabel }) {
         >
           {secondaryLabel}
         </Text>
-      </View>
-    </View>
-  );
-}
-
-// ─── Tab: Biblioteca ──────────────────────────────────────────────────────────
-
-function BibliotecaContent({ router, insets }) {
-  const [activeLib, setActiveLib] = useState("planes");
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const queryClient = useQueryClient();
-
-  const { data: myPlans = [], isLoading: loadingPlans } = useCustomPlans();
-  const { data: mySessions = [], isLoading: loadingSessions } =
-    useCustomSessions();
-  const { data: myExercises = [], isLoading: loadingExercises } =
-    useCustomExercises();
-
-  const handleDeleteSession = (session) => {
-    Alert.alert("Eliminar sesión", `¿Eliminar "${session.name}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          await database.transaction(async (tx) => {
-            await tx
-              .update(custom_session_exercises)
-              .set({ sync_status: "deleted" })
-              .where(eq(custom_session_exercises.session_id, session.id));
-            await tx
-              .update(custom_sessions)
-              .set({ sync_status: "deleted" })
-              .where(eq(custom_sessions.id, session.id));
-          });
-          queryClient.invalidateQueries({ queryKey: ["custom_sessions"] });
-          checkNetInfoAndSync().catch(() => {});
-        },
-      },
-    ]);
-  };
-
-  const handleDeleteExercise = (exercise) => {
-    Alert.alert("Eliminar ejercicio", `¿Eliminar "${exercise.name}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          await database
-            .update(custom_exercises)
-            .set({ sync_status: "deleted" })
-            .where(eq(custom_exercises.id, exercise.id));
-          queryClient.invalidateQueries({ queryKey: ["custom_exercises"] });
-          checkNetInfoAndSync().catch(() => {});
-        },
-      },
-    ]);
-  };
-
-  const fabRoute =
-    activeLib === "planes"
-      ? "planes/builder/custom-plan"
-      : activeLib === "sesiones"
-        ? "planes/builder/custom-session"
-        : "planes/builder/custom-exercise";
-
-  const listData =
-    activeLib === "planes"
-      ? myPlans
-      : activeLib === "sesiones"
-        ? mySessions
-        : myExercises;
-
-  const isLibLoading =
-    (activeLib === "planes" && loadingPlans) ||
-    (activeLib === "sesiones" && loadingSessions) ||
-    (activeLib === "ejercicios" && loadingExercises);
-
-  return (
-    <View className="flex-1">
-      {/* Descripción */}
-      <View className="px-6 pt-4 pb-1">
-        <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark leading-5">
-          Planes, sesiones y ejercicios que vos mismo creaste. Editá o borrá
-          cualquiera desde acá, y usálos cuando armes tus rutinas.
-        </Text>
-      </View>
-
-      {/* Tabs internos */}
-      <View className="px-6 mt-4 mb-2">
-        <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
-          {LIB_TABS.map((tab) => {
-            const isActive = activeLib === tab.key;
-            return (
-              <Pressable
-                key={tab.key}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setActiveLib(tab.key);
-                }}
-                className="flex-1 items-center py-2 rounded-lg active:opacity-70"
-                style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
-              >
-                <Text
-                  className={`font-jakarta-semi text-[12px] ${
-                    isActive
-                      ? "text-white"
-                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                  }`}
-                >
-                  {tab.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      {isLibLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={brandPrimary[500]} />
-        </View>
-      ) : (
-        <FlatList
-          data={listData}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 8,
-            paddingBottom: insets.bottom + 120,
-          }}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View className="py-16 items-center px-6">
-              <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center leading-5">
-                {activeLib === "planes"
-                  ? "Todavía no creaste ningún plan.\nTocá + para armar el tuyo."
-                  : activeLib === "sesiones"
-                    ? "Todavía no creaste ninguna sesión.\nTocá + para empezar."
-                    : "Todavía no creaste ningún ejercicio.\nTocá + para agregar el primero."}
-              </Text>
-            </View>
-          }
-          renderItem={({ item }) => {
-            if (activeLib === "planes") {
-              return (
-                <LibPlanRow
-                  plan={item}
-                  onPress={() => router.push(`/planes/custom-plan/${item.id}`)}
-                />
-              );
-            }
-            if (activeLib === "sesiones") {
-              return (
-                <LibSessionRow
-                  session={item}
-                  onEdit={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    router.push(`/planes/builder/custom-session?id=${item.id}`);
-                  }}
-                  onDelete={() => handleDeleteSession(item)}
-                  isDark={isDark}
-                />
-              );
-            }
-            return (
-              <LibExerciseRow
-                exercise={item}
-                onEdit={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/planes/builder/custom-exercise?id=${item.id}`);
-                }}
-                onDelete={() => handleDeleteExercise(item)}
-                isDark={isDark}
-              />
-            );
-          }}
-        />
-      )}
-
-      {/* FAB */}
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push(fabRoute);
-        }}
-        style={{
-          position: "absolute",
-          right: 20,
-          bottom: insets.bottom + 24,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          backgroundColor: brandPrimary[500],
-          alignItems: "center",
-          justifyContent: "center",
-          shadowColor: brandPrimary[500],
-          shadowOpacity: 0.4,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
-        }}
-      >
-        <Plus size={24} color="white" />
-      </Pressable>
-    </View>
-  );
-}
-
-// ─── Filas de biblioteca ──────────────────────────────────────────────────────
-
-function LibPlanRow({ plan, onPress }) {
-  return (
-    <Pressable
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress?.();
-      }}
-      className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:scale-[0.98]"
-    >
-      <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
-        <Barbell size={20} color={brandPrimary[500]} />
-      </View>
-      <View className="flex-1">
-        <Text
-          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-          numberOfLines={1}
-        >
-          {plan.name}
-        </Text>
-        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-          {plan.weekly_days} días ·{" "}
-          {plan.duration_weeks ? `${plan.duration_weeks} sem` : "Flexible"}
-        </Text>
-      </View>
-      <ChevronRight size={14} color="rgba(255,255,255,0.25)" />
-    </Pressable>
-  );
-}
-
-function LibSessionRow({ session, onEdit, onDelete, isDark }) {
-  const imageUrl = session.cover_image_uri
-    ? session.cover_image_uri.startsWith("file://")
-      ? session.cover_image_uri
-      : getCloudinaryUrl(
-          session.cover_image_uri,
-          "w_120,h_120,c_fill,f_auto,q_auto"
-        )
-    : null;
-
-  return (
-    <View className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={{ width: 48, height: 48, borderRadius: 10, marginRight: 12 }}
-          contentFit="cover"
-        />
-      ) : (
-        <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
-          <Text className="text-lg">💪</Text>
-        </View>
-      )}
-      <View className="flex-1">
-        <Text
-          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-          numberOfLines={1}
-        >
-          {session.name}
-        </Text>
-        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-          {session.exercise_count ?? 0} ejercicio
-          {session.exercise_count !== 1 ? "s" : ""}
-        </Text>
-      </View>
-      <View className="flex-row gap-2 ml-2">
-        <Pressable
-          onPress={onEdit}
-          className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
-        >
-          <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
-        </Pressable>
-        <Pressable
-          onPress={onDelete}
-          className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
-        >
-          <Trash size={14} color="#ef4444" />
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-function LibExerciseRow({ exercise, onEdit, onDelete, isDark }) {
-  const imageUrl = exercise.image_uri
-    ? exercise.image_uri.startsWith("file://")
-      ? exercise.image_uri
-      : getCloudinaryUrl(exercise.image_uri, "w_120,h_120,c_fill,f_auto,q_auto")
-    : null;
-
-  return (
-    <View className="flex-row items-center px-4 py-3 mb-2 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
-      {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
-          style={{ width: 48, height: 48, borderRadius: 10, marginRight: 12 }}
-          contentFit="cover"
-        />
-      ) : (
-        <View className="w-12 h-12 rounded-xl mr-3 items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950">
-          <Text className="text-lg">🏋️</Text>
-        </View>
-      )}
-      <View className="flex-1">
-        <Text
-          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-          numberOfLines={1}
-        >
-          {exercise.name}
-        </Text>
-        <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5 capitalize">
-          {exercise.muscle_group}
-        </Text>
-      </View>
-      <View className="flex-row gap-2 ml-2">
-        <Pressable
-          onPress={onEdit}
-          className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
-        >
-          <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
-        </Pressable>
-        <Pressable
-          onPress={onDelete}
-          className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
-        >
-          <Trash size={14} color="#ef4444" />
-        </Pressable>
       </View>
     </View>
   );
