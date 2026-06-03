@@ -10,6 +10,7 @@ import { useMemo } from "react";
 
 // Librerías externas
 import { useRouter } from "expo-router";
+import { useColorScheme } from "nativewind";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -66,7 +67,6 @@ export default function RegistrosTab() {
   const insets = useSafeAreaInsets();
 
   const { data: logs = [], isLoading } = useSessionLogs();
-  const { data: summary } = useActivePlanSummary();
 
   // Agrupa los logs por mes; vienen ya ordenados del más reciente al más viejo.
   const sections = useMemo(() => {
@@ -193,6 +193,8 @@ export default function RegistrosTab() {
 // ─── Card de un registro ──────────────────────────────────────────────────────
 
 function LogCard({ log, onPress }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const { title, kicker } = resolveLogLabels(log);
   const date = new Date(log.completed_at);
 
@@ -207,14 +209,8 @@ function LogCard({ log, onPress }) {
   return (
     <Pressable onPress={onPress} className="active:scale-[0.985]">
       <View
-        className="rounded-2xl overflow-hidden flex-row items-center"
-        style={{
-          backgroundColor: SURFACE,
-          borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.07)",
-          padding: 14,
-          gap: 14,
-        }}
+        className="rounded-2xl overflow-hidden flex-row items-center bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
+        style={{ padding: 14, gap: 14 }}
       >
         {/* Bloque de fecha editorial */}
         <View
@@ -228,7 +224,7 @@ function LogCard({ log, onPress }) {
           }}
         >
           <Text
-            className="font-jakarta-bold text-white"
+            className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
             style={{ fontSize: 22, lineHeight: 24, letterSpacing: -0.5 }}
           >
             {date.getDate()}
@@ -251,15 +247,15 @@ function LogCard({ log, onPress }) {
             {kicker}
           </Text>
           <Text
-            className="font-jakarta-bold text-white"
+            className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
             style={{ fontSize: 16, letterSpacing: -0.4 }}
             numberOfLines={1}
           >
             {title}
           </Text>
           <Text
-            className="font-manrope"
-            style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}
+            className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
+            style={{ fontSize: 12 }}
             numberOfLines={1}
           >
             {stats || "Sin series registradas"}
@@ -272,10 +268,15 @@ function LogCard({ log, onPress }) {
           style={{
             width: 28,
             height: 28,
-            backgroundColor: "rgba(255,255,255,0.05)",
+            backgroundColor: isDark
+              ? "rgba(255,255,255,0.05)"
+              : "rgba(15,13,32,0.05)",
           }}
         >
-          <ChevronRight size={14} color="rgba(255,255,255,0.4)" />
+          <ChevronRight
+            size={14}
+            color={isDark ? "rgba(255,255,255,0.4)" : "rgba(15,13,32,0.35)"}
+          />
         </View>
       </View>
     </Pressable>
