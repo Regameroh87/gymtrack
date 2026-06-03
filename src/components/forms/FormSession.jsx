@@ -231,7 +231,12 @@ export default function FormSession({
                       (e) =>
                         !field.state.value.find((v) => v.exercise_id === e.id)
                     )
-                    .map((e) => ({ label: e.name, value: e.id }))}
+                    .map((e) => ({
+                      label: e.name,
+                      value: e.id,
+                      imageUri: e.image_uri ?? undefined,
+                      subtitle: e.muscle_group ?? undefined,
+                    }))}
                   value=""
                   searchable
                   onChange={(exerciseId) => {

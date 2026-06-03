@@ -37,7 +37,11 @@ import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
 // Tema y assets
 import { brandPrimary, ui } from "../../theme/colors";
-import { ChevronRight, Plus, X } from "../../../assets/icons";
+import { ChevronRight, Plus, X, Calendar } from "../../../assets/icons";
+
+// Media
+import { Image } from "expo-image";
+import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // ─── Tarjeta de día ──────────────────────────────────────────────────────────
 
@@ -471,10 +475,20 @@ export default function FormPlanWeek({
               activeDayIdx !== null &&
               week.days[activeDayIdx]?.session_id === session.id;
 
+            const coverUri = session.cover_image_uri
+              ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
+              : null;
+
+            const subtitleParts = [
+              session.level,
+              session.exercise_count ? `${session.exercise_count} ejercicios` : null,
+            ].filter(Boolean);
+            const subtitle = subtitleParts.join(" · ");
+
             return (
               <Pressable
                 onPress={() => handleSessionSelect(session)}
-                className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${
+                className={`px-3 py-3 mb-2 rounded-xl flex-row items-center active:scale-[0.97] border ${
                   isSelected
                     ? "border-brandPrimary-500/20"
                     : "border-transparent"
@@ -487,6 +501,32 @@ export default function FormPlanWeek({
                       : ui.surfaceSecondary.light,
                 }}
               >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    backgroundColor: coverUri ? "transparent" : brandPrimary[500] + "22",
+                    borderWidth: 1,
+                    borderColor: brandPrimary[500] + "44",
+                    marginRight: 12,
+                    flexShrink: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {coverUri ? (
+                    <Image
+                      source={{ uri: coverUri }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <Calendar size={20} color={brandPrimary[500]} />
+                  )}
+                </View>
+
                 <View className="flex-1 mr-2">
                   <Text
                     className={`text-base font-manrope ${
@@ -498,12 +538,13 @@ export default function FormPlanWeek({
                   >
                     {session.name}
                   </Text>
-                  {session.source === "gym" && (
-                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-                      Del gym
+                  {subtitle ? (
+                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5" numberOfLines={1}>
+                      {subtitle}
                     </Text>
-                  )}
+                  ) : null}
                 </View>
+
                 {isSelected && (
                   <Text className="text-brandPrimary-600 font-manrope-bold">
                     ✓

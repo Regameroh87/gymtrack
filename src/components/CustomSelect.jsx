@@ -6,7 +6,10 @@ import {
   BottomSheetBackdrop,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
-import { ui } from "../theme/colors";
+import { Image } from "expo-image";
+import { ui, brandPrimary } from "../theme/colors";
+import { getCloudinaryUrl } from "../utils/cloudinary";
+import { Barbell } from "../../assets/icons";
 import { useColorScheme } from "nativewind";
 
 const CustomSelect = ({
@@ -208,6 +211,14 @@ const CustomSelect = ({
           }}
           renderItem={({ item: option }) => {
             const isSelected = value === option.value;
+            const hasVisual = option.imageUri !== undefined || option.subtitle !== undefined || option.isCustom !== undefined;
+            const resolvedUri = option.imageUri
+              ? (getCloudinaryUrl(option.imageUri) ?? option.imageUri)
+              : null;
+            const accentColor = option.isCustom
+              ? brandPrimary[400]
+              : brandPrimary[500];
+
             return (
               <Pressable
                 onPress={() => {
@@ -220,7 +231,7 @@ const CustomSelect = ({
                   checked: isSelected,
                   selected: isSelected,
                 }}
-                className={`p-4 mb-2 rounded-xl flex-row justify-between items-center active:scale-[0.97] border ${isSelected ? "border-brandPrimary-500/20" : "border-transparent"}`}
+                className={`px-3 py-3 mb-2 rounded-xl flex-row items-center active:scale-[0.97] border ${isSelected ? "border-brandPrimary-500/20" : "border-transparent"}`}
                 style={{
                   backgroundColor: isSelected
                     ? "rgba(48, 35, 205, 0.08)"
@@ -229,15 +240,55 @@ const CustomSelect = ({
                       : ui.surfaceSecondary.light,
                 }}
               >
-                <Text
-                  className={`text-base font-manrope ${
-                    isSelected
-                      ? "text-brandPrimary-600 font-manrope-bold"
-                      : "text-ui-text-main dark:text-ui-text-mainDark"
-                  }`}
-                >
-                  {option.label}
-                </Text>
+                {hasVisual && (
+                  <View
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      backgroundColor: resolvedUri ? "transparent" : accentColor + "22",
+                      borderWidth: 1,
+                      borderColor: accentColor + "44",
+                      marginRight: 12,
+                      flexShrink: 0,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {resolvedUri ? (
+                      <Image
+                        source={{ uri: resolvedUri }}
+                        style={{ width: "100%", height: "100%" }}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <Barbell size={20} color={accentColor} />
+                    )}
+                  </View>
+                )}
+
+                <View className="flex-1 mr-2">
+                  <Text
+                    className={`text-base font-manrope ${
+                      isSelected
+                        ? "text-brandPrimary-600 font-manrope-bold"
+                        : "text-ui-text-main dark:text-ui-text-mainDark"
+                    }`}
+                    numberOfLines={1}
+                  >
+                    {option.label}
+                  </Text>
+                  {option.subtitle ? (
+                    <Text
+                      className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
+                      numberOfLines={1}
+                    >
+                      {option.subtitle}
+                    </Text>
+                  ) : null}
+                </View>
+
                 {isSelected && (
                   <Text className="text-brandPrimary-600 font-manrope-bold">
                     ✓
