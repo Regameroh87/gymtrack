@@ -43,7 +43,6 @@ import {
 
 // Firma visual Editorial Pass
 const BRAND_MINT = "#2DD4BF";
-const SURFACE = "#0F0D20";
 
 // Resuelve título + kicker de un registro según su origen (plan, sesión suelta
 // o entrenamiento libre sin sesión asociada).

@@ -65,6 +65,17 @@ export default function RegistroDetalle() {
   const { data: log, isLoading } = useSessionLogDetail(id);
   const { mutate: deleteLog, isPending: isDeleting } = useDeleteSessionLog();
 
+  const seriesByGroup = useMemo(() => {
+    const map = new Map();
+    for (const ex of log?.exercises ?? []) {
+      const group = ex.muscle_group ?? "Otros";
+      map.set(group, (map.get(group) ?? 0) + ex.sets.length);
+    }
+    return [...map.entries()]
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1]);
+  }, [log?.exercises]);
+
   const confirmDelete = () => {
     Alert.alert(
       "Eliminar registro",
@@ -114,17 +125,6 @@ export default function RegistroDetalle() {
 
   const { title, kicker } = resolveLabels(log);
   const date = new Date(log.completed_at);
-
-  const seriesByGroup = useMemo(() => {
-    const map = new Map();
-    for (const ex of log.exercises) {
-      const group = ex.muscle_group ?? "Otros";
-      map.set(group, (map.get(group) ?? 0) + ex.sets.length);
-    }
-    return [...map.entries()]
-      .filter(([, count]) => count > 0)
-      .sort((a, b) => b[1] - a[1]);
-  }, [log.exercises]);
 
   return (
     <Screen safe>
