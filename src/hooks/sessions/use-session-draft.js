@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const sessionDraftPrefix = "gymtrack:session_draft:";
@@ -11,6 +11,12 @@ export function useSessionDraft(dayId) {
   const [completedSets, setCompletedSets] = useState(new Set());
   const [setData, setSetData] = useState({});
   const [isRestored, setIsRestored] = useState(false);
+  // Una vez que la sesión se finaliza o abandona, bloqueamos el autoguardado.
+  // Tras finalizar, el resumen del plan se invalida y currentDay avanza al día
+  // siguiente; si no frenáramos acá, el efecto de autoguardado escribiría un
+  // draft fantasma para ese día nuevo (estado sobrante) y la home mostraría
+  // "Continuar sesión".
+  const stoppedRef = useRef(false);
 
   useEffect(() => {
     if (!dayId) {
@@ -37,6 +43,7 @@ export function useSessionDraft(dayId) {
   }, [dayId]);
 
   useEffect(() => {
+    if (stoppedRef.current) return;
     if (!dayId || !isRestored || !startedAt) return;
     AsyncStorage.setItem(
       draftKey(dayId),
@@ -50,6 +57,9 @@ export function useSessionDraft(dayId) {
   }, [dayId, isRestored, startedAt, currentIdx, completedSets, setData]);
 
   const clearDraft = useCallback(() => {
+    // Síncrono: queda activo antes de que el refetch del resumen dispare el
+    // re-render con el día siguiente, evitando el draft fantasma.
+    stoppedRef.current = true;
     if (dayId) return AsyncStorage.removeItem(draftKey(dayId));
     return Promise.resolve();
   }, [dayId]);
