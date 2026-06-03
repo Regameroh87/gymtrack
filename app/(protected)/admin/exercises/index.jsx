@@ -30,7 +30,10 @@ import {
 } from "../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../src/database/sync";
 import { supabase } from "../../../../src/database/supabase";
-import { planIdsUsingSessionExercises, recomputePlanPublishState } from "../../../../src/hooks/plans/plan-publish";
+import {
+  planIdsUsingSessionExercises,
+  recomputePlanPublishState,
+} from "../../../../src/hooks/plans/plan-publish";
 
 // Hooks
 import { useExercises } from "../../../../src/hooks/exercises/use-exercises";
@@ -77,7 +80,8 @@ export default function ExercisesList() {
       const { count } = await supabase
         .from("session_set_logs")
         .select("id", { count: "exact", head: true })
-        .eq("exercise_id", item.id);
+        .eq("exercise_id", item.id)
+        .is("deleted_at", null);
       logsCount = count ?? 0;
     } catch (err) {
       console.error("No se pudo verificar el historial del ejercicio:", err);
@@ -88,99 +92,97 @@ export default function ExercisesList() {
         ? `"${item.name}" tiene ${logsCount} serie(s) registrada(s) en el historial de entrenamientos. Si lo eliminás, ese historial se borrará y el ejercicio se quitará de las sesiones que lo usan. ¿Continuar?`
         : `¿Estás seguro que deseas eliminar "${item.name}"? También se quitará de las sesiones que lo usen.`;
 
-    Alert.alert(
-      "Eliminar Ejercicio",
-      message,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Capturar session_exercise IDs antes de la txn para resolver planes afectados
-              const sessionExerciseIdsForPlans = (
-                await database
+    Alert.alert("Eliminar Ejercicio", message, [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            // Capturar session_exercise IDs antes de la txn para resolver planes afectados
+            const sessionExerciseIdsForPlans = (
+              await database
+                .select({ id: session_exercises.id })
+                .from(session_exercises)
+                .where(eq(session_exercises.exercise_id, item.id))
+            ).map((r) => r.id);
+            const affectedPlanIds = await planIdsUsingSessionExercises(
+              sessionExerciseIdsForPlans
+            );
+
+            await database.transaction(async (tx) => {
+              const now = new Date().toISOString();
+
+              // session_exercises que referencian este ejercicio
+              const sessionExerciseIds = (
+                await tx
                   .select({ id: session_exercises.id })
                   .from(session_exercises)
                   .where(eq(session_exercises.exercise_id, item.id))
               ).map((r) => r.id);
-              const affectedPlanIds = await planIdsUsingSessionExercises(sessionExerciseIdsForPlans);
 
-              await database.transaction(async (tx) => {
-                const now = new Date().toISOString();
-
-                // session_exercises que referencian este ejercicio
-                const sessionExerciseIds = (
-                  await tx
-                    .select({ id: session_exercises.id })
-                    .from(session_exercises)
-                    .where(eq(session_exercises.exercise_id, item.id))
-                ).map((r) => r.id);
-
-                // Cascade local: plan_week_day_exercises que dependen de esos
-                // session_exercises y los propios session_exercises.
-                if (sessionExerciseIds.length) {
-                  await tx
-                    .update(plan_week_day_exercises)
-                    .set({ sync_status: "deleted", updated_at: now })
-                    .where(
-                      inArray(
-                        plan_week_day_exercises.session_exercise_id,
-                        sessionExerciseIds
-                      )
-                    );
-                  await tx
-                    .update(session_exercises)
-                    .set({ sync_status: "deleted", updated_at: now })
-                    .where(inArray(session_exercises.id, sessionExerciseIds));
-                }
-
+              // Cascade local: plan_week_day_exercises que dependen de esos
+              // session_exercises y los propios session_exercises.
+              if (sessionExerciseIds.length) {
                 await tx
-                  .update(exercise_equipment)
+                  .update(plan_week_day_exercises)
                   .set({ sync_status: "deleted", updated_at: now })
-                  .where(eq(exercise_equipment.exercise_id, item.id));
-
+                  .where(
+                    inArray(
+                      plan_week_day_exercises.session_exercise_id,
+                      sessionExerciseIds
+                    )
+                  );
                 await tx
-                  .update(exercises_base)
+                  .update(session_exercises)
                   .set({ sync_status: "deleted", updated_at: now })
-                  .where(eq(exercises_base.id, item.id));
-              });
-
-              await recomputePlanPublishState(affectedPlanIds);
-
-              queryClient.invalidateQueries({ queryKey: ["exercises"] });
-              queryClient.invalidateQueries({ queryKey: ["exercise_equipment"] });
-              queryClient.invalidateQueries({ queryKey: ["sessions"] });
-              queryClient.invalidateQueries({ queryKey: ["session"] });
-              queryClient.invalidateQueries({ queryKey: ["session_exercises"] });
-              queryClient.invalidateQueries({ queryKey: ["training_plans"] });
-
-              // Refrescar el detalle de cada plan afectado: header (is_published) y rutina.
-              for (const planId of affectedPlanIds) {
-                queryClient.invalidateQueries({
-                  queryKey: ["training_plan", planId],
-                });
-                queryClient.invalidateQueries({
-                  queryKey: ["plan_detail_weeks", planId],
-                });
+                  .where(inArray(session_exercises.id, sessionExerciseIds));
               }
 
-              checkNetInfoAndSync();
+              await tx
+                .update(exercise_equipment)
+                .set({ sync_status: "deleted", updated_at: now })
+                .where(eq(exercise_equipment.exercise_id, item.id));
 
-              Toast.show({
-                type: "success",
-                text1: "Ejercicio eliminado",
-                text2: "Se eliminará también en la nube en unos segundos.",
-                position: "bottom",
+              await tx
+                .update(exercises_base)
+                .set({ sync_status: "deleted", updated_at: now })
+                .where(eq(exercises_base.id, item.id));
+            });
+
+            await recomputePlanPublishState(affectedPlanIds);
+
+            queryClient.invalidateQueries({ queryKey: ["exercises"] });
+            queryClient.invalidateQueries({ queryKey: ["exercise_equipment"] });
+            queryClient.invalidateQueries({ queryKey: ["sessions"] });
+            queryClient.invalidateQueries({ queryKey: ["session"] });
+            queryClient.invalidateQueries({ queryKey: ["session_exercises"] });
+            queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+
+            // Refrescar el detalle de cada plan afectado: header (is_published) y rutina.
+            for (const planId of affectedPlanIds) {
+              queryClient.invalidateQueries({
+                queryKey: ["training_plan", planId],
               });
-            } catch (error) {
-              console.error("Error al borrar el ejercicio:", error);
+              queryClient.invalidateQueries({
+                queryKey: ["plan_detail_weeks", planId],
+              });
             }
-          },
+
+            checkNetInfoAndSync();
+
+            Toast.show({
+              type: "success",
+              text1: "Ejercicio eliminado",
+              text2: "Se eliminará también en la nube en unos segundos.",
+              position: "bottom",
+            });
+          } catch (error) {
+            console.error("Error al borrar el ejercicio:", error);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const renderItem = ({ item }) => {

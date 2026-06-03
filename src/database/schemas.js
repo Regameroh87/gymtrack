@@ -108,7 +108,9 @@ export const training_plans = sqliteTable("training_plans", {
   weekly_days: integer("weekly_days").notNull().default(3),
   duration_weeks: integer("duration_weeks").notNull().default(8),
   cover_image_uri: text("cover_image_uri"),
-  is_published: integer("is_published", { mode: "boolean" }).notNull().default(false),
+  is_published: integer("is_published", { mode: "boolean" })
+    .notNull()
+    .default(false),
   created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()
@@ -253,6 +255,7 @@ export const session_logs = sqliteTable("session_logs", {
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
   sync_status: text("sync_status").notNull().default("pending"),
+  deleted_at: text("deleted_at"),
 });
 
 export const session_set_logs = sqliteTable(
@@ -279,6 +282,7 @@ export const session_set_logs = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date().toISOString()),
     sync_status: text("sync_status").notNull().default("pending"),
+    deleted_at: text("deleted_at"),
   },
   (t) => [unique().on(t.session_log_id, t.exercise_id, t.set_number)]
 );

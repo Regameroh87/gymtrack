@@ -84,13 +84,20 @@ const COMPOSITE_UNIQUE_COLUMNS = {
   custom_plan_week_day_exercise_sets: ["exercise_id", "set_number"],
 };
 
+// Tablas con soft-delete (tombstone vía columna deleted_at). En el PULL, una fila
+// remota con deleted_at gana sobre la copia local cualquiera sea su sync_status:
+// se borra local incluso si está pending/dirty. Eso cierra la "resurrección" de un
+// borrado cuando otro dispositivo conserva una copia sin sincronizar.
+const SOFT_DELETE_TABLES = new Set(["session_logs", "session_set_logs"]);
+
 async function pullTableChanges(
   tableName,
   schemaTable,
   lastSync,
   gymId = null,
   compositeUniqueColumns = null,
-  userId = null
+  userId = null,
+  softDelete = false
 ) {
   let query = supabase
     .from(tableName)
@@ -142,6 +149,15 @@ async function pullTableChanges(
 
     let skipped = 0;
     for (const remoteRow of data) {
+      // Tombstone remoto: gana sobre la copia local sea cual sea su sync_status
+      // (incluso pending/dirty). Como el PULL corre antes que el PUSH, esto borra
+      // la copia local antes de que pueda re-subirse → evita la resurrección.
+      if (softDelete && remoteRow.deleted_at) {
+        await database
+          .delete(schemaTable)
+          .where(eq(schemaTable.id, remoteRow.id));
+        continue;
+      }
       if (lockedIds.has(remoteRow.id)) {
         skipped++;
         continue;
@@ -361,9 +377,7 @@ export async function pushExercisesChanges() {
           .select({ sync_status: session_exercises.sync_status })
           .from(session_exercises)
           .where(eq(session_exercises.exercise_id, row.id));
-        const hasActiveRef = localRefs.some(
-          (r) => r.sync_status !== "deleted"
-        );
+        const hasActiveRef = localRefs.some((r) => r.sync_status !== "deleted");
         const hasPendingDeletion = localRefs.some(
           (r) => r.sync_status === "deleted"
         );
@@ -1384,16 +1398,21 @@ export async function pushSessionLogsChanges() {
 
   for (const row of localChanges) {
     if (row.sync_status === "deleted") {
+      // Soft-delete: subimos un tombstone (deleted_at) en vez de un DELETE físico.
+      // Así el borrado sobrevive a una copia "pending" del mismo log en otro
+      // dispositivo: el PULL del otro device verá deleted_at y borrará su copia
+      // antes de poder re-subirla (ver pullTableChanges + SOFT_DELETE_TABLES).
+      const { sync_status, updated_at, ...payload } = row;
+      payload.deleted_at = payload.deleted_at ?? new Date().toISOString();
       const { error } = await supabase
         .from("session_logs")
-        .delete()
-        .eq("id", row.id);
+        .upsert(payload, { onConflict: "id" });
       if (!error) {
         await database.delete(session_logs).where(eq(session_logs.id, row.id));
-        console.log(`✅ [PUSH] session_log (id: ${row.id}) eliminado`);
+        console.log(`🗑️  [PUSH] session_log (id: ${row.id}) tombstone subido`);
       } else {
         console.error(
-          `❌ [PUSH] Error eliminando session_log (id: ${row.id}):`,
+          `❌ [PUSH] Error subiendo tombstone session_log (id: ${row.id}):`,
           error.message
         );
       }
@@ -1429,7 +1448,8 @@ export async function pushSessionSetLogsChanges() {
     .where(
       or(
         eq(session_set_logs.sync_status, "pending"),
-        eq(session_set_logs.sync_status, "dirty")
+        eq(session_set_logs.sync_status, "dirty"),
+        eq(session_set_logs.sync_status, "deleted")
       )
     );
   if (localChanges.length === 0) return;
@@ -1437,27 +1457,64 @@ export async function pushSessionSetLogsChanges() {
     `⬆️  [PUSH] session_set_logs: ${localChanges.length} cambio(s) pendiente(s)`
   );
 
-  const rowsToUpsert = localChanges.map(
-    ({ sync_status, updated_at, ...rest }) => rest
-  );
-  const { error } = await supabase
-    .from("session_set_logs")
-    .upsert(rowsToUpsert, { onConflict: "id" });
-  if (!error) {
-    await database
-      .update(session_set_logs)
-      .set({ sync_status: "synced" })
-      .where(
+  const deletedRows = localChanges.filter((r) => r.sync_status === "deleted");
+  const upsertRows = localChanges.filter((r) => r.sync_status !== "deleted");
+
+  // Tombstones: subimos deleted_at (no DELETE físico) y borramos local tras éxito.
+  if (deletedRows.length > 0) {
+    const tombstones = deletedRows.map(
+      ({ sync_status, updated_at, ...rest }) => ({
+        ...rest,
+        deleted_at: rest.deleted_at ?? new Date().toISOString(),
+      })
+    );
+    const { error } = await supabase
+      .from("session_set_logs")
+      .upsert(tombstones, { onConflict: "id" });
+    if (!error) {
+      await database.delete(session_set_logs).where(
         inArray(
           session_set_logs.id,
-          localChanges.map((r) => r.id)
+          deletedRows.map((r) => r.id)
         )
       );
-    console.log(
-      `✅ [PUSH] session_set_logs: ${localChanges.length} registro(s) sincronizado(s)`
+      console.log(
+        `🗑️  [PUSH] session_set_logs: ${deletedRows.length} tombstone(s) subido(s)`
+      );
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo tombstones session_set_logs:`,
+        error.message
+      );
+    }
+  }
+
+  if (upsertRows.length > 0) {
+    const rowsToUpsert = upsertRows.map(
+      ({ sync_status, updated_at, ...rest }) => rest
     );
-  } else {
-    console.error(`❌ [PUSH] Error subiendo session_set_logs:`, error.message);
+    const { error } = await supabase
+      .from("session_set_logs")
+      .upsert(rowsToUpsert, { onConflict: "id" });
+    if (!error) {
+      await database
+        .update(session_set_logs)
+        .set({ sync_status: "synced" })
+        .where(
+          inArray(
+            session_set_logs.id,
+            upsertRows.map((r) => r.id)
+          )
+        );
+      console.log(
+        `✅ [PUSH] session_set_logs: ${upsertRows.length} registro(s) sincronizado(s)`
+      );
+    } else {
+      console.error(
+        `❌ [PUSH] Error subiendo session_set_logs:`,
+        error.message
+      );
+    }
   }
 }
 
@@ -1503,9 +1560,7 @@ async function cascadeDeleteCustomPlanLocally(planId) {
   await database
     .delete(custom_plan_weeks)
     .where(eq(custom_plan_weeks.plan_id, planId));
-  await database
-    .delete(custom_plans)
-    .where(eq(custom_plans.id, planId));
+  await database.delete(custom_plans).where(eq(custom_plans.id, planId));
 }
 
 async function cleanOrphanedCustomPlanChildren() {
@@ -1531,7 +1586,9 @@ async function cleanOrphanedCustomPlanChildren() {
 
   const weekIds = new Set(
     (
-      await database.select({ id: custom_plan_weeks.id }).from(custom_plan_weeks)
+      await database
+        .select({ id: custom_plan_weeks.id })
+        .from(custom_plan_weeks)
     ).map((r) => r.id)
   );
   const allDays = await database
@@ -2300,13 +2357,15 @@ export async function syncWithSupabase(
         const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
         const userId = USER_SCOPED_TABLES.has(table) ? currentUserId : null;
         const compositeUniqueColumns = COMPOSITE_UNIQUE_COLUMNS[table] ?? null;
+        const softDelete = SOFT_DELETE_TABLES.has(table);
         const { success, changed, newLastSync } = await pullTableChanges(
           table,
           schemaTable,
           lastSync,
           gymId,
           compositeUniqueColumns,
-          userId
+          userId,
+          softDelete
         );
         if (success) {
           // Solo avanzamos el watermark si el servidor devolvió filas nuevas.

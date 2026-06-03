@@ -1,6 +1,6 @@
 // Librerías externas
 import { useQuery } from "@tanstack/react-query";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../../database";
@@ -32,7 +32,9 @@ export const fetchSessionLogDetail = async (logId) => {
     .from(session_logs)
     .leftJoin(sessions, eq(session_logs.session_id, sessions.id))
     .leftJoin(training_plans, eq(session_logs.plan_id, training_plans.id))
-    .where(eq(session_logs.id, logId));
+    .where(
+      and(eq(session_logs.id, logId), ne(session_logs.sync_status, "deleted"))
+    );
 
   if (!log) return null;
 

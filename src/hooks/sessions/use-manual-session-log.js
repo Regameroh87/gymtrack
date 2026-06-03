@@ -6,6 +6,7 @@ import * as Crypto from "expo-crypto";
 // Base de datos
 import { database } from "../../database";
 import { session_logs, session_set_logs } from "../../database/schemas";
+import { checkNetInfoAndSync } from "../../database/sync";
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
@@ -78,26 +79,34 @@ export const useCreateManualLog = () => {
   });
 };
 
-// Elimina un registro de entrenamiento. La cabecera se marca como "deleted"
-// para que el sync borre la fila remota; las series locales se eliminan en
-// duro porque el borrado remoto se resuelve por cascada (FK onDelete: cascade).
+// Elimina un registro de entrenamiento mediante soft-delete (tombstone): tanto la
+// cabecera como sus series se marcan "deleted" con deleted_at seteado. El sync sube
+// la marca al servidor (no un DELETE físico) para que el borrado sea durable entre
+// dispositivos y no reaparezca por una copia "pending" en otro device. Ver el flujo
+// de tombstones en src/database/sync.js (pullTableChanges / pushSessionLogsChanges).
 export const useDeleteSessionLog = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (logId) => {
-      await database
-        .update(session_logs)
-        .set({ sync_status: "deleted", updated_at: new Date().toISOString() })
-        .where(eq(session_logs.id, logId));
+      const now = new Date().toISOString();
 
       await database
-        .delete(session_set_logs)
+        .update(session_logs)
+        .set({ sync_status: "deleted", deleted_at: now, updated_at: now })
+        .where(eq(session_logs.id, logId));
+
+      // Soft-delete de las series: ya no hay cascade físico que las baje del server
+      // (el padre se conserva como tombstone), así que cada serie propaga su marca.
+      await database
+        .update(session_set_logs)
+        .set({ sync_status: "deleted", deleted_at: now, updated_at: now })
         .where(eq(session_set_logs.session_log_id, logId));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["session_logs"] });
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
+      checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
     },
   });
 };

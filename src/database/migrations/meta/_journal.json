@@ -183,6 +183,13 @@
       "when": 1780240488304,
       "tag": "0025_big_the_hand",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1780452713803,
+      "tag": "0026_daily_ego",
+      "breakpoints": true
     }
   ]
 }

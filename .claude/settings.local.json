@@ -13,7 +13,11 @@
       "mcp__claude_ai_Supabase__list_tables",
       "Bash(npx drizzle-kit *)",
       "mcp__supabase__apply_migration",
-      "Bash(echo \"=== exit: $? ===\")"
+      "Bash(echo \"=== exit: $? ===\")",
+      "Bash(npx --no-install eslint src/database/sync.js src/hooks/sessions/use-manual-session-log.js src/hooks/plans/use-active-plan-summary.js src/hooks/sessions/use-session-log-detail.js)",
+      "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/database/sync.js'\\);console.log\\('sync.js OK'\\)\")",
+      "Bash(npx --no-install eslint --fix src/database/sync.js src/hooks/sessions/use-session-log-detail.js src/hooks/sessions/use-manual-session-log.js src/hooks/plans/use-active-plan-summary.js \"app/\\(protected\\)/admin/exercises/index.jsx\" src/database/schemas.js)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

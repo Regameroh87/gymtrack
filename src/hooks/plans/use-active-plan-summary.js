@@ -1,6 +1,6 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
-import { and, count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, ne } from "drizzle-orm";
 
 // DB
 import { database } from "../../database";
@@ -58,7 +58,8 @@ export const fetchActivePlanSummary = async (userId) => {
     .where(
       and(
         eq(session_logs.user_id, userId),
-        eq(session_logs.plan_id, row.plan_id)
+        eq(session_logs.plan_id, row.plan_id),
+        ne(session_logs.sync_status, "deleted")
       )
     )
     .orderBy(desc(session_logs.completed_at))
