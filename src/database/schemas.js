@@ -214,9 +214,8 @@ export const plan_week_day_exercise_sets = sqliteTable(
 
 export const plan_assignments = sqliteTable("plan_assignments", {
   id: text("id").primaryKey(),
-  plan_id: text("plan_id")
-    .notNull()
-    .references(() => training_plans.id),
+  plan_id: text("plan_id"),
+  custom_plan_id: text("custom_plan_id"),
   user_id: text("user_id").notNull(),
   assigned_by: text("assigned_by").notNull(),
   gym_id: text("gym_id").notNull(),

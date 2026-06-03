@@ -5,7 +5,7 @@ import { eq, ne, desc, and } from "drizzle-orm";
 // DB
 import { database } from "../../database";
 import { supabase } from "../../database/supabase";
-import { plan_assignments, training_plans } from "../../database/schemas";
+import { plan_assignments, training_plans, custom_plans } from "../../database/schemas";
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
@@ -21,6 +21,7 @@ export const usePlanAssignments = () => {
         .select({
           id: plan_assignments.id,
           plan_id: plan_assignments.plan_id,
+          custom_plan_id: plan_assignments.custom_plan_id,
           user_id: plan_assignments.user_id,
           assigned_by: plan_assignments.assigned_by,
           gym_id: plan_assignments.gym_id,
@@ -34,9 +35,16 @@ export const usePlanAssignments = () => {
           plan_level: training_plans.level,
           plan_weekly_days: training_plans.weekly_days,
           plan_duration_weeks: training_plans.duration_weeks,
+          custom_plan_name: custom_plans.name,
+          custom_plan_cover: custom_plans.cover_image_uri,
+          custom_plan_objective: custom_plans.objective,
+          custom_plan_level: custom_plans.level,
+          custom_plan_weekly_days: custom_plans.weekly_days,
+          custom_plan_duration_weeks: custom_plans.duration_weeks,
         })
         .from(plan_assignments)
         .leftJoin(training_plans, eq(plan_assignments.plan_id, training_plans.id))
+        .leftJoin(custom_plans, eq(plan_assignments.custom_plan_id, custom_plans.id))
         .where(
           and(
             eq(plan_assignments.user_id, userId),
@@ -66,17 +74,19 @@ export const usePlanAssignments = () => {
 
       const withPlan = rows.map((r) => ({
         ...r,
+        is_custom: !!r.custom_plan_id,
         assigner_name:
           r.assigned_by && r.assigned_by !== userId
             ? (assignerMap[r.assigned_by] ?? null)
             : null,
         plan: {
-          name: r.plan_name,
-          cover_image_uri: r.plan_cover,
-          objective: r.plan_objective,
-          level: r.plan_level,
-          weekly_days: r.plan_weekly_days,
-          duration_weeks: r.plan_duration_weeks,
+          name: r.plan_name ?? r.custom_plan_name,
+          cover_image_uri: r.plan_cover ?? r.custom_plan_cover,
+          objective: r.plan_objective ?? r.custom_plan_objective,
+          level: r.plan_level ?? r.custom_plan_level,
+          weekly_days: r.plan_weekly_days ?? r.custom_plan_weekly_days,
+          duration_weeks: r.plan_duration_weeks ?? r.custom_plan_duration_weeks,
+          is_custom: !!r.custom_plan_id,
         },
       }));
 

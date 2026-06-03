@@ -34,6 +34,8 @@ import { checkNetInfoAndSync } from "../../../../src/database/sync";
 // Hooks
 import { useRecordById } from "../../../../src/hooks/shared/use-record-by-id";
 import { useCustomPlanDetail } from "../../../../src/hooks/plans/use-custom-plan-detail";
+import { usePlanAssignments } from "../../../../src/hooks/plans/use-plan-assignments";
+import { useFollowCustomPlan } from "../../../../src/hooks/plans/use-follow-custom-plan";
 
 // Constantes
 import {
@@ -49,9 +51,11 @@ import {
   ArrowLeft,
   Barbell,
   ChartBar,
+  ChevronRight,
   Clock,
   Logs,
   Pencil,
+  Play,
   ShieldHalf,
   Trash,
 } from "../../../../assets/icons";
@@ -92,6 +96,12 @@ export default function CustomPlanDetail() {
 
   const { data: plan, isLoading } = useRecordById("custom_plan", custom_plans, id);
   const { data: weeks = [], isLoading: isDetailLoading } = useCustomPlanDetail(id);
+  const { data: assignments } = usePlanAssignments();
+  const { mutate: followPlan, isPending: isFollowing } = useFollowCustomPlan();
+
+  const currentPlan = assignments?.currentPlan ?? null;
+  const alreadyActive = currentPlan?.custom_plan_id === id;
+  const hasOtherActive = !!currentPlan && !alreadyActive;
 
   const bg = isDark ? SURFACE_DARK : SURFACE_LIGHT;
 
@@ -220,7 +230,7 @@ export default function CustomPlanDetail() {
   return (
     <View className="flex-1" style={{ backgroundColor: bg }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
         showsVerticalScrollIndicator={false}
       >
         {/* ── HERO ──────────────────────────────────────────────────────── */}
@@ -662,6 +672,108 @@ export default function CustomPlanDetail() {
           </>
         )}
       </ScrollView>
+
+      {/* ── CTA STICKY ────────────────────────────────────────────────── */}
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingTop: 12,
+          paddingBottom: insets.bottom + 12,
+          paddingHorizontal: 20,
+          backgroundColor: isDark ? "rgba(15,13,32,0.92)" : "rgba(245,245,248,0.92)",
+          borderTopWidth: 1,
+          borderTopColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+        }}
+      >
+        <Pressable
+          disabled={alreadyActive || isFollowing}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            if (hasOtherActive) {
+              const activeName = currentPlan.plan?.name ?? "tu plan actual";
+              Alert.alert(
+                "¿Reemplazar plan actual?",
+                `Estás haciendo "${activeName}". Si arrancás este, el anterior queda como completado.`,
+                [
+                  { text: "Cancelar", style: "cancel" },
+                  {
+                    text: "Sí, cambiar",
+                    onPress: () => followPlan({ customPlanId: id }),
+                  },
+                ]
+              );
+            } else {
+              followPlan({ customPlanId: id });
+            }
+          }}
+          className="active:scale-[0.98]"
+        >
+          <LinearGradient
+            colors={
+              alreadyActive
+                ? ["#1e1b4b", "#1e1b4b"]
+                : [BRAND_PRIMARY, "#6366f1"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={{
+              borderRadius: 16,
+              paddingVertical: 16,
+              paddingHorizontal: 18,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              shadowColor: alreadyActive ? "transparent" : BRAND_PRIMARY,
+              shadowOpacity: alreadyActive ? 0 : 0.5,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 6 },
+              opacity: isFollowing ? 0.7 : 1,
+            }}
+          >
+            <View className="flex-row items-center" style={{ gap: 10 }}>
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  backgroundColor: "rgba(255,255,255,0.18)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Play size={13} color="white" />
+              </View>
+              <Text
+                className="font-manrope-bold uppercase text-white"
+                style={{ fontSize: 13, letterSpacing: 1.4 }}
+              >
+                {isFollowing
+                  ? "Guardando…"
+                  : alreadyActive
+                    ? "Plan activo ✓"
+                    : "Seguir este plan"}
+              </Text>
+            </View>
+            {!alreadyActive && (
+              <View
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 15,
+                  backgroundColor: "white",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ChevronRight size={14} color={BRAND_PRIMARY} />
+              </View>
+            )}
+          </LinearGradient>
+        </Pressable>
+      </View>
     </View>
   );
 }

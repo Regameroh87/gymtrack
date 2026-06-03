@@ -302,13 +302,14 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
 
   const planObj = currentPlan
     ? {
-        id: currentPlan.plan_id,
-        name: currentPlan.plan_name,
-        cover_image_uri: currentPlan.plan_cover,
-        objective: currentPlan.plan_objective,
-        level: currentPlan.plan_level,
-        weekly_days: currentPlan.plan_weekly_days,
-        duration_weeks: currentPlan.plan_duration_weeks,
+        id: currentPlan.is_custom ? currentPlan.custom_plan_id : currentPlan.plan_id,
+        name: currentPlan.plan_name ?? currentPlan.custom_plan_name,
+        cover_image_uri: currentPlan.plan_cover ?? currentPlan.custom_plan_cover,
+        objective: currentPlan.plan_objective ?? currentPlan.custom_plan_objective,
+        level: currentPlan.plan_level ?? currentPlan.custom_plan_level,
+        weekly_days: currentPlan.plan_weekly_days ?? currentPlan.custom_plan_weekly_days,
+        duration_weeks: currentPlan.plan_duration_weeks ?? currentPlan.custom_plan_duration_weeks,
+        is_custom: currentPlan.is_custom,
       }
     : null;
 
@@ -332,7 +333,11 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
           <PlanTile
             plan={planObj}
             index={0}
-            onPress={() => router.push(`/planes/plan/${currentPlan.plan_id}`)}
+            onPress={() =>
+              currentPlan.is_custom
+                ? router.push(`/planes/custom-plan/${currentPlan.custom_plan_id}`)
+                : router.push(`/planes/plan/${currentPlan.plan_id}`)
+            }
             assignerName={currentPlan.assigner_name}
           />
           <Pressable
@@ -402,7 +407,11 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
             {history.map((item) => (
               <Pressable
                 key={item.id}
-                onPress={() => router.push(`/planes/plan/${item.plan_id}`)}
+                onPress={() =>
+                  item.is_custom
+                    ? router.push(`/planes/custom-plan/${item.custom_plan_id}`)
+                    : router.push(`/planes/plan/${item.plan_id}`)
+                }
                 className="active:opacity-70"
               >
                 <View
@@ -424,7 +433,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                       className="font-jakarta-semi text-[14px] text-white"
                       numberOfLines={1}
                     >
-                      {item.plan_name ?? "Plan eliminado"}
+                      {item.plan_name ?? item.custom_plan_name ?? "Plan eliminado"}
                     </Text>
                     <Text
                       className="font-manrope text-[12px] mt-0.5"
@@ -721,7 +730,7 @@ function SesionesSection({
 
 // ─── Componentes auxiliares ──────────────────────────────────────────────────
 
-function PlanTile({ plan, index = 0, onPress, assignerName = null }) {
+function PlanTile({ plan, index = 0, onPress, assignerName = null, isCustom = false }) {
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
   const { Icon } = config;
 
@@ -839,6 +848,16 @@ function PlanTile({ plan, index = 0, onPress, assignerName = null }) {
                 numberOfLines={1}
               >
                 Asignado por {assignerName}
+              </Text>
+            </View>
+          ) : isCustom || plan?.is_custom ? (
+            <View className="flex-row items-center" style={{ gap: 5 }}>
+              <Pencil size={9} color={BRAND_MINT} />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.4 }}
+              >
+                Plan personalizado
               </Text>
             </View>
           ) : (
