@@ -106,7 +106,6 @@ export default function RegistroDetalle() {
   if (!log) {
     return (
       <Screen safe={Platform.OS !== "ios"}>
-        {Platform.OS !== "ios" && <BackButton onPress={() => router.back()} />}
         <View className="flex-1 items-center justify-center px-8">
           <Text className="font-jakarta-bold text-white text-[18px] mb-1">
             Registro no encontrado
@@ -127,8 +126,6 @@ export default function RegistroDetalle() {
 
   return (
     <Screen safe={Platform.OS !== "ios"}>
-      {Platform.OS !== "ios" && <BackButton onPress={() => router.back()} />}
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
