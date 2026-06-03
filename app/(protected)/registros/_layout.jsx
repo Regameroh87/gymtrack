@@ -21,6 +21,7 @@ export default function RegistrosLayout() {
             ? {
                 headerShown: true,
                 headerTitle: "",
+                headerBackButtonDisplayMode: "minimal",
                 headerBackTitle: "",
                 headerShadowVisible: false,
                 headerStyle: {
