@@ -201,11 +201,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
   // Progreso "Semana X / Y" — solo disponible para planes de catálogo.
   const weekNumber = summary?.currentDay?.week_number ?? null;
   const totalWeeks = summary?.plan?.duration_weeks ?? null;
-  const progressLabel = weekNumber
-    ? totalWeeks
-      ? `Semana ${weekNumber} / ${totalWeeks}`
-      : `Semana ${weekNumber}`
-    : null;
+  const pad = (n) => String(n).padStart(2, "0");
 
   return (
     <ScrollView
@@ -224,67 +220,73 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
 
       {planObj ? (
         <View className="mb-6">
-          {/* Strip "Siguiendo" + progreso */}
-          <View className="flex-row items-center justify-between mb-3">
-            <View className="flex-row items-center" style={{ gap: 6 }}>
+          {/* Cabecera editorial del activo: estado + semana */}
+          <View className="flex-row items-center justify-between mb-2.5">
+            <View className="flex-row items-center" style={{ gap: 7 }}>
               <View
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   borderRadius: 4,
                   backgroundColor: BRAND_MINT,
                 }}
               />
               <Text
                 className="font-manrope-bold uppercase"
-                style={{ fontSize: 11, color: BRAND_MINT, letterSpacing: 2 }}
+                style={{ fontSize: 11, color: BRAND_MINT, letterSpacing: 2.4 }}
               >
-                Siguiendo
+                En curso
               </Text>
             </View>
-            {progressLabel && (
-              <View
-                className="rounded-full px-3 py-1"
+            {weekNumber && (
+              <Text
+                className="font-manrope-bold uppercase"
                 style={{
-                  backgroundColor: "rgba(74,68,228,0.14)",
-                  borderWidth: 1,
-                  borderColor: "rgba(74,68,228,0.4)",
+                  fontSize: 10,
+                  letterSpacing: 1.8,
+                  color: "rgba(255,255,255,0.4)",
                 }}
               >
-                <Text
-                  className="font-manrope-bold"
-                  style={{ fontSize: 11, color: brandPrimary[400] }}
-                >
-                  {progressLabel}
+                <Text style={{ color: BRAND_MINT }}>
+                  Semana {pad(weekNumber)}
                 </Text>
-              </View>
+                {totalWeeks ? ` / ${pad(totalWeeks)}` : ""}
+              </Text>
             )}
           </View>
 
-          {/* Tile con anillo gradiente para diferenciar el activo */}
-          <View
-            className="rounded-[26px] overflow-hidden"
-            style={{ padding: 1.5 }}
-          >
-            <LinearGradient
-              colors={[BRAND_MINT, brandPrimary[500]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-            <PlanTile
-              plan={planObj}
-              index={0}
-              onPress={() =>
-                currentPlan.is_custom
-                  ? router.push(
-                      `/planes/custom-plan/${currentPlan.custom_plan_id}`
-                    )
-                  : router.push(`/planes/plan/${currentPlan.plan_id}`)
-              }
-              assignerName={currentPlan.assigner_name}
-            />
-          </View>
+          {/* Barra de progreso segmentada por semana (eco de los ticks mint) */}
+          {weekNumber && totalWeeks ? (
+            <View className="flex-row mb-3.5" style={{ gap: 3 }}>
+              {Array.from({ length: totalWeeks }).map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: 3,
+                    borderRadius: 2,
+                    backgroundColor:
+                      i < weekNumber ? BRAND_MINT : "rgba(255,255,255,0.1)",
+                  }}
+                />
+              ))}
+            </View>
+          ) : (
+            <View className="mb-1" />
+          )}
+
+          <PlanTile
+            plan={planObj}
+            index={0}
+            onPress={() =>
+              currentPlan.is_custom
+                ? router.push(
+                    `/planes/custom-plan/${currentPlan.custom_plan_id}`
+                  )
+                : router.push(`/planes/plan/${currentPlan.plan_id}`)
+            }
+            assignerName={currentPlan.assigner_name}
+          />
 
           <Pressable
             disabled={isDropping}
