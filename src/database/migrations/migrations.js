@@ -29,6 +29,7 @@ import m0024 from './0024_custom_tables.sql';
 import m0025 from './0025_big_the_hand.sql';
 import m0026 from './0026_daily_ego.sql';
 import m0027 from './0027_plan_assignments_custom_plan_id.sql';
+import m0028 from './0028_uniq_active_plan_assignment.sql';
 
   export default {
     journal,
@@ -60,7 +61,8 @@ m0023,
 m0024,
 m0025,
 m0026,
-m0027
+m0027,
+m0028
     }
   }
   
