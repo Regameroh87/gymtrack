@@ -115,18 +115,14 @@ export default function RegistroDetalle() {
   const { title, kicker } = resolveLabels(log);
   const date = new Date(log.completed_at);
 
-  const volumeByGroup = useMemo(() => {
+  const seriesByGroup = useMemo(() => {
     const map = new Map();
     for (const ex of log.exercises) {
       const group = ex.muscle_group ?? "Otros";
-      const vol = ex.sets.reduce(
-        (acc, s) => acc + (s.weight_kg ?? 0) * s.reps,
-        0
-      );
-      map.set(group, (map.get(group) ?? 0) + vol);
+      map.set(group, (map.get(group) ?? 0) + ex.sets.length);
     }
     return [...map.entries()]
-      .filter(([, v]) => v > 0)
+      .filter(([, count]) => count > 0)
       .sort((a, b) => b[1] - a[1]);
   }, [log.exercises]);
 
@@ -199,8 +195,8 @@ export default function RegistroDetalle() {
           />
         </View>
 
-        {/* ── Volumen por grupo muscular ── */}
-        {volumeByGroup.length > 0 && (
+        {/* ── Series por grupo muscular ── */}
+        {seriesByGroup.length > 0 && (
           <View className="mb-7">
             <Text
               className="font-manrope-bold uppercase mb-3"
@@ -210,7 +206,7 @@ export default function RegistroDetalle() {
                 color: "rgba(255,255,255,0.4)",
               }}
             >
-              Volumen por grupo
+              Series por grupo
             </Text>
             <View
               className="rounded-2xl overflow-hidden"
@@ -220,7 +216,7 @@ export default function RegistroDetalle() {
                 borderColor: "rgba(255,255,255,0.07)",
               }}
             >
-              {volumeByGroup.map(([group, vol], i) => (
+              {seriesByGroup.map(([group, count], i) => (
                 <View key={group}>
                   <View
                     className="flex-row items-center justify-between"
@@ -240,10 +236,10 @@ export default function RegistroDetalle() {
                       className="font-jakarta-bold"
                       style={{ fontSize: 15, color: BRAND_MINT }}
                     >
-                      {Math.round(vol).toLocaleString("es")} kg
+                      {count} {count === 1 ? "serie" : "series"}
                     </Text>
                   </View>
-                  {i < volumeByGroup.length - 1 && (
+                  {i < seriesByGroup.length - 1 && (
                     <View
                       style={{
                         height: 1,

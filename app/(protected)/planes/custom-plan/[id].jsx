@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useQueryClient } from "@tanstack/react-query";
 import { eq, inArray } from "drizzle-orm";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useColorScheme } from "nativewind";
 
 // Base de datos
 import { database } from "../../../../src/database";
@@ -48,7 +49,6 @@ import {
   ArrowLeft,
   Barbell,
   ChartBar,
-  ChevronRight,
   Clock,
   Logs,
   Pencil,
@@ -61,6 +61,7 @@ const BRAND_PRIMARY = "#4A44E4";
 const BRAND_MINT = "#2DD4BF";
 const BRAND_FALLBACK_GRADIENT = ["#0C0B14", "#1e1b4b", "#3023cd"];
 const SURFACE_DARK = "#0F0D20";
+const SURFACE_LIGHT = "#F5F5F8";
 
 // ─── Diccionarios ─────────────────────────────────────────────────────────────
 const OBJECTIVE_LABELS = Object.fromEntries(
@@ -85,10 +86,14 @@ export default function CustomPlanDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
 
   const { data: plan, isLoading } = useRecordById("custom_plan", custom_plans, id);
   const { data: weeks = [], isLoading: isDetailLoading } = useCustomPlanDetail(id);
+
+  const bg = isDark ? SURFACE_DARK : SURFACE_LIGHT;
 
   const totalExercises = useMemo(
     () =>
@@ -111,7 +116,6 @@ export default function CustomPlanDetail() {
           style: "destructive",
           onPress: async () => {
             await database.transaction(async (tx) => {
-              // Obtener IDs de semanas
               const weekRows = await tx
                 .select({ id: custom_plan_weeks.id })
                 .from(custom_plan_weeks)
@@ -119,7 +123,6 @@ export default function CustomPlanDetail() {
               const weekIds = weekRows.map((w) => w.id);
 
               if (weekIds.length) {
-                // Obtener IDs de días
                 const dayRows = await tx
                   .select({ id: custom_plan_week_days.id })
                   .from(custom_plan_week_days)
@@ -127,7 +130,6 @@ export default function CustomPlanDetail() {
                 const dayIds = dayRows.map((d) => d.id);
 
                 if (dayIds.length) {
-                  // Obtener IDs de ejercicios
                   const exRows = await tx
                     .select({ id: custom_plan_week_day_exercises.id })
                     .from(custom_plan_week_day_exercises)
@@ -136,7 +138,6 @@ export default function CustomPlanDetail() {
                     );
                   const exIds = exRows.map((e) => e.id);
 
-                  // Soft-delete series
                   if (exIds.length) {
                     await tx
                       .update(custom_plan_week_day_exercise_sets)
@@ -149,7 +150,6 @@ export default function CustomPlanDetail() {
                       );
                   }
 
-                  // Soft-delete ejercicios
                   await tx
                     .update(custom_plan_week_day_exercises)
                     .set({ sync_status: "deleted" })
@@ -161,20 +161,17 @@ export default function CustomPlanDetail() {
                     );
                 }
 
-                // Soft-delete días
                 await tx
                   .update(custom_plan_week_days)
                   .set({ sync_status: "deleted" })
                   .where(inArray(custom_plan_week_days.week_id, weekIds));
 
-                // Soft-delete semanas
                 await tx
                   .update(custom_plan_weeks)
                   .set({ sync_status: "deleted" })
                   .where(inArray(custom_plan_weeks.plan_id, [id]));
               }
 
-              // Soft-delete plan
               await tx
                 .update(custom_plans)
                 .set({ sync_status: "deleted" })
@@ -197,7 +194,7 @@ export default function CustomPlanDetail() {
     return (
       <View
         className="flex-1 items-center justify-center"
-        style={{ backgroundColor: SURFACE_DARK }}
+        style={{ backgroundColor: bg }}
       >
         <ActivityIndicator size="large" color={BRAND_PRIMARY} />
       </View>
@@ -215,8 +212,13 @@ export default function CustomPlanDetail() {
   const levelLabel = LEVEL_LABELS[plan.level];
   const selectedWeek = weeks[selectedWeekIdx];
 
+  // Fade inferior del hero — se adapta al fondo
+  const heroFadeColors = isDark
+    ? ["rgba(15,13,32,0)", "rgba(15,13,32,0.4)", "rgba(15,13,32,0.92)", SURFACE_DARK]
+    : ["rgba(245,245,248,0)", "rgba(245,245,248,0.4)", "rgba(245,245,248,0.92)", SURFACE_LIGHT];
+
   return (
-    <View className="flex-1" style={{ backgroundColor: SURFACE_DARK }}>
+    <View className="flex-1" style={{ backgroundColor: bg }}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         showsVerticalScrollIndicator={false}
@@ -264,14 +266,9 @@ export default function CustomPlanDetail() {
             }}
           />
 
-          {/* Fade inferior */}
+          {/* Fade inferior hacia el fondo de la pantalla */}
           <LinearGradient
-            colors={[
-              "rgba(15,13,32,0)",
-              "rgba(15,13,32,0.4)",
-              "rgba(15,13,32,0.92)",
-              SURFACE_DARK,
-            ]}
+            colors={heroFadeColors}
             locations={[0, 0.4, 0.85, 1]}
             style={{
               position: "absolute",
@@ -427,20 +424,21 @@ export default function CustomPlanDetail() {
           <View
             className="flex-row items-stretch rounded-2xl"
             style={{
-              backgroundColor: "rgba(255,255,255,0.04)",
+              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
+              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
               paddingVertical: 16,
               paddingHorizontal: 4,
             }}
           >
-            <StatBlock value={plan.duration_weeks} label="Semanas" />
-            <Divider />
-            <StatBlock value={plan.weekly_days} label="Días/sem" />
-            <Divider />
+            <StatBlock value={plan.duration_weeks} label="Semanas" isDark={isDark} />
+            <Divider isDark={isDark} />
+            <StatBlock value={plan.weekly_days} label="Días/sem" isDark={isDark} />
+            <Divider isDark={isDark} />
             <StatBlock
               value={plan.duration_weeks * plan.weekly_days}
               label="Total días"
+              isDark={isDark}
             />
           </View>
         </View>
@@ -485,7 +483,7 @@ export default function CustomPlanDetail() {
                   style={{
                     fontSize: 14,
                     lineHeight: 22,
-                    color: "rgba(255,255,255,0.78)",
+                    color: isDark ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.72)",
                   }}
                 >
                   {plan.description}
@@ -519,14 +517,14 @@ export default function CustomPlanDetail() {
               style={{
                 flex: 1,
                 height: 1,
-                backgroundColor: "rgba(255,255,255,0.08)",
+                backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
               }}
             />
             <Text
               className="font-manrope-bold"
               style={{
                 fontSize: 10,
-                color: "rgba(255,255,255,0.5)",
+                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
                 letterSpacing: 1.5,
               }}
             >
@@ -546,7 +544,7 @@ export default function CustomPlanDetail() {
               paddingVertical: 36,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.08)",
+              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.12)",
               borderStyle: "dashed",
               alignItems: "center",
             }}
@@ -555,7 +553,7 @@ export default function CustomPlanDetail() {
               className="font-manrope"
               style={{
                 fontSize: 13,
-                color: "rgba(255,255,255,0.5)",
+                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
                 textAlign: "center",
                 paddingHorizontal: 20,
               }}
@@ -592,11 +590,15 @@ export default function CustomPlanDetail() {
                       borderRadius: 999,
                       backgroundColor: isActive
                         ? BRAND_PRIMARY
-                        : "rgba(255,255,255,0.05)",
+                        : isDark
+                          ? "rgba(255,255,255,0.05)"
+                          : "rgba(0,0,0,0.05)",
                       borderWidth: 1,
                       borderColor: isActive
                         ? BRAND_PRIMARY
-                        : "rgba(255,255,255,0.1)",
+                        : isDark
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(0,0,0,0.1)",
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 6,
@@ -620,7 +622,11 @@ export default function CustomPlanDetail() {
                       className="font-manrope-bold uppercase"
                       style={{
                         fontSize: 11,
-                        color: isActive ? "white" : "rgba(255,255,255,0.55)",
+                        color: isActive
+                          ? "white"
+                          : isDark
+                            ? "rgba(255,255,255,0.55)"
+                            : "rgba(0,0,0,0.55)",
                         letterSpacing: 1.2,
                       }}
                     >
@@ -640,7 +646,7 @@ export default function CustomPlanDetail() {
                   className="font-manrope italic"
                   style={{
                     fontSize: 13,
-                    color: "rgba(255,255,255,0.4)",
+                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
                     textAlign: "center",
                     paddingVertical: 24,
                   }}
@@ -649,7 +655,7 @@ export default function CustomPlanDetail() {
                 </Text>
               ) : (
                 selectedWeek?.days.map((day) => (
-                  <DayCard key={day.id} day={day} />
+                  <DayCard key={day.id} day={day} isDark={isDark} />
                 ))
               )}
             </View>
@@ -662,12 +668,17 @@ export default function CustomPlanDetail() {
 
 // ─── Subcomponentes ───────────────────────────────────────────────────────────
 
-function StatBlock({ value, label }) {
+function StatBlock({ value, label, isDark }) {
   return (
     <View className="flex-1 items-center">
       <Text
-        className="font-jakarta-bold text-white"
-        style={{ fontSize: 24, letterSpacing: -0.8, lineHeight: 26 }}
+        className="font-jakarta-bold"
+        style={{
+          fontSize: 24,
+          letterSpacing: -0.8,
+          lineHeight: 26,
+          color: isDark ? "white" : "#1a1a2e",
+        }}
       >
         {value ?? 0}
       </Text>
@@ -675,7 +686,7 @@ function StatBlock({ value, label }) {
         className="font-manrope-bold uppercase"
         style={{
           fontSize: 9,
-          color: "rgba(255,255,255,0.5)",
+          color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
           letterSpacing: 1.4,
           marginTop: 4,
         }}
@@ -686,19 +697,19 @@ function StatBlock({ value, label }) {
   );
 }
 
-function Divider() {
+function Divider({ isDark }) {
   return (
     <View
       style={{
         width: 1,
-        backgroundColor: "rgba(255,255,255,0.1)",
+        backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
         marginVertical: 4,
       }}
     />
   );
 }
 
-function DayCard({ day }) {
+function DayCard({ day, isDark }) {
   const exCount = day.exercises?.length ?? 0;
   const hasSession = !!day.session_name;
 
@@ -706,9 +717,9 @@ function DayCard({ day }) {
     <View
       style={{
         borderRadius: 16,
-        backgroundColor: "rgba(255,255,255,0.04)",
+        backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.08)",
+        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
         overflow: "hidden",
       }}
     >
@@ -720,7 +731,7 @@ function DayCard({ day }) {
           paddingVertical: 12,
           gap: 12,
           borderBottomWidth: exCount > 0 ? 1 : 0,
-          borderBottomColor: "rgba(255,255,255,0.06)",
+          borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)",
         }}
       >
         <View
@@ -742,8 +753,12 @@ function DayCard({ day }) {
             Día
           </Text>
           <Text
-            className="font-jakarta-bold text-white"
-            style={{ fontSize: 14, lineHeight: 16 }}
+            className="font-jakarta-bold"
+            style={{
+              fontSize: 14,
+              lineHeight: 16,
+              color: isDark ? "white" : "#1a1a2e",
+            }}
           >
             {day.day_number}
           </Text>
@@ -754,7 +769,9 @@ function DayCard({ day }) {
             className="font-jakarta-bold"
             style={{
               fontSize: 14,
-              color: hasSession ? "white" : "rgba(255,255,255,0.4)",
+              color: hasSession
+                ? isDark ? "white" : "#1a1a2e"
+                : isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
             }}
             numberOfLines={1}
           >
@@ -764,7 +781,7 @@ function DayCard({ day }) {
             className="font-manrope-semi uppercase"
             style={{
               fontSize: 9,
-              color: "rgba(255,255,255,0.45)",
+              color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
               letterSpacing: 1.2,
               marginTop: 2,
             }}
@@ -780,7 +797,7 @@ function DayCard({ day }) {
       {exCount > 0 && (
         <View style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 8 }}>
           {day.exercises.map((ex, idx) => (
-            <ExerciseRow key={ex.id} exercise={ex} index={idx} />
+            <ExerciseRow key={ex.id} exercise={ex} index={idx} isDark={isDark} />
           ))}
         </View>
       )}
@@ -788,7 +805,7 @@ function DayCard({ day }) {
   );
 }
 
-function ExerciseRow({ exercise, index }) {
+function ExerciseRow({ exercise, index, isDark }) {
   const sets = exercise.sets ?? [];
   return (
     <View className="flex-row items-start" style={{ gap: 10 }}>
@@ -796,7 +813,7 @@ function ExerciseRow({ exercise, index }) {
         className="font-jakarta-bold"
         style={{
           fontSize: 11,
-          color: "rgba(255,255,255,0.3)",
+          color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.25)",
           letterSpacing: 1,
           minWidth: 18,
           marginTop: 2,
@@ -807,7 +824,10 @@ function ExerciseRow({ exercise, index }) {
       <View className="flex-1">
         <Text
           className="font-manrope-semi"
-          style={{ fontSize: 13, color: "rgba(255,255,255,0.92)" }}
+          style={{
+            fontSize: 13,
+            color: isDark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.82)",
+          }}
           numberOfLines={1}
         >
           {exercise.exercise_name ?? "—"}
@@ -815,7 +835,7 @@ function ExerciseRow({ exercise, index }) {
         {sets.length > 0 && (
           <View className="flex-row flex-wrap" style={{ gap: 4, marginTop: 4 }}>
             {sets.map((s) => (
-              <SetChip key={s.set_number} set={s} />
+              <SetChip key={s.set_number} set={s} isDark={isDark} />
             ))}
           </View>
         )}
@@ -824,7 +844,7 @@ function ExerciseRow({ exercise, index }) {
   );
 }
 
-function SetChip({ set }) {
+function SetChip({ set, isDark }) {
   let label;
   if (set.duration_seconds) label = `${set.duration_seconds}s`;
   else if (set.reps_min != null && set.reps_max != null)
@@ -851,7 +871,7 @@ function SetChip({ set }) {
         className="font-manrope-bold uppercase"
         style={{
           fontSize: 8,
-          color: "rgba(255,255,255,0.5)",
+          color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
           letterSpacing: 0.8,
         }}
       >

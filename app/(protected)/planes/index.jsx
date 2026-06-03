@@ -26,7 +26,6 @@ import { eq } from "drizzle-orm";
 import { database } from "../../../src/database";
 import {
   custom_exercises,
-  custom_plans,
   custom_session_exercises,
   custom_sessions,
 } from "../../../src/database/schemas";
@@ -1161,24 +1160,6 @@ function BibliotecaContent({ router, insets }) {
   const { data: myExercises = [], isLoading: loadingExercises } =
     useCustomExercises();
 
-  const handleDeletePlan = (plan) => {
-    Alert.alert("Eliminar plan", `¿Eliminar "${plan.name}"?`, [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          await database
-            .update(custom_plans)
-            .set({ sync_status: "deleted" })
-            .where(eq(custom_plans.id, plan.id));
-          queryClient.invalidateQueries({ queryKey: ["custom_plans"] });
-          checkNetInfoAndSync().catch(() => {});
-        },
-      },
-    ]);
-  };
-
   const handleDeleteSession = (session) => {
     Alert.alert("Eliminar sesión", `¿Eliminar "${session.name}"?`, [
       { text: "Cancelar", style: "cancel" },
@@ -1310,14 +1291,7 @@ function BibliotecaContent({ router, insets }) {
               return (
                 <LibPlanRow
                   plan={item}
-                  onPress={() =>
-                    router.push(`/planes/custom-plan/${item.id}`)
-                  }
-                  onEdit={() =>
-                    router.push(`/planes/builder/custom-plan?id=${item.id}`)
-                  }
-                  onDelete={() => handleDeletePlan(item)}
-                  isDark={isDark}
+                  onPress={() => router.push(`/planes/custom-plan/${item.id}`)}
                 />
               );
             }
@@ -1380,7 +1354,7 @@ function BibliotecaContent({ router, insets }) {
 
 // ─── Filas de biblioteca ──────────────────────────────────────────────────────
 
-function LibPlanRow({ plan, onPress, onEdit, onDelete, isDark }) {
+function LibPlanRow({ plan, onPress }) {
   return (
     <Pressable
       onPress={() => {
@@ -1404,26 +1378,7 @@ function LibPlanRow({ plan, onPress, onEdit, onDelete, isDark }) {
           {plan.duration_weeks ? `${plan.duration_weeks} sem` : "Flexible"}
         </Text>
       </View>
-      <View className="flex-row gap-2 ml-2">
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation?.();
-            onEdit();
-          }}
-          className="w-8 h-8 rounded-xl items-center justify-center bg-ui-secondary-light dark:bg-ui-secondary-dark active:opacity-60"
-        >
-          <Pencil size={14} color={isDark ? ui.text.mainDark : ui.text.main} />
-        </Pressable>
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation?.();
-            onDelete();
-          }}
-          className="w-8 h-8 rounded-xl items-center justify-center bg-red-500/10 active:opacity-60"
-        >
-          <Trash size={14} color="#ef4444" />
-        </Pressable>
-      </View>
+      <ChevronRight size={14} color="rgba(255,255,255,0.25)" />
     </Pressable>
   );
 }
