@@ -160,7 +160,9 @@ const SessionRow = memo(function SessionRow({
               height: 44,
               borderRadius: 10,
               overflow: "hidden",
-              backgroundColor: coverUri ? "transparent" : brandPrimary[500] + "22",
+              backgroundColor: coverUri
+                ? "transparent"
+                : brandPrimary[500] + "22",
               borderWidth: 1,
               borderColor: brandPrimary[500] + "44",
               marginRight: 12,
@@ -242,10 +244,7 @@ const SessionRow = memo(function SessionRow({
           ) : (
             <View className="pt-1.5">
               {exercises.map((ex) => (
-                <View
-                  key={ex.id}
-                  className="flex-row items-center py-1.5 px-1"
-                >
+                <View key={ex.id} className="flex-row items-center py-1.5 px-1">
                   <View
                     className="w-1 h-1 rounded-full mr-2.5"
                     style={{ backgroundColor: brandPrimary[500] }}
@@ -378,7 +377,10 @@ export default function FormPlanWeek({
       let fetchFn, qKey;
       if (fetchExercisesFnMap && session.source) {
         fetchFn = fetchExercisesFnMap[session.source];
-        qKey = session.source === "custom" ? "custom_session_exercises" : "session_exercises";
+        qKey =
+          session.source === "custom"
+            ? "custom_session_exercises"
+            : "session_exercises";
       } else {
         fetchFn = fetchExercisesFn ?? fetchSessionExercises;
         qKey = sessionExercisesQueryKey ?? "session_exercises";
@@ -409,29 +411,10 @@ export default function FormPlanWeek({
       const dayIdx = activeDayIdx;
       if (dayIdx === null) return;
 
-      // 1) Marcar la sesión YA (síncrono): feedback inmediato sin esperar la query.
-      //    `_loadingExercises` le dice al editor que muestre spinner solo en las cards.
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      updateWeek((w) => ({
-        ...w,
-        days: w.days.map((d, i) =>
-          i !== dayIdx
-            ? d
-            : {
-                ...d,
-                session_id: session.id,
-                session_name: session.name,
-                exercises: [],
-                _loadingExercises: true,
-              }
-        ),
-      }));
 
-      // 2) Navegar (la transición arranca al instante).
-      goToPrescription(dayIdx);
-      sessionSheetRef.current?.dismiss();
-
-      // 3) Cargar los ejercicios (query a SQLite) en segundo plano y completar.
+      // Los ejercicios viven en SQLite local (lectura de milisegundos): los buscamos
+      // y escribimos todo el día en una sola mutación, luego cerramos y navegamos.
       let rawExercises = [];
       try {
         rawExercises = await queryClient.fetchQuery(getExercisesQuery(session));
@@ -466,9 +449,17 @@ export default function FormPlanWeek({
         days: w.days.map((d, i) =>
           i !== dayIdx
             ? d
-            : { ...d, exercises, _loadingExercises: false }
+            : {
+                ...d,
+                session_id: session.id,
+                session_name: session.name,
+                exercises,
+              }
         ),
       }));
+
+      sessionSheetRef.current?.dismiss();
+      goToPrescription(dayIdx);
     },
     [activeDayIdx, goToPrescription, queryClient, getExercisesQuery, updateWeek]
   );
@@ -559,9 +550,7 @@ export default function FormPlanWeek({
               key={day.id}
               day={day}
               onPress={() =>
-                day.session_id
-                  ? goToPrescription(idx)
-                  : openSessionPicker(idx)
+                day.session_id ? goToPrescription(idx) : openSessionPicker(idx)
               }
               onClear={() => handleClearDay(idx)}
               mutedColor={mutedColor}

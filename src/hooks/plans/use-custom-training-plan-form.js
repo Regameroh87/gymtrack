@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useForm, useStore } from "@tanstack/react-form";
+import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { asc, eq, inArray } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
@@ -469,16 +469,25 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
     };
   }, [id, form]);
 
-  const values = useStore(form.store, (state) => state.values);
+  // Autosave de borrador sin re-render: nos suscribimos al store directamente (en vez
+  // de `useStore(values)`, que re-renderizaba el layout entero en cada cambio del form).
+  const isLoadingRef = useRef(isLoading);
+  isLoadingRef.current = isLoading;
 
   useEffect(() => {
-    if (isLoading || id) return;
-    clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(values));
-    }, 800);
-    return () => clearTimeout(saveTimerRef.current);
-  }, [values, isLoading, id]);
+    if (id) return; // solo autosave de borrador para planes nuevos
+    const unsub = form.store.subscribe(() => {
+      if (isLoadingRef.current) return;
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => {
+        AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(form.store.state.values));
+      }, 800);
+    });
+    return () => {
+      unsub();
+      clearTimeout(saveTimerRef.current);
+    };
+  }, [id, form]);
 
   return { form, isLoading };
 };

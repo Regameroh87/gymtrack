@@ -42,11 +42,6 @@ export default function DayPrescriptionEditor({
   const weekIndex = weekNumber - 1;
   const day = weeks[weekIndex]?.days?.[dayIdx] ?? null;
 
-  // La sesión se marca sincrónicamente al elegirla (session_id/session_name) y los
-  // ejercicios se cargan en segundo plano. `_loadingExercises` distingue "cargando"
-  // de "sesión sin ejercicios": spinner solo en el área de cards.
-  const loadingExercises = !!day?._loadingExercises;
-
   const updateExercise = (exIdx, updates) => {
     form.setFieldValue("weeks", (prev) =>
       (prev ?? []).map((w, i) =>
@@ -84,9 +79,9 @@ export default function DayPrescriptionEditor({
     );
   }
 
-  // Header inmediato (confirma la sesión elegida). El contenido pesado espera a que
-  // termine la transición y a que lleguen los ejercicios.
-  const showContentSpinner = !ready || loadingExercises;
+  // Header inmediato (confirma la sesión elegida). El contenido pesado (las cards con
+  // sus inputs) espera a que termine la transición de navegación.
+  const showContentSpinner = !ready;
 
   return (
     <KeyboardAvoidingView
