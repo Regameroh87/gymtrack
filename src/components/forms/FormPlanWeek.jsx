@@ -388,6 +388,13 @@ export default function FormPlanWeek({
     const dayIdx = activeDayIdx;
     if (dayIdx === null) return;
 
+    // Navegar primero (feedback instantáneo): la transición nativa arranca ya y el
+    // fetch + armado del día corren en segundo plano. La pantalla de prescripción
+    // muestra un spinner hasta que el día queda armado (session_id + exercises).
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    goToPrescription(dayIdx);
+    sessionSheetRef.current?.dismiss();
+
     let rawExercises = [];
     try {
       rawExercises = await queryClient.fetchQuery(getExercisesQuery(session));
@@ -430,14 +437,6 @@ export default function FormPlanWeek({
             }
       ),
     }));
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    // Navegar a la pantalla de prescripción (route push). El push primero: la
-    // transición nativa tapa el cierre del sheet, y el editor pesado monta fuera
-    // del bottom sheet.
-    goToPrescription(dayIdx);
-    sessionSheetRef.current?.dismiss();
   };
 
   // ─── Clear / Copy ───────────────────────────────────────────────────────────

@@ -1,5 +1,10 @@
+// React
+import { useEffect, useState } from "react";
+
 // React Native
 import {
+  ActivityIndicator,
+  InteractionManager,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,7 +20,7 @@ import { useColorScheme } from "nativewind";
 import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
 // Tema
-import { ui } from "../../theme/colors";
+import { brandPrimary, ui } from "../../theme/colors";
 
 // Editor de la prescripción de un día (series/reps/peso/descanso/intensidad/…).
 // Vive en su propia pantalla (route push) en vez de un bottom sheet: la transición
@@ -29,9 +34,21 @@ export default function DayPrescriptionEditor({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  // Difiere el montaje pesado (las cards con sus ~100 inputs) hasta que termine la
+  // transición de navegación: así el push corre fluido y las cards aparecen después.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => setReady(true));
+    return () => task.cancel();
+  }, []);
+
   const weeks = useStore(form.store, (s) => s.values.weeks ?? []);
   const weekIndex = weekNumber - 1;
   const day = weeks[weekIndex]?.days?.[dayIdx] ?? null;
+
+  // El día recién asignado llega sin session_id hasta que el updateWeek de la
+  // selección corre (en segundo plano, durante la transición): mostramos spinner.
+  const building = !day || !day.session_id;
 
   const updateExercise = (exIdx, updates) => {
     const newWeeks = weeks.map((w, i) =>
@@ -54,12 +71,23 @@ export default function DayPrescriptionEditor({
     form.setFieldValue("weeks", newWeeks);
   };
 
-  if (!day) {
+  // Índice fuera de rango (no debería pasar en navegación normal).
+  if (ready && !day) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
         <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope">
           Día no encontrado
         </Text>
+      </View>
+    );
+  }
+
+  // Spinner mientras: (a) corre la transición de navegación, o (b) el día se está
+  // armando (la selección escribe la sesión en segundo plano).
+  if (!ready || building) {
+    return (
+      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
+        <ActivityIndicator size="large" color={brandPrimary[500]} />
       </View>
     );
   }
