@@ -46,51 +46,51 @@ export default function DayPrescriptionEditor({
   const weekIndex = weekNumber - 1;
   const day = weeks[weekIndex]?.days?.[dayIdx] ?? null;
 
-  // El día recién asignado llega sin session_id hasta que el updateWeek de la
-  // selección corre (en segundo plano, durante la transición): mostramos spinner.
-  const building = !day || !day.session_id;
+  // La sesión se marca sincrónicamente al elegirla (session_id/session_name) y los
+  // ejercicios se cargan en segundo plano. `_loadingExercises` distingue "cargando"
+  // de "sesión sin ejercicios": spinner solo en el área de cards.
+  const loadingExercises = !!day?._loadingExercises;
 
   const updateExercise = (exIdx, updates) => {
-    const newWeeks = weeks.map((w, i) =>
-      i !== weekIndex
-        ? w
-        : {
-            ...w,
-            days: w.days.map((d, j) =>
-              j !== dayIdx
-                ? d
-                : {
-                    ...d,
-                    exercises: d.exercises.map((ex, k) =>
-                      k !== exIdx ? ex : { ...ex, ...updates }
-                    ),
-                  }
-            ),
-          }
+    form.setFieldValue("weeks", (prev) =>
+      (prev ?? []).map((w, i) =>
+        i !== weekIndex
+          ? w
+          : {
+              ...w,
+              days: w.days.map((d, j) =>
+                j !== dayIdx
+                  ? d
+                  : {
+                      ...d,
+                      exercises: d.exercises.map((ex, k) =>
+                        k !== exIdx ? ex : { ...ex, ...updates }
+                      ),
+                    }
+              ),
+            }
+      )
     );
-    form.setFieldValue("weeks", newWeeks);
   };
 
   // Índice fuera de rango (no debería pasar en navegación normal).
-  if (ready && !day) {
+  if (!day) {
     return (
       <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope">
-          Día no encontrado
-        </Text>
+        {ready ? (
+          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope">
+            Día no encontrado
+          </Text>
+        ) : (
+          <ActivityIndicator size="large" color={brandPrimary[500]} />
+        )}
       </View>
     );
   }
 
-  // Spinner mientras: (a) corre la transición de navegación, o (b) el día se está
-  // armando (la selección escribe la sesión en segundo plano).
-  if (!ready || building) {
-    return (
-      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <ActivityIndicator size="large" color={brandPrimary[500]} />
-      </View>
-    );
-  }
+  // Header inmediato (confirma la sesión elegida). El contenido pesado espera a que
+  // termine la transición y a que lleguen los ejercicios.
+  const showContentSpinner = !ready || loadingExercises;
 
   return (
     <KeyboardAvoidingView
@@ -110,30 +110,36 @@ export default function DayPrescriptionEditor({
         </Text>
       </View>
 
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingHorizontal: 24,
-          paddingTop: 16,
-          paddingBottom: 100,
-        }}
-      >
-        {(day.exercises?.length ?? 0) === 0 ? (
-          <View className="items-center justify-center py-16">
-            <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-              Esta sesión no tiene ejercicios cargados.
-            </Text>
-          </View>
-        ) : (
-          day.exercises.map((ex, exIdx) => (
-            <PlanDayExerciseCard
-              key={ex.id}
-              exercise={ex}
-              onChange={(updates) => updateExercise(exIdx, updates)}
-            />
-          ))
-        )}
-      </ScrollView>
+      {showContentSpinner ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color={brandPrimary[500]} />
+        </View>
+      ) : (
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 16,
+            paddingBottom: 100,
+          }}
+        >
+          {(day.exercises?.length ?? 0) === 0 ? (
+            <View className="items-center justify-center py-16">
+              <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
+                Esta sesión no tiene ejercicios cargados.
+              </Text>
+            </View>
+          ) : (
+            day.exercises.map((ex, exIdx) => (
+              <PlanDayExerciseCard
+                key={ex.id}
+                exercise={ex}
+                onChange={(updates) => updateExercise(exIdx, updates)}
+              />
+            ))
+          )}
+        </ScrollView>
+      )}
     </KeyboardAvoidingView>
   );
 }

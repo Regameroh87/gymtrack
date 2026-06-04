@@ -11,7 +11,7 @@ import {
 } from "react-native";
 
 // React
-import { useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 
 // Librerías externas
 import {
@@ -105,7 +105,9 @@ function DayCard({ day, onPress, onClear, mutedColor }) {
 
 // ─── Fila de sesión (con acordeón de ejercicios) ─────────────────────────────
 
-function SessionRow({
+// Memoizada: con handlers estables (useCallback) + data estable (useAllSessions
+// memoizado), las filas no se re-renderizan en re-renders ajenos del form.
+const SessionRow = memo(function SessionRow({
   session,
   isSelected,
   expanded,
@@ -149,7 +151,7 @@ function SessionRow({
     >
       <View className="flex-row items-center px-3 py-3">
         <Pressable
-          onPress={onSelect}
+          onPress={() => onSelect(session)}
           className="flex-1 flex-row items-center active:opacity-70"
         >
           <View
@@ -208,7 +210,7 @@ function SessionRow({
 
         {canExpand && (
           <Pressable
-            onPress={onToggle}
+            onPress={() => onToggle(session.id)}
             hitSlop={10}
             className="w-9 h-9 items-center justify-center rounded-lg active:opacity-50"
           >
@@ -267,7 +269,7 @@ function SessionRow({
       )}
     </View>
   );
-}
+});
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
@@ -299,16 +301,19 @@ export default function FormPlanWeek({
   const [expandedSessionId, setExpandedSessionId] = useState(null);
 
   // Navega a la pantalla de prescripción del día indicado (mismo form vía contexto).
-  const goToPrescription = (dayIdx) => {
-    router.push({
-      pathname: prescriptionPathname,
-      params: {
-        week: String(weekNumber),
-        day: String(dayIdx),
-        id: planId ?? "",
-      },
-    });
-  };
+  const goToPrescription = useCallback(
+    (dayIdx) => {
+      router.push({
+        pathname: prescriptionPathname,
+        params: {
+          week: String(weekNumber),
+          day: String(dayIdx),
+          id: planId ?? "",
+        },
+      });
+    },
+    [router, prescriptionPathname, weekNumber, planId]
+  );
 
   const { data: availableSessions = [] } = (sessionsHook ?? useSessions)();
 
@@ -351,30 +356,42 @@ export default function FormPlanWeek({
 
   // ─── Helpers de mutación ────────────────────────────────────────────────────
 
-  const updateWeek = (mutator) => {
-    const newWeeks = weeks.map((w, i) => (i === weekIndex ? mutator(w) : w));
-    form.setFieldValue("weeks", newWeeks);
-  };
+  const updateWeek = useCallback(
+    (mutator) => {
+      const newWeeks = weeks.map((w, i) => (i === weekIndex ? mutator(w) : w));
+      form.setFieldValue("weeks", newWeeks);
+    },
+    [weeks, weekIndex, form]
+  );
 
   // ─── Session picker ─────────────────────────────────────────────────────────
 
   // Resuelve { queryKey, queryFn } de los ejercicios de una sesión según su origen.
   // Compartido por el preview (acordeón) y la selección, para no duplicar el branching
-  // y reusar el mismo cache de react-query.
-  const getExercisesQuery = (session) => {
-    let fetchFn, qKey;
-    if (fetchExercisesFnMap && session.source) {
-      fetchFn = fetchExercisesFnMap[session.source];
-      qKey = session.source === "custom" ? "custom_session_exercises" : "session_exercises";
-    } else {
-      fetchFn = fetchExercisesFn ?? fetchSessionExercises;
-      qKey = sessionExercisesQueryKey ?? "session_exercises";
-    }
-    return {
-      queryKey: [qKey, session.id],
-      queryFn: () => fetchFn(session.id),
-    };
-  };
+  // y reusar el mismo cache de react-query. Estable (useCallback) para que el memo de
+  // SessionRow sea efectivo.
+  const getExercisesQuery = useCallback(
+    (session) => {
+      let fetchFn, qKey;
+      if (fetchExercisesFnMap && session.source) {
+        fetchFn = fetchExercisesFnMap[session.source];
+        qKey = session.source === "custom" ? "custom_session_exercises" : "session_exercises";
+      } else {
+        fetchFn = fetchExercisesFn ?? fetchSessionExercises;
+        qKey = sessionExercisesQueryKey ?? "session_exercises";
+      }
+      return {
+        queryKey: [qKey, session.id],
+        queryFn: () => fetchFn(session.id),
+      };
+    },
+    [fetchExercisesFnMap, fetchExercisesFn, sessionExercisesQueryKey]
+  );
+
+  const toggleExpanded = useCallback(
+    (id) => setExpandedSessionId((prev) => (prev === id ? null : id)),
+    []
+  );
 
   const openSessionPicker = (dayIdx) => {
     setActiveDayIdx(dayIdx);
@@ -384,60 +401,63 @@ export default function FormPlanWeek({
     sessionSheetRef.current?.present();
   };
 
-  const handleSessionSelect = async (session) => {
-    const dayIdx = activeDayIdx;
-    if (dayIdx === null) return;
+  const handleSessionSelect = useCallback(
+    async (session) => {
+      const dayIdx = activeDayIdx;
+      if (dayIdx === null) return;
 
-    // Navegar primero (feedback instantáneo): la transición nativa arranca ya y el
-    // fetch + armado del día corren en segundo plano. La pantalla de prescripción
-    // muestra un spinner hasta que el día queda armado (session_id + exercises).
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    goToPrescription(dayIdx);
-    sessionSheetRef.current?.dismiss();
+      // Navegar primero (feedback instantáneo): la transición nativa arranca ya y el
+      // fetch + armado del día corren en segundo plano. La pantalla de prescripción
+      // muestra un spinner hasta que el día queda armado (session_id + exercises).
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      goToPrescription(dayIdx);
+      sessionSheetRef.current?.dismiss();
 
-    let rawExercises = [];
-    try {
-      rawExercises = await queryClient.fetchQuery(getExercisesQuery(session));
-    } catch {
-      rawExercises = [];
-    }
+      let rawExercises = [];
+      try {
+        rawExercises = await queryClient.fetchQuery(getExercisesQuery(session));
+      } catch {
+        rawExercises = [];
+      }
 
-    const exercises = rawExercises.map((se) => ({
-      id: Crypto.randomUUID(),
-      session_exercise_id: se.id,
-      exercise_id: se.exercise_id,
-      exercise_name: se.name,
-      exercise_muscle_group: se.muscle_group ?? "",
-      position: se.position,
-      prescription_mode: "reps",
-      intensity_mode: "none",
-      rir: null,
-      rpe: null,
-      tempo: "",
-      notes: "",
-      set_configs: Array.from({ length: 4 }, () => ({
-        reps_min: 8,
-        reps_max: 12,
-        duration_seconds: null,
-        weight_kg: null,
-        rest_seconds: 90,
-      })),
-    }));
+      const exercises = rawExercises.map((se) => ({
+        id: Crypto.randomUUID(),
+        session_exercise_id: se.id,
+        exercise_id: se.exercise_id,
+        exercise_name: se.name,
+        exercise_muscle_group: se.muscle_group ?? "",
+        position: se.position,
+        prescription_mode: "reps",
+        intensity_mode: "none",
+        rir: null,
+        rpe: null,
+        tempo: "",
+        notes: "",
+        set_configs: Array.from({ length: 4 }, () => ({
+          reps_min: 8,
+          reps_max: 12,
+          duration_seconds: null,
+          weight_kg: null,
+          rest_seconds: 90,
+        })),
+      }));
 
-    updateWeek((w) => ({
-      ...w,
-      days: w.days.map((d, i) =>
-        i !== dayIdx
-          ? d
-          : {
-              ...d,
-              session_id: session.id,
-              session_name: session.name,
-              exercises,
-            }
-      ),
-    }));
-  };
+      updateWeek((w) => ({
+        ...w,
+        days: w.days.map((d, i) =>
+          i !== dayIdx
+            ? d
+            : {
+                ...d,
+                session_id: session.id,
+                session_name: session.name,
+                exercises,
+              }
+        ),
+      }));
+    },
+    [activeDayIdx, goToPrescription, queryClient, getExercisesQuery, updateWeek]
+  );
 
   // ─── Clear / Copy ───────────────────────────────────────────────────────────
 
@@ -640,12 +660,8 @@ export default function FormPlanWeek({
                 session={session}
                 isSelected={isSelected}
                 expanded={expandedSessionId === session.id}
-                onToggle={() =>
-                  setExpandedSessionId((prev) =>
-                    prev === session.id ? null : session.id
-                  )
-                }
-                onSelect={() => handleSessionSelect(session)}
+                onToggle={toggleExpanded}
+                onSelect={handleSessionSelect}
                 getExercisesQuery={getExercisesQuery}
                 isDark={isDark}
                 mutedColor={mutedColor}
