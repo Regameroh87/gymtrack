@@ -133,6 +133,26 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
   if (setsRows.length) await db.insert(custom_plan_week_day_exercise_sets).values(setsRows);
 };
 
+// Los borradores guardados antes de que existiera `exercise_image_uri` no traen el
+// campo. Al restaurar, lo rellenamos desde exercises_base por exercise_id para que
+// las thumbnails aparezcan sin tener que reasignar la sesión.
+const backfillExerciseImages = async (weeks) => {
+  if (!Array.isArray(weeks)) return;
+  const missing = [];
+  for (const w of weeks)
+    for (const d of w.days ?? [])
+      for (const ex of d.exercises ?? [])
+        if (ex.exercise_image_uri == null && ex.exercise_id) missing.push(ex);
+  if (!missing.length) return;
+  const ids = [...new Set(missing.map((e) => e.exercise_id))];
+  const rows = await database
+    .select({ id: exercises_base.id, image_uri: exercises_base.image_uri })
+    .from(exercises_base)
+    .where(inArray(exercises_base.id, ids));
+  const byId = Object.fromEntries(rows.map((r) => [r.id, r.image_uri]));
+  for (const ex of missing) ex.exercise_image_uri = byId[ex.exercise_id] ?? null;
+};
+
 export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
   const saveTimerRef = useRef(null);
@@ -477,7 +497,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         }
       })();
     } else {
-      AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
+      AsyncStorage.getItem(DRAFT_KEY).then(async (raw) => {
         if (cancelled) return;
         if (raw) {
           try {
@@ -491,6 +511,8 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
                 parsed.weekly_days ?? DEFAULT_WEEKLY_DAYS
               );
             }
+            await backfillExerciseImages(parsed.weeks);
+            if (cancelled) return;
             form.reset(parsed, { keepDefaultValues: true });
           } catch {}
         }

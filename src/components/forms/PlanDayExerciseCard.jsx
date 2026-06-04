@@ -262,11 +262,6 @@ function PlanDayExerciseCard({ exercise, onChange }) {
     ? (getCloudinaryUrl(exercise.exercise_image_uri) ??
         `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${exercise.exercise_image_uri}`)
     : null;
-  console.log("[PlanDayExerciseCard]", {
-    name: exercise.exercise_name,
-    raw: exercise.exercise_image_uri,
-    resolved: exerciseImageUri,
-  });
   const setConfigs = exercise.set_configs ?? [{ ...DEFAULT_SET }];
 
   const updateSetConfig = (setIdx, updates) => {
