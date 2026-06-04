@@ -423,8 +423,8 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
 // ─── Tab: Explorar ────────────────────────────────────────────────────────────
 
 const ORIGIN_TABS = [
-  { key: "gym", label: "Del gym" },
-  { key: "mios", label: "Míos" },
+  { key: "gym", label: "Catálogo" },
+  { key: "mios", label: "Personalizados" },
 ];
 
 function ExplorarContent({ router, insets }) {
@@ -465,38 +465,38 @@ function ExplorarContent({ router, insets }) {
 
   return (
     <View className="flex-1">
+      {/* Pestañas fijas */}
+      <View className="px-6 pt-4 pb-3 border-b border-ui-input-border">
+        <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
+          {ORIGIN_TABS.map((tab) => {
+            const isActive = origin === tab.key;
+            return (
+              <Pressable
+                key={tab.key}
+                onPress={() => setOriginTab(tab.key)}
+                className="flex-1 items-center py-2 rounded-lg active:opacity-70"
+                style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
+              >
+                <Text
+                  className={`font-jakarta-semi text-[13px] ${
+                    isActive
+                      ? "text-white"
+                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                  }`}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
       <Animated.ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Chips de origen */}
-        <View className="px-6 pt-4 pb-1">
-          <View className="flex-row bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-xl p-1">
-            {ORIGIN_TABS.map((tab) => {
-              const isActive = origin === tab.key;
-              return (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => setOriginTab(tab.key)}
-                  className="flex-1 items-center py-2 rounded-lg active:opacity-70"
-                  style={isActive ? { backgroundColor: brandPrimary[500] } : {}}
-                >
-                  <Text
-                    className={`font-jakarta-semi text-[13px] ${
-                      isActive
-                        ? "text-white"
-                        : "text-ui-text-muted dark:text-ui-text-mutedDark"
-                    }`}
-                  >
-                    {tab.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Filtro por objetivo — solo "Del gym" */}
+        {/* Filtro por objetivo — solo "Catálogo" */}
         {!isMine && availableObjectiveFilters.length > 1 && (
           <ScrollView
             horizontal
