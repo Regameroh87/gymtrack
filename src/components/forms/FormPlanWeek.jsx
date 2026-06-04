@@ -18,7 +18,6 @@ import {
   BottomSheetBackdrop,
   BottomSheetFlatList,
   BottomSheetModal,
-  BottomSheetScrollView,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import * as Crypto from "expo-crypto";
@@ -34,7 +33,6 @@ import { fetchSessionExercises } from "../../hooks/sessions/use-session-exercise
 
 // Componentes
 import FormsHeader from "../FormsHeader";
-import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
 // Tema y assets
 import { brandPrimary, ui } from "../../theme/colors";
@@ -281,6 +279,8 @@ export default function FormPlanWeek({
   fetchExercisesFn,
   fetchExercisesFnMap,
   sessionExercisesQueryKey,
+  planId,
+  prescriptionPathname = "/admin/plans/builder/[week]/[day]",
 }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -289,16 +289,26 @@ export default function FormPlanWeek({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Un único sheet con dos pasos internos ("picker" → "prescription"): evita el gap
-  // de encadenar dos modales y que se solapen al cambiar de día.
+  // El picker vive en un bottom sheet; la prescripción es una pantalla aparte
+  // (route push) para que el montaje pesado del editor no trabe el sheet.
   const sessionSheetRef = useRef(null);
   const copyPickerRef = useRef(null);
 
   const [activeDayIdx, setActiveDayIdx] = useState(null);
-  const [prescriptionDayIdx, setPrescriptionDayIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSessionId, setExpandedSessionId] = useState(null);
-  const [flowStep, setFlowStep] = useState("picker");
+
+  // Navega a la pantalla de prescripción del día indicado (mismo form vía contexto).
+  const goToPrescription = (dayIdx) => {
+    router.push({
+      pathname: prescriptionPathname,
+      params: {
+        week: String(weekNumber),
+        day: String(dayIdx),
+        id: planId ?? "",
+      },
+    });
+  };
 
   const { data: availableSessions = [] } = (sessionsHook ?? useSessions)();
 
@@ -386,7 +396,6 @@ export default function FormPlanWeek({
     setActiveDayIdx(dayIdx);
     setSearchQuery("");
     setExpandedSessionId(null);
-    setFlowStep("picker");
     Keyboard.dismiss();
     sessionSheetRef.current?.present();
   };
@@ -440,18 +449,11 @@ export default function FormPlanWeek({
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    // Mismo sheet, solo cambia el paso: la prescripción reemplaza al picker en el
-    // lugar, sin cerrar/abrir modales → transición instantánea y sin solape.
-    setPrescriptionDayIdx(dayIdx);
-    setFlowStep("prescription");
-  };
-
-  // ─── Prescription sheet ─────────────────────────────────────────────────────
-
-  const openPrescriptionSheet = (dayIdx) => {
-    setPrescriptionDayIdx(dayIdx);
-    setFlowStep("prescription");
-    sessionSheetRef.current?.present();
+    // Navegar a la pantalla de prescripción (route push). El push primero: la
+    // transición nativa tapa el cierre del sheet, y el editor pesado monta fuera
+    // del bottom sheet.
+    goToPrescription(dayIdx);
+    sessionSheetRef.current?.dismiss();
   };
 
   // ─── Clear / Copy ───────────────────────────────────────────────────────────
@@ -493,9 +495,6 @@ export default function FormPlanWeek({
   };
 
   // ─── Render ─────────────────────────────────────────────────────────────────
-
-  const prescriptionDay =
-    prescriptionDayIdx !== null ? week.days[prescriptionDayIdx] : null;
 
   return (
     <KeyboardAvoidingView
@@ -544,7 +543,7 @@ export default function FormPlanWeek({
               day={day}
               onPress={() =>
                 day.session_id
-                  ? openPrescriptionSheet(idx)
+                  ? goToPrescription(idx)
                   : openSessionPicker(idx)
               }
               onClear={() => handleClearDay(idx)}
@@ -579,12 +578,8 @@ export default function FormPlanWeek({
           setSearchQuery("");
           setActiveDayIdx(null);
           setExpandedSessionId(null);
-          setPrescriptionDayIdx(null);
-          setFlowStep("picker");
         }}
       >
-        {flowStep === "picker" ? (
-          <>
         <View className="px-6 pt-4 pb-2">
           <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark mb-4">
             Elegir sesión
@@ -675,53 +670,6 @@ export default function FormPlanWeek({
             );
           }}
         />
-          </>
-        ) : prescriptionDay ? (
-          <>
-            <View
-              className="px-6 pt-4 pb-3"
-              style={{
-                borderBottomWidth: 1,
-                borderBottomColor: ui.input.border,
-              }}
-            >
-              <Text className="text-xs font-manrope-semi uppercase tracking-label text-ui-text-muted dark:text-ui-text-mutedDark">
-                Día {prescriptionDay.day_number} ·{" "}
-                {weekTitle ?? `Semana ${weekNumber}`}
-              </Text>
-              <Text className="text-xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark mt-0.5">
-                {prescriptionDay.session_name}
-              </Text>
-            </View>
-
-            <BottomSheetScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: 24,
-                paddingTop: 16,
-                paddingBottom: 100,
-              }}
-            >
-              {prescriptionDay.exercises.length === 0 ? (
-                <View className="items-center justify-center py-16">
-                  <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-                    Esta sesión no tiene ejercicios cargados.
-                  </Text>
-                </View>
-              ) : (
-                prescriptionDay.exercises.map((ex, exIdx) => (
-                  <PlanDayExerciseCard
-                    key={ex.id}
-                    exercise={ex}
-                    onChange={(updates) =>
-                      handleUpdateExercise(prescriptionDayIdx, exIdx, updates)
-                    }
-                  />
-                ))
-              )}
-            </BottomSheetScrollView>
-          </>
-        ) : null}
       </BottomSheetModal>
 
       {/* ─── PICKER DE SEMANA A COPIAR ──────────────────────────────────────── */}

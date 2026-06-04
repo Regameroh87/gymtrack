@@ -10,7 +10,7 @@ import FormPlanWeek from "../../../../../../src/components/forms/FormPlanWeek";
 
 export default function PlanWeekEditor() {
   const { week } = useLocalSearchParams();
-  const { form } = usePlanFormContext();
+  const { form, planId } = usePlanFormContext();
   const weekNumber = parseInt(week, 10);
   const durationWeeks = useStore(
     form.store,
@@ -20,6 +20,12 @@ export default function PlanWeekEditor() {
     durationWeeks === 0 ? "Semana tipo" : `Semana ${weekNumber}`;
 
   return (
-    <FormPlanWeek form={form} weekNumber={weekNumber} weekTitle={weekTitle} />
+    <FormPlanWeek
+      form={form}
+      weekNumber={weekNumber}
+      weekTitle={weekTitle}
+      planId={planId}
+      prescriptionPathname="/admin/plans/builder/[week]/[day]"
+    />
   );
 }

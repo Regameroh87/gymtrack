@@ -15,7 +15,7 @@ const fetchExercisesFnMap = {
 
 export default function UserPlanWeekEditor() {
   const { week } = useLocalSearchParams();
-  const { form } = usePlanFormContext();
+  const { form, planId } = usePlanFormContext();
   const weekNumber = parseInt(week, 10);
   const durationWeeks = useStore(
     form.store,
@@ -34,6 +34,8 @@ export default function UserPlanWeekEditor() {
           weekTitle={weekTitle}
           sessionsHook={useAllSessions}
           fetchExercisesFnMap={fetchExercisesFnMap}
+          planId={planId}
+          prescriptionPathname="/planes/builder/custom-plan/[week]/[day]"
         />
       </View>
     </>

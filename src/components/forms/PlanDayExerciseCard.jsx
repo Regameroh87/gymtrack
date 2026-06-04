@@ -1,8 +1,7 @@
 // React Native
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 // Librerías externas
-import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 
@@ -70,7 +69,7 @@ function Seg({ options, value, onChange, isDark }) {
 
 function NumInput({ value, onChange, placeholder = "—", isDark, style }) {
   return (
-    <BottomSheetTextInput
+    <TextInput
       value={value === null || value === undefined ? "" : String(value)}
       onChangeText={(t) => {
         if (t === "") {
@@ -484,7 +483,7 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
         {/* TEMPO */}
         <View style={{ marginBottom: 14 }}>
           <FieldLabel isDark={isDark}>Tempo (opcional)</FieldLabel>
-          <BottomSheetTextInput
+          <TextInput
             value={exercise.tempo ?? ""}
             onChangeText={(t) => onChange({ tempo: t })}
             placeholder="3-1-1-0"
@@ -505,7 +504,7 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
         {/* NOTAS */}
         <View>
           <FieldLabel isDark={isDark}>Notas del coach (opcional)</FieldLabel>
-          <BottomSheetTextInput
+          <TextInput
             value={exercise.notes ?? ""}
             onChangeText={(t) => onChange({ notes: t })}
             placeholder="Indicaciones adicionales..."
