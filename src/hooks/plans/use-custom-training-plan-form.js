@@ -141,25 +141,38 @@ const persistCustomWeeks = async (
     await db.insert(custom_plan_week_day_exercise_sets).values(setsRows);
 };
 
-// Los borradores guardados antes de que existiera `exercise_image_uri` no traen el
-// campo. Al restaurar, lo rellenamos desde exercises_base por exercise_id para que
-// las thumbnails aparezcan sin tener que reasignar la sesión.
-const backfillExerciseImages = async (weeks) => {
+// Los campos de display del ejercicio (nombre, grupo muscular, imagen) son DERIVADOS:
+// su fuente de verdad es `exercises_base`, no el borrador. Al restaurar el borrador
+// los re-derivamos siempre desde la DB por `exercise_id`, en vez de confiar en las
+// copias persistidas. Así el borrador nunca queda con datos viejos y agregar un campo
+// de display nuevo no requiere migraciones ni backfills: se suma una línea acá.
+const enrichExercisesFromBase = async (weeks) => {
   if (!Array.isArray(weeks)) return;
-  const missing = [];
+  const all = [];
   for (const w of weeks)
     for (const d of w.days ?? [])
       for (const ex of d.exercises ?? [])
-        if (ex.exercise_image_uri == null && ex.exercise_id) missing.push(ex);
-  if (!missing.length) return;
-  const ids = [...new Set(missing.map((e) => e.exercise_id))];
+        if (ex.exercise_id) all.push(ex);
+  if (!all.length) return;
+  const ids = [...new Set(all.map((e) => e.exercise_id))];
   const rows = await database
-    .select({ id: exercises_base.id, image_uri: exercises_base.image_uri })
+    .select({
+      id: exercises_base.id,
+      name: exercises_base.name,
+      muscle_group: exercises_base.muscle_group,
+      image_uri: exercises_base.image_uri,
+    })
     .from(exercises_base)
     .where(inArray(exercises_base.id, ids));
-  const byId = Object.fromEntries(rows.map((r) => [r.id, r.image_uri]));
-  for (const ex of missing)
-    ex.exercise_image_uri = byId[ex.exercise_id] ?? null;
+  const byId = Object.fromEntries(rows.map((r) => [r.id, r]));
+  for (const ex of all) {
+    const base = byId[ex.exercise_id];
+    if (!base) continue;
+    ex.exercise_name = base.name ?? ex.exercise_name ?? "";
+    ex.exercise_muscle_group =
+      base.muscle_group ?? ex.exercise_muscle_group ?? "";
+    ex.exercise_image_uri = base.image_uri ?? null;
+  }
 };
 
 export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
@@ -543,7 +556,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
                 parsed.weekly_days ?? DEFAULT_WEEKLY_DAYS
               );
             }
-            await backfillExerciseImages(parsed.weeks);
+            await enrichExercisesFromBase(parsed.weeks);
             if (cancelled) return;
             form.reset(parsed, { keepDefaultValues: true });
           } catch {}
