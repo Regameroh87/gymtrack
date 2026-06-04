@@ -356,12 +356,15 @@ export default function FormPlanWeek({
 
   // ─── Helpers de mutación ────────────────────────────────────────────────────
 
+  // Updater funcional: lee siempre el estado más reciente del form, así dos
+  // updateWeek seguidos (marcar sesión + llenar ejercicios) no se pisan.
   const updateWeek = useCallback(
     (mutator) => {
-      const newWeeks = weeks.map((w, i) => (i === weekIndex ? mutator(w) : w));
-      form.setFieldValue("weeks", newWeeks);
+      form.setFieldValue("weeks", (prev) =>
+        (prev ?? []).map((w, i) => (i === weekIndex ? mutator(w) : w))
+      );
     },
-    [weeks, weekIndex, form]
+    [weekIndex, form]
   );
 
   // ─── Session picker ─────────────────────────────────────────────────────────
@@ -406,13 +409,29 @@ export default function FormPlanWeek({
       const dayIdx = activeDayIdx;
       if (dayIdx === null) return;
 
-      // Navegar primero (feedback instantáneo): la transición nativa arranca ya y el
-      // fetch + armado del día corren en segundo plano. La pantalla de prescripción
-      // muestra un spinner hasta que el día queda armado (session_id + exercises).
+      // 1) Marcar la sesión YA (síncrono): feedback inmediato sin esperar la query.
+      //    `_loadingExercises` le dice al editor que muestre spinner solo en las cards.
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      updateWeek((w) => ({
+        ...w,
+        days: w.days.map((d, i) =>
+          i !== dayIdx
+            ? d
+            : {
+                ...d,
+                session_id: session.id,
+                session_name: session.name,
+                exercises: [],
+                _loadingExercises: true,
+              }
+        ),
+      }));
+
+      // 2) Navegar (la transición arranca al instante).
       goToPrescription(dayIdx);
       sessionSheetRef.current?.dismiss();
 
+      // 3) Cargar los ejercicios (query a SQLite) en segundo plano y completar.
       let rawExercises = [];
       try {
         rawExercises = await queryClient.fetchQuery(getExercisesQuery(session));
@@ -447,12 +466,7 @@ export default function FormPlanWeek({
         days: w.days.map((d, i) =>
           i !== dayIdx
             ? d
-            : {
-                ...d,
-                session_id: session.id,
-                session_name: session.name,
-                exercises,
-              }
+            : { ...d, exercises, _loadingExercises: false }
         ),
       }));
     },

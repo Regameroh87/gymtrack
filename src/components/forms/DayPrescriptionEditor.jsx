@@ -14,7 +14,6 @@ import {
 
 // Librerías externas
 import { useStore } from "@tanstack/react-form";
-import { useColorScheme } from "nativewind";
 
 // Componentes
 import PlanDayExerciseCard from "./PlanDayExerciseCard";
@@ -31,9 +30,6 @@ export default function DayPrescriptionEditor({
   dayIdx,
   weekTitle,
 }) {
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-
   // Difiere el montaje pesado (las cards con sus ~100 inputs) hasta que termine la
   // transición de navegación: así el push corre fluido y las cards aparecen después.
   const [ready, setReady] = useState(false);
