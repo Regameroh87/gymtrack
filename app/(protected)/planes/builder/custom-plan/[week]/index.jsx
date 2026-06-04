@@ -1,4 +1,5 @@
-import { useLocalSearchParams } from "expo-router";
+import { Platform, View } from "react-native";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
 import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
@@ -24,12 +25,17 @@ export default function UserPlanWeekEditor() {
     durationWeeks === 0 ? "Semana tipo" : `Semana ${weekNumber}`;
 
   return (
-    <FormPlanWeek
-      form={form}
-      weekNumber={weekNumber}
-      weekTitle={weekTitle}
-      sessionsHook={useAllSessions}
-      fetchExercisesFnMap={fetchExercisesFnMap}
-    />
+    <>
+      <Stack.Screen options={{ headerShown: Platform.OS === "ios" }} />
+      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-20"} flex-1`}>
+        <FormPlanWeek
+          form={form}
+          weekNumber={weekNumber}
+          weekTitle={weekTitle}
+          sessionsHook={useAllSessions}
+          fetchExercisesFnMap={fetchExercisesFnMap}
+        />
+      </View>
+    </>
   );
 }
