@@ -152,6 +152,16 @@ function SetRow({
         </Text>
       </View>
 
+      {/* Peso */}
+      <View style={{ flex: 1, marginHorizontal: 4 }}>
+        <NumInput
+          value={config.weight_kg}
+          onChange={(v) => onChange({ weight_kg: v })}
+          placeholder="—"
+          isDark={isDark}
+        />
+      </View>
+
       {/* Reps min–max o Duración */}
       {isReps ? (
         <View
@@ -197,16 +207,6 @@ function SetRow({
           />
         </View>
       )}
-
-      {/* Peso */}
-      <View style={{ flex: 1, marginHorizontal: 4 }}>
-        <NumInput
-          value={config.weight_kg}
-          onChange={(v) => onChange({ weight_kg: v })}
-          placeholder="—"
-          isDark={isDark}
-        />
-      </View>
 
       {/* Descanso */}
       <View style={{ flex: 1, marginLeft: 4 }}>
@@ -399,20 +399,6 @@ function PlanDayExerciseCard({ exercise, onChange }) {
             <View style={{ width: 22 }} />
             <Text
               style={{
-                flex: 2,
-                fontSize: 9,
-                fontFamily: "Manrope_600SemiBold",
-                textTransform: "uppercase",
-                letterSpacing: 0.6,
-                color: isDark ? ui.text.mutedDark : ui.text.muted,
-                textAlign: "center",
-                marginHorizontal: 4,
-              }}
-            >
-              {isReps ? "REPS" : "SEG"}
-            </Text>
-            <Text
-              style={{
                 flex: 1,
                 fontSize: 9,
                 fontFamily: "Manrope_600SemiBold",
@@ -424,6 +410,20 @@ function PlanDayExerciseCard({ exercise, onChange }) {
               }}
             >
               KG
+            </Text>
+            <Text
+              style={{
+                flex: 2,
+                fontSize: 9,
+                fontFamily: "Manrope_600SemiBold",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+                color: isDark ? ui.text.mutedDark : ui.text.muted,
+                textAlign: "center",
+                marginHorizontal: 4,
+              }}
+            >
+              {isReps ? "REPS" : "SEG"}
             </Text>
             <Text
               style={{
