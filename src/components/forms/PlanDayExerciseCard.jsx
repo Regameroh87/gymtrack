@@ -6,10 +6,12 @@ import { Pressable, Text, TextInput, View } from "react-native";
 
 // Librerías externas
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 
 // Tema y assets
-import { brandPrimary, ui } from "../../theme/colors";
+import { LinearGradient } from "expo-linear-gradient";
+import { brandPrimary, gradient, ui } from "../../theme/colors";
 import { Barbell } from "../../../assets/icons";
 
 const DEFAULT_SET = {
@@ -164,21 +166,15 @@ function SetRow({
 
       {/* Reps min–max o Duración */}
       {isReps ? (
-        <View
-          style={{
-            flex: 2,
-            flexDirection: "row",
-            alignItems: "center",
-            marginHorizontal: 4,
-          }}
-        >
-          <NumInput
-            value={config.reps_min}
-            onChange={(v) => onChange({ reps_min: v })}
-            placeholder="8"
-            isDark={isDark}
-            style={{ flex: 1 }}
-          />
+        <View className="flex-[2] flex-row items-center mx-1">
+          <View className="flex-1">
+            <NumInput
+              value={config.reps_min}
+              onChange={(v) => onChange({ reps_min: v })}
+              placeholder="8"
+              isDark={isDark}
+            />
+          </View>
           <Text
             style={{
               marginHorizontal: 3,
@@ -189,13 +185,14 @@ function SetRow({
           >
             –
           </Text>
-          <NumInput
-            value={config.reps_max}
-            onChange={(v) => onChange({ reps_max: v })}
-            placeholder="12"
-            isDark={isDark}
-            style={{ flex: 1 }}
-          />
+          <View className="flex-1">
+            <NumInput
+              value={config.reps_max}
+              onChange={(v) => onChange({ reps_max: v })}
+              placeholder="12"
+              isDark={isDark}
+            />
+          </View>
         </View>
       ) : (
         <View style={{ flex: 2, marginHorizontal: 4 }}>
@@ -295,30 +292,47 @@ function PlanDayExerciseCard({ exercise, onChange }) {
       }}
     >
       {/* Header con nombre del ejercicio y conteo de series */}
-      <View
+      <LinearGradient
+        colors={
+          isDark ? gradient.exerciseHeader.dark : gradient.exerciseHeader.light
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
         style={{
           flexDirection: "row",
           alignItems: "center",
           paddingHorizontal: 16,
           paddingVertical: 12,
-          backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
           borderBottomWidth: 1,
           borderBottomColor: ui.input.border,
         }}
       >
-        <View
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            backgroundColor: `${brandPrimary[600]}1A`,
-          }}
-        >
-          <Barbell size={16} color={brandPrimary[600]} />
-        </View>
+        {exercise.exercise_image_uri ? (
+          <Image
+            source={{ uri: exercise.exercise_image_uri }}
+            contentFit="cover"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              marginRight: 12,
+            }}
+          />
+        ) : (
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+              backgroundColor: "rgba(255,255,255,0.20)",
+            }}
+          >
+            <Barbell size={18} color={brandPrimary[600]} />
+          </View>
+        )}
         <View style={{ flex: 1 }}>
           <Text
             numberOfLines={1}
@@ -346,10 +360,10 @@ function PlanDayExerciseCard({ exercise, onChange }) {
         <View style={{ alignItems: "center", paddingLeft: 12 }}>
           <Text
             style={{
-              fontSize: 20,
+              fontSize: 22,
               fontFamily: "PlusJakartaSans_700Bold",
-              color: isDark ? ui.text.mainDark : ui.text.main,
-              lineHeight: 22,
+              color: "#ffffff",
+              lineHeight: 24,
             }}
           >
             {setConfigs.length}
@@ -358,7 +372,7 @@ function PlanDayExerciseCard({ exercise, onChange }) {
             style={{
               fontSize: 9,
               fontFamily: "Manrope_600SemiBold",
-              color: isDark ? ui.text.mutedDark : ui.text.muted,
+              color: "rgba(255,255,255,0.65)",
               textTransform: "uppercase",
               letterSpacing: 0.6,
             }}
@@ -366,7 +380,7 @@ function PlanDayExerciseCard({ exercise, onChange }) {
             series
           </Text>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Cuerpo */}
       <View
@@ -481,62 +495,70 @@ function PlanDayExerciseCard({ exercise, onChange }) {
           </Pressable>
         </View>
 
-        {/* INTENSIDAD */}
-        <View style={{ marginBottom: hasIntensity ? 8 : 14 }}>
-          <FieldLabel isDark={isDark}>Intensidad</FieldLabel>
-          <Seg
-            options={[
-              { label: "—", value: "none" },
-              { label: "RIR", value: "rir" },
-              { label: "RPE", value: "rpe" },
-            ]}
-            value={exercise.intensity_mode ?? "none"}
-            onChange={(v) =>
-              onChange({ intensity_mode: v, rir: null, rpe: null })
-            }
-            isDark={isDark}
-          />
-        </View>
-        {hasIntensity && (
-          <View style={{ marginBottom: 14, alignItems: "flex-start" }}>
-            <NumInput
-              value={
-                exercise.intensity_mode === "rir" ? exercise.rir : exercise.rpe
-              }
-              onChange={(v) =>
-                exercise.intensity_mode === "rir"
-                  ? onChange({ rir: v })
-                  : onChange({ rpe: v })
-              }
-              placeholder={
-                exercise.intensity_mode === "rir" ? "0 – 5" : "1 – 10"
-              }
-              isDark={isDark}
-              style={{ minWidth: 100 }}
+        {/* INTENSIDAD — solo visible en modo repeticiones */}
+        {isReps && (
+          <>
+            <View style={{ marginBottom: hasIntensity ? 8 : 14 }}>
+              <FieldLabel isDark={isDark}>Intensidad</FieldLabel>
+              <Seg
+                options={[
+                  { label: "—", value: "none" },
+                  { label: "RIR", value: "rir" },
+                  { label: "RPE", value: "rpe" },
+                ]}
+                value={exercise.intensity_mode ?? "none"}
+                onChange={(v) =>
+                  onChange({ intensity_mode: v, rir: null, rpe: null })
+                }
+                isDark={isDark}
+              />
+            </View>
+            {hasIntensity && (
+              <View style={{ marginBottom: 14, alignItems: "flex-start" }}>
+                <NumInput
+                  value={
+                    exercise.intensity_mode === "rir"
+                      ? exercise.rir
+                      : exercise.rpe
+                  }
+                  onChange={(v) =>
+                    exercise.intensity_mode === "rir"
+                      ? onChange({ rir: v })
+                      : onChange({ rpe: v })
+                  }
+                  placeholder={
+                    exercise.intensity_mode === "rir" ? "0 – 5" : "1 – 10"
+                  }
+                  isDark={isDark}
+                  style={{ minWidth: 100 }}
+                />
+              </View>
+            )}
+          </>
+        )}
+
+        {/* TEMPO — solo visible en modo repeticiones */}
+        {isReps && (
+          <View style={{ marginBottom: 14 }}>
+            <FieldLabel isDark={isDark}>Tempo (opcional)</FieldLabel>
+            <TextInput
+              value={exercise.tempo ?? ""}
+              onChangeText={(t) => onChange({ tempo: t })}
+              placeholder="3-1-1-0"
+              placeholderTextColor={isDark ? ui.text.mutedDark : ui.text.muted}
+              style={{
+                backgroundColor: isDark ? ui.input.dark : ui.input.light,
+                color: isDark ? ui.text.mainDark : ui.text.main,
+                padding: 12,
+                borderRadius: 10,
+                fontFamily: "Manrope_400Regular",
+                fontSize: 14,
+                borderWidth: 1,
+                borderColor: ui.input.border,
+              }}
             />
           </View>
         )}
-
-        {/* TEMPO */}
-        <View style={{ marginBottom: 14 }}>
-          <FieldLabel isDark={isDark}>Tempo (opcional)</FieldLabel>
-          <TextInput
-            value={exercise.tempo ?? ""}
-            onChangeText={(t) => onChange({ tempo: t })}
-            placeholder="3-1-1-0"
-            placeholderTextColor={isDark ? ui.text.mutedDark : ui.text.muted}
-            style={{
-              backgroundColor: isDark ? ui.input.dark : ui.input.light,
-              color: isDark ? ui.text.mainDark : ui.text.main,
-              padding: 12,
-              borderRadius: 10,
-              fontFamily: "Manrope_400Regular",
-              fontSize: 14,
-              borderWidth: 1,
-              borderColor: ui.input.border,
-            }}
-          />
-        </View>
 
         {/* NOTAS */}
         <View>
