@@ -1,5 +1,5 @@
 // React Native
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 
 // React Navigation
 import { HeaderBackButton } from "@react-navigation/elements";
@@ -35,23 +35,20 @@ export default function UserPlanBuilder() {
     <>
       <Stack.Screen
         options={{
-          headerLeft: () => (
-            <View style={{ marginLeft: -16 }}>
-              <HeaderBackButton
-                displayMode="minimal"
-                tintColor={isDark ? ui.text.mainDark : ui.text.main}
-                onPress={() => router.navigate("/planes")}
-              />
-            </View>
-          ),
+          headerShown: Platform.OS === "ios",
+          headerBackButtonDisplayMode: "minimal",
+          headerTitle: "",
+          headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
         }}
       />
-      <FormTrainingPlan
-        form={form}
-        plan={planId}
-        simplified
-        weekPathname="/planes/builder/custom-plan/[week]"
-      />
+      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-20"} flex-1`}>
+        <FormTrainingPlan
+          form={form}
+          plan={planId}
+          simplified
+          weekPathname="/planes/builder/custom-plan/[week]"
+        />
+      </View>
     </>
   );
 }
