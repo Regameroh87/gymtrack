@@ -476,7 +476,8 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
   useEffect(() => {
     if (id) return; // solo autosave de borrador para planes nuevos
-    const unsub = form.store.subscribe(() => {
+    // subscribe() devuelve { unsubscribe }, no una función (TanStack Store).
+    const sub = form.store.subscribe(() => {
       if (isLoadingRef.current) return;
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
@@ -484,7 +485,7 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       }, 800);
     });
     return () => {
-      unsub();
+      sub.unsubscribe();
       clearTimeout(saveTimerRef.current);
     };
   }, [id, form]);
