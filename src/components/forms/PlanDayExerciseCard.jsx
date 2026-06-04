@@ -1,3 +1,6 @@
+// React
+import { memo } from "react";
+
 // React Native
 import { Pressable, Text, TextInput, View } from "react-native";
 
@@ -10,10 +13,10 @@ import { brandPrimary, ui } from "../../theme/colors";
 import { Barbell } from "../../../assets/icons";
 
 const DEFAULT_SET = {
+  weight_kg: null,
   reps_min: 8,
   reps_max: 12,
   duration_seconds: null,
-  weight_kg: null,
   rest_seconds: 90,
 };
 
@@ -53,7 +56,11 @@ function Seg({ options, value, onChange, isDark }) {
               style={{
                 fontSize: 12,
                 fontFamily: "Manrope_600SemiBold",
-                color: isActive ? "#fff" : isDark ? ui.text.mutedDark : ui.text.muted,
+                color: isActive
+                  ? "#fff"
+                  : isDark
+                    ? ui.text.mutedDark
+                    : ui.text.muted,
               }}
             >
               {opt.label}
@@ -119,9 +126,19 @@ function FieldLabel({ children, isDark }) {
 
 // ─── Fila de una serie ────────────────────────────────────────────────────────
 
-function SetRow({ index, config, isReps, onChange, onRemove, canRemove, isDark }) {
+function SetRow({
+  index,
+  config,
+  isReps,
+  onChange,
+  onRemove,
+  canRemove,
+  isDark,
+}) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+    <View
+      style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}
+    >
       {/* Número de serie */}
       <View style={{ width: 22, alignItems: "center" }}>
         <Text
@@ -217,7 +234,9 @@ function SetRow({ index, config, isReps, onChange, onRemove, canRemove, isDark }
           alignItems: "center",
           justifyContent: "center",
           opacity: canRemove ? 1 : 0,
-          backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+          backgroundColor: isDark
+            ? "rgba(255,255,255,0.08)"
+            : "rgba(0,0,0,0.06)",
         }}
       >
         <Text
@@ -236,7 +255,7 @@ function SetRow({ index, config, isReps, onChange, onRemove, canRemove, isDark }
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export default function PlanDayExerciseCard({ exercise, onChange }) {
+function PlanDayExerciseCard({ exercise, onChange }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const isReps = (exercise.prescription_mode ?? "reps") === "reps";
@@ -245,12 +264,15 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
 
   const updateSetConfig = (setIdx, updates) => {
     onChange({
-      set_configs: setConfigs.map((c, i) => (i === setIdx ? { ...c, ...updates } : c)),
+      set_configs: setConfigs.map((c, i) =>
+        i === setIdx ? { ...c, ...updates } : c
+      ),
     });
   };
 
   const addSet = () => {
-    const { id: _id, ...last } = setConfigs[setConfigs.length - 1] ?? DEFAULT_SET;
+    const { id: _id, ...last } =
+      setConfigs[setConfigs.length - 1] ?? DEFAULT_SET;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onChange({ set_configs: [...setConfigs, { ...last }] });
   };
@@ -267,7 +289,9 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
         overflow: "hidden",
         borderWidth: 1,
         borderColor: ui.input.border,
-        backgroundColor: isDark ? ui.surfaceSecondary.dark : ui.surfaceSecondary.light,
+        backgroundColor: isDark
+          ? ui.surfaceSecondary.dark
+          : ui.surfaceSecondary.light,
       }}
     >
       {/* Header con nombre del ejercicio y conteo de series */}
@@ -345,8 +369,9 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
       </View>
 
       {/* Cuerpo */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 }}>
-
+      <View
+        style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 }}
+      >
         {/* TIPO DE PRESCRIPCIÓN */}
         <View style={{ marginBottom: 14 }}>
           <FieldLabel isDark={isDark}>Tipo</FieldLabel>
@@ -364,7 +389,13 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
         {/* TABLA DE SERIES */}
         <View style={{ marginBottom: 14 }}>
           {/* Encabezado de columnas */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
             <View style={{ width: 22 }} />
             <Text
               style={{
@@ -460,20 +491,26 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
               { label: "RPE", value: "rpe" },
             ]}
             value={exercise.intensity_mode ?? "none"}
-            onChange={(v) => onChange({ intensity_mode: v, rir: null, rpe: null })}
+            onChange={(v) =>
+              onChange({ intensity_mode: v, rir: null, rpe: null })
+            }
             isDark={isDark}
           />
         </View>
         {hasIntensity && (
           <View style={{ marginBottom: 14, alignItems: "flex-start" }}>
             <NumInput
-              value={exercise.intensity_mode === "rir" ? exercise.rir : exercise.rpe}
+              value={
+                exercise.intensity_mode === "rir" ? exercise.rir : exercise.rpe
+              }
               onChange={(v) =>
                 exercise.intensity_mode === "rir"
                   ? onChange({ rir: v })
                   : onChange({ rpe: v })
               }
-              placeholder={exercise.intensity_mode === "rir" ? "0 – 5" : "1 – 10"}
+              placeholder={
+                exercise.intensity_mode === "rir" ? "0 – 5" : "1 – 10"
+              }
               isDark={isDark}
               style={{ minWidth: 100 }}
             />
@@ -529,3 +566,5 @@ export default function PlanDayExerciseCard({ exercise, onChange }) {
     </View>
   );
 }
+
+export default memo(PlanDayExerciseCard);
