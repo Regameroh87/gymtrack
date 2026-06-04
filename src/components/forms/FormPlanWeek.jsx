@@ -356,22 +356,6 @@ export default function FormPlanWeek({
     form.setFieldValue("weeks", newWeeks);
   };
 
-  const handleUpdateExercise = (dayIdx, exIdx, updates) => {
-    updateWeek((w) => ({
-      ...w,
-      days: w.days.map((d, j) =>
-        j !== dayIdx
-          ? d
-          : {
-              ...d,
-              exercises: d.exercises.map((ex, k) =>
-                k !== exIdx ? ex : { ...ex, ...updates }
-              ),
-            }
-      ),
-    }));
-  };
-
   // ─── Session picker ─────────────────────────────────────────────────────────
 
   // Resuelve { queryKey, queryFn } de los ejercicios de una sesión según su origen.
