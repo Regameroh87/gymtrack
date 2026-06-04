@@ -145,6 +145,27 @@ export const resizeWeeksByDuration = (
   return currentWeeks.slice(0, newDuration);
 };
 
+// Regenera UUID frescos en toda la jerarquía (semana → día → ejercicio → serie).
+// Se usa al CREAR un plan: garantiza que no haya colisión de PK aunque el borrador
+// restaurado o huérfanos de sync conserven IDs ya presentes en SQLite.
+export const regenerateWeekIds = (weeks) =>
+  (weeks ?? []).map((w) => ({
+    ...w,
+    id: Crypto.randomUUID(),
+    days: (w.days ?? []).map((d) => ({
+      ...d,
+      id: Crypto.randomUUID(),
+      exercises: (d.exercises ?? []).map((ex) => ({
+        ...ex,
+        id: Crypto.randomUUID(),
+        set_configs: (ex.set_configs ?? []).map((c) => ({
+          ...c,
+          id: Crypto.randomUUID(),
+        })),
+      })),
+    })),
+  }));
+
 export const resizeWeeksByWeeklyDays = (currentWeeks, newWeeklyDays) =>
   currentWeeks.map((week) => {
     if (week.days.length === newWeeklyDays) return week;
@@ -266,7 +287,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             sync_status: "pending",
           });
 
-          await persistWeeks(planId, value.weeks, now, tx);
+          await persistWeeks(planId, regenerateWeekIds(value.weeks), now, tx);
         });
 
         await AsyncStorage.removeItem(DRAFT_KEY);
@@ -530,15 +551,22 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   // de `useStore(values)`, que re-renderizaba el layout entero en cada cambio del form).
   const isLoadingRef = useRef(isLoading);
   isLoadingRef.current = isLoading;
+  const lastValuesRef = useRef(form.store.state.values);
 
   useEffect(() => {
     if (id) return; // solo autosave de borrador para planes nuevos
     // subscribe() devuelve { unsubscribe }, no una función (TanStack Store).
+    // `state.values` mantiene identidad referencial cuando solo cambia la meta
+    // (isSubmitting, etc.): comparamos por referencia para ignorar esos ticks y así
+    // no re-escribir el borrador durante el submit (evita resucitar IDs ya guardados).
     const sub = form.store.subscribe(() => {
+      const v = form.store.state.values;
+      if (v === lastValuesRef.current) return;
+      lastValuesRef.current = v;
       if (isLoadingRef.current) return;
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
-        AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(form.store.state.values));
+        AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(v));
       }, 800);
     });
     return () => {

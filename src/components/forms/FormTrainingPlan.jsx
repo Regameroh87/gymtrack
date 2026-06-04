@@ -324,6 +324,17 @@ export default function FormTrainingPlan({
                 )}
               </form.Subscribe>
 
+              {/* ─── ERROR DE VALIDACIÓN A NIVEL FORM ─── */}
+              <form.Subscribe selector={(s) => s.errorMap?.onSubmit}>
+                {(formError) =>
+                  formError ? (
+                    <Text className="text-red-500 dark:text-red-400 text-sm text-center font-manrope-semi mt-4 -mb-2">
+                      {formError}
+                    </Text>
+                  ) : null
+                }
+              </form.Subscribe>
+
               {/* ─── SUBMIT ─── */}
               <form.Subscribe
                 selector={(s) => ({

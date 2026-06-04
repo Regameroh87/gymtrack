@@ -23,7 +23,13 @@ import { supabase } from "../../database/supabase";
 import { checkNetInfoAndSync } from "../../database/sync";
 
 // Re-export helpers shared with FormTrainingPlan
-export { buildEmptyWeeks, resizeWeeksByDuration, resizeWeeksByWeeklyDays } from "./use-training-plan-form";
+export {
+  buildEmptyWeeks,
+  resizeWeeksByDuration,
+  resizeWeeksByWeeklyDays,
+  regenerateWeekIds,
+} from "./use-training-plan-form";
+import { regenerateWeekIds } from "./use-training-plan-form";
 
 const DRAFT_KEY = "custom_training_plan_form_draft";
 const DEFAULT_DURATION_WEEKS = 0;
@@ -151,6 +157,26 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
 
   const form = useForm({
     defaultValues,
+    validators: {
+      // Bloquea el guardado si la rutina está incompleta. Mensaje inline en el form.
+      onSubmit: ({ value }) => {
+        const weeks = value.weeks ?? [];
+        if (
+          weeks.length === 0 ||
+          weeks.some((w) => !(w.days ?? []).some((d) => d.session_id))
+        )
+          return "Cada semana debe tener al menos una sesión asignada.";
+        if (
+          weeks.some((w) =>
+            (w.days ?? []).some(
+              (d) => d.session_id && (d.exercises?.length ?? 0) === 0
+            )
+          )
+        )
+          return "Cada sesión asignada debe tener al menos un ejercicio.";
+        return undefined;
+      },
+    },
     onSubmit: async ({ value }) => {
       const {
         data: { session },
@@ -231,7 +257,13 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             sync_status: "pending",
           });
 
-          await persistCustomWeeks(planId, userId, value.weeks, now, tx);
+          await persistCustomWeeks(
+            planId,
+            userId,
+            regenerateWeekIds(value.weeks),
+            now,
+            tx
+          );
         });
 
         await AsyncStorage.removeItem(DRAFT_KEY);
@@ -473,15 +505,22 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   // de `useStore(values)`, que re-renderizaba el layout entero en cada cambio del form).
   const isLoadingRef = useRef(isLoading);
   isLoadingRef.current = isLoading;
+  const lastValuesRef = useRef(form.store.state.values);
 
   useEffect(() => {
     if (id) return; // solo autosave de borrador para planes nuevos
     // subscribe() devuelve { unsubscribe }, no una función (TanStack Store).
+    // `state.values` mantiene identidad referencial cuando solo cambia la meta
+    // (isSubmitting, etc.): comparamos por referencia para ignorar esos ticks y así
+    // no re-escribir el borrador durante el submit (evita resucitar IDs ya guardados).
     const sub = form.store.subscribe(() => {
+      const v = form.store.state.values;
+      if (v === lastValuesRef.current) return;
+      lastValuesRef.current = v;
       if (isLoadingRef.current) return;
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
-        AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(form.store.state.values));
+        AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(v));
       }, 800);
     });
     return () => {
