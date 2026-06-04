@@ -74,7 +74,7 @@ function WeekCard({ weekNumber, summary, onPress, mutedColor, isTemplate }) {
 
       <View className="flex-1">
         <Text className="text-sm font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark">
-          Semana {weekNumber}
+          {isTemplate ? "Semana tipo" : `Semana ${weekNumber}`}
         </Text>
         <Text
           className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"

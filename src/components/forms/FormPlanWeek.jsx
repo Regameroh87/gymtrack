@@ -1,5 +1,6 @@
 // React Native
 import {
+  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -23,7 +24,7 @@ import {
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 
@@ -104,6 +105,172 @@ function DayCard({ day, onPress, onClear, mutedColor }) {
   );
 }
 
+// ─── Fila de sesión (con acordeón de ejercicios) ─────────────────────────────
+
+function SessionRow({
+  session,
+  isSelected,
+  expanded,
+  onToggle,
+  onSelect,
+  getExercisesQuery,
+  isDark,
+  mutedColor,
+}) {
+  const { queryKey, queryFn } = getExercisesQuery(session);
+  const { data: exercises = [], isLoading } = useQuery({
+    queryKey,
+    queryFn,
+    enabled: expanded,
+  });
+
+  const canExpand = (session.exercise_count ?? 0) > 0;
+
+  const coverUri = session.cover_image_uri
+    ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
+    : null;
+
+  const subtitleParts = [
+    session.level,
+    session.exercise_count ? `${session.exercise_count} ejercicios` : null,
+  ].filter(Boolean);
+  const subtitle = subtitleParts.join(" · ");
+
+  return (
+    <View
+      className={`mb-2 rounded-xl border overflow-hidden ${
+        isSelected ? "border-brandPrimary-500/20" : "border-transparent"
+      }`}
+      style={{
+        backgroundColor: isSelected
+          ? "rgba(74,68,228,0.08)"
+          : isDark
+            ? ui.surfaceSecondary.dark
+            : ui.surfaceSecondary.light,
+      }}
+    >
+      <View className="flex-row items-center px-3 py-3">
+        <Pressable
+          onPress={onSelect}
+          className="flex-1 flex-row items-center active:opacity-70"
+        >
+          <View
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 10,
+              overflow: "hidden",
+              backgroundColor: coverUri ? "transparent" : brandPrimary[500] + "22",
+              borderWidth: 1,
+              borderColor: brandPrimary[500] + "44",
+              marginRight: 12,
+              flexShrink: 0,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {coverUri ? (
+              <Image
+                source={{ uri: coverUri }}
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
+              />
+            ) : (
+              <Calendar size={20} color={brandPrimary[500]} />
+            )}
+          </View>
+
+          <View className="flex-1 mr-2">
+            <Text
+              className={`text-base font-manrope ${
+                isSelected
+                  ? "text-brandPrimary-600 font-manrope-bold"
+                  : "text-ui-text-main dark:text-ui-text-mainDark"
+              }`}
+              numberOfLines={1}
+            >
+              {session.name}
+            </Text>
+            {subtitle ? (
+              <Text
+                className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"
+                numberOfLines={1}
+              >
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
+
+          {isSelected && (
+            <Text className="text-brandPrimary-600 font-manrope-bold mr-1">
+              ✓
+            </Text>
+          )}
+        </Pressable>
+
+        {canExpand && (
+          <Pressable
+            onPress={onToggle}
+            hitSlop={10}
+            className="w-9 h-9 items-center justify-center rounded-lg active:opacity-50"
+          >
+            <ChevronRight
+              size={16}
+              color={mutedColor}
+              style={{ transform: [{ rotate: expanded ? "90deg" : "0deg" }] }}
+            />
+          </Pressable>
+        )}
+      </View>
+
+      {expanded && (
+        <View
+          className="px-3 pb-3 pt-1"
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: ui.input.border,
+          }}
+        >
+          {isLoading ? (
+            <View className="py-4 items-center">
+              <ActivityIndicator size="small" color={brandPrimary[500]} />
+            </View>
+          ) : exercises.length === 0 ? (
+            <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark py-2 px-1">
+              Sin ejercicios
+            </Text>
+          ) : (
+            <View className="pt-1.5">
+              {exercises.map((ex) => (
+                <View
+                  key={ex.id}
+                  className="flex-row items-center py-1.5 px-1"
+                >
+                  <View
+                    className="w-1 h-1 rounded-full mr-2.5"
+                    style={{ backgroundColor: brandPrimary[500] }}
+                  />
+                  <Text
+                    className="flex-1 text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+                    numberOfLines={1}
+                  >
+                    {ex.name ?? "Ejercicio"}
+                  </Text>
+                  {ex.muscle_group ? (
+                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark ml-2">
+                      {ex.muscle_group}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ─── Componente principal ────────────────────────────────────────────────────
 
 export default function FormPlanWeek({
@@ -122,13 +289,16 @@ export default function FormPlanWeek({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const sessionPickerRef = useRef(null);
+  // Un único sheet con dos pasos internos ("picker" → "prescription"): evita el gap
+  // de encadenar dos modales y que se solapen al cambiar de día.
+  const sessionSheetRef = useRef(null);
   const copyPickerRef = useRef(null);
-  const prescriptionSheetRef = useRef(null);
 
   const [activeDayIdx, setActiveDayIdx] = useState(null);
   const [prescriptionDayIdx, setPrescriptionDayIdx] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedSessionId, setExpandedSessionId] = useState(null);
+  const [flowStep, setFlowStep] = useState("picker");
 
   const { data: availableSessions = [] } = (sessionsHook ?? useSessions)();
 
@@ -194,35 +364,40 @@ export default function FormPlanWeek({
 
   // ─── Session picker ─────────────────────────────────────────────────────────
 
+  // Resuelve { queryKey, queryFn } de los ejercicios de una sesión según su origen.
+  // Compartido por el preview (acordeón) y la selección, para no duplicar el branching
+  // y reusar el mismo cache de react-query.
+  const getExercisesQuery = (session) => {
+    let fetchFn, qKey;
+    if (fetchExercisesFnMap && session.source) {
+      fetchFn = fetchExercisesFnMap[session.source];
+      qKey = session.source === "custom" ? "custom_session_exercises" : "session_exercises";
+    } else {
+      fetchFn = fetchExercisesFn ?? fetchSessionExercises;
+      qKey = sessionExercisesQueryKey ?? "session_exercises";
+    }
+    return {
+      queryKey: [qKey, session.id],
+      queryFn: () => fetchFn(session.id),
+    };
+  };
+
   const openSessionPicker = (dayIdx) => {
     setActiveDayIdx(dayIdx);
     setSearchQuery("");
+    setExpandedSessionId(null);
+    setFlowStep("picker");
     Keyboard.dismiss();
-    sessionPickerRef.current?.present();
+    sessionSheetRef.current?.present();
   };
 
   const handleSessionSelect = async (session) => {
     const dayIdx = activeDayIdx;
     if (dayIdx === null) return;
 
-    sessionPickerRef.current?.dismiss();
-    setActiveDayIdx(null);
-    setSearchQuery("");
-
     let rawExercises = [];
     try {
-      let fetchFn, qKey;
-      if (fetchExercisesFnMap && session.source) {
-        fetchFn = fetchExercisesFnMap[session.source];
-        qKey = session.source === "custom" ? "custom_session_exercises" : "session_exercises";
-      } else {
-        fetchFn = fetchExercisesFn ?? fetchSessionExercises;
-        qKey = sessionExercisesQueryKey ?? "session_exercises";
-      }
-      rawExercises = await queryClient.fetchQuery({
-        queryKey: [qKey, session.id],
-        queryFn: () => fetchFn(session.id),
-      });
+      rawExercises = await queryClient.fetchQuery(getExercisesQuery(session));
     } catch {
       rawExercises = [];
     }
@@ -265,17 +440,18 @@ export default function FormPlanWeek({
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    setTimeout(() => {
-      setPrescriptionDayIdx(dayIdx);
-      prescriptionSheetRef.current?.present();
-    }, 350);
+    // Mismo sheet, solo cambia el paso: la prescripción reemplaza al picker en el
+    // lugar, sin cerrar/abrir modales → transición instantánea y sin solape.
+    setPrescriptionDayIdx(dayIdx);
+    setFlowStep("prescription");
   };
 
   // ─── Prescription sheet ─────────────────────────────────────────────────────
 
   const openPrescriptionSheet = (dayIdx) => {
     setPrescriptionDayIdx(dayIdx);
-    prescriptionSheetRef.current?.present();
+    setFlowStep("prescription");
+    sessionSheetRef.current?.present();
   };
 
   // ─── Clear / Copy ───────────────────────────────────────────────────────────
@@ -378,11 +554,11 @@ export default function FormPlanWeek({
         </View>
       </ScrollView>
 
-      {/* ─── PICKER DE SESIONES ────────────────────────────────────────────── */}
+      {/* ─── SHEET DE SESIÓN (picker → prescripción, mismo modal) ───────────── */}
       <BottomSheetModal
-        ref={sessionPickerRef}
-        index={1}
-        snapPoints={["50%", "90%"]}
+        ref={sessionSheetRef}
+        index={0}
+        snapPoints={["92%"]}
         backdropComponent={renderBackdrop}
         keyboardBehavior="extend"
         android_keyboardInputMode="adjustResize"
@@ -402,8 +578,13 @@ export default function FormPlanWeek({
         onDismiss={() => {
           setSearchQuery("");
           setActiveDayIdx(null);
+          setExpandedSessionId(null);
+          setPrescriptionDayIdx(null);
+          setFlowStep("picker");
         }}
       >
+        {flowStep === "picker" ? (
+          <>
         <View className="px-6 pt-4 pb-2">
           <Text className="text-lg font-jakarta text-ui-text-main dark:text-ui-text-mainDark mb-4">
             Elegir sesión
@@ -434,6 +615,7 @@ export default function FormPlanWeek({
           data={filteredSessions}
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
+          extraData={`${expandedSessionId}|${activeDayIdx}`}
           contentContainerStyle={{
             paddingHorizontal: 24,
             paddingBottom: 100,
@@ -443,7 +625,7 @@ export default function FormPlanWeek({
             <Pressable
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                sessionPickerRef.current?.dismiss();
+                sessionSheetRef.current?.dismiss();
                 setActiveDayIdx(null);
                 router.push("/biblioteca/sesiones/builder");
               }}
@@ -475,85 +657,71 @@ export default function FormPlanWeek({
               activeDayIdx !== null &&
               week.days[activeDayIdx]?.session_id === session.id;
 
-            const coverUri = session.cover_image_uri
-              ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
-              : null;
-
-            const subtitleParts = [
-              session.level,
-              session.exercise_count ? `${session.exercise_count} ejercicios` : null,
-            ].filter(Boolean);
-            const subtitle = subtitleParts.join(" · ");
-
             return (
-              <Pressable
-                onPress={() => handleSessionSelect(session)}
-                className={`px-3 py-3 mb-2 rounded-xl flex-row items-center active:scale-[0.97] border ${
-                  isSelected
-                    ? "border-brandPrimary-500/20"
-                    : "border-transparent"
-                }`}
-                style={{
-                  backgroundColor: isSelected
-                    ? "rgba(74,68,228,0.08)"
-                    : isDark
-                      ? ui.surfaceSecondary.dark
-                      : ui.surfaceSecondary.light,
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 10,
-                    overflow: "hidden",
-                    backgroundColor: coverUri ? "transparent" : brandPrimary[500] + "22",
-                    borderWidth: 1,
-                    borderColor: brandPrimary[500] + "44",
-                    marginRight: 12,
-                    flexShrink: 0,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {coverUri ? (
-                    <Image
-                      source={{ uri: coverUri }}
-                      style={{ width: "100%", height: "100%" }}
-                      contentFit="cover"
-                    />
-                  ) : (
-                    <Calendar size={20} color={brandPrimary[500]} />
-                  )}
-                </View>
-
-                <View className="flex-1 mr-2">
-                  <Text
-                    className={`text-base font-manrope ${
-                      isSelected
-                        ? "text-brandPrimary-600 font-manrope-bold"
-                        : "text-ui-text-main dark:text-ui-text-mainDark"
-                    }`}
-                    numberOfLines={1}
-                  >
-                    {session.name}
-                  </Text>
-                  {subtitle ? (
-                    <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5" numberOfLines={1}>
-                      {subtitle}
-                    </Text>
-                  ) : null}
-                </View>
-
-                {isSelected && (
-                  <Text className="text-brandPrimary-600 font-manrope-bold">
-                    ✓
-                  </Text>
-                )}
-              </Pressable>
+              <SessionRow
+                session={session}
+                isSelected={isSelected}
+                expanded={expandedSessionId === session.id}
+                onToggle={() =>
+                  setExpandedSessionId((prev) =>
+                    prev === session.id ? null : session.id
+                  )
+                }
+                onSelect={() => handleSessionSelect(session)}
+                getExercisesQuery={getExercisesQuery}
+                isDark={isDark}
+                mutedColor={mutedColor}
+              />
             );
           }}
         />
+          </>
+        ) : prescriptionDay ? (
+          <>
+            <View
+              className="px-6 pt-4 pb-3"
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: ui.input.border,
+              }}
+            >
+              <Text className="text-xs font-manrope-semi uppercase tracking-label text-ui-text-muted dark:text-ui-text-mutedDark">
+                Día {prescriptionDay.day_number} ·{" "}
+                {weekTitle ?? `Semana ${weekNumber}`}
+              </Text>
+              <Text className="text-xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark mt-0.5">
+                {prescriptionDay.session_name}
+              </Text>
+            </View>
+
+            <BottomSheetScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingTop: 16,
+                paddingBottom: 100,
+              }}
+            >
+              {prescriptionDay.exercises.length === 0 ? (
+                <View className="items-center justify-center py-16">
+                  <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
+                    Esta sesión no tiene ejercicios cargados.
+                  </Text>
+                </View>
+              ) : (
+                prescriptionDay.exercises.map((ex, exIdx) => (
+                  <PlanDayExerciseCard
+                    key={ex.id}
+                    exercise={ex}
+                    onChange={(updates) =>
+                      handleUpdateExercise(prescriptionDayIdx, exIdx, updates)
+                    }
+                  />
+                ))
+              )}
+            </BottomSheetScrollView>
+          </>
+        ) : null}
       </BottomSheetModal>
 
       {/* ─── PICKER DE SEMANA A COPIAR ──────────────────────────────────────── */}
@@ -625,77 +793,6 @@ export default function FormPlanWeek({
             );
           }}
         />
-      </BottomSheetModal>
-
-      {/* ─── SHEET DE PRESCRIPCIÓN ──────────────────────────────────────────── */}
-      <BottomSheetModal
-        ref={prescriptionSheetRef}
-        index={0}
-        snapPoints={["95%"]}
-        backdropComponent={renderBackdrop}
-        keyboardBehavior="extend"
-        android_keyboardInputMode="adjustResize"
-        backgroundStyle={{
-          backgroundColor: isDark ? ui.surface.dark : ui.surface.light,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
-        handleIndicatorStyle={{
-          backgroundColor: isDark
-            ? ui.surfaceSecondary.dark
-            : ui.surfaceSecondary.light,
-          width: 40,
-          height: 4,
-          borderRadius: 2,
-        }}
-        onDismiss={() => setPrescriptionDayIdx(null)}
-      >
-        {prescriptionDay ? (
-          <>
-            <View
-              className="px-6 pt-4 pb-3"
-              style={{
-                borderBottomWidth: 1,
-                borderBottomColor: ui.input.border,
-              }}
-            >
-              <Text className="text-xs font-manrope-semi uppercase tracking-label text-ui-text-muted dark:text-ui-text-mutedDark">
-                Día {prescriptionDay.day_number} ·{" "}
-                {weekTitle ?? `Semana ${weekNumber}`}
-              </Text>
-              <Text className="text-xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark mt-0.5">
-                {prescriptionDay.session_name}
-              </Text>
-            </View>
-
-            <BottomSheetScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: 24,
-                paddingTop: 16,
-                paddingBottom: 100,
-              }}
-            >
-              {prescriptionDay.exercises.length === 0 ? (
-                <View className="items-center justify-center py-16">
-                  <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-                    Esta sesión no tiene ejercicios cargados.
-                  </Text>
-                </View>
-              ) : (
-                prescriptionDay.exercises.map((ex, exIdx) => (
-                  <PlanDayExerciseCard
-                    key={ex.id}
-                    exercise={ex}
-                    onChange={(updates) =>
-                      handleUpdateExercise(prescriptionDayIdx, exIdx, updates)
-                    }
-                  />
-                ))
-              )}
-            </BottomSheetScrollView>
-          </>
-        ) : null}
       </BottomSheetModal>
     </KeyboardAvoidingView>
   );
