@@ -487,10 +487,19 @@ export default function SesionActiva() {
             className="flex-row items-center justify-between"
             style={{ paddingHorizontal: 20, paddingTop: 26 }}
           >
-            <View className="px-[9px] py-[4px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
-              <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
-                {exercise.exercise_muscle || "—"}
-              </Text>
+            <View className="flex-row items-center gap-2">
+              <View className="px-[9px] py-[4px] rounded-lg bg-brandSecondary-400/[26%] dark:bg-brandSecondary-400/[12%]">
+                <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandSecondary-700 dark:text-brandSecondary-400">
+                  {exercise.exercise_muscle || "—"}
+                </Text>
+              </View>
+              {!!exercise.is_unilateral && (
+                <View className="px-[9px] py-[4px] rounded-lg bg-brandPrimary-700/[14%] dark:bg-brandPrimary-700/[15%]">
+                  <Text className="font-manrope-bold uppercase text-[9px] tracking-[1.6px] text-brandPrimary-700">
+                    Unilateral · L / R
+                  </Text>
+                </View>
+              )}
             </View>
             <View className="flex-row items-center gap-1.5">
               <View

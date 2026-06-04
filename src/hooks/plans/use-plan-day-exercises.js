@@ -39,6 +39,7 @@ export const fetchPlanDayExercises = async (weekDayId) => {
       image_uri: exercises_base.image_uri,
       video_uri: exercises_base.video_uri,
       youtube_video_url: exercises_base.youtube_video_url,
+      is_unilateral: exercises_base.is_unilateral,
     })
     .from(plan_week_day_exercises)
     .innerJoin(
@@ -149,6 +150,7 @@ export const fetchCustomPlanDayExercises = async (weekDayId) => {
         image_uri: exercises_base.image_uri,
         video_uri: exercises_base.video_uri,
         youtube_video_url: exercises_base.youtube_video_url,
+        is_unilateral: exercises_base.is_unilateral,
       })
       .from(exercises_base)
       .where(inArray(exercises_base.id, baseIds));
@@ -191,6 +193,7 @@ export const fetchCustomPlanDayExercises = async (weekDayId) => {
         image_uri: base.image_uri,
         video_uri: base.video_uri,
         youtube_video_url: base.youtube_video_url,
+        is_unilateral: base.is_unilateral,
         sets: setsByExercise[r.id] ?? [],
       };
     })
