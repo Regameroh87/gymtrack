@@ -290,7 +290,6 @@ export default function FormPlanWeek({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // El picker vive en un bottom sheet; la prescripción es una pantalla aparte
   // (route push) para que el montaje pesado del editor no trabe el sheet.
   const sessionSheetRef = useRef(null);
   const copyPickerRef = useRef(null);
@@ -342,16 +341,6 @@ export default function FormPlanWeek({
     ),
     []
   );
-
-  if (!week) {
-    return (
-      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
-        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope">
-          Semana no encontrada
-        </Text>
-      </View>
-    );
-  }
 
   // ─── Helpers de mutación ────────────────────────────────────────────────────
 
@@ -428,6 +417,7 @@ export default function FormPlanWeek({
         exercise_id: se.exercise_id,
         exercise_name: se.name,
         exercise_muscle_group: se.muscle_group ?? "",
+        exercise_image_uri: se.image_uri ?? null,
         position: se.position,
         prescription_mode: "reps",
         intensity_mode: "none",
@@ -503,6 +493,16 @@ export default function FormPlanWeek({
   };
 
   // ─── Render ─────────────────────────────────────────────────────────────────
+
+  if (!week) {
+    return (
+      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
+        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope">
+          Semana no encontrada
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView

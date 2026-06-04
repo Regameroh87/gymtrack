@@ -12,6 +12,7 @@ import { useColorScheme } from "nativewind";
 // Tema y assets
 import { LinearGradient } from "expo-linear-gradient";
 import { brandPrimary, gradient, ui } from "../../theme/colors";
+import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
 import { Barbell } from "../../../assets/icons";
 
 const DEFAULT_SET = {
@@ -257,6 +258,15 @@ function PlanDayExerciseCard({ exercise, onChange }) {
   const isDark = colorScheme === "dark";
   const isReps = (exercise.prescription_mode ?? "reps") === "reps";
   const hasIntensity = exercise.intensity_mode !== "none";
+  const exerciseImageUri = exercise.exercise_image_uri
+    ? (getCloudinaryUrl(exercise.exercise_image_uri) ??
+        `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${exercise.exercise_image_uri}`)
+    : null;
+  console.log("[PlanDayExerciseCard]", {
+    name: exercise.exercise_name,
+    raw: exercise.exercise_image_uri,
+    resolved: exerciseImageUri,
+  });
   const setConfigs = exercise.set_configs ?? [{ ...DEFAULT_SET }];
 
   const updateSetConfig = (setIdx, updates) => {
@@ -307,9 +317,9 @@ function PlanDayExerciseCard({ exercise, onChange }) {
           borderBottomColor: ui.input.border,
         }}
       >
-        {exercise.exercise_image_uri ? (
+        {exerciseImageUri ? (
           <Image
-            source={{ uri: exercise.exercise_image_uri }}
+            source={{ uri: exerciseImageUri }}
             contentFit="cover"
             style={{
               width: 44,
