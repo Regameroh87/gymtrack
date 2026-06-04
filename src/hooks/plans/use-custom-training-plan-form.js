@@ -21,6 +21,7 @@ import {
 } from "../../database/schemas";
 import { supabase } from "../../database/supabase";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { regenerateWeekIds } from "./use-training-plan-form";
 
 // Re-export helpers shared with FormTrainingPlan
 export {
@@ -29,7 +30,6 @@ export {
   resizeWeeksByWeeklyDays,
   regenerateWeekIds,
 } from "./use-training-plan-form";
-import { regenerateWeekIds } from "./use-training-plan-form";
 
 const DRAFT_KEY = "custom_training_plan_form_draft";
 const DEFAULT_DURATION_WEEKS = 0;
@@ -54,7 +54,13 @@ const buildEmptyWeeksLocal = (durationWeeks, weeklyDays) =>
     makeEmptyWeek(i + 1, weeklyDays)
   );
 
-const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => {
+const persistCustomWeeks = async (
+  planId,
+  userId,
+  weeks,
+  now,
+  db = database
+) => {
   const weeksRows = [];
   const daysRows = [];
   const exercisesRows = [];
@@ -129,8 +135,10 @@ const persistCustomWeeks = async (planId, userId, weeks, now, db = database) => 
 
   if (weeksRows.length) await db.insert(custom_plan_weeks).values(weeksRows);
   if (daysRows.length) await db.insert(custom_plan_week_days).values(daysRows);
-  if (exercisesRows.length) await db.insert(custom_plan_week_day_exercises).values(exercisesRows);
-  if (setsRows.length) await db.insert(custom_plan_week_day_exercise_sets).values(setsRows);
+  if (exercisesRows.length)
+    await db.insert(custom_plan_week_day_exercises).values(exercisesRows);
+  if (setsRows.length)
+    await db.insert(custom_plan_week_day_exercise_sets).values(setsRows);
 };
 
 // Los borradores guardados antes de que existiera `exercise_image_uri` no traen el
@@ -150,7 +158,8 @@ const backfillExerciseImages = async (weeks) => {
     .from(exercises_base)
     .where(inArray(exercises_base.id, ids));
   const byId = Object.fromEntries(rows.map((r) => [r.id, r.image_uri]));
-  for (const ex of missing) ex.exercise_image_uri = byId[ex.exercise_id] ?? null;
+  for (const ex of missing)
+    ex.exercise_image_uri = byId[ex.exercise_id] ?? null;
 };
 
 export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
@@ -239,23 +248,34 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               const oldExRows = await tx
                 .select({ id: custom_plan_week_day_exercises.id })
                 .from(custom_plan_week_day_exercises)
-                .where(inArray(custom_plan_week_day_exercises.week_day_id, oldDayIds));
+                .where(
+                  inArray(custom_plan_week_day_exercises.week_day_id, oldDayIds)
+                );
               const oldExIds = oldExRows.map((e) => e.id);
 
               if (oldExIds.length) {
                 await tx
                   .delete(custom_plan_week_day_exercise_sets)
-                  .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, oldExIds));
+                  .where(
+                    inArray(
+                      custom_plan_week_day_exercise_sets.exercise_id,
+                      oldExIds
+                    )
+                  );
               }
               await tx
                 .delete(custom_plan_week_day_exercises)
-                .where(inArray(custom_plan_week_day_exercises.week_day_id, oldDayIds));
+                .where(
+                  inArray(custom_plan_week_day_exercises.week_day_id, oldDayIds)
+                );
             }
             await tx
               .delete(custom_plan_week_days)
               .where(inArray(custom_plan_week_days.week_id, oldWeekIds));
           }
-          await tx.delete(custom_plan_weeks).where(eq(custom_plan_weeks.plan_id, id));
+          await tx
+            .delete(custom_plan_weeks)
+            .where(eq(custom_plan_weeks.plan_id, id));
           await persistCustomWeeks(id, userId, value.weeks, now, tx);
         });
       } else {
@@ -344,7 +364,10 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
                 session_name: custom_sessions.name,
               })
               .from(custom_plan_week_days)
-              .leftJoin(custom_sessions, eq(custom_plan_week_days.session_id, custom_sessions.id))
+              .leftJoin(
+                custom_sessions,
+                eq(custom_plan_week_days.session_id, custom_sessions.id)
+              )
               .where(inArray(custom_plan_week_days.week_id, weekIds))
               .orderBy(asc(custom_plan_week_days.day_number));
           }
@@ -359,13 +382,15 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               .select({
                 id: custom_plan_week_day_exercises.id,
                 week_day_id: custom_plan_week_day_exercises.week_day_id,
-                session_exercise_id: custom_plan_week_day_exercises.session_exercise_id,
+                session_exercise_id:
+                  custom_plan_week_day_exercises.session_exercise_id,
                 exercise_id: custom_session_exercises.exercise_id,
                 exercise_name: exercises_base.name,
                 exercise_muscle_group: exercises_base.muscle_group,
                 exercise_image_uri: exercises_base.image_uri,
                 position: custom_plan_week_day_exercises.position,
-                prescription_mode: custom_plan_week_day_exercises.prescription_mode,
+                prescription_mode:
+                  custom_plan_week_day_exercises.prescription_mode,
                 rest_seconds: custom_plan_week_day_exercises.rest_seconds,
                 intensity_mode: custom_plan_week_day_exercises.intensity_mode,
                 tempo: custom_plan_week_day_exercises.tempo,
@@ -374,13 +399,18 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               .from(custom_plan_week_day_exercises)
               .leftJoin(
                 custom_session_exercises,
-                eq(custom_plan_week_day_exercises.session_exercise_id, custom_session_exercises.id)
+                eq(
+                  custom_plan_week_day_exercises.session_exercise_id,
+                  custom_session_exercises.id
+                )
               )
               .leftJoin(
                 exercises_base,
                 eq(custom_session_exercises.exercise_id, exercises_base.id)
               )
-              .where(inArray(custom_plan_week_day_exercises.week_day_id, dayIds))
+              .where(
+                inArray(custom_plan_week_day_exercises.week_day_id, dayIds)
+              )
               .orderBy(asc(custom_plan_week_day_exercises.position));
           }
 
@@ -393,7 +423,9 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             setRows = await database
               .select()
               .from(custom_plan_week_day_exercise_sets)
-              .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, exIds))
+              .where(
+                inArray(custom_plan_week_day_exercise_sets.exercise_id, exIds)
+              )
               .orderBy(asc(custom_plan_week_day_exercise_sets.set_number));
           }
 
