@@ -241,6 +241,10 @@ export const session_logs = sqliteTable("session_logs", {
   plan_id: text("plan_id").references(() => training_plans.id, {
     onDelete: "set null",
   }),
+  // Cuando el log corresponde a un plan custom, plan_id queda null y se
+  // referencia el plan por acá. Sin FK: los planes custom viven en custom_plans
+  // y se limpian por su propio camino de sync (cleanup).
+  custom_plan_id: text("custom_plan_id"),
   week_number: integer("week_number"),
   day_number: integer("day_number"),
   duration_seconds: integer("duration_seconds"),

@@ -96,7 +96,7 @@ export default function SesionActiva() {
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
   const { data: dayExercises = [], isLoading: loadingExercises } =
-    usePlanDayExercises(currentDay?.id);
+    usePlanDayExercises(currentDay?.id, summary?.isCustom);
 
   const session = useMemo(() => {
     if (!summary || !currentDay) return null;
@@ -159,6 +159,18 @@ export default function SesionActiva() {
     return () => clearTimeout(tick);
   }, [rest]);
 
+  // Si el índice restaurado del draft quedó fuera de rango (p. ej. el día
+  // cambió tras un sync y ahora tiene menos ejercicios), lo reajustamos al
+  // último ejercicio válido. Sin esto, session.exercises[currentIdx] sería
+  // undefined y el render crashea al leer prescription_mode.
+  useEffect(() => {
+    if (!session) return;
+    const lastIdx = session.exercises.length - 1;
+    if (lastIdx >= 0 && currentIdx > lastIdx) {
+      setCurrentIdx(lastIdx);
+    }
+  }, [session, currentIdx, setCurrentIdx]);
+
   const isLoading = loadingSummary || (currentDay && loadingExercises);
 
   if (isLoading || !session) {
@@ -169,7 +181,63 @@ export default function SesionActiva() {
     );
   }
 
+  // Día sin ejercicios: estado vacío explícito en lugar de crashear.
+  if (session.exercises.length === 0) {
+    return (
+      <Screen safe={Platform.OS !== "ios"}>
+        <Stack.Screen
+          options={{
+            headerShown: Platform.OS === "ios",
+            headerShadowVisible: false,
+            headerTitle: "",
+            headerStyle: {
+              backgroundColor: isDark
+                ? ui.background.dark
+                : ui.background.light,
+            },
+            headerLeft: () => (
+              <HeaderBackButton
+                onPress={() => router.back()}
+                tintColor={mutedIcon}
+              />
+            ),
+          }}
+        />
+        <View className="flex-1 items-center justify-center px-8 bg-ui-background-light dark:bg-ui-background-dark">
+          <View className="w-16 h-16 rounded-2xl items-center justify-center mb-5 bg-ui-text-main/[5%] dark:bg-white/[6%]">
+            <Barbell size={28} color={mutedIcon} />
+          </View>
+          <Text className="font-jakarta-bold text-[20px] tracking-[-0.5px] text-center text-ui-text-main dark:text-ui-text-mainDark mb-2">
+            Este día no tiene ejercicios
+          </Text>
+          <Text className="font-manrope text-sm text-center leading-5 text-ui-text-muted dark:text-ui-text-mutedDark mb-6">
+            Todavía no hay ejercicios cargados para esta sesión.
+          </Text>
+          <Pressable
+            onPress={() => router.back()}
+            className="rounded-2xl py-3.5 px-7 items-center bg-ui-text-main/[6%] dark:bg-white/[7%] active:opacity-70"
+          >
+            <Text className="font-jakarta-bold text-[15px] tracking-[-0.2px] text-ui-text-main dark:text-ui-text-mainDark">
+              Volver
+            </Text>
+          </Pressable>
+        </View>
+      </Screen>
+    );
+  }
+
   const exercise = session.exercises[currentIdx];
+
+  // Frame transitorio: el índice quedó fuera de rango y el efecto de clamp
+  // todavía no corrió. Mostramos el spinner hasta que se reajuste.
+  if (!exercise) {
+    return (
+      <View className="flex-1 items-center justify-center bg-ui-background-light dark:bg-ui-background-dark">
+        <ActivityIndicator size="large" color={BRAND_PRIMARY} />
+      </View>
+    );
+  }
+
   const canPrev = currentIdx > 0;
   const canNext = currentIdx < session.exercises.length - 1;
   const isDuration = (exercise.prescription_mode ?? "reps") === "duration";

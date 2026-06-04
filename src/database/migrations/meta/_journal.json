@@ -204,6 +204,13 @@
       "when": 1781200000000,
       "tag": "0028_uniq_active_plan_assignment",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1780536888740,
+      "tag": "0029_session_logs_custom_plan_id",
+      "breakpoints": true
     }
   ]
 }

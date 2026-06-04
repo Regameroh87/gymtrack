@@ -29,8 +29,12 @@ export const useSaveSessionLog = () => {
         id: logId,
         gym_id: GYM_ID,
         user_id: userId,
-        session_id: currentDay.session?.id ?? null,
-        plan_id: summary.plan.id,
+        // session_id referencia sessions (del gym). En planes custom la sesión
+        // del día puede ser custom, así que lo dejamos null para no violar la FK:
+        // el log igual queda identificado por custom_plan_id + week/day.
+        session_id: summary.isCustom ? null : (currentDay.session?.id ?? null),
+        plan_id: summary.isCustom ? null : summary.plan.id,
+        custom_plan_id: summary.isCustom ? summary.plan.id : null,
         week_number: currentDay.week_number,
         day_number: currentDay.day_number,
         duration_seconds: elapsed,

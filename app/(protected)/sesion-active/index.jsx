@@ -37,7 +37,7 @@ export default function SesionPreview() {
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;
   const { data: dayExercises = [], isLoading: loadingExercises } =
-    usePlanDayExercises(currentDay?.id);
+    usePlanDayExercises(currentDay?.id, summary?.isCustom);
 
   const videoSheetRef = useRef(null);
   const [activeVideo, setActiveVideo] = useState(null);
