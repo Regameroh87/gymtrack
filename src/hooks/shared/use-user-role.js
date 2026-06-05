@@ -10,9 +10,8 @@ import {
 export const useUserRole = () => {
   const { user, loading } = useAuth();
 
-  // Fuente de verdad: profiles.role. Fallback legacy a is_admin solo si role
-  // viniera null (perfiles viejos sin backfill).
-  const role = user?.role ?? (user?.is_admin ? ROLES.ADMIN : null);
+  // Fuente única de verdad: profiles.role (NOT NULL, default 'member').
+  const role = user?.role ?? null;
 
   const isSuperAdmin = isSuperAdminRole(role);
   const isOwner = role === ROLES.OWNER;
