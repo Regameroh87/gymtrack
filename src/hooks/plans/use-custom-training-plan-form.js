@@ -151,8 +151,7 @@ const enrichExercisesFromBase = async (weeks) => {
   const all = [];
   for (const w of weeks)
     for (const d of w.days ?? [])
-      for (const ex of d.exercises ?? [])
-        if (ex.exercise_id) all.push(ex);
+      for (const ex of d.exercises ?? []) if (ex.exercise_id) all.push(ex);
   if (!all.length) return;
   const ids = [...new Set(all.map((e) => e.exercise_id))];
   const rows = await database
