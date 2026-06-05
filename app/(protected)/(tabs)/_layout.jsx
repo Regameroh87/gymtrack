@@ -43,7 +43,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="(home)"
+        name="(home)/index"
         options={{
           title: "GYMTRACK",
           tabBarLabel: "Inicio",
