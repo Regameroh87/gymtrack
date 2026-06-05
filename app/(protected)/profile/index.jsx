@@ -16,18 +16,18 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { supabase } from "../../src/database/supabase";
-import { useAuth } from "../../src/auth/lib/getSession";
-import { useUserRole } from "../../src/hooks/shared/use-user-role";
-import { uploadFileToCloudinary } from "../../src/utils/uploadFileToCloudinary";
-import { getCloudinaryUrl } from "../../src/utils/cloudinary";
-import { ROLE_LABELS } from "../../src/constants/roles";
+import { supabase } from "../../../src/database/supabase";
+import { useAuth } from "../../../src/auth/lib/getSession";
+import { useUserRole } from "../../../src/hooks/shared/use-user-role";
+import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
+import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
+import { ROLE_LABELS } from "../../../src/constants/roles";
 import {
   brandPrimary,
   brandSecondary,
   gradient,
   ui,
-} from "../../src/theme/colors";
+} from "../../../src/theme/colors";
 import {
   ChevronLeft,
   Mail,
@@ -36,7 +36,7 @@ import {
   MapPin,
   Polaroid,
   Pencil,
-} from "../../assets/icons";
+} from "../../../assets/icons";
 
 const norm = (s) => (s ? s.trim().toLowerCase() : null);
 

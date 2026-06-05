@@ -2,7 +2,7 @@ import { Tabs, Redirect } from "expo-router";
 import { Barbell, Home, Logs, ShieldHalf } from "../../assets/icons";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { useUserRole } from "../../src/hooks/shared/use-user-role";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Platform } from "react-native";
 import { useColorScheme } from "nativewind";
 import { ui, brandPrimary } from "../../src/theme/colors";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
@@ -102,13 +102,6 @@ export default function ProtectedLayout() {
             tabBarIcon: ({ color }) => (
               <ShieldHalf color={color} width={24} height={24} />
             ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            href: null,
-            headerShown: false,
           }}
         />
         <Tabs.Screen

@@ -115,7 +115,7 @@ export default function Home() {
             </View>
 
             <Pressable
-              onPress={() => router.push("/profile")}
+              onPress={() => router.push("/(protected)/profile")}
               className="flex-row items-center gap-2 active:opacity-70"
             >
               <View className="border-brandPrimary-700/50 bg-brandPrimary-700/[6%] dark:bg-brandPrimary-700/[12%] w-11 h-11 rounded-3xl border-2 p-1 ">
