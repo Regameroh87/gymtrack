@@ -44,9 +44,12 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  if (__DEV__) useKeepAwake();
+function KeepAwake() {
+  useKeepAwake();
+  return null;
+}
 
+export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -147,6 +150,7 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {__DEV__ && <KeepAwake />}
       <AuthProvider>
         <SafeAreaProvider>
           <KeyboardProvider statusBarTranslucent>
