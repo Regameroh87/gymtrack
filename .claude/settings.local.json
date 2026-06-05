@@ -22,7 +22,8 @@
       "Bash(curl -s -m 5 \"http://192.168.1.72:8081/status\")",
       "Bash(lsof -nP -iTCP:8081 -sTCP:LISTEN)",
       "Bash(echo \"eslint exit: $?\")",
-      "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('app/\\(protected\\)/sesion-active/active.jsx',{presets:['babel-preset-expo']}\\); console.log\\('babel parse: OK'\\)\")"
+      "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('app/\\(protected\\)/sesion-active/active.jsx',{presets:['babel-preset-expo']}\\); console.log\\('babel parse: OK'\\)\")",
+      "Bash(git fetch *)"
     ]
   }
 }
