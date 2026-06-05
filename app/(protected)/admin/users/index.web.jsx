@@ -13,7 +13,12 @@ import { Image } from "expo-image";
 
 import { supabase } from "../../../../src/database/supabase";
 import { brandPrimary, ui } from "../../../../src/theme/colors";
-import { isStaffRole, ROLE_LABELS } from "../../../../src/constants/roles";
+import {
+  isStaffRole,
+  isSuperAdminRole,
+  ROLE_LABELS,
+} from "../../../../src/constants/roles";
+import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 
 import {
   Users,
@@ -47,6 +52,7 @@ const formatDate = (iso) => {
 
 export default function UsersListWeb() {
   const router = useRouter();
+  const { isSuperAdmin } = useUserRole();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
@@ -63,16 +69,27 @@ export default function UsersListWeb() {
     },
   });
 
+  // El super_admin solo es visible para otro super_admin (defensa en UI; la RLS
+  // de profiles ya lo oculta a roles inferiores a nivel API).
+  const visibleUsers = useMemo(() => {
+    if (!users) return [];
+    return isSuperAdmin
+      ? users
+      : users.filter((u) => !isSuperAdminRole(u.role));
+  }, [users, isSuperAdmin]);
+
   const stats = useMemo(() => {
-    if (!users) return { total: 0, staff: 0, members: 0 };
-    const staff = users.filter((u) => isStaffRole(u.role)).length;
-    return { total: users.length, staff, members: users.length - staff };
-  }, [users]);
+    const staff = visibleUsers.filter((u) => isStaffRole(u.role)).length;
+    return {
+      total: visibleUsers.length,
+      staff,
+      members: visibleUsers.length - staff,
+    };
+  }, [visibleUsers]);
 
   const filtered = useMemo(() => {
-    if (!users) return [];
     const q = search.trim().toLowerCase();
-    return users.filter((u) => {
+    return visibleUsers.filter((u) => {
       const matches =
         !q ||
         u.name?.toLowerCase().includes(q) ||
@@ -83,13 +100,13 @@ export default function UsersListWeb() {
       if (filter === "students") return !isStaffRole(u.role);
       return true;
     });
-  }, [users, search, filter]);
+  }, [visibleUsers, search, filter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
   const pageRows = filtered.slice(
     currentPage * PAGE_SIZE,
-    currentPage * PAGE_SIZE + PAGE_SIZE,
+    currentPage * PAGE_SIZE + PAGE_SIZE
   );
 
   return (
@@ -185,9 +202,7 @@ export default function UsersListWeb() {
                   setPage(0);
                 }}
                 className={`px-3.5 py-1.5 rounded-[9px] ${
-                  active
-                    ? "bg-brandPrimary-600"
-                    : "hover:bg-brandPrimary-50/60"
+                  active ? "bg-brandPrimary-600" : "hover:bg-brandPrimary-50/60"
                 }`}
                 style={{ cursor: "pointer" }}
               >
@@ -328,7 +343,10 @@ function UserRow({ user, isLast, onPress }) {
       className={`flex-row items-center px-5 py-3 hover:bg-brandPrimary-50/40 ${
         isLast ? "" : "border-b border-ui-input-border"
       }`}
-      style={{ cursor: "pointer", opacity: user.is_active === false ? 0.55 : 1 }}
+      style={{
+        cursor: "pointer",
+        opacity: user.is_active === false ? 0.55 : 1,
+      }}
     >
       {/* Usuario */}
       <View className="flex-row items-center gap-3" style={{ flex: 3 }}>

@@ -18,13 +18,19 @@ import FilterChips from "../../../../src/components/FilterChips";
 import ButtonAdd from "../../../../src/components/buttons/ButtonAdd";
 import { ChevronRight, Mail } from "../../../../assets/icons";
 import { brandPrimary, ui } from "../../../../src/theme/colors";
-import { isStaffRole, ROLE_LABELS } from "../../../../src/constants/roles";
+import {
+  isStaffRole,
+  isSuperAdminRole,
+  ROLE_LABELS,
+} from "../../../../src/constants/roles";
+import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 
 const FILTER_OPTIONS = ["Todos", "Staff", "Alumnos"];
 
 export default function UsersList() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { isSuperAdmin } = useUserRole();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 
@@ -41,6 +47,9 @@ export default function UsersList() {
   });
 
   const filtered = users?.filter((u) => {
+    // El super_admin solo es visible para otro super_admin (defensa en UI;
+    // la RLS de profiles ya lo oculta a roles inferiores a nivel API).
+    if (!isSuperAdmin && isSuperAdminRole(u.role)) return false;
     const q = search.toLowerCase();
     const match =
       u.name?.toLowerCase().includes(q) ||
