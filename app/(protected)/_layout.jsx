@@ -85,6 +85,7 @@ export default function ProtectedLayout() {
           name="planes"
           options={{
             title: "Planes",
+            popToTopOnBlur: true,
             headerShown: false,
             tabBarIcon: ({ color }) => (
               <Barbell color={color} width={24} height={24} />
