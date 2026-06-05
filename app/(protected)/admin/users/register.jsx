@@ -33,8 +33,21 @@ import FormField from "../../../../src/components/forms/FormField";
 import StyledTextInput from "../../../../src/components/forms/StyledTextInput";
 import SubmitButton from "../../../../src/components/forms/SubmitButton";
 
+// Roles
+import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
+import {
+  ASSIGNABLE_ROLES,
+  ROLE_LABELS,
+  DEFAULT_ROLE,
+} from "../../../../src/constants/roles";
+
 export default function RegisterUser() {
   const scrollRef = useRef(null);
+  const { role: currentRole } = useUserRole();
+
+  // Roles que el usuario logueado puede asignar (estrictamente por debajo del suyo).
+  // crear-socio revalida esto en el backend (defensa en profundidad).
+  const assignableRoles = ASSIGNABLE_ROLES[currentRole] ?? [DEFAULT_ROLE];
 
   const form = useForm({
     defaultValues: {
@@ -45,6 +58,7 @@ export default function RegisterUser() {
       phone: "",
       document_number: "",
       address: "",
+      role: DEFAULT_ROLE,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -308,6 +322,41 @@ export default function RegisterUser() {
             )}
           </form.Field>
         </FormField>
+
+        {assignableRoles.length > 1 && (
+          <FormField label="ROL">
+            <form.Field name="role">
+              {(field) => (
+                <View className="flex-row flex-wrap gap-2">
+                  {assignableRoles.map((r) => {
+                    const active = field.state.value === r;
+                    return (
+                      <Pressable
+                        key={r}
+                        onPress={() => field.handleChange(r)}
+                        className={`px-4 py-2 rounded-xl border ${
+                          active
+                            ? "bg-brandPrimary-600 border-brandPrimary-600"
+                            : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-input-border"
+                        }`}
+                      >
+                        <Text
+                          className={`text-sm font-manrope-semi ${
+                            active
+                              ? "text-white"
+                              : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                          }`}
+                        >
+                          {ROLE_LABELS[r] ?? r}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+            </form.Field>
+          </FormField>
+        )}
       </View>
 
       {/* ── Submit ── */}

@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 
 import { supabase } from "../../../../src/database/supabase";
 import { brandPrimary, ui } from "../../../../src/theme/colors";
+import { isStaffRole, ROLE_LABELS } from "../../../../src/constants/roles";
 
 import {
   Users,
@@ -25,8 +26,8 @@ import {
 
 const FILTERS = [
   { key: "all", label: "Todos" },
-  { key: "admins", label: "Administradores" },
-  { key: "members", label: "Socios" },
+  { key: "staff", label: "Staff" },
+  { key: "students", label: "Alumnos" },
 ];
 
 const PAGE_SIZE = 12;
@@ -63,9 +64,9 @@ export default function UsersListWeb() {
   });
 
   const stats = useMemo(() => {
-    if (!users) return { total: 0, admins: 0, members: 0 };
-    const admins = users.filter((u) => u.is_admin).length;
-    return { total: users.length, admins, members: users.length - admins };
+    if (!users) return { total: 0, staff: 0, members: 0 };
+    const staff = users.filter((u) => isStaffRole(u.role)).length;
+    return { total: users.length, staff, members: users.length - staff };
   }, [users]);
 
   const filtered = useMemo(() => {
@@ -78,8 +79,8 @@ export default function UsersListWeb() {
         u.last_name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q);
       if (!matches) return false;
-      if (filter === "admins") return !!u.is_admin;
-      if (filter === "members") return !u.is_admin;
+      if (filter === "staff") return isStaffRole(u.role);
+      if (filter === "students") return !isStaffRole(u.role);
       return true;
     });
   }, [users, search, filter]);
@@ -140,14 +141,14 @@ export default function UsersListWeb() {
         />
         <StatCard
           icon={ShieldHalf}
-          label="Administradores"
-          value={stats.admins}
+          label="Staff"
+          value={stats.staff}
           iconColor="#7c3aed"
           bubble="bg-violet-50"
         />
         <StatCard
           icon={Users}
-          label="Socios"
+          label="Alumnos"
           value={stats.members}
           iconColor="#0284c7"
           bubble="bg-sky-50"
@@ -318,6 +319,8 @@ function HeaderCell({ label, flex, align }) {
 function UserRow({ user, isLast, onPress }) {
   const initials =
     `${user.name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() || "U";
+  const staff = isStaffRole(user.role);
+  const roleLabel = ROLE_LABELS[user.role] ?? user.role ?? "—";
 
   return (
     <Pressable
@@ -366,20 +369,20 @@ function UserRow({ user, isLast, onPress }) {
       <View style={{ flex: 1.2 }}>
         <View
           className={`self-start flex-row items-center gap-1 px-2 py-0.5 rounded-md ${
-            user.is_admin ? "bg-violet-50" : "bg-brandPrimary-50"
+            staff ? "bg-violet-50" : "bg-brandPrimary-50"
           }`}
         >
           <View
             className={`w-1 h-1 rounded-full ${
-              user.is_admin ? "bg-violet-600" : "bg-brandPrimary-600"
+              staff ? "bg-violet-600" : "bg-brandPrimary-600"
             }`}
           />
           <Text
             className={`text-[10px] font-manrope-bold tracking-wider uppercase ${
-              user.is_admin ? "text-violet-600" : "text-brandPrimary-600"
+              staff ? "text-violet-600" : "text-brandPrimary-600"
             }`}
           >
-            {user.is_admin ? "Admin" : "Socio"}
+            {roleLabel}
           </Text>
         </View>
       </View>

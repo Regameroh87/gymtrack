@@ -55,6 +55,7 @@ export default function UsersList() {
     <Pressable
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        router.push(`/admin/users/${item.id}`);
       }}
       className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center active:scale-[0.98]"
     >
@@ -84,10 +85,10 @@ export default function UsersList() {
           >
             {item.name} {item.last_name}
           </Text>
-          {item.is_admin && (
+          {isStaffRole(item.role) && (
             <View className="ml-2 px-1.5 py-0.5 rounded bg-brandPrimary-100 dark:bg-brandPrimary-900">
               <Text className="text-[8px] font-jakarta-semi uppercase text-brandPrimary-600 dark:text-brandPrimary-300">
-                Admin
+                {ROLE_LABELS[item.role] ?? item.role}
               </Text>
             </View>
           )}

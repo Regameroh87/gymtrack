@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth: solo owner o admin pueden crear usuarios.
+    // Auth: el caller debe ser staff con poder de crear (ver matriz ASSIGNABLE).
     const authHeader = req.headers.get('Authorization') ?? ''
     const jwt = authHeader.replace('Bearer ', '').trim()
     if (!jwt) {
@@ -76,7 +76,17 @@ Deno.serve(async (req) => {
 
     const { gym_id: callerGymId, role: callerRole } = callerProfile
 
-    if (!['owner', 'admin'].includes(callerRole)) {
+    // Matriz de roles asignables: cada rol crea estrictamente por debajo del suyo.
+    // Debe mantenerse en sync con ASSIGNABLE_ROLES en src/constants/roles.js.
+    const ASSIGNABLE: Record<string, string[]> = {
+      super_admin: ['owner', 'admin', 'coach', 'member'],
+      owner: ['admin', 'coach', 'member'],
+      admin: ['coach', 'member'],
+      coach: ['member'],
+    }
+    const allowed = ASSIGNABLE[callerRole] ?? []
+
+    if (allowed.length === 0) {
       return new Response(JSON.stringify({ error: 'No tenés permisos para crear usuarios.' }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         status: 403,
@@ -93,11 +103,6 @@ Deno.serve(async (req) => {
         status: 400,
       })
     }
-
-    // admin solo puede crear members; owner puede crear admin/coach/member.
-    const allowedByAdmin = ['member']
-    const allowedByOwner = ['admin', 'coach', 'member']
-    const allowed = callerRole === 'owner' ? allowedByOwner : allowedByAdmin
 
     if (!allowed.includes(newRole)) {
       return new Response(JSON.stringify({ error: `El rol '${callerRole}' no puede crear usuarios con rol '${newRole}'.` }), {
