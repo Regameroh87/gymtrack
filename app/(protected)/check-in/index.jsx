@@ -15,11 +15,17 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // BD
-import { supabase } from "../../src/database/supabase";
+import { supabase } from "../../../src/database/supabase";
 
 // Componentes / assets
-import { ArrowLeft, QrCode, CheckCircle, X, Camera } from "../../assets/icons";
-import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors";
+import {
+  ArrowLeft,
+  QrCode,
+  CheckCircle,
+  X,
+  Camera,
+} from "../../../assets/icons";
+import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors";
 
 const BRAND_PRIMARY = brandPrimary[700];
 const BRAND_MINT = brandSecondary[400];
