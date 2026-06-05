@@ -9,7 +9,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
-  const { isAdmin } = useUserRole();
+  const { isStaff } = useUserRole();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   //console.log("colorScheme", colorScheme);
 
@@ -96,7 +96,7 @@ export default function ProtectedLayout() {
           options={{
             title: "Admin",
             headerShown: false,
-            href: isAdmin ? undefined : null,
+            href: isStaff ? undefined : null,
             popToTopOnBlur: true,
             tabBarIcon: ({ color }) => (
               <ShieldHalf color={color} width={24} height={24} />

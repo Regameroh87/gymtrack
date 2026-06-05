@@ -1,13 +1,36 @@
 // Librerías externas
 import { useAuth } from "../../auth/lib/getSession";
-
-const STAFF_ROLES = ["owner", "admin", "coach"];
+import {
+  ROLES,
+  isStaffRole,
+  isAdminRole,
+  isSuperAdminRole,
+} from "../../constants/roles";
 
 export const useUserRole = () => {
   const { user, loading } = useAuth();
-  const role = user?.role ?? null;
-  const isAdmin = !!user?.is_admin;
-  const isStaff = STAFF_ROLES.includes(role);
 
-  return { role, isAdmin, isStaff, isStudent: !isAdmin, loading };
+  // Fuente de verdad: profiles.role. Fallback legacy a is_admin solo si role
+  // viniera null (perfiles viejos sin backfill).
+  const role = user?.role ?? (user?.is_admin ? ROLES.ADMIN : null);
+
+  const isSuperAdmin = isSuperAdminRole(role);
+  const isOwner = role === ROLES.OWNER;
+  const isCoach = role === ROLES.COACH;
+  const isAdmin = isAdminRole(role); // super_admin / owner / admin
+  const isStaff = isStaffRole(role); // + coach
+  const isMember = !isStaff;
+
+  return {
+    role,
+    isSuperAdmin,
+    isOwner,
+    isAdmin,
+    isCoach,
+    isStaff,
+    isMember,
+    // Alias legacy mantenido para no romper consumidores existentes.
+    isStudent: isMember,
+    loading,
+  };
 };

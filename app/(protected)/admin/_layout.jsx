@@ -1,10 +1,16 @@
-import { Stack } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { ui } from "../../../src/theme/colors";
+import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 
 export default function AdminLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { isStaff, loading } = useUserRole();
+
+  // Solo el staff accede al panel. Bloquea el ingreso por URL de un member.
+  if (loading) return null;
+  if (!isStaff) return <Redirect href="/" />;
 
   return (
     <Stack

@@ -4,18 +4,19 @@ const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 
 const sendCodeVerify = async (email) => {
   console.log("Enviando email a verificar");
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", email)
-    .eq("gym_id", GYM_ID);
+  // Chequeo de existencia pre-login (sin sesión). Con RLS activo en profiles ya
+  // no se puede leer la tabla directo desde anon: usamos la RPC SECURITY DEFINER.
+  const { data: exists, error } = await supabase.rpc("email_exists_in_gym", {
+    p_email: email,
+    p_gym_id: GYM_ID,
+  });
 
   if (error) {
     console.error("Error al enviar:", error.message);
     throw error;
   }
 
-  if (!data || data.length === 0) {
+  if (!exists) {
     throw new Error("Usuario no encontrado.");
   }
 
