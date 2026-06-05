@@ -1,0 +1,106 @@
+﻿import FormExercise from "../../../../../src/components/forms/FormExercise";
+import { useRef } from "react";
+import { useForm } from "@tanstack/react-form";
+import { database } from "../../../../../src/database";
+import {
+  exercises_base,
+  exercise_equipment,
+} from "../../../../../src/database/schemas";
+import * as Crypto from "expo-crypto";
+import { useQueryClient } from "@tanstack/react-query";
+import { checkNetInfoAndSync } from "../../../../../src/database/sync";
+import * as Haptics from "expo-haptics";
+import Toast from "react-native-toast-message";
+import { useAuth } from "../../../../../src/auth/lib/getSession";
+
+const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+
+export default function AddExerciseScreen() {
+  const formRef = useRef(null);
+  const queryClient = useQueryClient();
+  const { userId } = useAuth();
+  const addExerciseForm = useForm({
+    defaultValues: {
+      name: "",
+      category: "",
+      muscle_group: "",
+      equipments: [], // Ahora es un array de objetos { name, image_uri }
+      youtube_video_url: "",
+      image_uri: "",
+      video_uri: "",
+      instructions: "",
+      is_unilateral: false,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        const exerciseId = Crypto.randomUUID();
+        const exerciseValues = {
+          name: value.name.trim(),
+          category: value.category,
+          muscle_group: value.muscle_group,
+          video_uri: value.video_uri,
+          image_uri: value.image_uri,
+          youtube_video_url: value.youtube_video_url,
+          instructions: value.instructions,
+          is_unilateral: value.is_unilateral ? 1 : 0,
+        };
+        // Inserto el ejercicio en la tabla exercises_base
+        await database.insert(exercises_base).values({
+          id: exerciseId,
+          gym_id: GYM_ID,
+          created_by: userId ?? null,
+          ...exerciseValues,
+        });
+
+        // Inserto el equipamiento en la tabla exercises_equipments
+        if (value.equipments && value.equipments.length > 0) {
+          for (const eq of value.equipments) {
+            await database.insert(exercise_equipment).values({
+              id: Crypto.randomUUID(),
+              exercise_id: exerciseId,
+              equipment_id: eq.id,
+            });
+          }
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["exercises"] });
+        queryClient.invalidateQueries({ queryKey: ["exercise", exerciseId] });
+        queryClient.invalidateQueries({ queryKey: ["equipments"] });
+        //Sincronizo si hay internet
+        checkNetInfoAndSync().catch((err) => console.error("Sync failed", err));
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Toast.show({
+          type: "success",
+          text1: "¡Éxito!",
+          text2: "El ejercicio fue agregado exitosamente al catálogo.",
+          position: "bottom",
+        });
+
+        addExerciseForm.reset();
+        formRef.current?.focusFirstInput();
+        /*  if (scrollRef.current) {
+          scrollRef.current.scrollTo({ y: 0, animated: true });
+        } */
+      } catch (error) {
+        console.error("Error al insertar un ejercicio", error.message);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        Toast.show({
+          type: "error",
+          text1: "Error al guardar, intente nuevamente.",
+          text2: error.message,
+          position: "bottom",
+        });
+      }
+    },
+  });
+
+  return (
+    <FormExercise
+      ref={formRef}
+      form={addExerciseForm}
+      headerTitle="Nuevo Ejercicio"
+      headerDescription="Completá los datos para agregar un ejercicio al catálogo."
+    />
+  );
+}

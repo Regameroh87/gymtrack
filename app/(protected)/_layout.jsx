@@ -1,17 +1,10 @@
-import { Tabs, Redirect } from "expo-router";
-import { Barbell, Home, Logs, ShieldHalf } from "../../assets/icons";
+import { Stack, Redirect } from "expo-router";
 import { useAuth } from "../../src/auth/lib/getSession";
-import { useUserRole } from "../../src/hooks/shared/use-user-role";
-import { View, Text, Pressable, Platform } from "react-native";
-import { useColorScheme } from "nativewind";
-import { ui, brandPrimary } from "../../src/theme/colors";
+import { View, Text } from "react-native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
-  const { isStaff } = useUserRole();
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-  //console.log("colorScheme", colorScheme);
 
   if (loading) {
     return (
@@ -25,104 +18,14 @@ export default function ProtectedLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const isDark = colorScheme === "dark";
-
   return (
     <BottomSheetModalProvider>
-      <Tabs
-        screenOptions={{
-          headerTitleAlign: "center",
-          headerStyle: {
-            backgroundColor: isDark ? ui.background.dark : ui.background.light,
-            elevation: 0,
-            shadowOpacity: 0,
-          },
-          headerTitleStyle: {
-            fontFamily: "Lexend_700Bold",
-            color: isDark ? ui.text.mainDark : ui.text.main,
-          },
-          headerRight: () => (
-            <Pressable
-              onPress={() => toggleColorScheme()}
-              className="mr-4 bg-ui-secondary-light dark:bg-ui-secondary-dark p-2 rounded-lg active:opacity-70"
-            >
-              <Text className="text-xs font-bold text-ui-text-main dark:text-ui-text-mainDark uppercase">
-                {colorScheme}
-              </Text>
-            </Pressable>
-          ),
-          tabBarStyle: {
-            backgroundColor: isDark ? ui.background.dark : ui.background.light,
-            borderTopWidth: 0,
-            elevation: 0,
-          },
-          tabBarActiveTintColor: brandPrimary[500],
-          tabBarInactiveTintColor: isDark ? ui.text.mutedDark : ui.text.muted,
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "GYMTRACK",
-            tabBarLabel: "Inicio",
-            tabBarIcon: ({ color }) => (
-              <Home color={color} width={24} height={24} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="registros"
-          options={{
-            title: "Registros",
-            headerShown: false,
-            popToTopOnBlur: true,
-            tabBarIcon: ({ color }) => (
-              <Logs color={color} width={24} height={24} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="planes"
-          options={{
-            title: "Planes",
-            popToTopOnBlur: true,
-            headerShown: false,
-            tabBarIcon: ({ color }) => (
-              <Barbell color={color} width={24} height={24} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="admin"
-          options={{
-            title: "Admin",
-            headerShown: false,
-            href: isStaff ? undefined : null,
-            popToTopOnBlur: true,
-            tabBarIcon: ({ color }) => (
-              <ShieldHalf color={color} width={24} height={24} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="check-in"
-          options={{
-            href: null,
-            headerShown: false,
-          }}
-        />
-        <Tabs.Screen
-          name="sesion-active"
-          options={{
-            href: null,
-            headerShown: false,
-            // Al perder foco (finalizar/abandonar y volver al home), reseteamos
-            // el stack interno a `index` (preview). Sin esto, el tab recuerda que
-            // quedó en `active` y reaparece una sesión fantasma al reentrar.
-            popToTopOnBlur: true,
-          }}
-        />
-      </Tabs>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="profile" options={{ headerShown: true, title: "Perfil" }} />
+        <Stack.Screen name="check-in" />
+        <Stack.Screen name="sesion-active" />
+      </Stack>
     </BottomSheetModalProvider>
   );
 }
