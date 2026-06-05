@@ -7,7 +7,8 @@
       "Bash(npx prettier *)",
       "Bash(xcrun simctl *)",
       "Bash(xcodebuild -version)",
-      "Read(//Applications/Xcode.app/Contents/Developer/Platforms/**)"
+      "Read(//Applications/Xcode.app/Contents/Developer/Platforms/**)",
+      "Bash(Test-Path \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\_layout.jsx\")"
     ],
     "defaultMode": "default"
   }
