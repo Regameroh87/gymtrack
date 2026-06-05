@@ -7,20 +7,24 @@ import { Redirect, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 
 // Auth
-import { useAuth } from "../../../src/auth/lib/getSession.jsx";
-import { useUserRole } from "../../../src/hooks/shared/use-user-role.js";
+import { useAuth } from "../../../../src/auth/lib/getSession.jsx";
+import { useUserRole } from "../../../../src/hooks/shared/use-user-role.js";
 
 // Hooks
-import { useSessionLogs } from "../../../src/hooks/sessions/use-session-logs.js";
+import { useSessionLogs } from "../../../../src/hooks/sessions/use-session-logs.js";
 
 // Utilidades
-import { formatDuration } from "../../../src/utils/format-date.js";
+import { formatDuration } from "../../../../src/utils/format-date.js";
 
 // Componentes
-import MemberNavbar from "../../../src/components/web/MemberNavbar.jsx";
+import MemberNavbar from "../../../../src/components/web/MemberNavbar.jsx";
 
 // Tema / assets
-import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
+import {
+  brandPrimary,
+  brandSecondary,
+  ui,
+} from "../../../../src/theme/colors.js";
 import {
   Barbell,
   ChevronRight,
@@ -28,7 +32,7 @@ import {
   Clock,
   Logs,
   Plus,
-} from "../../../assets/icons.jsx";
+} from "../../../../assets/icons.jsx";
 
 // ─── Tokens ──────────────────────────────────────────────────────────────────
 const P600 = brandPrimary[600]; // #3023cd
