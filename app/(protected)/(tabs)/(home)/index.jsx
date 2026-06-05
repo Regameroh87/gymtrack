@@ -78,7 +78,7 @@ export default function Home() {
   const dayName = DAYS_ES[now.getDay()];
   const greeting = greetingFor(now);
   const firstName = (user?.name ?? "").split(" ")[0] || "Atleta";
-  const imageProfile = require("../../../assets/profile.png");
+  const imageProfile = require("../../../../assets/profile.png");
   const iconMint = isDark ? brandSecondary[400] : brandSecondary[700];
 
   return (
