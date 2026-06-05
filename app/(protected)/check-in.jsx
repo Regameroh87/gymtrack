@@ -19,9 +19,10 @@ import { supabase } from "../../src/database/supabase";
 
 // Componentes / assets
 import { ArrowLeft, QrCode, CheckCircle, X, Camera } from "../../assets/icons";
+import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors";
 
-const BRAND_PRIMARY = "#4a44e4";
-const BRAND_MINT = "#2ae8cc";
+const BRAND_PRIMARY = brandPrimary[700];
+const BRAND_MINT = brandSecondary[400];
 
 export default function CheckInScreen() {
   const router = useRouter();
@@ -89,16 +90,15 @@ export default function CheckInScreen() {
   return (
     <View
       className="flex-1"
-      style={{ backgroundColor: "#0C0B14", paddingTop: insets.top }}
+      style={{ backgroundColor: ui.background.dark, paddingTop: insets.top }}
     >
       {/* Top bar */}
       <View className="flex-row items-center justify-between px-5 pt-3 pb-4">
         <Pressable
           onPress={() => router.back()}
-          className="w-10 h-10 rounded-full items-center justify-center bg-white/8"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+          className="w-10 h-10 rounded-full items-center justify-center bg-white/[8%]"
         >
-          <ArrowLeft size={18} color="rgba(255,255,255,0.85)" />
+          <ArrowLeft size={18} color={ui.icon.onDarkStrong} />
         </Pressable>
         <View className="flex-row items-center gap-2">
           <View
@@ -109,7 +109,7 @@ export default function CheckInScreen() {
               backgroundColor: BRAND_MINT,
             }}
           />
-          <Text className="text-[#2ae8cc] text-[10px] font-manrope-bold uppercase tracking-[2.2px]">
+          <Text className="text-brandSecondary-400 text-[10px] font-manrope-bold uppercase tracking-[2.2px]">
             Check-in
           </Text>
         </View>
@@ -121,14 +121,14 @@ export default function CheckInScreen() {
         <View
           className="w-full aspect-square rounded-[32px] overflow-hidden"
           style={{
-            backgroundColor: "#1a1730",
+            backgroundColor: ui.surface.dim,
             borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.1)",
+            borderColor: ui.border.onDark,
           }}
         >
           {Platform.OS === "web" ? (
             <View className="flex-1 items-center justify-center px-6">
-              <QrCode size={64} color="rgba(255,255,255,0.35)" />
+              <QrCode size={64} color={ui.icon.onDarkMuted} />
               <Text className="text-white/70 text-center font-manrope mt-4">
                 El scanner funciona desde la app móvil. Abrí GymTrack en tu
                 teléfono para escanear el QR del kiosko.
@@ -142,7 +142,7 @@ export default function CheckInScreen() {
             <View className="flex-1 items-center justify-center px-6">
               <View
                 className="w-16 h-16 rounded-2xl items-center justify-center mb-4"
-                style={{ backgroundColor: "rgba(74,68,228,0.18)" }}
+                style={{ backgroundColor: `${BRAND_PRIMARY}2E` }}
               >
                 <Camera size={26} color="#fff" />
               </View>
@@ -231,7 +231,7 @@ function ResultOverlay({ status, message, onClose, onRetry }) {
     success: {
       title: "¡Bienvenido!",
       sub: "Tu asistencia quedó registrada.",
-      color: "#10b981",
+      color: ui.status.success,
       Icon: CheckCircle,
     },
     duplicate: {
@@ -243,7 +243,7 @@ function ResultOverlay({ status, message, onClose, onRetry }) {
     error: {
       title: "No se pudo registrar",
       sub: message,
-      color: "#ef4444",
+      color: ui.status.error,
       Icon: X,
     },
   }[status];
@@ -251,14 +251,14 @@ function ResultOverlay({ status, message, onClose, onRetry }) {
   return (
     <View
       className="absolute inset-0 items-center justify-center px-6"
-      style={{ backgroundColor: "rgba(12,11,20,0.92)" }}
+      style={{ backgroundColor: ui.overlay.scrimDark }}
     >
       <View
         className="w-full max-w-[360px] rounded-3xl p-7 items-center"
         style={{
-          backgroundColor: "#161427",
+          backgroundColor: ui.surface.dim,
           borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.08)",
+          borderColor: ui.border.onDarkSubtle,
         }}
       >
         <View
@@ -285,8 +285,7 @@ function ResultOverlay({ status, message, onClose, onRetry }) {
             {!isSuccess && (
               <Pressable
                 onPress={onRetry}
-                className="flex-1 py-3 rounded-xl items-center"
-                style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+                className="flex-1 py-3 rounded-xl items-center bg-white/[8%]"
               >
                 <Text className="text-white text-sm font-manrope-bold">
                   Reintentar

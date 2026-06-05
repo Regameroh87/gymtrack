@@ -103,7 +103,7 @@ export default function Home() {
           {/* Saludo + avatar */}
           <View className="flex-row items-center justify-between">
             <View className="flex-1 mr-3">
-              <Text className="font-manrope-semi text-[#0f0d20]/55 dark:text-white/50 text-sm tracking-wider mb-1">
+              <Text className="font-manrope-semi text-ui-text-main/55 dark:text-white/50 text-sm tracking-wider mb-1">
                 {greeting},
               </Text>
               <Text
@@ -152,7 +152,7 @@ export default function Home() {
               Acceso Rápido
             </Text>
             <View
-              className="flex-1 bg-[#0f0d20]/8 dark:bg-white/8"
+              className="flex-1 bg-ui-text-main/[8%] dark:bg-white/[8%]"
               style={{ height: 1 }}
             />
           </View>
@@ -223,7 +223,7 @@ function QuickAction({
         className={`rounded-2xl overflow-hidden border p-4 flex-row items-center gap-[14px] ${
           isPrimary
             ? "bg-brandPrimary-700/10 dark:bg-brandPrimary-700/[18%] border-brandPrimary-700/25 dark:border-brandPrimary-700/35"
-            : "bg-[#0f0d20]/[3%] dark:bg-white/[4%] border-[#0f0d20]/8 dark:border-white/8"
+            : "bg-ui-text-main/[3%] dark:bg-white/[4%] border-ui-text-main/[8%] dark:border-white/[8%]"
         }`}
       >
         <View
@@ -250,7 +250,7 @@ function QuickAction({
             className={`font-manrope-bold uppercase mb-[3px] ${
               isPrimary
                 ? "text-brandSecondary-700 dark:text-brandSecondary-400"
-                : "text-[#0f0d20]/45 dark:text-white/45"
+                : "text-ui-text-main/45 dark:text-white/45"
             }`}
             style={{ fontSize: 9, letterSpacing: 1.6 }}
           >
@@ -263,7 +263,7 @@ function QuickAction({
             {title}
           </Text>
           <Text
-            className="font-manrope text-[#0f0d20]/55 dark:text-white/50"
+            className="font-manrope text-ui-text-main/55 dark:text-white/50"
             style={{ fontSize: 12, lineHeight: 16 }}
             numberOfLines={1}
           >
@@ -275,7 +275,7 @@ function QuickAction({
           className={`items-center justify-center rounded-full ${
             isPrimary
               ? "bg-white"
-              : "bg-[#0f0d20]/5 dark:bg-white/8 border border-[#0f0d20]/10 dark:border-white/[12%]"
+              : "bg-ui-text-main/5 dark:bg-white/[8%] border border-ui-text-main/10 dark:border-white/[12%]"
           }`}
           style={{ width: 26, height: 26 }}
         >

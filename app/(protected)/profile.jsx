@@ -22,7 +22,12 @@ import { useUserRole } from "../../src/hooks/shared/use-user-role";
 import { uploadFileToCloudinary } from "../../src/utils/uploadFileToCloudinary";
 import { getCloudinaryUrl } from "../../src/utils/cloudinary";
 import { ROLE_LABELS } from "../../src/constants/roles";
-import { brandPrimary, brandSecondary, ui } from "../../src/theme/colors";
+import {
+  brandPrimary,
+  brandSecondary,
+  gradient,
+  ui,
+} from "../../src/theme/colors";
 import {
   ChevronLeft,
   Mail,
@@ -171,11 +176,7 @@ export default function ProfileScreen() {
       {/* ── Hero ── */}
       <View style={{ paddingTop: insets.top }}>
         <LinearGradient
-          colors={[
-            "rgba(74,68,228,0.18)",
-            "rgba(42,232,204,0.10)",
-            "rgba(248,249,252,0)",
-          ]}
+          colors={gradient.hero.light}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
@@ -184,7 +185,7 @@ export default function ProfileScreen() {
         {/* Back button */}
         <Pressable
           onPress={() => router.back()}
-          className="mx-4 mt-3 mb-6 w-9 h-9 rounded-[11px] items-center justify-center bg-white/70 dark:bg-white/[6%] border border-[#0f0d20]/10 dark:border-white/10 active:opacity-60"
+          className="mx-4 mt-3 mb-6 w-9 h-9 rounded-[11px] items-center justify-center bg-white/70 dark:bg-white/[6%] border border-ui-text-main/10 dark:border-white/10 active:opacity-60"
         >
           <ChevronLeft size={18} color={ui.text.main} />
         </Pressable>
@@ -217,7 +218,9 @@ export default function ProfileScreen() {
                 {hasPhoto && avatarSource ? (
                   <Image
                     source={avatarSource}
-                    style={{ width: "100%", height: "100%" }}
+                    width={"100%"}
+                    height={"100%"}
+                    style={{ borderRadius: 30 }}
                     contentFit="cover"
                     transition={200}
                   />
@@ -237,7 +240,7 @@ export default function ProfileScreen() {
               className="absolute -bottom-1.5 -right-1.5 w-7 h-7 rounded-[9px] items-center justify-center border-2 border-white dark:border-ui-background-dark"
               style={{ backgroundColor: BRAND }}
             >
-              <Polaroid size={12} color="#fff" />
+              <Polaroid size={12} color="white" />
             </View>
           </Pressable>
 
@@ -265,11 +268,11 @@ export default function ProfileScreen() {
       </View>
 
       {/* Divisor */}
-      <View className="h-px mx-4 mb-6 bg-[#0f0d20]/[6%] dark:bg-white/[6%]" />
+      <View className="h-px mx-4 mb-6 bg-ui-text-main/[6%] dark:bg-white/[6%]" />
 
       {/* ── Cuenta ── */}
       <SectionTitle>Cuenta</SectionTitle>
-      <View className="mx-4 mb-6 bg-white dark:bg-ui-surface-dark border border-[#0f0d20]/[6%] dark:border-white/[6%] rounded-2xl overflow-hidden">
+      <View className="mx-4 mb-6 bg-white dark:bg-ui-surface-dark border border-ui-text-main/[6%] dark:border-white/[6%] rounded-2xl overflow-hidden">
         <View className="flex-row items-center px-4 py-4">
           <IconBox color={BRAND}>
             <Mail size={14} color={BRAND} />
@@ -285,7 +288,7 @@ export default function ProfileScreen() {
               {user?.email ?? "—"}
             </Text>
           </View>
-          <View className="px-2 py-1 rounded-full bg-[#0f0d20]/[5%] dark:bg-white/[7%]">
+          <View className="px-2 py-1 rounded-full bg-ui-text-main/5 dark:bg-white/[7%]">
             <Text className="text-[9px] font-manrope-bold uppercase tracking-[0.8px] text-ui-text-muted">
               Solo lectura
             </Text>
@@ -295,7 +298,7 @@ export default function ProfileScreen() {
 
       {/* ── Datos personales ── */}
       <SectionTitle>Datos personales</SectionTitle>
-      <View className="mx-4 mb-7 bg-white dark:bg-ui-surface-dark border border-[#0f0d20]/[6%] dark:border-white/[6%] rounded-2xl overflow-hidden">
+      <View className="mx-4 mb-7 bg-white dark:bg-ui-surface-dark border border-ui-text-main/[6%] dark:border-white/[6%] rounded-2xl overflow-hidden">
         <FieldRow
           icon={<Pencil size={14} color={BRAND} />}
           label="Nombre"
@@ -353,7 +356,7 @@ export default function ProfileScreen() {
           }}
         >
           <LinearGradient
-            colors={["#6360f0", BRAND, "#3023cd"]}
+            colors={gradient.button.primary}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={{
@@ -411,7 +414,7 @@ function FieldRow({ icon, label, value, onChangeText, last, ...inputProps }) {
   return (
     <View
       className={`flex-row items-center px-4 py-3.5 ${
-        last ? "" : "border-b border-[#0f0d20]/[5%] dark:border-white/[5%]"
+        last ? "" : "border-b border-ui-text-main/5 dark:border-white/5"
       }`}
     >
       <IconBox color={brandPrimary[700]}>{icon}</IconBox>

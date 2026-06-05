@@ -71,8 +71,14 @@ export const ui = {
   },
   // ── Overlays / scrims (modales, sombras base) ──
   overlay: {
-    scrim: "rgba(0,0,0,0.6)", // fondo oscuro detrás de modales
-    shadow: "#000000", // shadowColor base de las cards modales
+    scrim: "rgba(0,0,0,0.6)",
+    shadow: "#000000",
+    scrimDark: "rgba(12,11,20,0.92)", // overlay oscuro sobre el bg dark (check-in result)
+  },
+  // ── Estados de feedback ──
+  status: {
+    success: "#10b981",
+    error: "#ef4444",
   },
   // ── Decorativos (tipografía fantasma, marcas de agua) ──
   decor: {
@@ -84,7 +90,14 @@ export const ui = {
   // ── 3. Colores de íconos SVG (no expresables como clase Tailwind) ──
   icon: {
     onDark: "rgba(255,255,255,0.4)",
+    onDarkStrong: "rgba(255,255,255,0.85)",
+    onDarkMuted: "rgba(255,255,255,0.35)",
     onLight: "rgba(15,13,32,0.35)",
+  },
+  // ── Bordes sobre fondos oscuros (inline style, no admiten Tailwind) ──
+  border: {
+    onDark: "rgba(255,255,255,0.10)",
+    onDarkSubtle: "rgba(255,255,255,0.08)",
   },
   arrow: {
     onDark: "rgba(255,255,255,0.65)",
@@ -119,6 +132,20 @@ export const gradient = {
   sessionPlaceholder: {
     dark: ["#0C0B14", "#1e1b4b", "#3023cd"],
     light: ["#eef0ff", "#c5caff", "#7e79fc"],
+  },
+  // ── Hero de pantalla de perfil ──
+  hero: {
+    light: ["rgba(74,68,228,0.18)", "rgba(42,232,204,0.10)", "rgba(248,249,252,0)"],
+    dark: ["rgba(74,68,228,0.28)", "rgba(42,232,204,0.15)", "rgba(12,11,20,0)"],
+  },
+  // ── Botón CTA principal ──
+  button: {
+    primary: ["#6360f0", "#4a44e4", "#3023cd"],
+  },
+  // ── Fondo sutil de thumbnail sin imagen ──
+  cardSubtle: {
+    dark: ["#4A44E420", "#2DD4BF10"],
+    light: ["#4A44E412", "#2DD4BF08"],
   },
   angle: 135,
 };

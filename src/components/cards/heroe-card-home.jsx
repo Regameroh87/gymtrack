@@ -100,7 +100,7 @@ export default function HeroeCardHome({ image }) {
       <View className="px-5 mb-7">
         <Pressable onPress={handlePress} className="active:scale-[0.985]">
           <View
-            className="rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-[#0f0d20]/8 dark:border-white/8"
+            className="rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-ui-text-main/[8%] dark:border-white/[8%]"
             style={{
               shadowColor: BRAND_PRIMARY,
               shadowOpacity: hasNoPlan ? 0.14 : 0.18,
@@ -136,7 +136,7 @@ export default function HeroeCardHome({ image }) {
             />
 
             {/* Número editorial gigante de fondo */}
-            <Text className="absolute -top-[22px] -right-[8px] text-[180px] leading-[180px] tracking-[-8px] font-jakarta-bold text-[#0f0d20]/5 dark:text-white/[4%]">
+            <Text className="absolute -top-[22px] -right-[8px] text-[180px] leading-[180px] tracking-[-8px] font-jakarta-bold text-ui-text-main/5 dark:text-white/[4%]">
               {String(now.getDate()).padStart(2, "0")}
             </Text>
 
@@ -158,7 +158,7 @@ export default function HeroeCardHome({ image }) {
 
               <View className="flex-row items-center" style={{ gap: 6 }}>
                 {hasNoPlan ? (
-                  <View className="bg-[#0f0d20]/20 dark:bg-white/20 w-2 h-2 rounded-full" />
+                  <View className="bg-ui-text-main/20 dark:bg-white/20 w-2 h-2 rounded-full" />
                 ) : (
                   <View
                     className="bg-brandSecondary-400 w-2 h-2 rounded-full"
@@ -173,7 +173,7 @@ export default function HeroeCardHome({ image }) {
                 <Text
                   className={`font-jakarta-bold text-xs tracking-[2px] ${
                     hasNoPlan
-                      ? "text-[#0f0d20]/45 dark:text-white/45"
+                      ? "text-ui-text-main/45 dark:text-white/45"
                       : "text-brandSecondary-700 dark:text-brandSecondary-400"
                   }`}
                 >
@@ -217,7 +217,7 @@ export default function HeroeCardHome({ image }) {
                       ? "Todavía no tenés un plan asignado."
                       : sessionTitle}
                   </Text>
-                  <Text className="font-manrope text-[#0f0d20]/55 dark:text-white/50 text-sm mt-2 leading-5">
+                  <Text className="font-manrope text-ui-text-main/55 dark:text-white/50 text-sm mt-2 leading-5">
                     {hasNoPlan
                       ? "Explorá el catálogo de planes y elegí el que mejor se adapte a tus objetivos."
                       : `${exerciseCount} ${exerciseCount === 1 ? "ejercicio" : "ejercicios"}`}
@@ -245,8 +245,8 @@ export default function HeroeCardHome({ image }) {
                         <LinearGradient
                           colors={
                             isDark
-                              ? ["#4A44E420", "#2DD4BF10"]
-                              : ["#4A44E412", "#2DD4BF08"]
+                              ? gradient.cardSubtle.dark
+                              : gradient.cardSubtle.light
                           }
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}
@@ -294,18 +294,18 @@ export default function HeroeCardHome({ image }) {
 
                 {!hasNoPlan && (
                   <View className="flex-row items-center gap-1">
-                    <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-3 h-[1px]" />
-                    <Text className="font-manrope-bold uppercase text-[#0f0d20]/45 dark:text-white/45 text-[10px] tracking-[2px]">
+                    <View className="bg-ui-text-main/[18%] dark:bg-white/25 w-3 h-[1px]" />
+                    <Text className="font-manrope-bold uppercase text-ui-text-main/45 dark:text-white/45 text-[10px] tracking-[2px]">
                       {`Día ${currentDay.day_number}`}
                     </Text>
-                    <View className="bg-[#0f0d20]/[18%] dark:bg-white/25 w-4 h-[1px]" />
+                    <View className="bg-ui-text-main/[18%] dark:bg-white/25 w-4 h-[1px]" />
                   </View>
                 )}
               </View>
             </View>
 
             {/* ── CTA strip ── */}
-            <View className="border-t border-[#0f0d20]/8 dark:border-white/8">
+            <View className="border-t border-ui-text-main/[8%] dark:border-white/[8%]">
               <View className="flex-row items-center justify-between px-5 py-3">
                 <View className="flex-row items-center" style={{ gap: 8 }}>
                   <View className="w-6 h-6 rounded-xl items-center justify-center bg-brandPrimary-700/[18%] border border-brandPrimary-700/50">
