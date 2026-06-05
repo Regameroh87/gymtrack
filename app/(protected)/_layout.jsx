@@ -1,6 +1,6 @@
 import { Stack, Redirect } from "expo-router";
 import { useAuth } from "../../src/auth/lib/getSession";
-import { View, Text } from "react-native";
+import { View, Text, Platform } from "react-native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 export default function ProtectedLayout() {
@@ -22,6 +22,15 @@ export default function ProtectedLayout() {
     <BottomSheetModalProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="profile/index"
+          options={{
+            headerShown: Platform.OS === "ios",
+            headerBackButtonDisplayMode: "minimal",
+            headerTitle: "",
+            headerTintColor: "#fff",
+          }}
+        />
       </Stack>
     </BottomSheetModalProvider>
   );
