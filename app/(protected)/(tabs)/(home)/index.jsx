@@ -7,11 +7,15 @@ import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ── Auth / Theme ──
-import { useAuth } from "../../../src/auth/lib/getSession.jsx";
-import { useTheme } from "../../../src/theme/theme.jsx";
+import { useAuth } from "../../../../src/auth/lib/getSession.jsx";
+import { useTheme } from "../../../../src/theme/theme.jsx";
 
 // ── Design Tokens ──
-import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors.js";
+import {
+  brandPrimary,
+  brandSecondary,
+  ui,
+} from "../../../../src/theme/colors.js";
 
 // ── Assets ──
 import {
@@ -19,10 +23,10 @@ import {
   ClipboardList,
   Plus,
   QrCode,
-} from "../../../assets/icons.jsx";
+} from "../../../../assets/icons.jsx";
 
 // ── Components ──
-import HeroeCardHome from "../../../src/components/cards/heroe-card-home.jsx";
+import HeroeCardHome from "../../../../src/components/cards/heroe-card-home.jsx";
 
 const BRAND_PRIMARY = brandPrimary[700];
 

@@ -182,14 +182,6 @@ export default function ProfileScreen() {
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         />
 
-        {/* Back button */}
-        <Pressable
-          onPress={() => router.back()}
-          className="mx-4 mt-3 mb-6 w-9 h-9 rounded-[11px] items-center justify-center bg-white/70 dark:bg-white/[6%] border border-ui-text-main/10 dark:border-white/10 active:opacity-60"
-        >
-          <ChevronLeft size={18} color={ui.text.main} />
-        </Pressable>
-
         {/* Avatar */}
         <View className="items-center pb-8 px-5">
           <Pressable onPress={pickImage} className="mb-5 active:scale-[0.96]">

@@ -1,9 +1,9 @@
 import { Tabs } from "expo-router";
-import { Barbell, Home, Logs, ShieldHalf } from "../../../assets/icons";
-import { useUserRole } from "../../../src/hooks/shared/use-user-role";
+import { Barbell, Home, Logs, ShieldHalf } from "../../../../assets/icons";
+import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { Pressable, Text } from "react-native";
 import { useColorScheme } from "nativewind";
-import { ui, brandPrimary } from "../../../src/theme/colors";
+import { ui, brandPrimary } from "../../../../src/theme/colors";
 
 export default function TabsLayout() {
   const { isStaff } = useUserRole();
