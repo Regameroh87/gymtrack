@@ -148,34 +148,36 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-      <SafeAreaProvider>
-        <KeyboardProvider statusBarTranslucent>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider
-              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <BottomSheetModalProvider>
-                <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-                <Screen>
-                  <Stack>
-                    <Stack.Screen
-                      name="(auth)"
-                      options={{ headerShown: false }}
-                    />
-                    <Stack.Screen
-                      name="(protected)"
-                      options={{
-                        headerShown: false,
-                      }}
-                    />
-                  </Stack>
-                  <Toast config={toastConfig} />
-                </Screen>
-              </BottomSheetModalProvider>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </KeyboardProvider>
-      </SafeAreaProvider>
+        <SafeAreaProvider>
+          <KeyboardProvider statusBarTranslucent>
+            <QueryClientProvider client={queryClient}>
+              <ThemeProvider
+                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+              >
+                <BottomSheetModalProvider>
+                  <StatusBar
+                    style={colorScheme === "dark" ? "light" : "dark"}
+                  />
+                  <Screen>
+                    <Stack>
+                      <Stack.Screen
+                        name="(auth)"
+                        options={{ headerShown: false }}
+                      />
+                      <Stack.Screen
+                        name="(protected)"
+                        options={{
+                          headerShown: false,
+                        }}
+                      />
+                    </Stack>
+                    <Toast config={toastConfig} />
+                  </Screen>
+                </BottomSheetModalProvider>
+              </ThemeProvider>
+            </QueryClientProvider>
+          </KeyboardProvider>
+        </SafeAreaProvider>
       </AuthProvider>
     </GestureHandlerRootView>
   );

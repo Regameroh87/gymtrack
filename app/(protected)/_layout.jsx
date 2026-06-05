@@ -22,7 +22,10 @@ export default function ProtectedLayout() {
     <BottomSheetModalProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="profile" options={{ headerShown: true, title: "Perfil" }} />
+        <Stack.Screen
+          name="profile"
+          options={{ headerShown: true, title: "Perfil" }}
+        />
         <Stack.Screen name="check-in" />
         <Stack.Screen name="sesion-active" />
       </Stack>
