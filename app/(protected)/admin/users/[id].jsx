@@ -20,7 +20,12 @@ import {
   useAssignPlanToMember,
 } from "../../../../src/hooks/users/use-assign-plan-to-member";
 import { useToggleMemberActive } from "../../../../src/hooks/users/use-update-member";
-import { ROLE_LABELS, isStaffRole } from "../../../../src/constants/roles";
+import {
+  ROLE_LABELS,
+  isStaffRole,
+  canManageMemberData,
+} from "../../../../src/constants/roles";
+import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import {
   formatShortDate,
@@ -50,6 +55,8 @@ export default function MemberDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { role } = useUserRole();
+  const canManage = canManageMemberData(role); // editar / dar de baja (admin+)
   const { data, isLoading, isError } = useMemberDetail(id);
 
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -298,35 +305,37 @@ export default function MemberDetail() {
           )}
         </View>
 
-        {/* ── Acciones ── */}
-        <View className="mx-5 mt-8 gap-2.5">
-          <Pressable
-            onPress={() => router.push(`/admin/users/edit/${id}`)}
-            className="flex-row items-center justify-center gap-2 py-3 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-80"
-          >
-            <Text className="text-sm font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
-              Editar datos
-            </Text>
-          </Pressable>
+        {/* ── Acciones administrativas (solo admin+) ── */}
+        {canManage && (
+          <View className="mx-5 mt-8 gap-2.5">
+            <Pressable
+              onPress={() => router.push(`/admin/users/edit/${id}`)}
+              className="flex-row items-center justify-center gap-2 py-3 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-80"
+            >
+              <Text className="text-sm font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
+                Editar datos
+              </Text>
+            </Pressable>
 
-          <Pressable
-            onPress={() => onToggleActive(!profile.is_active)}
-            disabled={toggleActive.isPending}
-            className={`flex-row items-center justify-center gap-2 py-3 rounded-2xl border active:opacity-80 ${
-              profile.is_active
-                ? "border-red-500/30 bg-red-500/10"
-                : "border-green-500/30 bg-green-500/10"
-            }`}
-          >
-            <Text
-              className={`text-sm font-jakarta-semi ${
-                profile.is_active ? "text-red-500" : "text-green-600"
+            <Pressable
+              onPress={() => onToggleActive(!profile.is_active)}
+              disabled={toggleActive.isPending}
+              className={`flex-row items-center justify-center gap-2 py-3 rounded-2xl border active:opacity-80 ${
+                profile.is_active
+                  ? "border-red-500/30 bg-red-500/10"
+                  : "border-green-500/30 bg-green-500/10"
               }`}
             >
-              {profile.is_active ? "Dar de baja" : "Reactivar alumno"}
-            </Text>
-          </Pressable>
-        </View>
+              <Text
+                className={`text-sm font-jakarta-semi ${
+                  profile.is_active ? "text-red-500" : "text-green-600"
+                }`}
+              >
+                {profile.is_active ? "Dar de baja" : "Reactivar alumno"}
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       {/* ── Selector de plan ── */}

@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { View, Text, ScrollView, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, Redirect } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 import { useMemberDetail } from "../../../../../src/hooks/users/use-member-detail";
 import { useUpdateMember } from "../../../../../src/hooks/users/use-update-member";
+import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
+import { canManageMemberData } from "../../../../../src/constants/roles";
 import FormField from "../../../../../src/components/forms/FormField";
 import StyledTextInput from "../../../../../src/components/forms/StyledTextInput";
 import SubmitButton from "../../../../../src/components/forms/SubmitButton";
@@ -18,6 +20,8 @@ const norm = (s) => (s ? s.trim().toLowerCase() : null);
 export default function EditMember() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { role, loading: roleLoading } = useUserRole();
+  const canManage = canManageMemberData(role); // editar datos = admin+
   const { data, isLoading } = useMemberDetail(id);
   const updateMutation = useUpdateMember(id);
 
@@ -75,6 +79,10 @@ export default function EditMember() {
       }
     );
   };
+
+  // Editar datos es administrativo (admin+). El coach no accede ni por URL.
+  if (roleLoading) return null;
+  if (!canManage) return <Redirect href={`/admin/users/${id}`} />;
 
   if (isLoading) {
     return (

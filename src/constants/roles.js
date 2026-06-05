@@ -46,6 +46,14 @@ export const MODULE_ROLES = {
 export const canAccessModule = (role, path) =>
   (MODULE_ROLES[path] ?? STAFF_ROLES).includes(role);
 
+// Capacidades sobre la ficha de un alumno (gating por permisos, ACUMULATIVO por
+// jerarquía: a más nivel, más capacidades).
+//   - coach: entrenamiento (asignar/cambiar plan, ver historial) + contacto en
+//     solo-lectura. NO gestiona datos administrativos.
+//   - admin/owner/super_admin: lo del coach + administrativo (editar datos, baja).
+export const canManageMemberData = (role) => isAdminRole(role);
+export const canManageTraining = (role) => isStaffRole(role);
+
 // Roles que un rol dado puede asignar al crear/editar usuarios
 // (cada rol solo puede asignar roles estrictamente por debajo del suyo).
 export const ASSIGNABLE_ROLES = {
