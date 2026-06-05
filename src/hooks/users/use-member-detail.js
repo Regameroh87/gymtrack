@@ -30,15 +30,20 @@ export const useMemberDetail = (memberId) =>
       if (aErr) throw aErr;
 
       const planIds = [
-        ...new Set((assignments ?? []).filter((a) => a.plan_id).map((a) => a.plan_id)),
+        ...new Set(
+          (assignments ?? []).filter((a) => a.plan_id).map((a) => a.plan_id)
+        ),
       ];
       const customIds = [
         ...new Set(
-          (assignments ?? []).filter((a) => a.custom_plan_id).map((a) => a.custom_plan_id)
+          (assignments ?? [])
+            .filter((a) => a.custom_plan_id)
+            .map((a) => a.custom_plan_id)
         ),
       ];
 
-      const PLAN_COLS = "id,name,objective,level,weekly_days,duration_weeks,cover_image_uri";
+      const PLAN_COLS =
+        "id,name,objective,level,weekly_days,duration_weeks,cover_image_uri";
       const planMap = {};
       const customMap = {};
       if (planIds.length) {
@@ -59,7 +64,9 @@ export const useMemberDetail = (memberId) =>
       const mapped = (assignments ?? []).map((a) => ({
         ...a,
         is_custom: !!a.custom_plan_id,
-        plan: a.custom_plan_id ? customMap[a.custom_plan_id] : planMap[a.plan_id],
+        plan: a.custom_plan_id
+          ? customMap[a.custom_plan_id]
+          : planMap[a.plan_id],
       }));
 
       // 3. Historial de entrenamientos (session_logs no borrados).
@@ -73,7 +80,9 @@ export const useMemberDetail = (memberId) =>
       if (lErr) throw lErr;
 
       const sessionIds = [
-        ...new Set((logs ?? []).filter((l) => l.session_id).map((l) => l.session_id)),
+        ...new Set(
+          (logs ?? []).filter((l) => l.session_id).map((l) => l.session_id)
+        ),
       ];
       const sessionMap = {};
       if (sessionIds.length) {

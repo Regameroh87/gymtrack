@@ -167,7 +167,9 @@ export default function MemberDetail() {
           >
             <Text
               className={`text-[10px] font-jakarta-semi uppercase tracking-wider ${
-                staff ? "text-violet-600 dark:text-violet-300" : "text-brandPrimary-600 dark:text-brandPrimary-300"
+                staff
+                  ? "text-violet-600 dark:text-violet-300"
+                  : "text-brandPrimary-600 dark:text-brandPrimary-300"
               }`}
             >
               {ROLE_LABELS[profile.role] ?? profile.role}
@@ -188,8 +190,17 @@ export default function MemberDetail() {
         <View className="mx-5 mb-5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl overflow-hidden">
           <InfoRow icon={Mail} label="Email" value={profile.email} />
           <InfoRow icon={Phone} label="Teléfono" value={profile.phone} />
-          <InfoRow icon={IdBadge} label="Documento" value={profile.document_number} />
-          <InfoRow icon={MapPin} label="Dirección" value={profile.address} last />
+          <InfoRow
+            icon={IdBadge}
+            label="Documento"
+            value={profile.document_number}
+          />
+          <InfoRow
+            icon={MapPin}
+            label="Dirección"
+            value={profile.address}
+            last
+          />
         </View>
 
         {/* ── Plan activo ── */}
@@ -262,7 +273,9 @@ export default function MemberDetail() {
               <View
                 key={log.id}
                 className={`flex-row items-center py-3 ${
-                  i === history.length - 1 ? "" : "border-b border-ui-input-border"
+                  i === history.length - 1
+                    ? ""
+                    : "border-b border-ui-input-border"
                 }`}
               >
                 <View className="w-9 h-9 rounded-lg items-center justify-center bg-brandSecondary-500/10 mr-3">

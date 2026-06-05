@@ -56,7 +56,11 @@ export default function EditMember() {
       {
         onSuccess: () => {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Toast.show({ type: "success", text1: "Datos actualizados", position: "bottom" });
+          Toast.show({
+            type: "success",
+            text1: "Datos actualizados",
+            position: "bottom",
+          });
           router.back();
         },
         onError: (e) => {
