@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
