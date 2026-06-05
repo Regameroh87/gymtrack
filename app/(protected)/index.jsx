@@ -114,7 +114,10 @@ export default function Home() {
               </Text>
             </View>
 
-            <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => router.push("/profile")}
+              className="flex-row items-center gap-2 active:opacity-70"
+            >
               <View className="border-brandPrimary-700/50 bg-brandPrimary-700/[6%] dark:bg-brandPrimary-700/[12%] w-11 h-11 rounded-3xl border-2 p-1 ">
                 <Image
                   source={
@@ -125,7 +128,7 @@ export default function Home() {
                   style={{ width: "100%", height: "100%", borderRadius: 18 }}
                 />
               </View>
-            </View>
+            </Pressable>
           </View>
         </View>
 

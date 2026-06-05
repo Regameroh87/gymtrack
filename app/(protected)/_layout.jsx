@@ -104,6 +104,13 @@ export default function ProtectedLayout() {
           }}
         />
         <Tabs.Screen
+          name="profile"
+          options={{
+            href: null,
+            headerShown: false,
+          }}
+        />
+        <Tabs.Screen
           name="check-in"
           options={{
             href: null,
