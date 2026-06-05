@@ -47,6 +47,20 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
+        name="users/[id]"
+        options={{
+          headerTitle: "Ficha del alumno",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
+        name="users/edit/[id]"
+        options={{
+          headerTitle: "Editar alumno",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
         name="exercises/index"
         options={{
           headerTitle: "",
