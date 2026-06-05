@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
@@ -19,6 +19,7 @@ import {
   useAssignablePlans,
   useAssignPlanToMember,
 } from "../../../../src/hooks/users/use-assign-plan-to-member";
+import { useToggleMemberActive } from "../../../../src/hooks/users/use-update-member";
 import { ROLE_LABELS, isStaffRole } from "../../../../src/constants/roles";
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import {
@@ -47,12 +48,33 @@ const safeDate = (iso) => {
 
 export default function MemberDetail() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { data, isLoading, isError } = useMemberDetail(id);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const { data: plans, isLoading: plansLoading } = useAssignablePlans();
   const assignMutation = useAssignPlanToMember(id);
+  const toggleActive = useToggleMemberActive(id);
+
+  const onToggleActive = (nextActive) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    toggleActive.mutate(nextActive, {
+      onSuccess: () =>
+        Toast.show({
+          type: "success",
+          text1: nextActive ? "Alumno reactivado" : "Alumno dado de baja",
+          position: "bottom",
+        }),
+      onError: (e) =>
+        Toast.show({
+          type: "error",
+          text1: "No se pudo actualizar",
+          text2: e?.message,
+          position: "bottom",
+        }),
+    });
+  };
 
   const assignPlan = (planId) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -153,6 +175,15 @@ export default function MemberDetail() {
           </View>
         </View>
 
+        {/* ── Aviso de baja ── */}
+        {!profile.is_active && (
+          <View className="mx-5 mb-5 px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/30">
+            <Text className="text-[13px] font-jakarta-semi text-red-500 text-center">
+              Este alumno está dado de baja
+            </Text>
+          </View>
+        )}
+
         {/* ── Datos de contacto ── */}
         <View className="mx-5 mb-5 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl overflow-hidden">
           <InfoRow icon={Mail} label="Email" value={profile.email} />
@@ -252,6 +283,36 @@ export default function MemberDetail() {
               </View>
             ))
           )}
+        </View>
+
+        {/* ── Acciones ── */}
+        <View className="mx-5 mt-8 gap-2.5">
+          <Pressable
+            onPress={() => router.push(`/admin/users/edit/${id}`)}
+            className="flex-row items-center justify-center gap-2 py-3 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-80"
+          >
+            <Text className="text-sm font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark">
+              Editar datos
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => onToggleActive(!profile.is_active)}
+            disabled={toggleActive.isPending}
+            className={`flex-row items-center justify-center gap-2 py-3 rounded-2xl border active:opacity-80 ${
+              profile.is_active
+                ? "border-red-500/30 bg-red-500/10"
+                : "border-green-500/30 bg-green-500/10"
+            }`}
+          >
+            <Text
+              className={`text-sm font-jakarta-semi ${
+                profile.is_active ? "text-red-500" : "text-green-600"
+              }`}
+            >
+              {profile.is_active ? "Dar de baja" : "Reactivar alumno"}
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
 

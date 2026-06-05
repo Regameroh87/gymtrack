@@ -328,7 +328,7 @@ function UserRow({ user, isLast, onPress }) {
       className={`flex-row items-center px-5 py-3 hover:bg-brandPrimary-50/40 ${
         isLast ? "" : "border-b border-ui-input-border"
       }`}
-      style={{ cursor: "pointer" }}
+      style={{ cursor: "pointer", opacity: user.is_active === false ? 0.55 : 1 }}
     >
       {/* Usuario */}
       <View className="flex-row items-center gap-3" style={{ flex: 3 }}>
@@ -385,6 +385,11 @@ function UserRow({ user, isLast, onPress }) {
             {roleLabel}
           </Text>
         </View>
+        {user.is_active === false && (
+          <Text className="mt-1 text-[9px] font-manrope-bold tracking-wider uppercase text-red-500">
+            Baja
+          </Text>
+        )}
       </View>
 
       {/* Fecha */}

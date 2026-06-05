@@ -57,6 +57,7 @@ export default function UsersList() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         router.push(`/admin/users/${item.id}`);
       }}
+      style={{ opacity: item.is_active === false ? 0.55 : 1 }}
       className="mx-5 mb-3 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5 flex-row items-center active:scale-[0.98]"
     >
       {/* Avatar */}
@@ -89,6 +90,13 @@ export default function UsersList() {
             <View className="ml-2 px-1.5 py-0.5 rounded bg-brandPrimary-100 dark:bg-brandPrimary-900">
               <Text className="text-[8px] font-jakarta-semi uppercase text-brandPrimary-600 dark:text-brandPrimary-300">
                 {ROLE_LABELS[item.role] ?? item.role}
+              </Text>
+            </View>
+          )}
+          {item.is_active === false && (
+            <View className="ml-2 px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/40">
+              <Text className="text-[8px] font-jakarta-semi uppercase text-red-500">
+                Baja
               </Text>
             </View>
           )}
