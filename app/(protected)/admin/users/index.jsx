@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../../../src/database/supabase";
@@ -17,11 +18,13 @@ import FilterChips from "../../../../src/components/FilterChips";
 import ButtonAdd from "../../../../src/components/buttons/ButtonAdd";
 import { ChevronRight, Mail } from "../../../../assets/icons";
 import { brandPrimary, ui } from "../../../../src/theme/colors";
+import { isStaffRole, ROLE_LABELS } from "../../../../src/constants/roles";
 
-const FILTER_OPTIONS = ["Todos", "Administradores", "Socios"];
+const FILTER_OPTIONS = ["Todos", "Staff", "Alumnos"];
 
 export default function UsersList() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 
@@ -43,8 +46,8 @@ export default function UsersList() {
       u.name?.toLowerCase().includes(q) ||
       u.last_name?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q);
-    if (filter === "Administradores") return match && u.is_admin;
-    if (filter === "Socios") return match && !u.is_admin;
+    if (filter === "Staff") return match && isStaffRole(u.role);
+    if (filter === "Alumnos") return match && !isStaffRole(u.role);
     return match;
   });
 

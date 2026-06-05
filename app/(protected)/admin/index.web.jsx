@@ -15,6 +15,8 @@ import {
 } from "../../../assets/icons";
 
 import { brandSecondary, ui } from "../../../src/theme/colors";
+import { useUserRole } from "../../../src/hooks/shared/use-user-role";
+import { canAccessModule } from "../../../src/constants/roles";
 
 const STATS = [
   {
@@ -150,6 +152,10 @@ const COMING_SOON = [
 
 export default function AdminDashboardWeb() {
   const router = useRouter();
+  const { role } = useUserRole();
+
+  // Solo los módulos permitidos para el rol (coach no ve Contabilidad).
+  const modules = MODULES.filter((mod) => canAccessModule(role, mod.path));
 
   const dateStr = new Date().toLocaleDateString("es-ES", {
     weekday: "long",
@@ -271,7 +277,7 @@ export default function AdminDashboardWeb() {
             Módulos del sistema
           </Text>
           <View className="gap-2">
-            {MODULES.map((mod, i) => {
+            {modules.map((mod, i) => {
               const Icon = mod.icon;
               return (
                 <Pressable

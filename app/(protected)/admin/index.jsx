@@ -10,6 +10,10 @@ import Screen from "../../../src/components/Screen";
 import AdminHeader from "../../../src/components/AdminHeader";
 import AdminModuleCard from "../../../src/components/cards/AdminModuleCard";
 
+// ── Roles ──
+import { useUserRole } from "../../../src/hooks/shared/use-user-role";
+import { canAccessModule } from "../../../src/constants/roles";
+
 // ── Tema ──
 import { brandSecondary, gradient } from "../../../src/theme/colors";
 
@@ -101,8 +105,12 @@ const MODULES = [
 export default function AdminDashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { role } = useUserRole();
 
   const nav = (path) => router.push(`/admin/${path}`);
+
+  // Solo los módulos permitidos para el rol (coach no ve Billing/Reportes/Ajustes).
+  const modules = MODULES.filter((m) => canAccessModule(role, m.path));
 
   return (
     <Screen safe>
@@ -132,7 +140,7 @@ export default function AdminDashboard() {
           </View>
 
           <View className="flex-row flex-wrap justify-between">
-            {MODULES.map((m) => (
+            {modules.map((m) => (
               <AdminModuleCard
                 key={m.path}
                 icon={m.icon}

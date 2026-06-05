@@ -4,6 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { supabase } from "../../database/supabase.js";
 import { useAuth } from "../../auth/lib/getSession";
+import { useUserRole } from "../../hooks/shared/use-user-role";
+import { canAccessModule } from "../../constants/roles";
 import { brandSecondary, gradient } from "../../theme/colors";
 
 import {
@@ -54,6 +56,12 @@ export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
+  const { role } = useUserRole();
+
+  // El Dashboard ("") siempre visible; el resto según permisos del rol.
+  const navItems = NAV_ITEMS.filter(
+    (item) => item.path === "" || canAccessModule(role, item.path)
+  );
 
   const nav = (path) => {
     const target = path ? `/admin/${path}` : "/admin";
@@ -107,7 +115,7 @@ export default function AdminSidebar() {
           Navegación
         </Text>
 
-        {NAV_ITEMS.map((item, i) => {
+        {navItems.map((item, i) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.path);
           const disabled = item.comingSoon || active;
