@@ -64,10 +64,7 @@ export const isPlanComplete = async (planId, db = database) => {
     .select({ id: plan_weeks.id })
     .from(plan_weeks)
     .where(
-      and(
-        eq(plan_weeks.plan_id, planId),
-        ne(plan_weeks.sync_status, "deleted")
-      )
+      and(eq(plan_weeks.plan_id, planId), ne(plan_weeks.sync_status, "deleted"))
     );
 
   if (!weeks.length) return false;
@@ -178,7 +175,8 @@ export const useTogglePlanPublish = () => {
         Toast.show({
           type: "error",
           text1: "Plan incompleto",
-          text2: "Asigná una sesión con ejercicios a cada día antes de publicar.",
+          text2:
+            "Asigná una sesión con ejercicios a cada día antes de publicar.",
           position: "bottom",
         });
       }
