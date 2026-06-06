@@ -21,7 +21,6 @@ export default function UserPlanBuilder() {
   const { form, planId, isLoading } = usePlanFormContext();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const router = useRouter();
 
   if (isLoading) {
     return (
