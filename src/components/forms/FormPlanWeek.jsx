@@ -628,7 +628,9 @@ export default function FormPlanWeek({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 sessionSheetRef.current?.dismiss();
                 setActiveDayIdx(null);
-                router.push("/biblioteca/sesiones/builder");
+                router.push(
+                  "/(protected)/(tabs)/planes/builder/custom-session"
+                );
               }}
               className="flex-row items-center p-4 mb-3 rounded-xl border border-dashed border-brandPrimary-500/50 active:scale-[0.97]"
               style={{ backgroundColor: "rgba(74,68,228,0.06)" }}
