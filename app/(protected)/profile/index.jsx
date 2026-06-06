@@ -7,6 +7,7 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -36,7 +37,6 @@ import {
   Polaroid,
   Pencil,
 } from "../../../assets/icons";
-import Screen from "../../../src/components/Screen";
 
 const norm = (s) => (s ? s.trim().toLowerCase() : null);
 
@@ -169,7 +169,9 @@ export default function ProfileScreen() {
   return (
     <ScrollView
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-      //contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+      contentContainerStyle={{
+        paddingBottom: insets.bottom,
+      }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >

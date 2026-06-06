@@ -17,6 +17,9 @@ import {
   ui,
 } from "../../../../src/theme/colors.js";
 
+// ── Utils ──
+import { getCloudinaryUrl } from "../../../../src/utils/cloudinary.js";
+
 // ── Assets ──
 import {
   ChevronRight,
@@ -77,8 +80,10 @@ export default function Home() {
   const dateLine = formatDateLine(now);
   const dayName = DAYS_ES[now.getDay()];
   const greeting = greetingFor(now);
-  const firstName = (user?.name ?? "").split(" ")[0] || "Atleta";
+  const rawFirst = (user?.name ?? "").split(" ")[0] || "Atleta";
+  const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
   const imageProfile = require("../../../../assets/profile.png");
+  const profileUrl = getCloudinaryUrl(user?.image_profile);
   const iconMint = isDark ? brandSecondary[400] : brandSecondary[700];
 
   return (
@@ -124,11 +129,7 @@ export default function Home() {
             >
               <View className="border-brandPrimary-700/50 bg-brandPrimary-700/[6%] dark:bg-brandPrimary-700/[12%] w-11 h-11 rounded-3xl border-2 p-1 ">
                 <Image
-                  source={
-                    user?.image_profile
-                      ? { uri: user.image_profile }
-                      : imageProfile
-                  }
+                  source={profileUrl ? { uri: profileUrl } : imageProfile}
                   style={{ width: "100%", height: "100%", borderRadius: 18 }}
                 />
               </View>

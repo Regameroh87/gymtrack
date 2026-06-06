@@ -2,10 +2,12 @@ import { Stack, Redirect } from "expo-router";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { View, Text, Platform } from "react-native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { ui } from "../../src/theme/colors.js";
+import { useTheme } from "../../src/theme/theme";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading } = useAuth();
-
+  const { isDark } = useTheme();
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -25,10 +27,11 @@ export default function ProtectedLayout() {
         <Stack.Screen
           name="profile/index"
           options={{
-            headerShown: Platform.OS === "ios",
+            headerShown: true,
+            headerBackVisible: Platform.OS === "ios",
             headerBackButtonDisplayMode: "minimal",
             headerTitle: "",
-            headerTintColor: "#fff",
+            headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
           }}
         />
       </Stack>
