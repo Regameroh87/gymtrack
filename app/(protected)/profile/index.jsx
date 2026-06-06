@@ -7,7 +7,6 @@ import {
   Alert,
   TextInput,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

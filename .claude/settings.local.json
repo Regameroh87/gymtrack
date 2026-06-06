@@ -23,7 +23,8 @@
       "Bash(lsof -nP -iTCP:8081 -sTCP:LISTEN)",
       "Bash(echo \"eslint exit: $?\")",
       "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('app/\\(protected\\)/sesion-active/active.jsx',{presets:['babel-preset-expo']}\\); console.log\\('babel parse: OK'\\)\")",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(rm /Users/rodrigogamero/.claude/projects/-Users-rodrigogamero-Desktop-gymtrack/memory/feedback_be_faster.md)"
     ]
   }
 }
