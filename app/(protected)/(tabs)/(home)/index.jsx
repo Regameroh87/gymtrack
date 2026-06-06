@@ -124,8 +124,11 @@ export default function Home() {
             </View>
 
             <Pressable
-              onPress={() => router.push("/(protected)/profile")}
-              className="flex-row items-center gap-2 active:opacity-70"
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                router.push("/(protected)/profile");
+              }}
+              className="flex-row items-center gap-2 active:opacity-70 active:scale-110"
             >
               <View className="border-brandPrimary-700/50 bg-brandPrimary-700/[6%] dark:bg-brandPrimary-700/[12%] w-11 h-11 rounded-3xl border-2 p-1 ">
                 <Image
@@ -168,8 +171,8 @@ export default function Home() {
               title="Explorar rutinas"
               description="Planes y sesiones publicados por el gym."
               icon={<ClipboardList size={18} color="white" />}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push("/planes");
               }}
               variant="primary"
@@ -179,8 +182,8 @@ export default function Home() {
               title="Crear mi rutina"
               description="Armá una rutina propia eligiendo ejercicios."
               icon={<Plus size={18} color={iconMint} />}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push("/planes/builder");
               }}
               variant="ghost"

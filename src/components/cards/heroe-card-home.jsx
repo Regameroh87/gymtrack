@@ -83,8 +83,8 @@ export default function HeroeCardHome({ image }) {
 
   const handlePress = hasNoPlan
     ? () => router.push("/planes")
-    : () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    : async () => {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.heavy);
         // Entramos por el preview; con sesión a medias empujamos la activa
         // encima con push (frame de stack normal). Evitamos navigate directo a
         // active, que dejaría ese destino en el historial y reaparecería como
