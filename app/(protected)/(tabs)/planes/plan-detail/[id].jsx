@@ -15,33 +15,30 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useQueryClient } from "@tanstack/react-query";
-import { eq, inArray } from "drizzle-orm";
+import { useQuery } from "@tanstack/react-query";
+import { asc, eq, inArray } from "drizzle-orm";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
 
 // Base de datos
 import { database } from "../../../../../src/database";
 import {
-  custom_plans,
-  custom_plan_weeks,
-  custom_plan_week_days,
-  custom_plan_week_day_exercises,
-  custom_plan_week_day_exercise_sets,
+  exercises_base,
+  plan_week_day_exercise_sets,
+  plan_week_day_exercises,
+  plan_week_days,
+  plan_weeks,
+  session_exercises,
+  sessions,
+  training_plans,
 } from "../../../../../src/database/schemas";
-import { checkNetInfoAndSync } from "../../../../../src/database/sync";
 
 // Hooks
 import { useRecordById } from "../../../../../src/hooks/shared/use-record-by-id";
-import { useCustomPlanDetail } from "../../../../../src/hooks/plans/use-custom-plan-detail";
 import { usePlanAssignments } from "../../../../../src/hooks/plans/use-plan-assignments";
-import { useFollowCustomPlan } from "../../../../../src/hooks/plans/use-follow-custom-plan";
+import { useAssignPlan } from "../../../../../src/hooks/plans/use-assign-plan";
 
 // Constantes
-import {
-  SESSION_OBJECTIVES,
-  SESSION_LEVELS,
-} from "../../../../../src/constants/sessionOptions";
+import { SESSION_OBJECTIVES } from "../../../../../src/constants/sessionOptions";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
@@ -60,20 +57,17 @@ import {
   Trash,
 } from "../../../../../assets/icons";
 
-// ─── Brand colors ─────────────────────────────────────────────────────────────
+// ─── Brand colors (Kinetic Precision) ────────────────────────────────────────
 const BRAND_PRIMARY = "#4A44E4";
 const BRAND_MINT = "#2DD4BF";
 const BRAND_FALLBACK_GRADIENT = ["#0C0B14", "#1e1b4b", "#3023cd"];
 const SURFACE_DARK = "#0F0D20";
-const SURFACE_LIGHT = "#F5F5F8";
 
-// ─── Diccionarios ─────────────────────────────────────────────────────────────
+// ─── Diccionarios ────────────────────────────────────────────────────────────
 const OBJECTIVE_LABELS = Object.fromEntries(
   SESSION_OBJECTIVES.map((o) => [o.value, o.label])
 );
-const LEVEL_LABELS = Object.fromEntries(
-  SESSION_LEVELS.map((l) => [l.value, l.label])
-);
+
 const OBJECTIVE_ICON = {
   hipertrofia: Barbell,
   fuerza: Barbell,
@@ -83,27 +77,122 @@ const OBJECTIVE_ICON = {
   rehabilitacion: ShieldHalf,
 };
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+// ─── Componente principal ────────────────────────────────────────────────────
 
-export default function CustomPlanDetail() {
+export default function PlanDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
 
-  const { data: plan, isLoading } = useRecordById("custom_plan", custom_plans, id);
-  const { data: weeks = [], isLoading: isDetailLoading } = useCustomPlanDetail(id);
   const { data: assignments } = usePlanAssignments();
-  const { mutate: followPlan, isPending: isFollowing } = useFollowCustomPlan();
+  const { mutate: assignPlan, isPending: isAssigning } = useAssignPlan();
+  const alreadyActive = assignments?.currentPlan?.plan_id === id;
+  const hasOtherActive = !!assignments?.currentPlan && !alreadyActive;
 
-  const currentPlan = assignments?.currentPlan ?? null;
-  const alreadyActive = currentPlan?.custom_plan_id === id;
-  const hasOtherActive = !!currentPlan && !alreadyActive;
+  const { data: plan, isLoading } = useRecordById(
+    "training_plan_detail",
+    training_plans,
+    id
+  );
 
-  const bg = isDark ? SURFACE_DARK : SURFACE_LIGHT;
+  const { data: weeks = [], isLoading: isDetailLoading } = useQuery({
+    queryKey: ["plan_detail_weeks_user", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const weeksRows = await database
+        .select()
+        .from(plan_weeks)
+        .where(eq(plan_weeks.plan_id, id))
+        .orderBy(asc(plan_weeks.week_number));
+
+      if (!weeksRows.length) return [];
+
+      const weekIds = weeksRows.map((w) => w.id);
+      const daysRows = await database
+        .select({
+          id: plan_week_days.id,
+          week_id: plan_week_days.week_id,
+          day_number: plan_week_days.day_number,
+          session_id: plan_week_days.session_id,
+          session_name: sessions.name,
+        })
+        .from(plan_week_days)
+        .leftJoin(sessions, eq(plan_week_days.session_id, sessions.id))
+        .where(inArray(plan_week_days.week_id, weekIds))
+        .orderBy(asc(plan_week_days.day_number));
+
+      const dayIds = daysRows.map((d) => d.id);
+      let exRows = [];
+      if (dayIds.length) {
+        exRows = await database
+          .select({
+            id: plan_week_day_exercises.id,
+            week_day_id: plan_week_day_exercises.week_day_id,
+            exercise_name: exercises_base.name,
+            muscle_group: exercises_base.muscle_group,
+            position: plan_week_day_exercises.position,
+          })
+          .from(plan_week_day_exercises)
+          .leftJoin(
+            session_exercises,
+            eq(
+              plan_week_day_exercises.session_exercise_id,
+              session_exercises.id
+            )
+          )
+          .leftJoin(
+            exercises_base,
+            eq(session_exercises.exercise_id, exercises_base.id)
+          )
+          .where(inArray(plan_week_day_exercises.week_day_id, dayIds))
+          .orderBy(asc(plan_week_day_exercises.position));
+      }
+
+      const exIds = exRows.map((e) => e.id);
+      const setsByEx = {};
+      if (exIds.length) {
+        const setRows = await database
+          .select({
+            exercise_id: plan_week_day_exercise_sets.exercise_id,
+            set_number: plan_week_day_exercise_sets.set_number,
+            reps_min: plan_week_day_exercise_sets.reps_min,
+            reps_max: plan_week_day_exercise_sets.reps_max,
+            duration_seconds: plan_week_day_exercise_sets.duration_seconds,
+          })
+          .from(plan_week_day_exercise_sets)
+          .where(inArray(plan_week_day_exercise_sets.exercise_id, exIds))
+          .orderBy(asc(plan_week_day_exercise_sets.set_number));
+        for (const s of setRows) {
+          if (!setsByEx[s.exercise_id]) setsByEx[s.exercise_id] = [];
+          setsByEx[s.exercise_id].push(s);
+        }
+      }
+
+      const exByDayId = {};
+      for (const ex of exRows) {
+        if (!exByDayId[ex.week_day_id]) exByDayId[ex.week_day_id] = [];
+        exByDayId[ex.week_day_id].push({
+          ...ex,
+          sets: setsByEx[ex.id] ?? [],
+        });
+      }
+
+      const daysByWeekId = {};
+      for (const d of daysRows) {
+        if (!daysByWeekId[d.week_id]) daysByWeekId[d.week_id] = [];
+        daysByWeekId[d.week_id].push({
+          ...d,
+          exercises: exByDayId[d.id] ?? [],
+        });
+      }
+
+      return weeksRows.map((w) => ({
+        ...w,
+        days: daysByWeekId[w.id] ?? [],
+      }));
+    },
+  });
 
   const totalExercises = useMemo(
     () =>
@@ -115,125 +204,39 @@ export default function CustomPlanDetail() {
     [weeks]
   );
 
-  const handleDelete = () => {
-    Alert.alert(
-      "Eliminar plan",
-      "¿Estás seguro? Esta acción no se puede deshacer.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            await database.transaction(async (tx) => {
-              const weekRows = await tx
-                .select({ id: custom_plan_weeks.id })
-                .from(custom_plan_weeks)
-                .where(eq(custom_plan_weeks.plan_id, id));
-              const weekIds = weekRows.map((w) => w.id);
-
-              if (weekIds.length) {
-                const dayRows = await tx
-                  .select({ id: custom_plan_week_days.id })
-                  .from(custom_plan_week_days)
-                  .where(inArray(custom_plan_week_days.week_id, weekIds));
-                const dayIds = dayRows.map((d) => d.id);
-
-                if (dayIds.length) {
-                  const exRows = await tx
-                    .select({ id: custom_plan_week_day_exercises.id })
-                    .from(custom_plan_week_day_exercises)
-                    .where(
-                      inArray(custom_plan_week_day_exercises.week_day_id, dayIds)
-                    );
-                  const exIds = exRows.map((e) => e.id);
-
-                  if (exIds.length) {
-                    await tx
-                      .update(custom_plan_week_day_exercise_sets)
-                      .set({ sync_status: "deleted" })
-                      .where(
-                        inArray(
-                          custom_plan_week_day_exercise_sets.exercise_id,
-                          exIds
-                        )
-                      );
-                  }
-
-                  await tx
-                    .update(custom_plan_week_day_exercises)
-                    .set({ sync_status: "deleted" })
-                    .where(
-                      inArray(
-                        custom_plan_week_day_exercises.week_day_id,
-                        dayIds
-                      )
-                    );
-                }
-
-                await tx
-                  .update(custom_plan_week_days)
-                  .set({ sync_status: "deleted" })
-                  .where(inArray(custom_plan_week_days.week_id, weekIds));
-
-                await tx
-                  .update(custom_plan_weeks)
-                  .set({ sync_status: "deleted" })
-                  .where(inArray(custom_plan_weeks.plan_id, [id]));
-              }
-
-              await tx
-                .update(custom_plans)
-                .set({ sync_status: "deleted" })
-                .where(eq(custom_plans.id, id));
-            });
-
-            queryClient.invalidateQueries({ queryKey: ["custom_plans"] });
-            queryClient.invalidateQueries({
-              queryKey: ["custom_plan_detail_weeks", id],
-            });
-            checkNetInfoAndSync();
-            router.back();
-          },
-        },
-      ]
-    );
-  };
-
   if (isLoading || !plan) {
     return (
       <View
         className="flex-1 items-center justify-center"
-        style={{ backgroundColor: bg }}
+        style={{ backgroundColor: SURFACE_DARK }}
       >
         <ActivityIndicator size="large" color={BRAND_PRIMARY} />
       </View>
     );
   }
 
+  const isOwner = false;
+
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
-      : getCloudinaryUrl(plan.cover_image_uri, "w_1200,h_900,c_fill,f_auto,q_auto")
+      : getCloudinaryUrl(
+          plan.cover_image_uri,
+          "w_1200,h_900,c_fill,f_auto,q_auto"
+        )
     : null;
 
   const ObjectiveIcon = OBJECTIVE_ICON[plan.objective] ?? Barbell;
   const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
-  const levelLabel = LEVEL_LABELS[plan.level];
   const selectedWeek = weeks[selectedWeekIdx];
 
-  // Fade inferior del hero — se adapta al fondo
-  const heroFadeColors = isDark
-    ? ["rgba(15,13,32,0)", "rgba(15,13,32,0.4)", "rgba(15,13,32,0.92)", SURFACE_DARK]
-    : ["rgba(245,245,248,0)", "rgba(245,245,248,0.4)", "rgba(245,245,248,0.92)", SURFACE_LIGHT];
-
   return (
-    <View className="flex-1" style={{ backgroundColor: bg }}>
+    <View className="flex-1" style={{ backgroundColor: SURFACE_DARK }}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── HERO ──────────────────────────────────────────────────────── */}
+        {/* ── HERO ────────────────────────────────────────────────────── */}
         <View style={{ height: 380, position: "relative" }}>
           {imageUrl ? (
             <Image
@@ -264,7 +267,7 @@ export default function CustomPlanDetail() {
             </>
           )}
 
-          {/* Scrim superior */}
+          {/* Scrim para botones arriba */}
           <LinearGradient
             colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0)"]}
             style={{
@@ -276,9 +279,14 @@ export default function CustomPlanDetail() {
             }}
           />
 
-          {/* Fade inferior hacia el fondo de la pantalla */}
+          {/* Fade hacia surface en bottom */}
           <LinearGradient
-            colors={heroFadeColors}
+            colors={[
+              "rgba(15,13,32,0)",
+              "rgba(15,13,32,0.4)",
+              "rgba(15,13,32,0.92)",
+              SURFACE_DARK,
+            ]}
             locations={[0, 0.4, 0.85, 1]}
             style={{
               position: "absolute",
@@ -289,7 +297,7 @@ export default function CustomPlanDetail() {
             }}
           />
 
-          {/* Botón back */}
+          {/* Botón back glass */}
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -313,54 +321,90 @@ export default function CustomPlanDetail() {
             <ArrowLeft size={18} color="white" />
           </Pressable>
 
-          {/* Botones Edit + Delete */}
-          <View
-            style={{
-              position: "absolute",
-              top: insets.top + 10,
-              right: 20,
-              flexDirection: "row",
-              gap: 8,
-            }}
-          >
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push(`/planes/builder/custom-plan?id=${id}`);
-              }}
-              className="active:scale-90"
+          {/* Top-right: botones edit/delete (owner) o kicker (otros) */}
+          {isOwner ? (
+            <View
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "rgba(15,13,32,0.6)",
-                borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.18)",
-                alignItems: "center",
-                justifyContent: "center",
+                position: "absolute",
+                top: insets.top + 10,
+                right: 20,
+                flexDirection: "row",
+                gap: 8,
               }}
             >
-              <Pencil size={16} color="white" />
-            </Pressable>
-            <Pressable
-              onPress={handleDelete}
-              className="active:scale-90"
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push(`/planes/builder?id=${id}`);
+                }}
+                className="active:scale-90"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: "rgba(15,13,32,0.6)",
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.18)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Pencil size={16} color="white" />
+              </Pressable>
+              <Pressable
+                onPress={handleDelete}
+                className="active:scale-90"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: "rgba(239,68,68,0.2)",
+                  borderWidth: 1,
+                  borderColor: "rgba(239,68,68,0.35)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Trash size={16} color="#ef4444" />
+              </Pressable>
+            </View>
+          ) : (
+            <View
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "rgba(239,68,68,0.2)",
-                borderWidth: 1,
-                borderColor: "rgba(239,68,68,0.35)",
+                position: "absolute",
+                top: insets.top + 22,
+                right: 20,
+                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "center",
+                gap: 6,
               }}
             >
-              <Trash size={16} color="#ef4444" />
-            </Pressable>
-          </View>
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: BRAND_MINT,
+                  shadowColor: BRAND_MINT,
+                  shadowOpacity: 1,
+                  shadowRadius: 6,
+                  shadowOffset: { width: 0, height: 0 },
+                }}
+              />
+              <Text
+                className="font-manrope-bold uppercase"
+                style={{
+                  fontSize: 10,
+                  color: BRAND_MINT,
+                  letterSpacing: 2.4,
+                }}
+              >
+                Rutina
+              </Text>
+            </View>
+          )}
 
-          {/* Título sobre scrim inferior */}
+          {/* Título superpuesto al borde del scrim */}
           <View
             style={{
               position: "absolute",
@@ -370,6 +414,7 @@ export default function CustomPlanDetail() {
               gap: 12,
             }}
           >
+            {/* Ticks editoriales */}
             <View className="flex-row items-center" style={{ gap: 6 }}>
               <View
                 style={{
@@ -434,84 +479,60 @@ export default function CustomPlanDetail() {
           <View
             className="flex-row items-stretch rounded-2xl"
             style={{
-              backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+              backgroundColor: "rgba(255,255,255,0.04)",
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
+              borderColor: "rgba(255,255,255,0.08)",
               paddingVertical: 16,
               paddingHorizontal: 4,
             }}
           >
             {plan.duration_weeks ? (
               <>
-                <StatBlock value={plan.duration_weeks} label="Semanas" isDark={isDark} />
-                <Divider isDark={isDark} />
-                <StatBlock value={plan.weekly_days} label="Días/sem" isDark={isDark} />
-                <Divider isDark={isDark} />
+                <StatBlock value={plan.duration_weeks} label="Semanas" />
+                <Divider />
+                <StatBlock value={plan.weekly_days} label="Días/sem" />
+                <Divider />
                 <StatBlock
                   value={plan.duration_weeks * plan.weekly_days}
                   label="Total días"
-                  isDark={isDark}
                 />
               </>
             ) : (
               <>
-                <StatBlock value="∞" label="Flexible" isDark={isDark} />
-                <Divider isDark={isDark} />
-                <StatBlock value={plan.weekly_days} label="Días/sem" isDark={isDark} />
+                <StatBlock value="∞" label="Flexible" />
+                <Divider />
+                <StatBlock value={plan.weekly_days} label="Días/sem" />
               </>
             )}
           </View>
         </View>
 
-        {/* ── DESCRIPCIÓN / NIVEL ────────────────────────────────────── */}
-        {(plan.description || levelLabel) && (
-          <View style={{ paddingHorizontal: 20, marginBottom: 28, gap: 12 }}>
-            {levelLabel && (
-              <View
-                style={{
-                  alignSelf: "flex-start",
-                  paddingHorizontal: 10,
-                  paddingVertical: 4,
-                  borderRadius: 999,
-                  backgroundColor: "rgba(45,212,191,0.1)",
-                  borderWidth: 1,
-                  borderColor: "rgba(45,212,191,0.25)",
-                }}
-              >
-                <Text
-                  className="font-manrope-bold uppercase"
-                  style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 1.4 }}
-                >
-                  {levelLabel}
-                </Text>
-              </View>
-            )}
-            {plan.description ? (
-              <>
-                <Text
-                  className="font-manrope-bold uppercase"
-                  style={{
-                    fontSize: 10,
-                    color: BRAND_MINT,
-                    letterSpacing: 2.2,
-                  }}
-                >
-                  Sobre el plan
-                </Text>
-                <Text
-                  className="font-manrope"
-                  style={{
-                    fontSize: 14,
-                    lineHeight: 22,
-                    color: isDark ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.72)",
-                  }}
-                >
-                  {plan.description}
-                </Text>
-              </>
-            ) : null}
+        {/* ── DESCRIPCIÓN ─────────────────────────────────────────────── */}
+        {plan.description ? (
+          <View style={{ paddingHorizontal: 20, marginBottom: 28 }}>
+            <Text
+              className="font-manrope-bold uppercase"
+              style={{
+                fontSize: 10,
+                color: BRAND_MINT,
+                letterSpacing: 2.2,
+                marginBottom: 10,
+              }}
+            >
+              Sobre el plan
+            </Text>
+            <Text
+              className="font-manrope"
+              style={{
+                fontSize: 14,
+                lineHeight: 22,
+                color: "rgba(255,255,255,0.78)",
+              }}
+            >
+              {plan.description}
+            </Text>
           </View>
-        )}
+        ) : null}
 
         {/* ── PROGRAMA ────────────────────────────────────────────────── */}
         <View style={{ paddingHorizontal: 20 }}>
@@ -529,7 +550,11 @@ export default function CustomPlanDetail() {
             />
             <Text
               className="font-manrope-bold uppercase"
-              style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.2 }}
+              style={{
+                fontSize: 10,
+                color: BRAND_MINT,
+                letterSpacing: 2.2,
+              }}
             >
               El Programa
             </Text>
@@ -537,14 +562,14 @@ export default function CustomPlanDetail() {
               style={{
                 flex: 1,
                 height: 1,
-                backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
+                backgroundColor: "rgba(255,255,255,0.08)",
               }}
             />
             <Text
               className="font-manrope-bold"
               style={{
                 fontSize: 10,
-                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                color: "rgba(255,255,255,0.5)",
                 letterSpacing: 1.5,
               }}
             >
@@ -564,7 +589,7 @@ export default function CustomPlanDetail() {
               paddingVertical: 36,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.12)",
+              borderColor: "rgba(255,255,255,0.08)",
               borderStyle: "dashed",
               alignItems: "center",
             }}
@@ -573,13 +598,11 @@ export default function CustomPlanDetail() {
               className="font-manrope"
               style={{
                 fontSize: 13,
-                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                color: "rgba(255,255,255,0.5)",
                 textAlign: "center",
-                paddingHorizontal: 20,
               }}
             >
-              Este plan aún no tiene contenido.{"\n"}Tocá el lápiz para armar la
-              rutina.
+              Este plan aún no tiene contenido publicado.
             </Text>
           </View>
         ) : (
@@ -610,15 +633,11 @@ export default function CustomPlanDetail() {
                       borderRadius: 999,
                       backgroundColor: isActive
                         ? BRAND_PRIMARY
-                        : isDark
-                          ? "rgba(255,255,255,0.05)"
-                          : "rgba(0,0,0,0.05)",
+                        : "rgba(255,255,255,0.05)",
                       borderWidth: 1,
                       borderColor: isActive
                         ? BRAND_PRIMARY
-                        : isDark
-                          ? "rgba(255,255,255,0.1)"
-                          : "rgba(0,0,0,0.1)",
+                        : "rgba(255,255,255,0.1)",
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 6,
@@ -642,17 +661,11 @@ export default function CustomPlanDetail() {
                       className="font-manrope-bold uppercase"
                       style={{
                         fontSize: 11,
-                        color: isActive
-                          ? "white"
-                          : isDark
-                            ? "rgba(255,255,255,0.55)"
-                            : "rgba(0,0,0,0.55)",
+                        color: isActive ? "white" : "rgba(255,255,255,0.55)",
                         letterSpacing: 1.2,
                       }}
                     >
-                      {weeks.length === 1 && w.week_number === 0
-                        ? "Semana tipo"
-                        : `Semana ${w.week_number}`}
+                      Semana {w.week_number}
                     </Text>
                   </Pressable>
                 );
@@ -666,7 +679,7 @@ export default function CustomPlanDetail() {
                   className="font-manrope italic"
                   style={{
                     fontSize: 13,
-                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                    color: "rgba(255,255,255,0.4)",
                     textAlign: "center",
                     paddingVertical: 24,
                   }}
@@ -675,7 +688,7 @@ export default function CustomPlanDetail() {
                 </Text>
               ) : (
                 selectedWeek?.days.map((day) => (
-                  <DayCard key={day.id} day={day} isDark={isDark} />
+                  <DayCard key={day.id} day={day} />
                 ))
               )}
             </View>
@@ -693,30 +706,29 @@ export default function CustomPlanDetail() {
           paddingTop: 12,
           paddingBottom: insets.bottom + 12,
           paddingHorizontal: 20,
-          backgroundColor: isDark ? "rgba(15,13,32,0.92)" : "rgba(245,245,248,0.92)",
+          backgroundColor: "rgba(15,13,32,0.92)",
           borderTopWidth: 1,
-          borderTopColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+          borderTopColor: "rgba(255,255,255,0.08)",
         }}
       >
         <Pressable
-          disabled={alreadyActive || isFollowing}
+          disabled={alreadyActive || isAssigning}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             if (hasOtherActive) {
-              const activeName = currentPlan.plan?.name ?? "tu plan actual";
               Alert.alert(
                 "¿Reemplazar plan actual?",
-                `Estás haciendo "${activeName}". Si arrancás este, el anterior queda como completado.`,
+                `Estás haciendo "${assignments.currentPlan.plan_name}". Si arrancás este, el anterior queda como completado.`,
                 [
                   { text: "Cancelar", style: "cancel" },
                   {
                     text: "Sí, cambiar",
-                    onPress: () => followPlan({ customPlanId: id }),
+                    onPress: () => assignPlan({ planId: id }),
                   },
                 ]
               );
             } else {
-              followPlan({ customPlanId: id });
+              assignPlan({ planId: id });
             }
           }}
           className="active:scale-[0.98]"
@@ -740,7 +752,7 @@ export default function CustomPlanDetail() {
               shadowOpacity: alreadyActive ? 0 : 0.5,
               shadowRadius: 16,
               shadowOffset: { width: 0, height: 6 },
-              opacity: isFollowing ? 0.7 : 1,
+              opacity: isAssigning ? 0.7 : 1,
             }}
           >
             <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -760,11 +772,11 @@ export default function CustomPlanDetail() {
                 className="font-manrope-bold uppercase text-white"
                 style={{ fontSize: 13, letterSpacing: 1.4 }}
               >
-                {isFollowing
+                {isAssigning
                   ? "Guardando…"
                   : alreadyActive
                     ? "Plan activo ✓"
-                    : "Seguir este plan"}
+                    : "Empezar este plan"}
               </Text>
             </View>
             {!alreadyActive && (
@@ -788,19 +800,14 @@ export default function CustomPlanDetail() {
   );
 }
 
-// ─── Subcomponentes ───────────────────────────────────────────────────────────
+// ─── Subcomponentes ──────────────────────────────────────────────────────────
 
-function StatBlock({ value, label, isDark }) {
+function StatBlock({ value, label }) {
   return (
     <View className="flex-1 items-center">
       <Text
-        className="font-jakarta-bold"
-        style={{
-          fontSize: 24,
-          letterSpacing: -0.8,
-          lineHeight: 26,
-          color: isDark ? "white" : "#1a1a2e",
-        }}
+        className="font-jakarta-bold text-white"
+        style={{ fontSize: 24, letterSpacing: -0.8, lineHeight: 26 }}
       >
         {value ?? 0}
       </Text>
@@ -808,7 +815,7 @@ function StatBlock({ value, label, isDark }) {
         className="font-manrope-bold uppercase"
         style={{
           fontSize: 9,
-          color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+          color: "rgba(255,255,255,0.5)",
           letterSpacing: 1.4,
           marginTop: 4,
         }}
@@ -819,19 +826,19 @@ function StatBlock({ value, label, isDark }) {
   );
 }
 
-function Divider({ isDark }) {
+function Divider() {
   return (
     <View
       style={{
         width: 1,
-        backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+        backgroundColor: "rgba(255,255,255,0.1)",
         marginVertical: 4,
       }}
     />
   );
 }
 
-function DayCard({ day, isDark }) {
+function DayCard({ day }) {
   const exCount = day.exercises?.length ?? 0;
   const hasSession = !!day.session_name;
 
@@ -839,9 +846,9 @@ function DayCard({ day, isDark }) {
     <View
       style={{
         borderRadius: 16,
-        backgroundColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+        backgroundColor: "rgba(255,255,255,0.04)",
         borderWidth: 1,
-        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+        borderColor: "rgba(255,255,255,0.08)",
         overflow: "hidden",
       }}
     >
@@ -853,7 +860,7 @@ function DayCard({ day, isDark }) {
           paddingVertical: 12,
           gap: 12,
           borderBottomWidth: exCount > 0 ? 1 : 0,
-          borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.08)",
+          borderBottomColor: "rgba(255,255,255,0.06)",
         }}
       >
         <View
@@ -870,17 +877,17 @@ function DayCard({ day, isDark }) {
         >
           <Text
             className="font-manrope-bold uppercase"
-            style={{ fontSize: 8, color: BRAND_MINT, letterSpacing: 1 }}
+            style={{
+              fontSize: 8,
+              color: BRAND_MINT,
+              letterSpacing: 1,
+            }}
           >
             Día
           </Text>
           <Text
-            className="font-jakarta-bold"
-            style={{
-              fontSize: 14,
-              lineHeight: 16,
-              color: isDark ? "white" : "#1a1a2e",
-            }}
+            className="font-jakarta-bold text-white"
+            style={{ fontSize: 14, lineHeight: 16 }}
           >
             {day.day_number}
           </Text>
@@ -891,9 +898,7 @@ function DayCard({ day, isDark }) {
             className="font-jakarta-bold"
             style={{
               fontSize: 14,
-              color: hasSession
-                ? isDark ? "white" : "#1a1a2e"
-                : isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+              color: hasSession ? "white" : "rgba(255,255,255,0.4)",
             }}
             numberOfLines={1}
           >
@@ -903,7 +908,7 @@ function DayCard({ day, isDark }) {
             className="font-manrope-semi uppercase"
             style={{
               fontSize: 9,
-              color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+              color: "rgba(255,255,255,0.45)",
               letterSpacing: 1.2,
               marginTop: 2,
             }}
@@ -919,7 +924,7 @@ function DayCard({ day, isDark }) {
       {exCount > 0 && (
         <View style={{ paddingHorizontal: 14, paddingVertical: 10, gap: 8 }}>
           {day.exercises.map((ex, idx) => (
-            <ExerciseRow key={ex.id} exercise={ex} index={idx} isDark={isDark} />
+            <ExerciseRow key={ex.id} exercise={ex} index={idx} />
           ))}
         </View>
       )}
@@ -927,7 +932,7 @@ function DayCard({ day, isDark }) {
   );
 }
 
-function ExerciseRow({ exercise, index, isDark }) {
+function ExerciseRow({ exercise, index }) {
   const sets = exercise.sets ?? [];
   return (
     <View className="flex-row items-start" style={{ gap: 10 }}>
@@ -935,7 +940,7 @@ function ExerciseRow({ exercise, index, isDark }) {
         className="font-jakarta-bold"
         style={{
           fontSize: 11,
-          color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.25)",
+          color: "rgba(255,255,255,0.3)",
           letterSpacing: 1,
           minWidth: 18,
           marginTop: 2,
@@ -946,10 +951,7 @@ function ExerciseRow({ exercise, index, isDark }) {
       <View className="flex-1">
         <Text
           className="font-manrope-semi"
-          style={{
-            fontSize: 13,
-            color: isDark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.82)",
-          }}
+          style={{ fontSize: 13, color: "rgba(255,255,255,0.92)" }}
           numberOfLines={1}
         >
           {exercise.exercise_name ?? "—"}
@@ -957,7 +959,7 @@ function ExerciseRow({ exercise, index, isDark }) {
         {sets.length > 0 && (
           <View className="flex-row flex-wrap" style={{ gap: 4, marginTop: 4 }}>
             {sets.map((s) => (
-              <SetChip key={s.set_number} set={s} isDark={isDark} />
+              <SetChip key={s.set_number} set={s} />
             ))}
           </View>
         )}
@@ -966,7 +968,7 @@ function ExerciseRow({ exercise, index, isDark }) {
   );
 }
 
-function SetChip({ set, isDark }) {
+function SetChip({ set }) {
   let label;
   if (set.duration_seconds) label = `${set.duration_seconds}s`;
   else if (set.reps_min != null && set.reps_max != null)
@@ -993,13 +995,16 @@ function SetChip({ set, isDark }) {
         className="font-manrope-bold uppercase"
         style={{
           fontSize: 8,
-          color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+          color: "rgba(255,255,255,0.5)",
           letterSpacing: 0.8,
         }}
       >
         S{set.set_number}
       </Text>
-      <Text className="font-manrope-bold" style={{ fontSize: 10, color: BRAND_MINT }}>
+      <Text
+        className="font-manrope-bold"
+        style={{ fontSize: 10, color: BRAND_MINT }}
+      >
         {label}
       </Text>
     </View>

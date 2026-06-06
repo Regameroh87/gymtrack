@@ -357,8 +357,10 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                 key={item.id}
                 onPress={() =>
                   item.is_custom
-                    ? router.push(`/planes/custom-plan/${item.custom_plan_id}`)
-                    : router.push(`/planes/plan/${item.plan_id}`)
+                    ? router.push(
+                        `/planes/plan-detail/custom/${item.custom_plan_id}`
+                      )
+                    : router.push(`/planes/plan-detail/${item.plan_id}`)
                 }
                 className="active:opacity-70"
               >

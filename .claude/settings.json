@@ -8,7 +8,9 @@
       "Bash(xcrun simctl *)",
       "Bash(xcodebuild -version)",
       "Read(//Applications/Xcode.app/Contents/Developer/Platforms/**)",
-      "Bash(Test-Path \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\_layout.jsx\")"
+      "Bash(Test-Path \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\_layout.jsx\")",
+      "PowerShell($base = \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\planes\\\\plan-detail\"; New-Item -ItemType Directory -Force \"$base\\\\custom\" | Out-Null; Move-Item \"$base\\\\[custom-id].jsx\" \"$base\\\\custom\\\\[id].jsx\"; Get-ChildItem -Recurse $base | Select-Object FullName)",
+      "PowerShell($base = \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\planes\\\\plan-detail\"; Move-Item -LiteralPath \"$base\\\\[custom-id].jsx\" -Destination \"$base\\\\custom\\\\[id].jsx\"; Get-ChildItem -Recurse -LiteralPath $base -File | Select-Object FullName)"
     ],
     "defaultMode": "default"
   }
