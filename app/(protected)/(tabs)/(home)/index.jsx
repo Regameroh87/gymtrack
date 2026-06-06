@@ -125,7 +125,7 @@ export default function Home() {
 
             <Pressable
               onPress={async () => {
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
                 router.push("/(protected)/profile");
               }}
               className="flex-row items-center gap-2 active:opacity-70 active:scale-110"
@@ -193,8 +193,8 @@ export default function Home() {
               title="Check-in en el gym"
               description="Escaneá el QR de recepción al llegar."
               icon={<QrCode size={18} color={iconMint} />}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onPress={async () => {
+                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push("/check-in");
               }}
               variant="ghost"
