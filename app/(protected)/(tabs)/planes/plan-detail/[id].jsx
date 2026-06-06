@@ -54,7 +54,6 @@ import {
   Pencil,
   Play,
   ShieldHalf,
-  Trash,
 } from "../../../../../assets/icons";
 
 // ─── Brand colors (Kinetic Precision) ────────────────────────────────────────
@@ -350,22 +349,6 @@ export default function PlanDetail() {
                 }}
               >
                 <Pencil size={16} color="white" />
-              </Pressable>
-              <Pressable
-                onPress={handleDelete}
-                className="active:scale-90"
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: "rgba(239,68,68,0.2)",
-                  borderWidth: 1,
-                  borderColor: "rgba(239,68,68,0.35)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Trash size={16} color="#ef4444" />
               </Pressable>
             </View>
           ) : (

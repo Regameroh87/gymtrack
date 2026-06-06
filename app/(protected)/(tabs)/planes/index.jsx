@@ -281,9 +281,9 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
             onPress={() =>
               currentPlan.is_custom
                 ? router.push(
-                    `/planes/custom-plan/${currentPlan.custom_plan_id}`
+                    `/planes/plan-detail/custom/${currentPlan.custom_plan_id}`
                   )
-                : router.push(`/planes/plan/${currentPlan.plan_id}`)
+                : router.push(`/planes/plan-detail/${currentPlan.plan_id}`)
             }
             assignerName={currentPlan.assigner_name}
           />
@@ -582,8 +582,8 @@ function ExplorarContent({ router, insets }) {
                   isCustom={isMine}
                   onPress={(p) =>
                     isMine
-                      ? router.push(`/planes/custom-plan/${p.id}`)
-                      : router.push(`/planes/plan/${p.id}`)
+                      ? router.push(`/planes/plan-detail/custom/${p.id}`)
+                      : router.push(`/planes/plan-detail/${p.id}`)
                   }
                 />
               </Animated.View>
