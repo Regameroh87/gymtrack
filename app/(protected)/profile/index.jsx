@@ -175,7 +175,7 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* ── Hero ── */}
-      <View style={{ paddingTop: insets.top }}>
+      <View style={{ paddingTop: insets.top + 10 }}>
         <LinearGradient
           colors={gradient.hero.light}
           start={{ x: 0, y: 0 }}
