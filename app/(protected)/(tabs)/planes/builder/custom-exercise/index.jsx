@@ -10,12 +10,12 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
-import { useAuth } from "../../../../../src/auth/lib/getSession";
-import { database } from "../../../../../src/database";
-import { custom_exercises } from "../../../../../src/database/schemas";
-import { checkNetInfoAndSync } from "../../../../../src/database/sync";
-import FormExercise from "../../../../../src/components/forms/FormExercise";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { useAuth } from "../../../../../../src/auth/lib/getSession";
+import { database } from "../../../../../../src/database";
+import { custom_exercises } from "../../../../../../src/database/schemas";
+import { checkNetInfoAndSync } from "../../../../../../src/database/sync";
+import FormExercise from "../../../../../../src/components/forms/FormExercise";
+import { brandPrimary, ui } from "../../../../../../src/theme/colors";
 
 export default function UserExerciseBuilder() {
   const { id } = useLocalSearchParams();
@@ -67,7 +67,11 @@ export default function UserExerciseBuilder() {
         if (isEdit) {
           await database
             .update(custom_exercises)
-            .set({ ...exerciseValues, updated_at: new Date().toISOString(), sync_status: "pending" })
+            .set({
+              ...exerciseValues,
+              updated_at: new Date().toISOString(),
+              sync_status: "pending",
+            })
             .where(eq(custom_exercises.id, id));
         } else {
           const exerciseId = Crypto.randomUUID();

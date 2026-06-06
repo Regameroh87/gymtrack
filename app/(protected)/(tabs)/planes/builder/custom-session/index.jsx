@@ -3,9 +3,9 @@ import { HeaderBackButton } from "@react-navigation/elements";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 
-import { useCustomSessionForm } from "../../../../../src/hooks/sessions/use-custom-session-form";
-import FormSession from "../../../../../src/components/forms/FormSession";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { useCustomSessionForm } from "../../../../../../src/hooks/sessions/use-custom-session-form";
+import FormSession from "../../../../../../src/components/forms/FormSession";
+import { brandPrimary, ui } from "../../../../../../src/theme/colors";
 
 export default function UserSessionBuilder() {
   const { id } = useLocalSearchParams();
