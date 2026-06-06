@@ -161,6 +161,7 @@ export default function RootLayout() {
                 <BottomSheetModalProvider>
                   <StatusBar
                     style={colorScheme === "dark" ? "light" : "dark"}
+                    translucent
                   />
                   <Screen>
                     <Stack>
