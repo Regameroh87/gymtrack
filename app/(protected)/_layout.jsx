@@ -27,8 +27,7 @@ export default function ProtectedLayout() {
         <Stack.Screen
           name="profile/index"
           options={{
-            headerShown: true,
-            headerBackVisible: Platform.OS === "ios",
+            headerShown: Platform.OS === "ios",
             headerBackButtonDisplayMode: "minimal",
             headerTitle: "",
             headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
