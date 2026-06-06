@@ -1,11 +1,8 @@
 ﻿// React Native
 import { ActivityIndicator, Platform, View } from "react-native";
 
-// React Navigation
-import { HeaderBackButton } from "@react-navigation/elements";
-
 // Librerías externas
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 
 // Contexto
