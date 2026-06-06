@@ -18,7 +18,7 @@ export default function PlanBuilderLayout() {
 
   return (
     <PlanFormProvider value={{ form, planId: id ?? null, isLoading }}>
-      <Stack />
+      <Stack screenOptions={{ headerShown: false }} />
     </PlanFormProvider>
   );
 }

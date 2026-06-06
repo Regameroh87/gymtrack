@@ -1,10 +1,6 @@
 ﻿// React Native
 import { ActivityIndicator, Platform, View } from "react-native";
 
-// Librerías externas
-import { Stack } from "expo-router";
-import { useColorScheme } from "nativewind";
-
 // Contexto
 import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
 
@@ -12,12 +8,10 @@ import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormConte
 import FormTrainingPlan from "../../../../../../src/components/forms/FormTrainingPlan";
 
 // Tema
-import { brandPrimary, ui } from "../../../../../../src/theme/colors";
+import { brandPrimary } from "../../../../../../src/theme/colors";
 
 export default function UserPlanBuilder() {
   const { form, planId, isLoading } = usePlanFormContext();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   if (isLoading) {
     return (
@@ -29,14 +23,6 @@ export default function UserPlanBuilder() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: Platform.OS === "ios",
-          headerBackButtonDisplayMode: "minimal",
-          headerTitle: "",
-          headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
-        }}
-      />
       <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-20"} flex-1`}>
         <FormTrainingPlan
           form={form}
