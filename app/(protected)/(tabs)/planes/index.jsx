@@ -462,7 +462,6 @@ function ExplorarContent({ router, insets }) {
   const isMine = origin === "mios";
 
   const setOriginTab = (key) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOrigin(key);
   };
 
