@@ -37,12 +37,12 @@ export default function PlanBuilderLayout() {
         <Stack.Screen
           name="custom-plan/index"
           options={{
-            headerShown: true,
+            headerShown: Platform.OS === "ios",
             headerLeft: () => (
               <Pressable
                 onPress={() => router.replace("/planes")}
                 hitSlop={8}
-                className="-ml-2 active:opacity-70"
+                className="-ml-5 active:opacity-70"
               >
                 <View>
                   <ChevronLeft
