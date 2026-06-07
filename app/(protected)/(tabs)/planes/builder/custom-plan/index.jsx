@@ -23,7 +23,7 @@ export default function UserPlanBuilder() {
 
   return (
     <>
-      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-20"} flex-1`}>
+      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-4"} flex-1`}>
         <FormTrainingPlan
           form={form}
           plan={planId}

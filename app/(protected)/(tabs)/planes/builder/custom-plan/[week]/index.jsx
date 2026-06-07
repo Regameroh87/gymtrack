@@ -26,7 +26,7 @@ export default function UserPlanWeekEditor() {
 
   return (
     <>
-      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-20"} flex-1`}>
+      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-5"} flex-1`}>
         <FormPlanWeek
           form={form}
           weekNumber={weekNumber}

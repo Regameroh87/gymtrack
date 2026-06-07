@@ -107,7 +107,7 @@ export default function DayPrescriptionEditor({
     >
       {/* Header: siempre visible, confirma sesión y muestra cantidad de ejercicios */}
       <View
-        className="px-6 pt-2 pb-3"
+        className="px-6 pt-6 pb-3"
         style={{ borderBottomWidth: 1, borderBottomColor: ui.input.border }}
       >
         <View className="flex-row items-center justify-between">

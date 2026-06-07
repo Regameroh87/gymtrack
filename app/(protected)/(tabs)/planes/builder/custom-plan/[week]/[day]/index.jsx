@@ -19,8 +19,7 @@ export default function UserPlanDayPrescription() {
 
   return (
     <>
-      <Stack.Screen options={{ headerShown: Platform.OS === "ios" }} />
-      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-20"} flex-1`}>
+      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-5"} flex-1`}>
         <DayPrescriptionEditor
           form={form}
           weekNumber={weekNumber}
