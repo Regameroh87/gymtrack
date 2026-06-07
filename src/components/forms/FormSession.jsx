@@ -85,7 +85,7 @@ export default function FormSession({
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
     >
       <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
@@ -99,9 +99,9 @@ export default function FormSession({
           }
         />
 
-        <View className="px-4 pt-4 pb-10">
+        <View className="px-4 pt-8">
           {/* ─────────────── SECCIÓN A: INFORMACIÓN GENERAL ─────────────── */}
-          <View className="mb-8">
+          <View>
             <SectionLabel>1 · Información General</SectionLabel>
 
             {/* Nombre */}

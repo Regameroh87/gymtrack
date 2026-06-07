@@ -1,14 +1,9 @@
 // React Native
-import { View, Text } from "react-native";
-
-// Librerías externas
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, Platform } from "react-native";
 
 export default function FormsHeader({ title, subtitle }) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <View className="px-4" style={{ paddingTop: insets.top }}>
+    <View className={`px-4 ${Platform.OS === "ios" ? "py-4" : "pt-20"}`}>
       <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark">
         {title}
       </Text>
