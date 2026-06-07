@@ -1,5 +1,9 @@
 ﻿// Librerías externas
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Platform, Pressable, View } from "react-native";
+
+// Assets
+import { ChevronLeft } from "../../../../../assets/icons";
 
 // Hooks
 import { useCustomTrainingPlanForm } from "../../../../../src/hooks/plans/use-custom-training-plan-form";
@@ -7,7 +11,11 @@ import { useCustomTrainingPlanForm } from "../../../../../src/hooks/plans/use-cu
 // Contexto
 import { PlanFormProvider } from "../../../../../src/contexts/PlanFormContext";
 
+import { ui } from "../../../../../src/theme/colors";
+import { useTheme } from "../../../../../src/theme/theme";
+
 export default function PlanBuilderLayout() {
+  const { isDark } = useTheme();
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
@@ -18,7 +26,35 @@ export default function PlanBuilderLayout() {
 
   return (
     <PlanFormProvider value={{ form, planId: id ?? null, isLoading }}>
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: Platform.OS === "ios",
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+          headerTintColor: isDark ? ui.text.mainDark : ui.text.mutedDark,
+        }}
+      >
+        <Stack.Screen
+          name="custom-plan/index"
+          options={{
+            headerShown: true,
+            headerLeft: () => (
+              <Pressable
+                onPress={() => router.replace("/planes")}
+                hitSlop={8}
+                className="-ml-2 active:opacity-70"
+              >
+                <View>
+                  <ChevronLeft
+                    size={30}
+                    color={isDark ? ui.text.mainDark : ui.text.mutedDark}
+                  />
+                </View>
+              </Pressable>
+            ),
+          }}
+        />
+      </Stack>
     </PlanFormProvider>
   );
 }
