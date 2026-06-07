@@ -1,5 +1,5 @@
 ﻿import { Platform, View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
 import { usePlanFormContext } from "../../../../../../../../src/contexts/PlanFormContext";
