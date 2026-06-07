@@ -16,6 +16,7 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 // Hooks
 import { useTrainingPlans } from "../../../../src/hooks/plans/use-training-plans";
@@ -465,6 +466,22 @@ function ExplorarContent({ router, insets }) {
     setOrigin(key);
   };
 
+  // Swipe horizontal para alternar entre Catálogo (gym) y Personalizados (mios).
+  // activeOffsetX/failOffsetY hacen que el gesto solo gane ante movimiento lateral
+  // claro, cediendo al scroll vertical de la lista.
+  const swipeGesture = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-15, 15])
+    .failOffsetY([-12, 12])
+    .onEnd((e) => {
+      const SWIPE_THRESHOLD = 50;
+      if (e.translationX <= -SWIPE_THRESHOLD && origin === "gym") {
+        setOriginTab("mios");
+      } else if (e.translationX >= SWIPE_THRESHOLD && origin === "mios") {
+        setOriginTab("gym");
+      }
+    });
+
   return (
     <View className="flex-1">
       {/* Pestañas fijas */}
@@ -494,103 +511,105 @@ function ExplorarContent({ router, insets }) {
         </View>
       </View>
 
-      <Animated.ScrollView
-        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Filtro por objetivo — solo "Catálogo" */}
-        {!isMine && availableObjectiveFilters.length > 1 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 24,
-              paddingTop: 16,
-              paddingBottom: 20,
-            }}
-          >
-            <View className="flex-row gap-2">
-              {availableObjectiveFilters.map((filter) => {
-                const isActive = activeObjective === filter.key;
-                return (
-                  <Pressable
-                    key={filter.key ?? "all"}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setActiveObjective(filter.key);
-                    }}
-                    className="active:scale-[0.95]"
-                  >
-                    {isActive ? (
-                      <LinearGradient
-                        colors={[brandPrimary[600], brandPrimary[500]]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        className="px-4 py-2 rounded-full"
-                      >
-                        <Text className="text-white font-jakarta-semi text-[12px]">
-                          {filter.label}
-                        </Text>
-                      </LinearGradient>
-                    ) : (
-                      <View className="px-4 py-2 rounded-full border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
-                        <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi text-[12px]">
-                          {filter.label}
-                        </Text>
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          </ScrollView>
-        )}
+      <GestureDetector gesture={swipeGesture}>
+        <Animated.ScrollView
+          contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Filtro por objetivo — solo "Catálogo" */}
+          {!isMine && availableObjectiveFilters.length > 1 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingTop: 16,
+                paddingBottom: 20,
+              }}
+            >
+              <View className="flex-row gap-2">
+                {availableObjectiveFilters.map((filter) => {
+                  const isActive = activeObjective === filter.key;
+                  return (
+                    <Pressable
+                      key={filter.key ?? "all"}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setActiveObjective(filter.key);
+                      }}
+                      className="active:scale-[0.95]"
+                    >
+                      {isActive ? (
+                        <LinearGradient
+                          colors={[brandPrimary[600], brandPrimary[500]]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          className="px-4 py-2 rounded-full"
+                        >
+                          <Text className="text-white font-jakarta-semi text-[12px]">
+                            {filter.label}
+                          </Text>
+                        </LinearGradient>
+                      ) : (
+                        <View className="px-4 py-2 rounded-full border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark">
+                          <Text className="text-ui-text-muted dark:text-ui-text-mutedDark font-jakarta-semi text-[12px]">
+                            {filter.label}
+                          </Text>
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
 
-        {isLoading ? (
-          <View className="pt-16 items-center">
-            <ActivityIndicator color={brandPrimary[500]} />
-          </View>
-        ) : list.length === 0 ? (
-          <View className="px-6 pt-5">
-            {isMine ? (
-              <EmptyCard
-                icon={<Pencil size={28} color={brandPrimary[600]} />}
-                title="Sin planes propios"
-                description="Todavía no creaste ningún plan. Tocá + para armar el tuyo."
-              />
-            ) : (
-              <EmptyCard
-                icon={<ClipboardList size={28} color={brandPrimary[600]} />}
-                title="Sin planes disponibles"
-                description="El gym todavía no publicó planes de entrenamiento."
-              />
-            )}
-          </View>
-        ) : (
-          <View
-            className="px-6"
-            style={{ gap: 18, paddingTop: isMine ? 16 : 0 }}
-          >
-            {list.map((plan, i) => (
-              <Animated.View
-                key={plan.id}
-                entering={FadeInDown.delay(i * 80).springify()}
-              >
-                <PlanTile
-                  plan={plan}
-                  index={i}
-                  isCustom={isMine}
-                  onPress={(p) =>
-                    isMine
-                      ? router.push(`/planes/plan-detail/custom/${p.id}`)
-                      : router.push(`/planes/plan-detail/${p.id}`)
-                  }
+          {isLoading ? (
+            <View className="pt-16 items-center">
+              <ActivityIndicator color={brandPrimary[500]} />
+            </View>
+          ) : list.length === 0 ? (
+            <View className="px-6 pt-5">
+              {isMine ? (
+                <EmptyCard
+                  icon={<Pencil size={28} color={brandPrimary[600]} />}
+                  title="Sin planes propios"
+                  description="Todavía no creaste ningún plan. Tocá + para armar el tuyo."
                 />
-              </Animated.View>
-            ))}
-          </View>
-        )}
-      </Animated.ScrollView>
+              ) : (
+                <EmptyCard
+                  icon={<ClipboardList size={28} color={brandPrimary[600]} />}
+                  title="Sin planes disponibles"
+                  description="El gym todavía no publicó planes de entrenamiento."
+                />
+              )}
+            </View>
+          ) : (
+            <View
+              className="px-6"
+              style={{ gap: 18, paddingTop: isMine ? 16 : 0 }}
+            >
+              {list.map((plan, i) => (
+                <Animated.View
+                  key={plan.id}
+                  entering={FadeInDown.delay(i * 80).springify()}
+                >
+                  <PlanTile
+                    plan={plan}
+                    index={i}
+                    isCustom={isMine}
+                    onPress={(p) =>
+                      isMine
+                        ? router.push(`/planes/plan-detail/custom/${p.id}`)
+                        : router.push(`/planes/plan-detail/${p.id}`)
+                    }
+                  />
+                </Animated.View>
+              ))}
+            </View>
+          )}
+        </Animated.ScrollView>
+      </GestureDetector>
 
       {/* FAB — único punto de creación de plan */}
       <Pressable
