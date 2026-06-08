@@ -443,6 +443,7 @@ export default function FormPlanWeek({
                 ...d,
                 session_id: session.id,
                 session_name: session.name,
+                session_source: session.source,
                 exercises,
               }
         ),

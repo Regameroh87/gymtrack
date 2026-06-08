@@ -25,6 +25,7 @@ export default function UserPlanDayPrescription() {
           weekNumber={weekNumber}
           dayIdx={dayIdx}
           weekTitle={weekTitle}
+          allowAddExercise
         />
       </View>
     </>

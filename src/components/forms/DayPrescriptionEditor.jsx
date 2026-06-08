@@ -1,5 +1,5 @@
 // React
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // React Native
 import {
@@ -7,19 +7,39 @@ import {
   InteractionManager,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
 
 // Librerías externas
+import {
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+  BottomSheetModal,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
+import * as Crypto from "expo-crypto";
+import * as Haptics from "expo-haptics";
+import { useColorScheme } from "nativewind";
 import { useStore } from "@tanstack/react-form";
 
 // Componentes
 import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
-// Tema
+// Hooks
+import { useExercises } from "../../hooks/exercises/use-exercises";
+
+// Utils
+import { forkSession } from "../../utils/fork-session";
+
+// DB
+import { supabase } from "../../database/supabase";
+
+// Tema e iconos
 import { brandPrimary, ui } from "../../theme/colors";
+import { Plus } from "../../../assets/icons";
 
 // Wrapper memoizado: estabiliza el `onChange` por índice para que el memo de
 // PlanDayExerciseCard sea efectivo → solo re-renderiza la card cuyo ejercicio cambió.
@@ -39,8 +59,11 @@ export default function DayPrescriptionEditor({
   weekNumber,
   dayIdx,
   weekTitle,
+  allowAddExercise = false,
 }) {
   const weekIndex = weekNumber - 1;
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
 
   // Selector narrowo: solo re-renderiza cuando cambia ESTE día — no otros días ni semanas.
   const day = useStore(
@@ -55,6 +78,32 @@ export default function DayPrescriptionEditor({
     const task = InteractionManager.runAfterInteractions(() => setReady(true));
     return () => task.cancel();
   }, []);
+
+  // ─── Add exercise ──────────────────────────────────────────────────────────
+  const exerciseSheetRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data: allExercises = [] } = useExercises();
+
+  const pickerExercises = useMemo(
+    () =>
+      allExercises.filter(
+        (e) =>
+          !day?.exercises?.some((ex) => ex.exercise_id === e.id) &&
+          e.name.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [allExercises, day?.exercises, searchQuery]
+  );
+
+  const renderBackdrop = useCallback(
+    (props) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
+    ),
+    []
+  );
 
   // Updater funcional estable: solo cambia si cambia el día/semana/form en sí.
   const updateExercise = useCallback(
@@ -82,6 +131,92 @@ export default function DayPrescriptionEditor({
     [weekIndex, dayIdx, form]
   );
 
+  const handleAddExercise = useCallback(
+    async (ex) => {
+      exerciseSheetRef.current?.dismiss();
+      setSearchQuery("");
+
+      const newEntry = {
+        id: Crypto.randomUUID(),
+        session_exercise_id: null,
+        exercise_id: ex.id,
+        exercise_name: ex.name,
+        exercise_muscle_group: ex.muscle_group ?? "",
+        exercise_image_uri: ex.image_uri ?? null,
+        position: day?.exercises?.length ?? 0,
+        prescription_mode: "reps",
+        intensity_mode: "none",
+        rir: null,
+        rpe: null,
+        tempo: "",
+        notes: "",
+        set_configs: Array.from({ length: 4 }, () => ({
+          reps_min: 8,
+          reps_max: 12,
+          duration_seconds: null,
+          weight_kg: null,
+          rest_seconds: 90,
+        })),
+      };
+
+      if (day?.session_source === "gym") {
+        const {
+          data: { session: authSession },
+        } = await supabase.auth.getSession();
+        const userId = authSession?.user?.id ?? null;
+        const newCustomSessionId = await forkSession(
+          userId,
+          day.session_name,
+          day.exercises ?? [],
+          newEntry
+        );
+
+        form.setFieldValue("weeks", (prev) =>
+          (prev ?? []).map((w, i) =>
+            i !== weekIndex
+              ? w
+              : {
+                  ...w,
+                  days: w.days.map((d, j) =>
+                    j !== dayIdx
+                      ? d
+                      : {
+                          ...d,
+                          session_id: newCustomSessionId,
+                          session_source: "custom",
+                          exercises: [...(d.exercises ?? []), newEntry],
+                        }
+                  ),
+                }
+          )
+        );
+      } else {
+        form.setFieldValue("weeks", (prev) =>
+          (prev ?? []).map((w, i) =>
+            i !== weekIndex
+              ? w
+              : {
+                  ...w,
+                  days: w.days.map((d, j) =>
+                    j !== dayIdx
+                      ? d
+                      : {
+                          ...d,
+                          exercises: [...(d.exercises ?? []), newEntry],
+                        }
+                  ),
+                }
+          )
+        );
+      }
+
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    },
+    [day, weekIndex, dayIdx, form]
+  );
+
+  // ─── Render ────────────────────────────────────────────────────────────────
+
   // Índice fuera de rango (no debería pasar en navegación normal).
   if (!day) {
     return (
@@ -98,6 +233,7 @@ export default function DayPrescriptionEditor({
   }
 
   const exerciseCount = day.exercises?.length ?? 0;
+  const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
 
   return (
     <KeyboardAvoidingView
@@ -151,6 +287,21 @@ export default function DayPrescriptionEditor({
           <Text className="font-manrope text-sm text-center text-ui-text-muted dark:text-ui-text-mutedDark opacity-70">
             Esta sesión no tiene ejercicios cargados.
           </Text>
+          {allowAddExercise && (
+            <Pressable
+              onPress={() => exerciseSheetRef.current?.present()}
+              className="mt-5 flex-row items-center gap-2 px-5 py-2.5 rounded-xl active:opacity-70"
+              style={{ backgroundColor: brandPrimary[600] + "14" }}
+            >
+              <Plus size={15} color={brandPrimary[600]} />
+              <Text
+                className="text-sm font-manrope-semi"
+                style={{ color: brandPrimary[600] }}
+              >
+                Agregar ejercicio
+              </Text>
+            </Pressable>
+          )}
         </View>
       ) : (
         <ScrollView
@@ -169,7 +320,105 @@ export default function DayPrescriptionEditor({
               onUpdate={updateExercise}
             />
           ))}
+
+          {allowAddExercise && (
+            <Pressable
+              onPress={() => exerciseSheetRef.current?.present()}
+              className="mt-2 flex-row items-center justify-center gap-2 py-3.5 rounded-xl border border-dashed active:opacity-60"
+              style={{ borderColor: brandPrimary[500] + "50" }}
+            >
+              <Plus size={15} color={brandPrimary[500]} />
+              <Text
+                className="text-sm font-manrope-semi"
+                style={{ color: brandPrimary[500] }}
+              >
+                Agregar ejercicio
+              </Text>
+            </Pressable>
+          )}
         </ScrollView>
+      )}
+
+      {/* ─── Exercise picker bottom sheet ──────────────────────────────── */}
+      {allowAddExercise && (
+        <BottomSheetModal
+          ref={exerciseSheetRef}
+          snapPoints={["50%", "85%"]}
+          backdropComponent={renderBackdrop}
+          onDismiss={() => setSearchQuery("")}
+          backgroundStyle={{
+            backgroundColor: isDark
+              ? ui.surfaceSecondary.dark
+              : ui.surfaceSecondary.light,
+          }}
+          handleIndicatorStyle={{ backgroundColor: mutedColor }}
+        >
+          <View className="px-4 pb-2">
+            <Text className="text-base font-jakarta text-ui-text-main dark:text-ui-text-mainDark mb-3">
+              Agregar ejercicio
+            </Text>
+            <BottomSheetTextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Buscar ejercicio..."
+              placeholderTextColor={mutedColor}
+              style={{
+                backgroundColor: isDark
+                  ? ui.input.dark
+                  : ui.input.light,
+                borderRadius: 10,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                fontSize: 14,
+                fontFamily: "Manrope",
+                color: isDark ? ui.text.mainDark : ui.text.main,
+                borderWidth: 1,
+                borderColor: ui.input.border,
+              }}
+            />
+          </View>
+
+          <BottomSheetFlatList
+            data={pickerExercises}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+            ListEmptyComponent={
+              <View className="py-10 items-center">
+                <Text className="font-manrope text-sm text-ui-text-muted dark:text-ui-text-mutedDark">
+                  No se encontraron ejercicios
+                </Text>
+              </View>
+            }
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => handleAddExercise(item)}
+                className="flex-row items-center py-3 border-b active:opacity-60"
+                style={{ borderBottomColor: ui.input.border }}
+              >
+                <View
+                  className="w-9 h-9 rounded-lg items-center justify-center mr-3 flex-shrink-0"
+                  style={{ backgroundColor: brandPrimary[500] + "18" }}
+                >
+                  <Plus size={14} color={brandPrimary[500]} />
+                </View>
+                <View className="flex-1">
+                  <Text
+                    className="text-sm font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+                    numberOfLines={1}
+                  >
+                    {item.name}
+                  </Text>
+                  {item.muscle_group && (
+                    <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+                      {item.muscle_group}
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
+            )}
+          />
+        </BottomSheetModal>
       )}
     </KeyboardAvoidingView>
   );
