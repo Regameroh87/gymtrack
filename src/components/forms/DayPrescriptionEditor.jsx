@@ -24,8 +24,7 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useStore } from "@tanstack/react-form";
-import {
-  ReorderableList,
+import ReorderableList, {
   reorderItems,
   useIsActive,
   useReorderableDrag,
