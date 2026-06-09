@@ -17,6 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useColorScheme } from "nativewind";
 
 // Hooks
 import { useTrainingPlans } from "../../../../src/hooks/plans/use-training-plans";
@@ -32,7 +33,7 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary } from "../../../../src/theme/colors";
+import { brandPrimary, ui, gradient } from "../../../../src/theme/colors";
 import {
   Barbell,
   Calendar,
@@ -61,7 +62,6 @@ const DEFAULT_CONFIG = { Icon: Barbell, label: null };
 // Brand colors del design system Kinetic Precision
 const BRAND_PRIMARY = "#4A44E4";
 const BRAND_MINT = "#2DD4BF";
-const BRAND_FALLBACK_GRADIENT = ["#0C0B14", "#1e1b4b", "#3023cd"];
 
 const MAIN_TABS = [
   { key: "mi_plan", label: "Mi Plan" },
@@ -655,6 +655,11 @@ function PlanTile({
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
   const { Icon } = config;
 
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const ink = isDark ? "255,255,255" : "15,13,32"; // base para overlays decorativos
+  const overlay = (a) => `rgba(${ink},${a})`;
+
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
@@ -675,11 +680,10 @@ function PlanTile({
       className="active:scale-[0.985]"
     >
       <View
-        className="rounded-3xl overflow-hidden"
+        className="rounded-3xl overflow-hidden bg-white dark:bg-[#0F0D20]"
         style={{
-          backgroundColor: "#0F0D20",
           shadowColor: BRAND_PRIMARY,
-          shadowOpacity: 0.18,
+          shadowOpacity: isDark ? 0.18 : 0.1,
           shadowRadius: 24,
           shadowOffset: { width: 0, height: 10 },
           elevation: 10,
@@ -687,7 +691,7 @@ function PlanTile({
       >
         {/* Halo mint en esquina superior izquierda */}
         <LinearGradient
-          colors={["rgba(45,212,191,0.22)", "rgba(45,212,191,0)"]}
+          colors={isDark ? gradient.mintHalo.dark : gradient.mintHalo.light}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.7, y: 0.8 }}
           style={{
@@ -701,7 +705,7 @@ function PlanTile({
 
         {/* Glow indigo esquina inferior derecha */}
         <LinearGradient
-          colors={["rgba(74,68,228,0)", "rgba(74,68,228,0.28)"]}
+          colors={isDark ? gradient.primaryHalo.dark : gradient.primaryHalo.light}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -722,7 +726,7 @@ function PlanTile({
             right: -8,
             fontSize: 180,
             lineHeight: 180,
-            color: "rgba(255,255,255,0.04)",
+            color: isDark ? ui.decor.ghostNumber.dark : ui.decor.ghostNumber.light,
             letterSpacing: -8,
           }}
         >
@@ -812,14 +816,14 @@ function PlanTile({
                       width: 4,
                       height: 4,
                       borderRadius: 2,
-                      backgroundColor: "rgba(255,255,255,0.4)",
+                      backgroundColor: overlay(0.4),
                     }}
                   />
                   <Text
                     className="font-manrope-bold uppercase"
                     style={{
                       fontSize: 9,
-                      color: "rgba(255,255,255,0.55)",
+                      color: overlay(0.55),
                       letterSpacing: 1.6,
                     }}
                   >
@@ -830,7 +834,7 @@ function PlanTile({
 
               {/* Título grande editorial */}
               <Text
-                className="font-jakarta-bold text-white"
+                className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
                 style={{
                   fontSize: 26,
                   lineHeight: 30,
@@ -842,7 +846,9 @@ function PlanTile({
               </Text>
 
               {/* Creador — línea micro */}
-              {plan.creator && <CreatorLine creator={plan.creator} />}
+              {plan.creator && (
+                <CreatorLine creator={plan.creator} overlay={overlay} />
+              )}
             </View>
           </View>
 
@@ -867,8 +873,8 @@ function PlanTile({
                 width: 124,
                 height: 124,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.12)",
-                backgroundColor: "#1a1730",
+                borderColor: overlay(0.12),
+                backgroundColor: isDark ? ui.surface.dim : ui.surfaceSecondary.light,
               }}
             >
               {imageUrl ? (
@@ -881,7 +887,11 @@ function PlanTile({
               ) : (
                 <>
                   <LinearGradient
-                    colors={BRAND_FALLBACK_GRADIENT}
+                    colors={
+                      isDark
+                        ? gradient.sessionPlaceholder.dark
+                        : gradient.sessionPlaceholder.light
+                    }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={StyleSheet.absoluteFillObject}
@@ -893,7 +903,10 @@ function PlanTile({
                       justifyContent: "center",
                     }}
                   >
-                    <Icon size={56} color="rgba(255,255,255,0.35)" />
+                    <Icon
+                      size={56}
+                      color={isDark ? ui.icon.onDarkMuted : ui.icon.onLight}
+                    />
                   </View>
                 </>
               )}
@@ -905,14 +918,14 @@ function PlanTile({
                 style={{
                   width: 14,
                   height: 1,
-                  backgroundColor: "rgba(255,255,255,0.25)",
+                  backgroundColor: overlay(0.25),
                 }}
               />
               <Text
                 className="font-manrope-bold uppercase"
                 style={{
                   fontSize: 8,
-                  color: "rgba(255,255,255,0.45)",
+                  color: overlay(0.45),
                   letterSpacing: 1.4,
                 }}
               >
@@ -922,7 +935,7 @@ function PlanTile({
                 style={{
                   width: 14,
                   height: 1,
-                  backgroundColor: "rgba(255,255,255,0.25)",
+                  backgroundColor: overlay(0.25),
                 }}
               />
             </View>
@@ -943,12 +956,13 @@ function PlanTile({
             value={plan.weekly_days ?? 0}
             primaryLabel={plan.weekly_days === 1 ? "día" : "días"}
             secondaryLabel="por semana"
+            overlay={overlay}
           />
           <View
             style={{
               width: 1,
               height: 30,
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: overlay(0.1),
               marginBottom: 2,
             }}
           />
@@ -962,6 +976,7 @@ function PlanTile({
                 : "sin duración"
             }
             secondaryLabel={plan.duration_weeks ? "de duración" : "fija"}
+            overlay={overlay}
           />
         </View>
 
@@ -969,7 +984,7 @@ function PlanTile({
         <View
           style={{
             borderTopWidth: 1,
-            borderTopColor: "rgba(255,255,255,0.08)",
+            borderTopColor: overlay(0.08),
           }}
         >
           <View
@@ -1002,7 +1017,7 @@ function PlanTile({
                 />
               </View>
               <Text
-                className="font-manrope-bold uppercase text-white"
+                className="font-manrope-bold uppercase text-ui-text-main dark:text-ui-text-mainDark"
                 style={{
                   fontSize: 11,
                   letterSpacing: 1.5,
@@ -1033,7 +1048,7 @@ function PlanTile({
   );
 }
 
-function CreatorLine({ creator }) {
+function CreatorLine({ creator, overlay }) {
   const displayName =
     [creator.name, creator.last_name]
       .map((s) => s?.trim())
@@ -1044,18 +1059,18 @@ function CreatorLine({ creator }) {
     <Text
       numberOfLines={1}
       className="font-manrope-bold uppercase text-[8px] tracking-[1.4px]"
-      style={{ color: "rgba(255,255,255,0.45)" }}
+      style={{ color: overlay(0.45) }}
     >
       Por {displayName}
     </Text>
   );
 }
 
-function PlanStat({ value, primaryLabel, secondaryLabel }) {
+function PlanStat({ value, primaryLabel, secondaryLabel, overlay }) {
   return (
     <View className="flex-row items-end" style={{ gap: 8 }}>
       <Text
-        className="font-jakarta-bold text-white"
+        className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark"
         style={{
           fontSize: 32,
           lineHeight: 32,
@@ -1079,7 +1094,7 @@ function PlanStat({ value, primaryLabel, secondaryLabel }) {
           className="font-manrope-semi uppercase"
           style={{
             fontSize: 9,
-            color: "rgba(255,255,255,0.4)",
+            color: overlay(0.4),
             letterSpacing: 1.4,
           }}
         >
