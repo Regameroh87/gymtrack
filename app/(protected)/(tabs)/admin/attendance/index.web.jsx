@@ -13,7 +13,8 @@ import { Image } from "expo-image";
 
 import { supabase } from "../../../../../src/database/supabase";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 import {
   QrCode,
