@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray, ne } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -199,8 +199,8 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const form = useForm({
     defaultValues,
     validators: {
-      // Bloquea el guardado si la rutina está incompleta. Mensaje inline en el form.
-      onSubmit: ({ value }) => {
+      // Bloquea el guardado si la rutina está incompleta o el nombre está duplicado.
+      onSubmit: async ({ value }) => {
         const weeks = value.weeks ?? [];
         if (
           weeks.length === 0 ||
@@ -215,6 +215,24 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
           )
         )
           return "Cada sesión asignada debe tener al menos un ejercicio.";
+
+        try {
+          const existing = await database
+            .select({ id: custom_plans.id, name: custom_plans.name })
+            .from(custom_plans)
+            .where(ne(custom_plans.sync_status, "deleted"));
+          const trimmed = value.name?.trim().toLowerCase() ?? "";
+          const duplicate = existing.find(
+            (p) =>
+              p.name?.trim().toLowerCase() === trimmed && (!id || p.id !== id)
+          );
+          if (duplicate) {
+            return `Ya tenés un plan llamado "${value.name.trim()}". Usá un nombre diferente.`;
+          }
+        } catch (e) {
+          console.warn("Duplicate name check failed:", e);
+        }
+
         return undefined;
       },
     },

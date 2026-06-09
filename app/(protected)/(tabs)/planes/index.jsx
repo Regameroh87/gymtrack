@@ -62,6 +62,7 @@ const DEFAULT_CONFIG = { Icon: Barbell, label: null };
 // Brand colors del design system Kinetic Precision
 const BRAND_PRIMARY = "#4A44E4";
 const BRAND_MINT = "#2DD4BF";
+const CUSTOM_ACCENT = "#F59E0B";
 
 const MAIN_TABS = [
   { key: "mi_plan", label: "Mi Plan" },
@@ -662,6 +663,27 @@ function PlanTile({
   const ink = isDark ? "255,255,255" : "15,13,32"; // base para overlays decorativos
   const overlay = (a) => `rgba(${ink},${a})`;
 
+  const isPersonalized = isCustom || plan?.is_custom;
+  const accentColor = isPersonalized ? CUSTOM_ACCENT : BRAND_MINT;
+  const primaryColor = isPersonalized ? CUSTOM_ACCENT : BRAND_PRIMARY;
+  const accentMuted = isPersonalized ? "rgba(245,158,11,0.4)" : "rgba(45,212,191,0.4)";
+  const mintHaloColors = isPersonalized
+    ? isDark
+      ? ["rgba(245,158,11,0.2)", "rgba(245,158,11,0)"]
+      : ["rgba(245,158,11,0.15)", "rgba(245,158,11,0)"]
+    : isDark
+    ? gradient.mintHalo.dark
+    : gradient.mintHalo.light;
+  const primaryHaloColors = isPersonalized
+    ? isDark
+      ? ["rgba(245,158,11,0)", "rgba(245,158,11,0.22)"]
+      : ["rgba(245,158,11,0)", "rgba(245,158,11,0.14)"]
+    : isDark
+    ? gradient.primaryHalo.dark
+    : gradient.primaryHalo.light;
+  const ctaRingBg = isPersonalized ? "rgba(245,158,11,0.18)" : "rgba(74,68,228,0.18)";
+  const ctaRingBorder = isPersonalized ? "rgba(245,158,11,0.5)" : "rgba(74,68,228,0.5)";
+
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
@@ -684,7 +706,7 @@ function PlanTile({
       <View
         className="rounded-3xl overflow-hidden bg-white dark:bg-[#0F0D20]"
         style={{
-          shadowColor: BRAND_PRIMARY,
+          shadowColor: primaryColor,
           shadowOpacity: isDark ? 0.18 : 0.1,
           shadowRadius: 24,
           shadowOffset: { width: 0, height: 10 },
@@ -693,7 +715,7 @@ function PlanTile({
       >
         {/* Halo mint en esquina superior izquierda */}
         <LinearGradient
-          colors={isDark ? gradient.mintHalo.dark : gradient.mintHalo.light}
+          colors={mintHaloColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.7, y: 0.8 }}
           style={{
@@ -707,7 +729,7 @@ function PlanTile({
 
         {/* Glow indigo esquina inferior derecha */}
         <LinearGradient
-          colors={isDark ? gradient.primaryHalo.dark : gradient.primaryHalo.light}
+          colors={primaryHaloColors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -735,7 +757,7 @@ function PlanTile({
           {planNumber}
         </Text>
 
-        {/* Tick mint top-left */}
+        {/* Tick accent top-left */}
         <View
           style={{
             position: "absolute",
@@ -743,12 +765,12 @@ function PlanTile({
             left: 20,
             width: 28,
             height: 3,
-            backgroundColor: BRAND_MINT,
+            backgroundColor: accentColor,
             borderRadius: 2,
           }}
         />
 
-        {/* Tick mint complementario */}
+        {/* Tick accent complementario */}
         <View
           style={{
             position: "absolute",
@@ -756,7 +778,7 @@ function PlanTile({
             left: 52,
             width: 10,
             height: 3,
-            backgroundColor: "rgba(45,212,191,0.4)",
+            backgroundColor: accentMuted,
             borderRadius: 2,
           }}
         />
@@ -768,21 +790,21 @@ function PlanTile({
         >
           {assignerName ? (
             <View className="flex-row items-center" style={{ gap: 5 }}>
-              <ShieldHalf size={9} color={BRAND_MINT} />
+              <ShieldHalf size={9} color={accentColor} />
               <Text
                 className="font-manrope-bold uppercase"
-                style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.4 }}
+                style={{ fontSize: 10, color: accentColor, letterSpacing: 2.4 }}
                 numberOfLines={1}
               >
                 Asignado por {assignerName}
               </Text>
             </View>
-          ) : isCustom || plan?.is_custom ? (
+          ) : isPersonalized ? (
             <View className="flex-row items-center" style={{ gap: 5 }}>
-              <Pencil size={9} color={BRAND_MINT} />
+              <Pencil size={9} color={accentColor} />
               <Text
                 className="font-manrope-bold uppercase"
-                style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.4 }}
+                style={{ fontSize: 10, color: accentColor, letterSpacing: 2.4 }}
               >
                 Plan personalizado
               </Text>
@@ -790,7 +812,7 @@ function PlanTile({
           ) : (
             <Text
               className="font-manrope-bold uppercase"
-              style={{ fontSize: 10, color: BRAND_MINT, letterSpacing: 2.4 }}
+              style={{ fontSize: 10, color: accentColor, letterSpacing: 2.4 }}
             >
               El Programa
             </Text>
@@ -856,7 +878,7 @@ function PlanTile({
 
           {/* Columna derecha — imagen cuadrada contenida */}
           <View style={{ gap: 6, alignItems: "center" }}>
-            {/* Tick vertical mint pegado al borde */}
+            {/* Tick vertical accent pegado al borde */}
             <View
               style={{
                 position: "absolute",
@@ -864,7 +886,7 @@ function PlanTile({
                 top: 12,
                 width: 3,
                 height: 36,
-                backgroundColor: BRAND_MINT,
+                backgroundColor: accentColor,
                 borderRadius: 2,
               }}
             />
@@ -959,6 +981,7 @@ function PlanTile({
             primaryLabel={plan.weekly_days === 1 ? "día" : "días"}
             secondaryLabel="por semana"
             overlay={overlay}
+            color={accentColor}
           />
           <View
             style={{
@@ -979,6 +1002,7 @@ function PlanTile({
             }
             secondaryLabel={plan.duration_weeks ? "de duración" : "fija"}
             overlay={overlay}
+            color={accentColor}
           />
         </View>
 
@@ -1002,9 +1026,9 @@ function PlanTile({
                   width: 22,
                   height: 22,
                   borderRadius: 11,
-                  backgroundColor: "rgba(74,68,228,0.18)",
+                  backgroundColor: ctaRingBg,
                   borderWidth: 1,
-                  borderColor: "rgba(74,68,228,0.5)",
+                  borderColor: ctaRingBorder,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
@@ -1014,7 +1038,7 @@ function PlanTile({
                     width: 6,
                     height: 6,
                     borderRadius: 3,
-                    backgroundColor: BRAND_PRIMARY,
+                    backgroundColor: primaryColor,
                   }}
                 />
               </View>
@@ -1034,8 +1058,8 @@ function PlanTile({
               style={{
                 width: 30,
                 height: 30,
-                backgroundColor: BRAND_PRIMARY,
-                shadowColor: BRAND_PRIMARY,
+                backgroundColor: primaryColor,
+                shadowColor: primaryColor,
                 shadowOpacity: 0.6,
                 shadowRadius: 8,
                 shadowOffset: { width: 0, height: 2 },
@@ -1068,7 +1092,7 @@ function CreatorLine({ creator, overlay }) {
   );
 }
 
-function PlanStat({ value, primaryLabel, secondaryLabel, overlay }) {
+function PlanStat({ value, primaryLabel, secondaryLabel, overlay, color = BRAND_MINT }) {
   return (
     <View className="flex-row items-end" style={{ gap: 8 }}>
       <Text
@@ -1086,7 +1110,7 @@ function PlanStat({ value, primaryLabel, secondaryLabel, overlay }) {
           className="font-manrope-bold uppercase"
           style={{
             fontSize: 9,
-            color: BRAND_MINT,
+            color: color,
             letterSpacing: 1.6,
           }}
         >
