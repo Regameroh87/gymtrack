@@ -2,3 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme de marca por defecto (gym sin theme propio) ───
+   Canales "R G B" de las rampas hand-tuned de src/theme/colors.js.
+   GymThemeProvider sobreescribe estas vars en runtime con vars() para los gyms
+   con theme_primary/theme_accent custom. Acá viven los defaults para que las
+   clases brandPrimary-*/brandSecondary-* tengan color incluso fuera del subtree
+   del provider (portales de Toast/BottomSheet, primer frame). */
+:root {
+  --brand-primary-50: 238 240 255;
+  --brand-primary-100: 223 227 255;
+  --brand-primary-200: 197 202 255;
+  --brand-primary-300: 165 180 252;
+  --brand-primary-400: 126 121 252;
+  --brand-primary-500: 99 102 241;
+  --brand-primary-600: 48 35 205;
+  --brand-primary-700: 74 68 228;
+  --brand-primary-800: 55 48 163;
+  --brand-primary-900: 49 46 129;
+  --brand-primary-950: 30 27 75;
+
+  --brand-secondary-50: 239 254 249;
+  --brand-secondary-100: 201 254 239;
+  --brand-secondary-200: 147 252 224;
+  --brand-secondary-300: 98 250 227;
+  --brand-secondary-400: 42 232 204;
+  --brand-secondary-500: 16 185 129;
+  --brand-secondary-600: 5 150 105;
+  --brand-secondary-700: 0 80 71;
+  --brand-secondary-800: 6 95 70;
+  --brand-secondary-900: 6 78 59;
+  --brand-secondary-950: 2 44 34;
+}

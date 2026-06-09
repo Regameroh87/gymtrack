@@ -40,6 +40,7 @@ import {
 } from "@react-navigation/native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { GymThemeProvider } from "../src/contexts/gym-theme-context";
 
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
@@ -155,10 +156,11 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <KeyboardProvider statusBarTranslucent>
             <QueryClientProvider client={queryClient}>
-              <ThemeProvider
-                value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-              >
-                <BottomSheetModalProvider>
+              <GymThemeProvider>
+                <ThemeProvider
+                  value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+                >
+                  <BottomSheetModalProvider>
                   <StatusBar
                     style={colorScheme === "dark" ? "light" : "dark"}
                     translucent
@@ -178,8 +180,9 @@ export default function RootLayout() {
                     </Stack>
                     <Toast config={toastConfig} />
                   </Screen>
-                </BottomSheetModalProvider>
-              </ThemeProvider>
+                  </BottomSheetModalProvider>
+                </ThemeProvider>
+              </GymThemeProvider>
             </QueryClientProvider>
           </KeyboardProvider>
         </SafeAreaProvider>

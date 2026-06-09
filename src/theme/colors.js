@@ -79,6 +79,10 @@ export const ui = {
   status: {
     success: "#10b981",
     error: "#ef4444",
+    // Semántico: marca un plan/elemento "personalizado" (tuyo, no del catálogo).
+    // NO es color de marca del gym: debe contrastar contra cualquier theme,
+    // por eso es fijo e igual para todos los gyms.
+    custom: "#F59E0B",
   },
   // ── Decorativos (tipografía fantasma, marcas de agua) ──
   decor: {
@@ -148,4 +152,72 @@ export const gradient = {
     light: ["#4A44E412", "#2DD4BF08"],
   },
   angle: 135,
+};
+
+// ─── Degradados derivados de la marca (theme dinámico) ───
+// El objeto `gradient` de arriba es el DEFAULT (gym sin theme propio) y queda
+// intacto para no regresionar al gym actual. `buildGradients` reconstruye la
+// misma estructura a partir de rampas custom (primary/secondary) para los gyms
+// que definen theme_primary/theme_accent. Solo se rearman las entradas de marca;
+// las no-marca (previewYoutube, previewVideo) y el ángulo se mantienen fijas.
+
+const _hexToRgb = (hex) => {
+  let h = String(hex).trim().replace(/^#/, "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  const int = parseInt(h, 16);
+  return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
+};
+
+const rgba = (hex, a) => {
+  const { r, g, b } = _hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+};
+
+/**
+ * Reconstruye el objeto de degradados a partir de rampas de marca.
+ * @param {Record<number,string>} primary - rampa brandPrimary (50–950, hex)
+ * @param {Record<number,string>} secondary - rampa brandSecondary (50–950, hex)
+ * @returns {typeof gradient}
+ */
+export function buildGradients(primary, secondary) {
+  return {
+    primary: [primary[600], primary[700]],
+    exerciseHeader: {
+      light: [rgba(secondary[400], 0.11), rgba(primary[700], 0.06), "rgba(0,0,0,0)"],
+      dark: [rgba(secondary[400], 0.18), rgba(primary[700], 0.12), "rgba(0,0,0,0)"],
+    },
+    // No-marca: se mantienen fijas
+    previewYoutube: gradient.previewYoutube,
+    previewVideo: gradient.previewVideo,
+    mintHalo: {
+      dark: [rgba(secondary[400], 0.22), rgba(secondary[400], 0)],
+      light: [rgba(secondary[400], 0.18), rgba(secondary[400], 0)],
+    },
+    primaryHalo: {
+      dark: [rgba(primary[700], 0), rgba(primary[700], 0.3)],
+      light: [rgba(primary[700], 0), rgba(primary[700], 0.18)],
+    },
+    sessionPlaceholder: {
+      dark: [ui.background.dark, primary[950], primary[600]],
+      light: [primary[50], primary[200], primary[400]],
+    },
+    hero: {
+      light: [rgba(primary[700], 0.18), rgba(secondary[400], 0.1), "rgba(248,249,252,0)"],
+      dark: [rgba(primary[700], 0.28), rgba(secondary[400], 0.15), "rgba(12,11,20,0)"],
+    },
+    button: {
+      primary: [primary[500], primary[700], primary[600]],
+    },
+    cardSubtle: {
+      dark: [rgba(primary[700], 0.125), rgba(secondary[400], 0.0625)],
+      light: [rgba(primary[700], 0.07), rgba(secondary[400], 0.03)],
+    },
+    angle: 135,
+  };
+}
+
+// ─── Rampas default exportadas como objeto (para el contexto de theme) ───
+export const defaultBrand = {
+  primary: brandPrimary,
+  secondary: brandSecondary,
 };
