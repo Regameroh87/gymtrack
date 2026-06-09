@@ -385,6 +385,7 @@ function CatalogoContent({ router }) {
 
 // ─── Empty: sin plan actual ──────────────────────────────────────────────────
 function EmptyCurrentPlan({ onBrowseCatalog }) {
+  const { brandPrimary } = useGymTheme();
   return (
     <View
       className="bg-ui-surface-light rounded-[22px] overflow-hidden p-7"
@@ -441,6 +442,7 @@ function EmptyCurrentPlan({ onBrowseCatalog }) {
 
 // ─── PlanCardWeb (Editorial Pass adaptado a fondo claro) ─────────────────────
 function PlanCardWeb({ plan, index = 0, onPress }) {
+  const { brandPrimary } = useGymTheme();
   const config = OBJECTIVE_CONFIG[plan.objective] ?? DEFAULT_CONFIG;
   const { Icon } = config;
 
