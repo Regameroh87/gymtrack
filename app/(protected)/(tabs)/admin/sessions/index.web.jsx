@@ -12,7 +12,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 
 import { supabase } from "../../../../../src/database/supabase";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 
 import {
