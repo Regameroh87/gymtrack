@@ -11,7 +11,9 @@
       "Bash(Test-Path \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\_layout.jsx\")",
       "PowerShell($base = \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\planes\\\\plan-detail\"; New-Item -ItemType Directory -Force \"$base\\\\custom\" | Out-Null; Move-Item \"$base\\\\[custom-id].jsx\" \"$base\\\\custom\\\\[id].jsx\"; Get-ChildItem -Recurse $base | Select-Object FullName)",
       "PowerShell($base = \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\planes\\\\plan-detail\"; Move-Item -LiteralPath \"$base\\\\[custom-id].jsx\" -Destination \"$base\\\\custom\\\\[id].jsx\"; Get-ChildItem -Recurse -LiteralPath $base -File | Select-Object FullName)",
-      "Bash(node -e \"try{const r=require\\('react-native-reorderable-list'\\);console.log\\('reorderable keys:',Object.keys\\(r\\)\\)}catch\\(e\\){console.log\\('ERR reorderable',e.message\\)}\")"
+      "Bash(node -e \"try{const r=require\\('react-native-reorderable-list'\\);console.log\\('reorderable keys:',Object.keys\\(r\\)\\)}catch\\(e\\){console.log\\('ERR reorderable',e.message\\)}\")",
+      "Bash(npx --no-install babel src/components/forms/PlanDayExerciseCard.jsx --presets module:metro-react-native-babel-preset)",
+      "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/components/forms/PlanDayExerciseCard.jsx',{presets:[['@babel/preset-react',{runtime:'automatic'}]]}\\);console.log\\('PARSE OK'\\)\")"
     ],
     "defaultMode": "default"
   }

@@ -1,5 +1,5 @@
 // React
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 
 // React Native
 import { Pressable, Text, TextInput, View } from "react-native";
@@ -14,7 +14,7 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import { LinearGradient } from "expo-linear-gradient";
 import { brandPrimary, gradient, ui } from "../../theme/colors";
 import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
-import { Barbell, GripVertical, Trash } from "../../../assets/icons";
+import { Barbell, ChevronRight, GripVertical, Trash } from "../../../assets/icons";
 
 const DEFAULT_SET = {
   weight_kg: null,
@@ -260,12 +260,9 @@ function DeleteAction({ onDelete, isDark }) {
       onPress={onDelete}
       style={{
         width: 80,
-        marginBottom: 16,
-        borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: ui.status.error,
-        marginLeft: 8,
       }}
     >
       <Trash size={18} color="#fff" />
@@ -290,6 +287,9 @@ function DeleteAction({ onDelete, isDark }) {
 function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  // Colapsado por defecto: con varios ejercicios la lista queda compacta y se expande bajo demanda.
+  const [expanded, setExpanded] = useState(false);
+  const showBody = expanded && !isActive;
   const isReps = (exercise.prescription_mode ?? "reps") === "reps";
   const hasIntensity = exercise.intensity_mode !== "none";
   const exerciseImageUri = exercise.exercise_image_uri
@@ -322,22 +322,14 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
     [onDelete, isDark]
   );
 
-  // Vista colapsada mientras se arrastra: header compacto sin inputs para drag fluido.
-  const cardContent = (
-    <View
-      style={{
-        marginBottom: 16,
-        borderRadius: 16,
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: isActive ? brandPrimary[500] : ui.input.border,
-        backgroundColor: isDark
-          ? ui.surfaceSecondary.dark
-          : ui.surfaceSecondary.light,
-        opacity: isActive ? 0.92 : 1,
-      }}
-    >
-      {/* Header con nombre del ejercicio y conteo de series */}
+  const toggleExpanded = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setExpanded((e) => !e);
+  }, []);
+
+  // Header: siempre visible y actúa como toggle del cuerpo desplegable.
+  const headerNode = (
+    <Pressable onPress={toggleExpanded}>
       <LinearGradient
         colors={
           isDark ? gradient.exerciseHeader.dark : gradient.exerciseHeader.light
@@ -349,7 +341,7 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
           alignItems: "center",
           paddingHorizontal: 16,
           paddingVertical: 12,
-          borderBottomWidth: isActive ? 0 : 1,
+          borderBottomWidth: showBody ? 1 : 0,
           borderBottomColor: ui.input.border,
         }}
       >
@@ -426,6 +418,15 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
             series
           </Text>
         </View>
+        {/* Chevron: indica estado desplegable (abajo = colapsado, arriba = expandido) */}
+        <View
+          style={{
+            marginLeft: 10,
+            transform: [{ rotate: expanded ? "-90deg" : "90deg" }],
+          }}
+        >
+          <ChevronRight size={18} color="#ffffff" />
+        </View>
         {/* Grip handle: solo visible en modo edición con drag habilitado */}
         {!!drag && (
           <Pressable
@@ -442,9 +443,11 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
           </Pressable>
         )}
       </LinearGradient>
+    </Pressable>
+  );
 
-      {/* Cuerpo — oculto mientras se arrastra para mantener el drag fluido */}
-      {!isActive && (
+  // Cuerpo desplegable — oculto si está colapsado o mientras se arrastra.
+  const bodyNode = showBody ? (
       <View
         style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 }}
       >
@@ -647,23 +650,38 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
           />
         </View>
       </View>
+  ) : null;
+
+  // Contenedor redondeado: el swipe solo envuelve el header, así "Eliminar" se revela a su
+  // altura y el cuerpo expandido permanece fijo debajo.
+  return (
+    <View
+      style={{
+        marginBottom: 16,
+        borderRadius: 16,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: isActive ? brandPrimary[500] : ui.input.border,
+        backgroundColor: isDark
+          ? ui.surfaceSecondary.dark
+          : ui.surfaceSecondary.light,
+        opacity: isActive ? 0.92 : 1,
+      }}
+    >
+      {onDelete ? (
+        <ReanimatedSwipeable
+          renderRightActions={renderRightActions}
+          rightThreshold={60}
+          overshootRight={false}
+        >
+          {headerNode}
+        </ReanimatedSwipeable>
+      ) : (
+        headerNode
       )}
+      {bodyNode}
     </View>
   );
-
-  if (onDelete) {
-    return (
-      <ReanimatedSwipeable
-        renderRightActions={renderRightActions}
-        rightThreshold={60}
-        overshootRight={false}
-      >
-        {cardContent}
-      </ReanimatedSwipeable>
-    );
-  }
-
-  return cardContent;
 }
 
 export default memo(PlanDayExerciseCard);
