@@ -7,7 +7,8 @@ import {
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
-import { ui, brandPrimary } from "../theme/colors";
+import { ui } from "../theme/colors";
+import { useGymTheme } from "../contexts/gym-theme-context";
 import { getCloudinaryUrl } from "../utils/cloudinary";
 import { Barbell } from "../../assets/icons";
 import { useColorScheme } from "nativewind";
@@ -26,6 +27,7 @@ const CustomSelect = ({
 }) => {
   const bottomSheetModalRef = useRef(null);
   const { colorScheme } = useColorScheme();
+  const { brandPrimary } = useGymTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 

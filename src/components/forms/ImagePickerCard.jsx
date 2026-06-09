@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 import { useState } from "react";
 import { forwardRef } from "react";
 import { Photo, Upload, Link } from "../../../assets/icons";
-import { brandSecondary } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { useMediaPicker } from "../../hooks/ui/use-media-picker";
 
 import ButtonUploadAnimated from "../buttons/ButtonUploadAnimated";
@@ -26,6 +26,7 @@ const ImagePickerCard = forwardRef(function ImagePickerCard(
   ref
 ) {
   const { isDark } = useTheme();
+  const { brandSecondary } = useGymTheme();
   const [isUploading, setIsUploading] = useState(false);
   const { pickMedia } = useMediaPicker();
 

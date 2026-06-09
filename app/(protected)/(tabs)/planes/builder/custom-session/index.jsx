@@ -3,11 +3,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useCustomSessionForm } from "../../../../../../src/hooks/sessions/use-custom-session-form";
 import FormSession from "../../../../../../src/components/forms/FormSession";
-import { brandPrimary } from "../../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
 export default function UserSessionBuilder() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { brandPrimary } = useGymTheme();
 
   const { form, isLoading } = useCustomSessionForm({
     id: id ?? null,

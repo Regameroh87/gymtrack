@@ -1,9 +1,10 @@
 import { Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Plus } from "../../../assets/icons";
-import { brandPrimary } from "../../../src/theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 
 export default function ButtonAddPill({ onPress }) {
+  const { brandPrimary } = useGymTheme();
   return (
     <Pressable onPress={onPress} className="active:scale-[0.95]">
       <LinearGradient

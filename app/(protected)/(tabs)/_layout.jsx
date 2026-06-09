@@ -3,12 +3,14 @@ import { Barbell, Home, Logs, ShieldHalf } from "../../../assets/icons";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { Pressable, Text } from "react-native";
 import { useColorScheme } from "nativewind";
-import { ui, brandPrimary } from "../../../src/theme/colors";
+import { ui } from "../../../src/theme/colors";
+import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 
 export default function TabsLayout() {
   const { isStaff } = useUserRole();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
 
   return (
     <Tabs

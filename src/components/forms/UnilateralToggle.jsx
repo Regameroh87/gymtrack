@@ -1,11 +1,13 @@
 import { View, Text, Switch } from "react-native";
 import { SwitchHorizontal } from "../../../assets/icons";
-import { ui, brandPrimary, brandSecondary } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { useColorScheme } from "nativewind";
 
 export default function UnilateralToggle({ value, onChange }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary, brandSecondary } = useGymTheme();
 
   return (
     <View

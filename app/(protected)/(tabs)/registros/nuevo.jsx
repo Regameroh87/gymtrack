@@ -33,7 +33,7 @@ import { SESSION_LEVELS } from "../../../../src/constants/sessionOptions";
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import {
   ArrowLeft,
   Barbell,
@@ -45,7 +45,6 @@ import {
 } from "../../../../assets/icons";
 
 // Firma visual Editorial Pass
-const BRAND_MINT = "#2DD4BF";
 const SURFACE = "#0F0D20";
 const SUB_SURFACE = "rgba(255,255,255,0.04)";
 
@@ -74,6 +73,8 @@ const sameDay = (a, b) =>
 export default function NuevoRegistro() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
 
   const { data: sessions = [], isLoading: loadingSessions } = useSessions();
   const { mutate: createLog, isPending: isSaving } = useCreateManualLog();
@@ -530,6 +531,7 @@ export default function NuevoRegistro() {
 // ─── Fila de sesión (fase A) ──────────────────────────────────────────────────
 
 function SessionPickRow({ session, onPress }) {
+  const { brandPrimary } = useGymTheme();
   const levelLabel = SESSION_LEVELS.find(
     (l) => l.value === session.level
   )?.label;
@@ -589,6 +591,8 @@ function SessionPickRow({ session, onPress }) {
 // ─── Formulario de un ejercicio (fase B) ──────────────────────────────────────
 
 function ExerciseForm({ exercise, index, onUpdateSet, onAddSet, onRemoveSet }) {
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
   return (
     <View
       className="rounded-2xl overflow-hidden"

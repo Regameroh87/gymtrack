@@ -35,7 +35,8 @@ import { fetchSessionExercises } from "../../hooks/sessions/use-session-exercise
 import FormsHeader from "../FormsHeader";
 
 // Tema y assets
-import { brandPrimary, ui } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { ChevronRight, Plus, X, Calendar } from "../../../assets/icons";
 
 // Media
@@ -117,6 +118,7 @@ const SessionRow = memo(function SessionRow({
   isDark,
   mutedColor,
 }) {
+  const { brandPrimary } = useGymTheme();
   const { queryKey, queryFn } = getExercisesQuery(session);
   const { data: exercises = [], isLoading } = useQuery({
     queryKey,
@@ -286,6 +288,7 @@ export default function FormPlanWeek({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
+  const { brandPrimary } = useGymTheme();
 
   const router = useRouter();
   const queryClient = useQueryClient();

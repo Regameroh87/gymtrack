@@ -43,7 +43,8 @@ import { forkSession } from "../../utils/fork-session";
 import { supabase } from "../../database/supabase";
 
 // Tema e iconos
-import { brandPrimary, ui } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Plus } from "../../../assets/icons";
 
 // Wrapper para drag reordenamiento: cada item necesita llamar a los hooks dentro del
@@ -95,6 +96,7 @@ export default function DayPrescriptionEditor({
   const weekIndex = weekNumber - 1;
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
 
   // Selector narrowo: solo re-renderiza cuando cambia ESTE día — no otros días ni semanas.
   const day = useStore(

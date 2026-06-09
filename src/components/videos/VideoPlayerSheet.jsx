@@ -10,7 +10,8 @@ import YoutubePlayer from "react-native-youtube-iframe";
 import { useColorScheme } from "nativewind";
 
 // Tema / assets
-import { ui, brandPrimary } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Youtube, Play } from "../../../assets/icons";
 
 function extractYoutubeId(url) {
@@ -45,6 +46,7 @@ const SNAP_POINTS = ["60%"];
 export default function VideoPlayerSheet({ sheetRef, videoUrl, title }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
   const { width } = useWindowDimensions();
 
   const [isOpen, setIsOpen] = useState(false);

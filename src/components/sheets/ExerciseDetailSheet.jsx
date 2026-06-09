@@ -21,7 +21,8 @@ import {
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 import PreviewVideo from "../videos/PreviewVideo";
 import { Barbell, Pencil, Trash } from "../../../assets/icons";
-import { ui, brandPrimary, brandSecondary } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 
 const SNAP_POINTS = ["92%"];
 
@@ -33,6 +34,7 @@ export default function ExerciseDetailSheet({
 }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary, brandSecondary } = useGymTheme();
 
   const { data: equipmentList = [] } = useQuery({
     queryKey: ["exercise_equipment_detail", exercise?.id],

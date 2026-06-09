@@ -31,7 +31,7 @@ import {
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import {
   Barbell,
   Calendar,
@@ -40,9 +40,6 @@ import {
   Logs,
   Plus,
 } from "../../../../assets/icons";
-
-// Firma visual Editorial Pass
-const BRAND_MINT = "#2DD4BF";
 
 // Resuelve título + kicker de un registro según su origen (plan, sesión suelta
 // o entrenamiento libre sin sesión asociada).
@@ -66,6 +63,8 @@ function resolveLogLabels(log) {
 export default function RegistrosTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
 
   const { data: logs = [], isLoading } = useSessionLogs();
 
@@ -196,6 +195,8 @@ export default function RegistrosTab() {
 function LogCard({ log, onPress }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
   const { title, kicker } = resolveLogLabels(log);
   const date = new Date(log.completed_at);
 
@@ -318,6 +319,8 @@ function StatTile({ value, label, accent }) {
 function EmptyState({ router, insets, onLogPast }) {
   // Si el usuario tiene un plan activo en curso, el CTA primario lo lleva a
   // continuar ese plan; si no, lo lleva a explorar el catálogo de rutinas.
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
   const { data: summary } = useActivePlanSummary();
   const hasActivePlan = !!summary && !summary.isCompleted;
 

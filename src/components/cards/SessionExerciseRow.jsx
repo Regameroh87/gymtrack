@@ -9,7 +9,7 @@ import * as Haptics from "expo-haptics";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // Tema / assets
-import { brandPrimary } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Play, Youtube } from "../../../assets/icons";
 
 function resolveVideoLink(exercise) {
@@ -25,10 +25,12 @@ function resolveVideoLink(exercise) {
 export default function SessionExerciseRow({
   exercise,
   position,
-  accent = brandPrimary[500],
+  accent,
   compact = false,
   onVideoPress,
 }) {
+  const { brandPrimary } = useGymTheme();
+  accent = accent ?? brandPrimary[500];
   const imageUri = exercise.image_uri
     ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
     : null;

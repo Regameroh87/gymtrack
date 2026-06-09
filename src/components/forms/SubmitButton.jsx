@@ -6,7 +6,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 
 // Tema
-import { brandPrimary } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 
 export default function SubmitButton({
   onPress,
@@ -15,6 +15,7 @@ export default function SubmitButton({
   disabled = false,
   icon: Icon = null,
 }) {
+  const { brandPrimary } = useGymTheme();
   const isDisabled = isLoading || disabled;
 
   const handlePress = () => {

@@ -38,7 +38,8 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary, ui } from "../../../../src/theme/colors";
+import { ui } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import { ArrowLeft, Pencil, Plus, Trash } from "../../../../assets/icons";
 
 const LIB_TABS = [
@@ -51,6 +52,7 @@ export default function BibliotecaScreen() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
   const queryClient = useQueryClient();
 
   const [activeLib, setActiveLib] = useState("sesiones");

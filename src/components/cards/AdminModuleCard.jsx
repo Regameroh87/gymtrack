@@ -6,7 +6,7 @@ import { View, Text, Pressable } from "react-native";
 import * as Haptics from "expo-haptics";
 
 // ── Tema / Assets ──
-import { brandPrimary } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Lock } from "../../../assets/icons";
 
 const AdminModuleCard = ({
@@ -19,6 +19,8 @@ const AdminModuleCard = ({
   comingSoon = false,
   accentColor,
 }) => {
+  const { brandPrimary } = useGymTheme();
+
   const handlePress = () => {
     if (comingSoon) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

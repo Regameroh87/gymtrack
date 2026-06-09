@@ -2,24 +2,25 @@ import { View, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { Plus } from "../../../assets/icons";
-import { brandPrimary, brandSecondary } from "../../../src/theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-
-const COLOR_VARIANTS = {
-  primary: {
-    colors: [brandPrimary[600], brandPrimary[700]],
-    shadow: "shadow-brandPrimary-600/30",
-  },
-  secondary: {
-    colors: [brandSecondary[500], brandSecondary[400]],
-    shadow: "shadow-brandSecondary-600/30",
-  },
-};
 
 export default function ButtonAdd({ route, onPress, color = "secondary" }) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { brandPrimary, brandSecondary } = useGymTheme();
+
+  const COLOR_VARIANTS = {
+    primary: {
+      colors: [brandPrimary[600], brandPrimary[700]],
+      shadow: "shadow-brandPrimary-600/30",
+    },
+    secondary: {
+      colors: [brandSecondary[500], brandSecondary[400]],
+      shadow: "shadow-brandSecondary-600/30",
+    },
+  };
   const variant = COLOR_VARIANTS[color] ?? COLOR_VARIANTS.secondary;
 
   const handlePress = () => {

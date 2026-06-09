@@ -10,7 +10,8 @@ import { useColorScheme } from "nativewind";
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
 // Tema / assets
-import { brandPrimary, ui } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Barbell, Trash, ChevronRight } from "../../../assets/icons";
 
 export default function SessionExerciseCard({
@@ -23,6 +24,7 @@ export default function SessionExerciseCard({
 }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
   const disabledColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
 

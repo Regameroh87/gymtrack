@@ -20,10 +20,8 @@ import {
 import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
 
 // Tema / assets
-import { brandSecondary } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { ChevronRight, Play, Youtube } from "../../../assets/icons";
-
-const MINT = brandSecondary[400];
 
 // ─── Helpers de prescripción ────────────────────────────────────────────────
 
@@ -59,6 +57,8 @@ function buildSummary(exercise) {
 export default function PlanExerciseRow({ exercise, position, onVideoPress, onEquipmentPress }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandSecondary } = useGymTheme();
+  const MINT = brandSecondary[400];
   const [expanded, setExpanded] = useState(false);
 
   const imageUri = exercise.image_uri

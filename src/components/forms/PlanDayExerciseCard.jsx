@@ -12,7 +12,8 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 
 // Tema y assets
 import { LinearGradient } from "expo-linear-gradient";
-import { brandPrimary, gradient, ui } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
 import { Barbell, ChevronRight, GripVertical, Trash } from "../../../assets/icons";
 
@@ -27,6 +28,7 @@ const DEFAULT_SET = {
 // ─── SegmentedControl ─────────────────────────────────────────────────────────
 
 function Seg({ options, value, onChange, isDark }) {
+  const { brandPrimary } = useGymTheme();
   return (
     <View
       style={{
@@ -287,6 +289,7 @@ function DeleteAction({ onDelete, isDark }) {
 function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary, gradient } = useGymTheme();
   // Colapsado por defecto: con varios ejercicios la lista queda compacta y se expande bajo demanda.
   const [expanded, setExpanded] = useState(false);
   const showBody = expanded && !isActive;

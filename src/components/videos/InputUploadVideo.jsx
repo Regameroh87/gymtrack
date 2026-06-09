@@ -3,7 +3,8 @@ import { Pressable, Text, Alert, View, Animated } from "react-native";
 import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/ui/use-media-picker";
-import { brandPrimary, ui } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import {
   saveMediaLocally,
   deleteMediaLocally,
@@ -15,6 +16,7 @@ import HeaderCard from "../cards/HeaderCard";
 export default function InputUploadVideo({ value, onChange }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
   const { pickMedia } = useMediaPicker();
   const [cardInfo, setCardInfo] = useState(null);
   const [isUploading, setIsUploading] = useState(false);

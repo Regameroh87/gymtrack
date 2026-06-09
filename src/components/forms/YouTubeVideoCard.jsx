@@ -1,7 +1,8 @@
 import { View } from "react-native";
 import { forwardRef } from "react";
 import { Play, Link } from "../../../assets/icons";
-import { ui, brandPrimary } from "../../theme/colors";
+import { ui } from "../../theme/colors";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import PreviewVideo from "../videos/PreviewVideo";
 import HeaderCard from "../cards/HeaderCard";
 import StyledInputCard from "../cards/StyledInputCard";
@@ -12,6 +13,7 @@ const YouTubeVideoCard = forwardRef(function YouTubeVideoCard(
   ref
 ) {
   const { isDark } = useTheme();
+  const { brandPrimary } = useGymTheme();
 
   return (
     <View

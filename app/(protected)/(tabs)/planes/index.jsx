@@ -33,7 +33,8 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary, ui, gradient } from "../../../../src/theme/colors";
+import { ui } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import {
   Barbell,
   Calendar,
@@ -59,11 +60,6 @@ const OBJECTIVE_CONFIG = {
 
 const DEFAULT_CONFIG = { Icon: Barbell, label: null };
 
-// Brand colors del design system Kinetic Precision
-const BRAND_PRIMARY = "#4A44E4";
-const BRAND_MINT = "#2DD4BF";
-const CUSTOM_ACCENT = "#F59E0B";
-
 const MAIN_TABS = [
   { key: "mi_plan", label: "Mi Plan" },
   { key: "explorar", label: "Explorar" },
@@ -74,6 +70,7 @@ let _lastTab = "mi_plan";
 export default function RutinasTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary } = useGymTheme();
 
   const [activeTab, setActiveTab] = useState(_lastTab);
 
@@ -165,6 +162,8 @@ export default function RutinasTab() {
 // ─── Tab: Mi Plan ─────────────────────────────────────────────────────────────
 
 function MisPlanesContent({ router, insets, onBrowseCatalog }) {
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
   const { data: assignments, isLoading } = usePlanAssignments();
   const { data: summary } = useActivePlanSummary();
   const { mutate: dropPlan, isPending: isDropping } = useDropPlan();
@@ -432,6 +431,7 @@ const ORIGIN_TABS = [
 ];
 
 function ExplorarContent({ router, insets }) {
+  const { brandPrimary } = useGymTheme();
   const [origin, setOrigin] = useState("gym");
   const [activeObjective, setActiveObjective] = useState(null);
 
@@ -660,13 +660,19 @@ function PlanTile({
 
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary, brandSecondary, gradient } = useGymTheme();
   const ink = isDark ? "255,255,255" : "15,13,32"; // base para overlays decorativos
   const overlay = (a) => `rgba(${ink},${a})`;
+
+  // Marca del gym (themed) vs. ámbar semántico fijo de "plan personalizado".
+  const BRAND_PRIMARY = brandPrimary[700];
+  const BRAND_MINT = brandSecondary[400];
+  const CUSTOM_ACCENT = ui.status.custom;
 
   const isPersonalized = isCustom || plan?.is_custom;
   const accentColor = isPersonalized ? CUSTOM_ACCENT : BRAND_MINT;
   const primaryColor = isPersonalized ? CUSTOM_ACCENT : BRAND_PRIMARY;
-  const accentMuted = isPersonalized ? "rgba(245,158,11,0.4)" : "rgba(45,212,191,0.4)";
+  const accentMuted = isPersonalized ? "rgba(245,158,11,0.4)" : BRAND_MINT + "66";
   const mintHaloColors = isPersonalized
     ? isDark
       ? ["rgba(245,158,11,0.2)", "rgba(245,158,11,0)"]
@@ -681,8 +687,8 @@ function PlanTile({
     : isDark
     ? gradient.primaryHalo.dark
     : gradient.primaryHalo.light;
-  const ctaRingBg = isPersonalized ? "rgba(245,158,11,0.18)" : "rgba(74,68,228,0.18)";
-  const ctaRingBorder = isPersonalized ? "rgba(245,158,11,0.5)" : "rgba(74,68,228,0.5)";
+  const ctaRingBg = isPersonalized ? "rgba(245,158,11,0.18)" : BRAND_PRIMARY + "2E";
+  const ctaRingBorder = isPersonalized ? "rgba(245,158,11,0.5)" : BRAND_PRIMARY + "80";
 
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
@@ -1092,7 +1098,9 @@ function CreatorLine({ creator, overlay }) {
   );
 }
 
-function PlanStat({ value, primaryLabel, secondaryLabel, overlay, color = BRAND_MINT }) {
+function PlanStat({ value, primaryLabel, secondaryLabel, overlay, color }) {
+  const { brandSecondary } = useGymTheme();
+  const statColor = color ?? brandSecondary[400];
   return (
     <View className="flex-row items-end" style={{ gap: 8 }}>
       <Text
@@ -1110,7 +1118,7 @@ function PlanStat({ value, primaryLabel, secondaryLabel, overlay, color = BRAND_
           className="font-manrope-bold uppercase"
           style={{
             fontSize: 9,
-            color: color,
+            color: statColor,
             letterSpacing: 1.6,
           }}
         >

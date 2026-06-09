@@ -15,13 +15,15 @@ import { database } from "../../../../../../src/database";
 import { custom_exercises } from "../../../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../../../src/database/sync";
 import FormExercise from "../../../../../../src/components/forms/FormExercise";
-import { brandPrimary, ui } from "../../../../../../src/theme/colors";
+import { ui } from "../../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
 export default function UserExerciseBuilder() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
   const formRef = useRef(null);
   const queryClient = useQueryClient();
   const { userId } = useAuth();

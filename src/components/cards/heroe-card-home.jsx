@@ -10,9 +10,10 @@ import { useRouter, useFocusEffect } from "expo-router";
 
 // ── Navigation / Theme ──
 import { useTheme } from "../../theme/theme";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 
 // ── Design Tokens ──
-import { brandPrimary, brandSecondary, gradient, ui } from "../../theme/colors";
+import { ui } from "../../theme/colors";
 
 // ── Assets ──
 import { ChevronRight, Barbell, ClipboardList } from "../../../assets/icons";
@@ -27,6 +28,7 @@ import { getCloudinaryUrl } from "../../utils/cloudinary";
 export default function HeroeCardHome({ image }) {
   const router = useRouter();
   const { isDark } = useTheme();
+  const { brandPrimary, brandSecondary, gradient } = useGymTheme();
   const now = new Date();
 
   const { data: summary, isPending } = useActivePlanSummary();
