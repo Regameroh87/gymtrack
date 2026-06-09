@@ -2,18 +2,13 @@
 import { memo, useCallback } from "react";
 
 // React Native
-import { Animated, Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 // Librerías externas
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import Reanimated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 
 // Tema y assets
 import { LinearGradient } from "expo-linear-gradient";
