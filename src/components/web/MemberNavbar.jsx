@@ -12,7 +12,7 @@ import { supabase } from "../../database/supabase.js";
 import { useAuth } from "../../auth/lib/getSession.jsx";
 
 // Tema / assets
-import { brandPrimary } from "../../theme/colors.js";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Barbell, ClipboardList, Home, Logout } from "../../../assets/icons.jsx";
 
 const NAV = [
@@ -29,6 +29,7 @@ export default function MemberNavbar() {
   const router   = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
+  const { brandPrimary } = useGymTheme();
 
   const handleLogout = async () => {
     if (typeof window !== "undefined" && window.confirm("¿Cerrar sesión?")) {

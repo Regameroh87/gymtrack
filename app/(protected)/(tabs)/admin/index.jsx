@@ -15,7 +15,7 @@ import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { canAccessModule } from "../../../../src/constants/roles";
 
 // ── Tema ──
-import { brandSecondary, gradient } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 
 // ── Assets ──
 import {
@@ -27,7 +27,7 @@ import {
   ChartBar,
 } from "../../../../assets/icons";
 
-const MODULES = [
+const buildModules = ({ brandSecondary, gradient }) => [
   {
     n: "01",
     icon: Users,
@@ -106,11 +106,14 @@ export default function AdminDashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { role } = useUserRole();
+  const { brandSecondary, gradient } = useGymTheme();
 
   const nav = (path) => router.push(`/admin/${path}`);
 
   // Solo los módulos permitidos para el rol (coach no ve Billing/Reportes/Ajustes).
-  const modules = MODULES.filter((m) => canAccessModule(role, m.path));
+  const modules = buildModules({ brandSecondary, gradient }).filter((m) =>
+    canAccessModule(role, m.path)
+  );
 
   return (
     <Screen safe>

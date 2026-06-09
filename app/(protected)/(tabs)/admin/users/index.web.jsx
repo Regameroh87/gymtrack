@@ -12,7 +12,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 
 import { supabase } from "../../../../../src/database/supabase";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   isStaffRole,
   isSuperAdminRole,
@@ -53,6 +54,7 @@ const formatDate = (iso) => {
 export default function UsersListWeb() {
   const router = useRouter();
   const { isSuperAdmin } = useUserRole();
+  const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);

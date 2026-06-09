@@ -50,7 +50,8 @@ import {
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 
 // Tema / assets
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { Barbell, Pencil, Trash, Upload } from "../../../../../assets/icons";
 
 // ─── Constantes de display ────────────────────────────────────────────────────
@@ -289,6 +290,7 @@ export default function PlanDetail() {
   const queryClient = useQueryClient();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
 
   const { data: plan, isLoading } = useRecordById(
     "training_plan",

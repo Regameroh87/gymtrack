@@ -45,7 +45,7 @@ import SessionExerciseRow from "../../../../../src/components/cards/SessionExerc
 import VideoPlayerSheet from "../../../../../src/components/videos/VideoPlayerSheet";
 
 // Tema / assets
-import { brandPrimary, gradient } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { Barbell, ChartBar, Pencil, Trash } from "../../../../../assets/icons";
 
 const HERO_HEIGHT = 280;
@@ -54,6 +54,7 @@ export default function SessionDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary, gradient } = useGymTheme();
 
   const { mutate: deleteSession, isPending: isDeleting } = useDeleteSession();
 

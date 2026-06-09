@@ -26,7 +26,8 @@ import {
 } from "../../../../../assets/icons.jsx";
 
 // Tema
-import { ui, brandPrimary } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 // Componentes
 import FormField from "../../../../../src/components/forms/FormField";
@@ -44,6 +45,7 @@ import {
 export default function RegisterUser() {
   const scrollRef = useRef(null);
   const { role: currentRole } = useUserRole();
+  const { brandPrimary } = useGymTheme();
 
   // Roles que el usuario logueado puede asignar (estrictamente por debajo del suyo).
   // crear-socio revalida esto en el backend (defensa en profundidad).

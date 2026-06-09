@@ -17,7 +17,8 @@ import SearchBar from "../../../../../src/components/SearchBar";
 import FilterChips from "../../../../../src/components/FilterChips";
 import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { ChevronRight, Mail } from "../../../../../assets/icons";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   isStaffRole,
   isSuperAdminRole,
@@ -31,6 +32,7 @@ export default function UsersList() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { isSuperAdmin } = useUserRole();
+  const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 

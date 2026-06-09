@@ -29,16 +29,13 @@ import {
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { brandPrimary } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import {
   Barbell,
   Calendar,
   Clock,
   Trash,
 } from "../../../../assets/icons";
-
-// Firma visual Editorial Pass
-const BRAND_MINT = "#2DD4BF";
 
 function resolveLabels(log) {
   if (log.plan_id && log.plan_name) {
@@ -61,6 +58,8 @@ export default function RegistroDetalle() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
 
   const { data: log, isLoading } = useSessionLogDetail(id);
   const { mutate: deleteLog, isPending: isDeleting } = useDeleteSessionLog();
@@ -303,6 +302,8 @@ export default function RegistroDetalle() {
 // ─── Bloque de un ejercicio con su tabla de series ────────────────────────────
 
 function ExerciseBlock({ exercise, index }) {
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_MINT = brandSecondary[400];
   return (
     <View
       className="rounded-2xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"

@@ -8,10 +8,11 @@ import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormConte
 import FormTrainingPlan from "../../../../../../src/components/forms/FormTrainingPlan";
 
 // Tema y assets
-import { brandPrimary } from "../../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
 export default function PlanBuilder() {
   const { form, planId, isLoading } = usePlanFormContext();
+  const { brandPrimary } = useGymTheme();
 
   if (isLoading) {
     return (

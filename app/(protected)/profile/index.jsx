@@ -22,12 +22,8 @@ import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
 import { ROLE_LABELS } from "../../../src/constants/roles";
-import {
-  brandPrimary,
-  brandSecondary,
-  gradient,
-  ui,
-} from "../../../src/theme/colors";
+import { ui } from "../../../src/theme/colors";
+import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import {
   Mail,
   Phone,
@@ -39,14 +35,14 @@ import {
 
 const norm = (s) => (s ? s.trim().toLowerCase() : null);
 
-const BRAND = brandPrimary[700];
-const MINT = brandSecondary[400];
-
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, userId, refreshProfile } = useAuth();
   const { role } = useUserRole();
+  const { brandPrimary, brandSecondary, gradient } = useGymTheme();
+  const BRAND = brandPrimary[700];
+  const MINT = brandSecondary[400];
 
   const fullName =
     [user?.name, user?.last_name].filter(Boolean).join(" ") || "";
@@ -404,6 +400,7 @@ function IconBox({ color, children }) {
 }
 
 function FieldRow({ icon, label, value, onChangeText, last, ...inputProps }) {
+  const { brandPrimary } = useGymTheme();
   return (
     <View
       className={`flex-row items-center px-4 py-3.5 ${

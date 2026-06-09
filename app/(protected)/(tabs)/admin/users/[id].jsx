@@ -32,7 +32,8 @@ import {
   formatRelativeDay,
   formatDuration,
 } from "../../../../../src/utils/format-date";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   Mail,
   Phone,
@@ -56,6 +57,7 @@ export default function MemberDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { role } = useUserRole();
+  const { brandPrimary } = useGymTheme();
   const canManage = canManageMemberData(role); // editar / dar de baja (admin+)
   const { data, isLoading, isError } = useMemberDetail(id);
 

@@ -24,7 +24,7 @@ import TrainingPlanCard from "../../../../../src/components/cards/TrainingPlanCa
 import ButtonAddPill from "../../../../../src/components/buttons/ButtonAddPill";
 
 // Tema / assets
-import { brandPrimary } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { ClipboardList, Plus } from "../../../../../assets/icons";
 
 function AnimatedCard({ plan, onPress, scrollY, containerY, isDraft = false }) {
@@ -66,6 +66,7 @@ const TABS = [
 export default function PlansList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary } = useGymTheme();
   const { data: plans = [], isLoading } = useTrainingPlans();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);

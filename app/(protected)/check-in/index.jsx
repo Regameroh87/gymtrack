@@ -25,14 +25,15 @@ import {
   X,
   Camera,
 } from "../../../assets/icons";
-import { brandPrimary, brandSecondary, ui } from "../../../src/theme/colors";
-
-const BRAND_PRIMARY = brandPrimary[700];
-const BRAND_MINT = brandSecondary[400];
+import { ui } from "../../../src/theme/colors";
+import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 
 export default function CheckInScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary, brandSecondary } = useGymTheme();
+  const BRAND_PRIMARY = brandPrimary[700];
+  const BRAND_MINT = brandSecondary[400];
   const [permission, requestPermission] = useCameraPermissions();
   const [status, setStatus] = useState("scanning"); // scanning | sending | success | duplicate | error
   const [errorMsg, setErrorMsg] = useState("");
@@ -226,6 +227,8 @@ export default function CheckInScreen() {
 }
 
 function ResultOverlay({ status, message, onClose, onRetry }) {
+  const { brandPrimary } = useGymTheme();
+  const BRAND_PRIMARY = brandPrimary[700];
   const isSuccess = status === "success" || status === "duplicate";
   const config = {
     sending: {

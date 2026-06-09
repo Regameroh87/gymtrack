@@ -24,7 +24,8 @@ import Screen from "../../../../../src/components/Screen";
 import SearchBar from "../../../../../src/components/SearchBar";
 import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Barbell, Trash, Pencil } from "../../../../../assets/icons";
-import { brandPrimary, brandSecondary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 import { eq, ne } from "drizzle-orm";
 
@@ -32,6 +33,7 @@ export default function EquipmentsList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { brandPrimary, brandSecondary } = useGymTheme();
   const [search, setSearch] = useState("");
 
   const { data: equipments, isLoading } = useQuery({

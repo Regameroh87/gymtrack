@@ -6,7 +6,6 @@ import { supabase } from "../../database/supabase.js";
 import { useAuth } from "../../auth/lib/getSession";
 import { useUserRole } from "../../hooks/shared/use-user-role";
 import { canAccessModule } from "../../constants/roles";
-import { brandSecondary, gradient } from "../../theme/colors";
 
 import {
   Users,
@@ -20,14 +19,16 @@ import {
   QrCode,
 } from "../../../assets/icons";
 
+// Nota: el campo `color` no se usa en el render (los íconos usan colores fijos
+// sobre el sidebar oscuro). Se conserva como metadata.
 const NAV_ITEMS = [
-  { icon: Home, label: "Dashboard", path: "", color: gradient.primary[0] },
-  { icon: Users, label: "Usuarios", path: "users", color: gradient.primary[0] },
+  { icon: Home, label: "Dashboard", path: "", color: "#3023cd" },
+  { icon: Users, label: "Usuarios", path: "users", color: "#3023cd" },
   {
     icon: Barbell,
     label: "Ejercicios",
     path: "exercises",
-    color: brandSecondary[500],
+    color: "#10b981",
   },
   { icon: Barbell, label: "Máquinas", path: "equipments", color: "#f43f5e" },
   {

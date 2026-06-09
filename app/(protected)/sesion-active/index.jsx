@@ -15,7 +15,8 @@ import { useFocusEffect, useRouter, Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { HeaderBackButton } from "@react-navigation/elements";
 
-import { brandPrimary, ui } from "../../../src/theme/colors.js";
+import { ui } from "../../../src/theme/colors.js";
+import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import { Barbell, Play } from "../../../assets/icons.jsx";
 
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
@@ -33,6 +34,7 @@ export default function SesionPreview() {
   const insets = useSafeAreaInsets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+  const { brandPrimary } = useGymTheme();
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
   const { data: summary, isLoading: loadingSummary } = useActivePlanSummary();
   const currentDay = summary?.currentDay ?? null;

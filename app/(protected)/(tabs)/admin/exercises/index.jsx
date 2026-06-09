@@ -48,7 +48,8 @@ import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Barbell, ChevronRight } from "../../../../../assets/icons";
 
 // Tema y utilidades
-import { brandPrimary, brandSecondary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 import { searchByQuery } from "../../../../../src/utils/searchByQuery";
 
@@ -56,6 +57,7 @@ export default function ExercisesList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { brandPrimary, brandSecondary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [selectedExercise, setSelectedExercise] = useState(null);
   const detailSheetRef = useRef(null);

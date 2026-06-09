@@ -14,7 +14,8 @@ import {
   UserPlus,
 } from "../../../../assets/icons";
 
-import { brandSecondary, ui } from "../../../../src/theme/colors";
+import { ui } from "../../../../src/theme/colors";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { canAccessModule } from "../../../../src/constants/roles";
 
@@ -53,7 +54,7 @@ const STATS = [
   },
 ];
 
-const MODULES = [
+const buildModules = (brandSecondary) => [
   {
     icon: Users,
     label: "Usuarios",
@@ -110,7 +111,7 @@ const MODULES = [
   },
 ];
 
-const QUICK_ACTIONS = [
+const buildQuickActions = (brandSecondary) => [
   {
     label: "Registrar socio",
     sub: "Nuevo miembro",
@@ -153,9 +154,13 @@ const COMING_SOON = [
 export default function AdminDashboardWeb() {
   const router = useRouter();
   const { role } = useUserRole();
+  const { brandSecondary } = useGymTheme();
+  const QUICK_ACTIONS = buildQuickActions(brandSecondary);
 
   // Solo los módulos permitidos para el rol (coach no ve Contabilidad).
-  const modules = MODULES.filter((mod) => canAccessModule(role, mod.path));
+  const modules = buildModules(brandSecondary).filter((mod) =>
+    canAccessModule(role, mod.path)
+  );
 
   const dateStr = new Date().toLocaleDateString("es-ES", {
     weekday: "long",

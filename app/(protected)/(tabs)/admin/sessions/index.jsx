@@ -24,7 +24,7 @@ import SessionCard from "../../../../../src/components/cards/SessionCard";
 import ButtonAddPill from "../../../../../src/components/buttons/ButtonAddPill";
 
 // Tema / assets
-import { brandPrimary } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { ClipboardList, Plus } from "../../../../../assets/icons";
 
 function AnimatedCard({ session, onPress, scrollY, containerY }) {
@@ -62,6 +62,7 @@ function AnimatedCard({ session, onPress, scrollY, containerY }) {
 export default function SessionsList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { brandPrimary } = useGymTheme();
   const { data: sessions = [], isLoading } = useSessions();
   const scrollY = useSharedValue(0);
   const containerY = useSharedValue(0);

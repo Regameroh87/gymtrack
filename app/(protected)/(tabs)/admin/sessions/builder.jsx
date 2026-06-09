@@ -11,11 +11,12 @@ import { useSessionForm } from "../../../../../src/hooks/sessions/use-session-fo
 import FormSession from "../../../../../src/components/forms/FormSession";
 
 // Tema / assets
-import { brandPrimary } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 export default function SessionBuilder() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { brandPrimary } = useGymTheme();
 
   const { form, isLoading } = useSessionForm({
     id: id ?? null,
