@@ -264,7 +264,7 @@ function DeleteAction({ onDelete, isDark }) {
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: ui.error,
+        backgroundColor: ui.status.error,
         marginLeft: 8,
       }}
     >
