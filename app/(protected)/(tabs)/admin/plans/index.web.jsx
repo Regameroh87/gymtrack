@@ -12,7 +12,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 
 import { supabase } from "../../../../../src/database/supabase";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 
 import {
@@ -49,6 +50,7 @@ const formatDate = (iso) => {
 
 export default function PlansListWeb() {
   const router = useRouter();
+  const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("all");
   const [page, setPage] = useState(0);
@@ -339,6 +341,7 @@ function FilterChip({ label, active, onPress }) {
 }
 
 function PlanCard({ plan, activeAssignments, onPress }) {
+  const { brandPrimary } = useGymTheme();
   const imageUrl =
     getCloudinaryUrl(plan.cover_image_uri) ||
     (plan.cover_image_uri ? `${plan.cover_image_uri}` : null);
