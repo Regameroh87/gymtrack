@@ -48,6 +48,7 @@ const formatDate = (iso) => {
 
 export default function SessionsListWeb() {
   const router = useRouter();
+  const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("all");
   const [page, setPage] = useState(0);
