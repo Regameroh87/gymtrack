@@ -14,7 +14,8 @@ import { z } from "zod";
 
 import { supabase } from "../../../../../src/database/supabase";
 import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   Polaroid,
   Mail,
@@ -71,6 +72,7 @@ function Input({ icon, ...props }) {
 
 export default function RegisterUserWeb() {
   const router = useRouter();
+  const { brandPrimary } = useGymTheme();
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);

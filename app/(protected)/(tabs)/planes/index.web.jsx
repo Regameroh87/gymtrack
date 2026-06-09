@@ -19,7 +19,7 @@ import { getCloudinaryUrl } from "../../../../src/utils/cloudinary.js";
 import MemberNavbar from "../../../../src/components/web/MemberNavbar.jsx";
 
 // Tema / assets
-import { brandPrimary, brandSecondary } from "../../../../src/theme/colors.js";
+import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import {
   Barbell,
   Calendar,
@@ -53,6 +53,7 @@ const MAIN_TABS = [
 // ─── Página ──────────────────────────────────────────────────────────────────
 export default function RutinasWeb() {
   const router = useRouter();
+  const { brandPrimary } = useGymTheme();
   const [activeTab, setActiveTab] = useState("mis_planes");
 
   return (
@@ -150,6 +151,7 @@ export default function RutinasWeb() {
 // ─── Tab: Mis Planes ─────────────────────────────────────────────────────────
 function MisPlanesContent({ router, onBrowseCatalog }) {
   const { userId } = useAuth();
+  const { brandPrimary, brandSecondary } = useGymTheme();
   const { data: assignments, isLoading } = usePlanAssignments();
   const { mutate: dropPlan, isPending: isDropping } = useDropPlan();
 
@@ -292,6 +294,7 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
 
 // ─── Tab: Catálogo ───────────────────────────────────────────────────────────
 function CatalogoContent({ router }) {
+  const { brandPrimary } = useGymTheme();
   const { data: plans = [], isLoading } = useTrainingPlans({ publishedOnly: true });
   const [activeObjective, setActiveObjective] = useState(null);
 

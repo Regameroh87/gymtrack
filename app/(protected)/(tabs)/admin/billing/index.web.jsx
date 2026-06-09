@@ -1,7 +1,8 @@
 ﻿import { View, Text, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { brandPrimary, ui } from "../../../../../src/theme/colors";
+import { ui } from "../../../../../src/theme/colors";
+import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 import {
   Receipt,
@@ -12,7 +13,7 @@ import {
   ClipboardList,
 } from "../../../../../assets/icons";
 
-const FEATURES = [
+const buildFeatures = (brandPrimary) => [
   {
     icon: Users,
     title: "Gestión de membresías",
@@ -44,6 +45,8 @@ const FEATURES = [
 ];
 
 export default function BillingPlaceholderWeb() {
+  const { brandPrimary } = useGymTheme();
+  const FEATURES = buildFeatures(brandPrimary);
   return (
     <ScrollView
       className="flex-1"
