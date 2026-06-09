@@ -606,6 +606,7 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
 
 // ─── Helpers UI ──────────────────────────────────────────────────────────────
 function ObjectiveChip({ label, Icon, active, onPress }) {
+  const { brandPrimary } = useGymTheme();
   return (
     <Pressable
       onPress={onPress}
