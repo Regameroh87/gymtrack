@@ -62,6 +62,7 @@ export default function AttendanceListWeb() {
   const router = useRouter();
   const qc = useQueryClient();
   const { user } = useAuth();
+  const { brandPrimary } = useGymTheme();
   const gymId = user?.gym_id || process.env.EXPO_PUBLIC_GYM_ID;
   const staffProfileId = user?.id;
 
@@ -340,6 +341,7 @@ export default function AttendanceListWeb() {
 // ── Modal: check-in manual ────────────────────────────────────────────
 
 function ManualCheckInModal({ gymId, staffProfileId, onClose, onDone }) {
+  const { brandPrimary } = useGymTheme();
   const [q, setQ] = useState("");
 
   const { data: members } = useQuery({
