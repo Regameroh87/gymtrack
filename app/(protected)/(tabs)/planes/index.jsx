@@ -610,35 +610,37 @@ function ExplorarContent({ router, insets }) {
         </Animated.ScrollView>
       </GestureDetector>
 
-      {/* FAB — único punto de creación de plan */}
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push("/planes/builder/custom-plan");
-        }}
-        style={{
-          position: "absolute",
-          right: 20,
-          bottom: insets.bottom + 24,
-          height: 52,
-          borderRadius: 26,
-          paddingHorizontal: 20,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 8,
-          backgroundColor: brandPrimary[500],
-          shadowColor: brandPrimary[500],
-          shadowOpacity: 0.4,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 8,
-        }}
-      >
-        <Plus size={20} color="white" />
-        <Text className="font-jakarta-bold text-[14px] text-white">
-          Crear plan
-        </Text>
-      </Pressable>
+      {/* FAB — único punto de creación de plan, solo en "Personalizados" */}
+      {isMine && (
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push("/planes/builder/custom-plan");
+          }}
+          style={{
+            position: "absolute",
+            right: 20,
+            bottom: insets.bottom + 24,
+            height: 52,
+            borderRadius: 26,
+            paddingHorizontal: 20,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            backgroundColor: brandPrimary[500],
+            shadowColor: brandPrimary[500],
+            shadowOpacity: 0.4,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 8,
+          }}
+        >
+          <Plus size={20} color="white" />
+          <Text className="font-jakarta-bold text-[14px] text-white">
+            Crear plan
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }
