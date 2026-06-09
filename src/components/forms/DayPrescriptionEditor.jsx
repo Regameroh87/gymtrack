@@ -24,6 +24,12 @@ import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 import { useStore } from "@tanstack/react-form";
+import {
+  ReorderableList,
+  reorderItems,
+  useIsActive,
+  useReorderableDrag,
+} from "react-native-reorderable-list";
 
 // Componentes
 import PlanDayExerciseCard from "./PlanDayExerciseCard";
@@ -41,8 +47,34 @@ import { supabase } from "../../database/supabase";
 import { brandPrimary, ui } from "../../theme/colors";
 import { Plus } from "../../../assets/icons";
 
-// Wrapper memoizado: estabiliza el `onChange` por índice para que el memo de
-// PlanDayExerciseCard sea efectivo → solo re-renderiza la card cuyo ejercicio cambió.
+// Wrapper para drag reordenamiento: cada item necesita llamar a los hooks dentro del
+// contexto de ReorderableList, por eso vive aquí y no en PlanDayExerciseCard.
+const DraggableExerciseItem = memo(function DraggableExerciseItem({
+  item,
+  index,
+  onUpdate,
+  onDelete,
+}) {
+  const drag = useReorderableDrag();
+  const isActive = useIsActive();
+
+  const handleChange = useCallback(
+    (updates) => onUpdate(index, updates),
+    [index, onUpdate]
+  );
+
+  return (
+    <PlanDayExerciseCard
+      exercise={item}
+      onChange={handleChange}
+      onDelete={onDelete}
+      drag={drag}
+      isActive={isActive}
+    />
+  );
+});
+
+// Wrapper memoizado sin drag: para el modo admin (sin allowAddExercise).
 const ExerciseItem = memo(function ExerciseItem({ exercise, exIdx, onUpdate }) {
   const handleChange = useCallback(
     (updates) => onUpdate(exIdx, updates),
@@ -127,6 +159,58 @@ export default function DayPrescriptionEditor({
               }
         )
       );
+    },
+    [weekIndex, dayIdx, form]
+  );
+
+  const removeExercise = useCallback(
+    (exIdx) => {
+      form.setFieldValue("weeks", (prev) =>
+        (prev ?? []).map((w, i) =>
+          i !== weekIndex
+            ? w
+            : {
+                ...w,
+                days: w.days.map((d, j) =>
+                  j !== dayIdx
+                    ? d
+                    : {
+                        ...d,
+                        exercises: d.exercises
+                          .filter((_, k) => k !== exIdx)
+                          .map((ex, k) => ({ ...ex, position: k })),
+                      }
+                ),
+              }
+        )
+      );
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    },
+    [weekIndex, dayIdx, form]
+  );
+
+  const reorderExercises = useCallback(
+    ({ from, to }) => {
+      form.setFieldValue("weeks", (prev) =>
+        (prev ?? []).map((w, i) =>
+          i !== weekIndex
+            ? w
+            : {
+                ...w,
+                days: w.days.map((d, j) =>
+                  j !== dayIdx
+                    ? d
+                    : {
+                        ...d,
+                        exercises: reorderItems(d.exercises, from, to).map(
+                          (ex, k) => ({ ...ex, position: k })
+                        ),
+                      }
+                ),
+              }
+        )
+      );
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     },
     [weekIndex, dayIdx, form]
   );
@@ -303,6 +387,41 @@ export default function DayPrescriptionEditor({
             </Pressable>
           )}
         </View>
+      ) : allowAddExercise ? (
+        <ReorderableList
+          data={day.exercises}
+          keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="handled"
+          onReorder={reorderExercises}
+          contentContainerStyle={{
+            paddingHorizontal: 24,
+            paddingTop: 16,
+            paddingBottom: 100,
+          }}
+          renderItem={({ item, index }) => (
+            <DraggableExerciseItem
+              item={item}
+              index={index}
+              onUpdate={updateExercise}
+              onDelete={() => removeExercise(index)}
+            />
+          )}
+          ListFooterComponent={
+            <Pressable
+              onPress={() => exerciseSheetRef.current?.present()}
+              className="mt-2 flex-row items-center justify-center gap-2 py-3.5 rounded-xl border border-dashed active:opacity-60"
+              style={{ borderColor: brandPrimary[500] + "50" }}
+            >
+              <Plus size={15} color={brandPrimary[500]} />
+              <Text
+                className="text-sm font-manrope-semi"
+                style={{ color: brandPrimary[500] }}
+              >
+                Agregar ejercicio
+              </Text>
+            </Pressable>
+          }
+        />
       ) : (
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -320,22 +439,6 @@ export default function DayPrescriptionEditor({
               onUpdate={updateExercise}
             />
           ))}
-
-          {allowAddExercise && (
-            <Pressable
-              onPress={() => exerciseSheetRef.current?.present()}
-              className="mt-2 flex-row items-center justify-center gap-2 py-3.5 rounded-xl border border-dashed active:opacity-60"
-              style={{ borderColor: brandPrimary[500] + "50" }}
-            >
-              <Plus size={15} color={brandPrimary[500]} />
-              <Text
-                className="text-sm font-manrope-semi"
-                style={{ color: brandPrimary[500] }}
-              >
-                Agregar ejercicio
-              </Text>
-            </Pressable>
-          )}
         </ScrollView>
       )}
 

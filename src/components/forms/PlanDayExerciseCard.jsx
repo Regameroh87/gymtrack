@@ -1,19 +1,25 @@
 // React
-import { memo } from "react";
+import { memo, useCallback } from "react";
 
 // React Native
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Animated, Pressable, Text, TextInput, View } from "react-native";
 
 // Librerías externas
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
+import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import Reanimated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 
 // Tema y assets
 import { LinearGradient } from "expo-linear-gradient";
 import { brandPrimary, gradient, ui } from "../../theme/colors";
 import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
-import { Barbell } from "../../../assets/icons";
+import { Barbell, GripVertical, Trash } from "../../../assets/icons";
 
 const DEFAULT_SET = {
   weight_kg: null,
@@ -251,9 +257,42 @@ function SetRow({
   );
 }
 
+// ─── Acción de eliminar al hacer swipe ────────────────────────────────────────
+
+function DeleteAction({ onDelete, isDark }) {
+  return (
+    <Pressable
+      onPress={onDelete}
+      style={{
+        width: 80,
+        marginBottom: 16,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: ui.error,
+        marginLeft: 8,
+      }}
+    >
+      <Trash size={18} color="#fff" />
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 10,
+          fontFamily: "Manrope_600SemiBold",
+          marginTop: 4,
+          textTransform: "uppercase",
+          letterSpacing: 0.6,
+        }}
+      >
+        Eliminar
+      </Text>
+    </Pressable>
+  );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-function PlanDayExerciseCard({ exercise, onChange }) {
+function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const isReps = (exercise.prescription_mode ?? "reps") === "reps";
@@ -283,17 +322,24 @@ function PlanDayExerciseCard({ exercise, onChange }) {
     onChange({ set_configs: setConfigs.filter((_, i) => i !== setIdx) });
   };
 
-  return (
+  const renderRightActions = useCallback(
+    () => <DeleteAction onDelete={onDelete} isDark={isDark} />,
+    [onDelete, isDark]
+  );
+
+  // Vista colapsada mientras se arrastra: header compacto sin inputs para drag fluido.
+  const cardContent = (
     <View
       style={{
         marginBottom: 16,
         borderRadius: 16,
         overflow: "hidden",
         borderWidth: 1,
-        borderColor: ui.input.border,
+        borderColor: isActive ? brandPrimary[500] : ui.input.border,
         backgroundColor: isDark
           ? ui.surfaceSecondary.dark
           : ui.surfaceSecondary.light,
+        opacity: isActive ? 0.92 : 1,
       }}
     >
       {/* Header con nombre del ejercicio y conteo de series */}
@@ -308,7 +354,7 @@ function PlanDayExerciseCard({ exercise, onChange }) {
           alignItems: "center",
           paddingHorizontal: 16,
           paddingVertical: 12,
-          borderBottomWidth: 1,
+          borderBottomWidth: isActive ? 0 : 1,
           borderBottomColor: ui.input.border,
         }}
       >
@@ -385,9 +431,25 @@ function PlanDayExerciseCard({ exercise, onChange }) {
             series
           </Text>
         </View>
+        {/* Grip handle: solo visible en modo edición con drag habilitado */}
+        {!!drag && (
+          <Pressable
+            onLongPress={drag}
+            delayLongPress={200}
+            hitSlop={8}
+            style={{
+              marginLeft: 10,
+              padding: 6,
+              opacity: 0.5,
+            }}
+          >
+            <GripVertical size={18} color="#ffffff" />
+          </Pressable>
+        )}
       </LinearGradient>
 
-      {/* Cuerpo */}
+      {/* Cuerpo — oculto mientras se arrastra para mantener el drag fluido */}
+      {!isActive && (
       <View
         style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 }}
       >
@@ -590,8 +652,23 @@ function PlanDayExerciseCard({ exercise, onChange }) {
           />
         </View>
       </View>
+      )}
     </View>
   );
+
+  if (onDelete) {
+    return (
+      <ReanimatedSwipeable
+        renderRightActions={renderRightActions}
+        rightThreshold={60}
+        overshootRight={false}
+      >
+        {cardContent}
+      </ReanimatedSwipeable>
+    );
+  }
+
+  return cardContent;
 }
 
 export default memo(PlanDayExerciseCard);
