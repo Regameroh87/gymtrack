@@ -91,6 +91,10 @@ Deno.serve(async (req) => {
       logo_url,
       theme_primary,
       theme_accent,
+      gym_address,
+      gym_phone,
+      gym_email,
+      gym_instagram,
       email,
       name,
       last_name,
@@ -131,6 +135,10 @@ Deno.serve(async (req) => {
         logo_url: logo_url ?? null,
         theme_primary: theme_primary ?? null,
         theme_accent: theme_accent ?? null,
+        address: gym_address ?? null,
+        phone: gym_phone ?? null,
+        email: gym_email ?? null,
+        instagram: gym_instagram ?? null,
       })
       .select()
       .single()

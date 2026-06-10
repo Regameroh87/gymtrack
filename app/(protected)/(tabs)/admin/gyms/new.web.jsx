@@ -125,6 +125,31 @@ function ColorField({ label, value, onChange, error }) {
   );
 }
 
+function SectionTitle({ step, title, subtitle }) {
+  return (
+    <View className="flex-row items-center gap-3 mb-5">
+      <View className="w-[26px] h-[26px] rounded-lg bg-brandPrimary-600 items-center justify-center">
+        <Text className="text-[12px] font-jakarta-bold text-white">{step}</Text>
+      </View>
+      <View className="flex-1">
+        <Text className="text-[15px] font-jakarta-bold text-ui-text-main tracking-tight">
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text className="text-[11px] font-manrope text-ui-text-muted">
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+const OWNER_MODES = [
+  { value: "existing", label: "Usuario existente" },
+  { value: "new", label: "Crear nuevo" },
+];
+
 export default function NewGymWeb() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -136,6 +161,7 @@ export default function NewGymWeb() {
   const [slugTouched, setSlugTouched] = useState(false);
 
   // Selector de dueño
+  const [ownerMode, setOwnerMode] = useState("existing");
   const [ownerSearch, setOwnerSearch] = useState("");
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState(null);
@@ -181,11 +207,22 @@ export default function NewGymWeb() {
       phone: "",
       email: "",
       instagram: "",
+      owner_name: "",
+      owner_last_name: "",
+      owner_email: "",
+      owner_phone: "",
     },
     onSubmit: async ({ value }) => {
       try {
-        if (!selectedOwner) {
+        if (ownerMode === "existing" && !selectedOwner) {
           notify("error", "Seleccioná el dueño del gimnasio.");
+          return;
+        }
+        if (
+          ownerMode === "new" &&
+          (!value.owner_name.trim() || !value.owner_email.trim())
+        ) {
+          notify("error", "Completá nombre y email del nuevo dueño.");
           return;
         }
 
@@ -198,56 +235,95 @@ export default function NewGymWeb() {
           }
         }
 
-        const { data: gym, error } = await supabase
-          .from("gyms")
-          .insert({
-            name: value.name.trim(),
-            slug: value.slug.trim(),
-            owner_id: selectedOwner.user_id,
-            logo_url,
-            theme_primary: value.theme_primary,
-            theme_accent: value.theme_accent,
-            address: value.address.trim() || null,
-            phone: value.phone.trim() || null,
-            email: value.email.trim() || null,
-            instagram: value.instagram.trim() || null,
-          })
-          .select("id")
-          .single();
+        if (ownerMode === "new") {
+          // La edge function crea auth user + gym + profile owner con
+          // rollback en cascada si algún paso falla.
+          const response = await supabase.functions.invoke("crear-gym", {
+            body: {
+              gym_name: value.name.trim(),
+              gym_slug: value.slug.trim(),
+              logo_url,
+              theme_primary: value.theme_primary,
+              theme_accent: value.theme_accent,
+              gym_address: value.address.trim() || null,
+              gym_phone: value.phone.trim() || null,
+              gym_email: value.email.trim() || null,
+              gym_instagram: value.instagram.trim() || null,
+              email: value.owner_email.trim(),
+              name: value.owner_name.trim(),
+              last_name: value.owner_last_name.trim() || null,
+              phone: value.owner_phone.trim() || null,
+            },
+          });
 
-        if (error) {
-          if (error.code === "23505") {
-            throw new Error("Ya existe un gimnasio con ese slug.");
+          if (response.error) {
+            let msg = "Ha ocurrido un error inesperado.";
+            if (response.error.context) {
+              try {
+                const body = await response.error.context.json();
+                if (body?.error) msg = body.error;
+              } catch {}
+            }
+            throw new Error(msg);
           }
-          throw new Error(error.message);
-        }
+        } else {
+          const { data: gym, error } = await supabase
+            .from("gyms")
+            .insert({
+              name: value.name.trim(),
+              slug: value.slug.trim(),
+              owner_id: selectedOwner.user_id,
+              logo_url,
+              theme_primary: value.theme_primary,
+              theme_accent: value.theme_accent,
+              address: value.address.trim() || null,
+              phone: value.phone.trim() || null,
+              email: value.email.trim() || null,
+              instagram: value.instagram.trim() || null,
+            })
+            .select("id")
+            .single();
 
-        // Vincula al dueño con su nuevo gym. Si el elegido es el propio
-        // super_admin no se toca su perfil (sigue siendo cross-gym).
-        if (selectedOwner.role !== ROLES.SUPER_ADMIN) {
-          const { error: ownerError } = await supabase
-            .from("profiles")
-            .update({ role: ROLES.OWNER, gym_id: gym.id })
-            .eq("user_id", selectedOwner.user_id);
-          if (ownerError) {
-            notify(
-              "error",
-              "Gimnasio creado, pero no se pudo asignar el perfil del dueño. Asignalo manualmente desde Usuarios."
-            );
-            return;
+          if (error) {
+            if (error.code === "23505") {
+              throw new Error("Ya existe un gimnasio con ese slug.");
+            }
+            throw new Error(error.message);
+          }
+
+          // Vincula al dueño con su nuevo gym. Si el elegido es el propio
+          // super_admin no se toca su perfil (sigue siendo cross-gym).
+          if (selectedOwner.role !== ROLES.SUPER_ADMIN) {
+            const { error: ownerError } = await supabase
+              .from("profiles")
+              .update({ role: ROLES.OWNER, gym_id: gym.id })
+              .eq("user_id", selectedOwner.user_id);
+            if (ownerError) {
+              notify(
+                "error",
+                "Gimnasio creado, pero no se pudo asignar el perfil del dueño. Asignalo manualmente desde Usuarios."
+              );
+              return;
+            }
           }
         }
 
         queryClient.invalidateQueries({ queryKey: ["admin_gyms_web"] });
         queryClient.invalidateQueries({ queryKey: ["gyms"] });
 
-        notify("success", "Gimnasio creado exitosamente.");
+        notify(
+          "success",
+          ownerMode === "new"
+            ? "Gimnasio y cuenta del dueño creados exitosamente."
+            : "Gimnasio creado exitosamente."
+        );
         form.reset();
         setPreviewUrl(null);
         setSelectedFile(null);
         setSelectedOwner(null);
         setOwnerSearch("");
         setSlugTouched(false);
+        setOwnerMode("existing");
         router.push("/admin/gyms");
       } catch (err) {
         notify("error", err.message);
@@ -334,7 +410,6 @@ export default function NewGymWeb() {
         className="bg-white rounded-[20px] border border-ui-input-border p-8 self-center w-full"
         style={{ maxWidth: 680 }}
       >
-        {/* Logo picker */}
         <input
           type="file"
           accept="image/*"
@@ -342,44 +417,13 @@ export default function NewGymWeb() {
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
-        <View className="items-center mb-8">
-          <Pressable
-            onPress={() => fileInputRef.current?.click()}
-            className="items-center gap-3 hover:opacity-80"
-            style={{ cursor: "pointer" }}
-          >
-            <View className="relative">
-              {previewUrl ? (
-                <Image
-                  source={{ uri: previewUrl }}
-                  style={{ width: 88, height: 88, borderRadius: 22 }}
-                  contentFit="cover"
-                  transition={200}
-                />
-              ) : (
-                <View className="w-[88px] h-[88px] rounded-[22px] bg-brandPrimary-50 items-center justify-center border-2 border-dashed border-brandPrimary-300">
-                  <Polaroid size={30} color={brandPrimary[500]} />
-                </View>
-              )}
-              <View className="absolute bottom-0 right-0 bg-brandPrimary-600 p-2 rounded-full border-2 border-white shadow-sm">
-                <CameraPlus size={13} color="white" />
-              </View>
-            </View>
-            <View className="items-center">
-              <Text className="text-[13px] font-manrope-bold text-ui-text-main">
-                Logo del gimnasio
-              </Text>
-              <Text className="text-[11px] font-manrope text-ui-text-muted">
-                Hacé clic para elegir una imagen
-              </Text>
-            </View>
-          </Pressable>
-        </View>
 
-        {/* Divider */}
-        <View className="w-full h-px bg-ui-input-light mb-7" />
-
-        {/* Fields */}
+        {/* ── Sección 1 · Datos del gimnasio ── */}
+        <SectionTitle
+          step="1"
+          title="Datos del gimnasio"
+          subtitle="Identidad y contacto del establecimiento"
+        />
         <View className="gap-y-5">
           {/* Row: Nombre + Slug */}
           <View className="flex-row gap-4">
@@ -438,120 +482,6 @@ export default function NewGymWeb() {
                       }}
                     />
                   </Field>
-                )}
-              </form.Field>
-            </View>
-          </View>
-
-          {/* Dueño */}
-          <Field
-            label="DUEÑO"
-            hint={
-              selectedOwner && selectedOwner.gym_id
-                ? "Este usuario ya pertenece a un gym; al crear se lo reasigna como dueño del nuevo."
-                : "Su perfil pasa a rol Dueño vinculado a este gimnasio."
-            }
-          >
-            {selectedOwner ? (
-              <View className="flex-row items-center gap-2.5 bg-brandPrimary-50 rounded-xl px-3.5 py-2.5 border border-brandPrimary-300">
-                <ShieldHalf size={15} color={brandPrimary[600]} />
-                <Text className="flex-1 text-[13px] font-manrope-semi text-ui-text-main">
-                  {`${selectedOwner.name || ""} ${selectedOwner.last_name || ""}`.trim() ||
-                    selectedOwner.email}
-                  <Text className="font-manrope text-ui-text-muted">
-                    {"  ·  "}
-                    {selectedOwner.email} · {ROLE_LABELS[selectedOwner.role]}
-                  </Text>
-                </Text>
-                <Pressable
-                  onPress={() => setSelectedOwner(null)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <X size={14} color={ui.text.muted} />
-                </Pressable>
-              </View>
-            ) : (
-              <View>
-                <View className="flex-row items-center gap-2.5 bg-white rounded-xl px-3.5 py-2.5 border border-ui-input-border">
-                  <Search size={15} color={ui.text.muted} />
-                  <TextInput
-                    value={ownerSearch}
-                    onChangeText={setOwnerSearch}
-                    onFocus={() => setOwnerOpen(true)}
-                    placeholder="Buscar usuario por nombre o email..."
-                    placeholderTextColor={ui.text.muted}
-                    className="flex-1 text-[13px] font-manrope text-ui-text-main"
-                    style={{ outlineWidth: 0 }}
-                  />
-                </View>
-
-                {ownerOpen && ownerOptions.length > 0 && (
-                  <View className="mt-1.5 bg-white rounded-xl border border-ui-input-border overflow-hidden">
-                    {ownerOptions.map((p) => (
-                      <Pressable
-                        key={p.id}
-                        onPress={() => {
-                          setSelectedOwner(p);
-                          setOwnerOpen(false);
-                        }}
-                        className="flex-row items-center gap-2.5 px-3.5 py-2.5 hover:bg-brandPrimary-50/60 border-b border-ui-input-light"
-                        style={{ cursor: "pointer" }}
-                      >
-                        <View className="flex-1">
-                          <Text className="text-[13px] font-manrope-semi text-ui-text-main">
-                            {`${p.name || ""} ${p.last_name || ""}`.trim() ||
-                              p.email}
-                          </Text>
-                          <Text className="text-[11px] font-manrope text-ui-text-muted">
-                            {p.email}
-                          </Text>
-                        </View>
-                        <View className="px-2 py-0.5 rounded-md bg-ui-background-light">
-                          <Text className="text-[10px] font-manrope-semi text-ui-text-muted">
-                            {ROLE_LABELS[p.role] || p.role}
-                          </Text>
-                        </View>
-                      </Pressable>
-                    ))}
-                  </View>
-                )}
-              </View>
-            )}
-          </Field>
-
-          {/* Row: Colores del tema */}
-          <View className="flex-row gap-4">
-            <View className="flex-1">
-              <form.Field
-                name="theme_primary"
-                validators={{
-                  onChange: z.string().regex(HEX_RE, "Hex inválido (#RRGGBB)"),
-                }}
-              >
-                {(field) => (
-                  <ColorField
-                    label="COLOR PRIMARIO"
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    error={field.state.meta.errors[0]?.message}
-                  />
-                )}
-              </form.Field>
-            </View>
-            <View className="flex-1">
-              <form.Field
-                name="theme_accent"
-                validators={{
-                  onChange: z.string().regex(HEX_RE, "Hex inválido (#RRGGBB)"),
-                }}
-              >
-                {(field) => (
-                  <ColorField
-                    label="COLOR DE ACENTO"
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    error={field.state.meta.errors[0]?.message}
-                  />
                 )}
               </form.Field>
             </View>
@@ -631,6 +561,291 @@ export default function NewGymWeb() {
               </Field>
             )}
           </form.Field>
+        </View>
+
+        {/* Divider */}
+        <View className="w-full h-px bg-ui-input-light my-7" />
+
+        {/* ── Sección 2 · Dueño ── */}
+        <SectionTitle
+          step="2"
+          title="Dueño"
+          subtitle="Quién administra este gimnasio"
+        />
+        <View className="gap-y-5">
+          {/* Toggle: existente / nuevo */}
+          <View className="flex-row bg-ui-background-light rounded-xl p-1 self-start">
+            {OWNER_MODES.map((m) => (
+              <Pressable
+                key={m.value}
+                onPress={() => setOwnerMode(m.value)}
+                className={`px-4 py-1.5 rounded-lg ${
+                  ownerMode === m.value ? "bg-white shadow-sm" : ""
+                }`}
+                style={{ cursor: "pointer" }}
+              >
+                <Text
+                  className={`text-[12px] ${
+                    ownerMode === m.value
+                      ? "font-manrope-bold text-brandPrimary-600"
+                      : "font-manrope-semi text-ui-text-muted"
+                  }`}
+                >
+                  {m.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {ownerMode === "existing" ? (
+            <Field
+              label="DUEÑO"
+              hint={
+                selectedOwner && selectedOwner.gym_id
+                  ? "Este usuario ya pertenece a un gym; al crear se lo reasigna como dueño del nuevo."
+                  : "Su perfil pasa a rol Dueño vinculado a este gimnasio."
+              }
+            >
+              {selectedOwner ? (
+                <View className="flex-row items-center gap-2.5 bg-brandPrimary-50 rounded-xl px-3.5 py-2.5 border border-brandPrimary-300">
+                  <ShieldHalf size={15} color={brandPrimary[600]} />
+                  <Text className="flex-1 text-[13px] font-manrope-semi text-ui-text-main">
+                    {`${selectedOwner.name || ""} ${selectedOwner.last_name || ""}`.trim() ||
+                      selectedOwner.email}
+                    <Text className="font-manrope text-ui-text-muted">
+                      {"  ·  "}
+                      {selectedOwner.email} · {ROLE_LABELS[selectedOwner.role]}
+                    </Text>
+                  </Text>
+                  <Pressable
+                    onPress={() => setSelectedOwner(null)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <X size={14} color={ui.text.muted} />
+                  </Pressable>
+                </View>
+              ) : (
+                <View>
+                  <View className="flex-row items-center gap-2.5 bg-white rounded-xl px-3.5 py-2.5 border border-ui-input-border">
+                    <Search size={15} color={ui.text.muted} />
+                    <TextInput
+                      value={ownerSearch}
+                      onChangeText={setOwnerSearch}
+                      onFocus={() => setOwnerOpen(true)}
+                      placeholder="Buscar usuario por nombre o email..."
+                      placeholderTextColor={ui.text.muted}
+                      className="flex-1 text-[13px] font-manrope text-ui-text-main"
+                      style={{ outlineWidth: 0 }}
+                    />
+                  </View>
+
+                  {ownerOpen && ownerOptions.length > 0 && (
+                    <View className="mt-1.5 bg-white rounded-xl border border-ui-input-border overflow-hidden">
+                      {ownerOptions.map((p) => (
+                        <Pressable
+                          key={p.id}
+                          onPress={() => {
+                            setSelectedOwner(p);
+                            setOwnerOpen(false);
+                          }}
+                          className="flex-row items-center gap-2.5 px-3.5 py-2.5 hover:bg-brandPrimary-50/60 border-b border-ui-input-light"
+                          style={{ cursor: "pointer" }}
+                        >
+                          <View className="flex-1">
+                            <Text className="text-[13px] font-manrope-semi text-ui-text-main">
+                              {`${p.name || ""} ${p.last_name || ""}`.trim() ||
+                                p.email}
+                            </Text>
+                            <Text className="text-[11px] font-manrope text-ui-text-muted">
+                              {p.email}
+                            </Text>
+                          </View>
+                          <View className="px-2 py-0.5 rounded-md bg-ui-background-light">
+                            <Text className="text-[10px] font-manrope-semi text-ui-text-muted">
+                              {ROLE_LABELS[p.role] || p.role}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )}
+            </Field>
+          ) : (
+            <View className="gap-y-5">
+              {/* Row: Nombre + Apellido */}
+              <View className="flex-row gap-4">
+                <View className="flex-1">
+                  <form.Field name="owner_name">
+                    {(field) => (
+                      <Field label="NOMBRE">
+                        <Input
+                          placeholder="Ej: Juan"
+                          value={field.state.value}
+                          onChangeText={field.handleChange}
+                        />
+                      </Field>
+                    )}
+                  </form.Field>
+                </View>
+                <View className="flex-1">
+                  <form.Field name="owner_last_name">
+                    {(field) => (
+                      <Field label="APELLIDO (OPCIONAL)">
+                        <Input
+                          placeholder="Ej: Pérez"
+                          value={field.state.value}
+                          onChangeText={field.handleChange}
+                        />
+                      </Field>
+                    )}
+                  </form.Field>
+                </View>
+              </View>
+
+              {/* Row: Email + Teléfono */}
+              <View className="flex-row gap-4">
+                <View className="flex-1">
+                  <form.Field
+                    name="owner_email"
+                    validators={{
+                      onChange: z
+                        .string()
+                        .email("Correo electrónico inválido")
+                        .or(z.literal("")),
+                    }}
+                  >
+                    {(field) => (
+                      <Field
+                        label="EMAIL"
+                        error={field.state.meta.errors[0]?.message}
+                      >
+                        <Input
+                          placeholder="dueno@energym.com"
+                          icon={<Mail size={15} color={ui.text.muted} />}
+                          value={field.state.value}
+                          onChangeText={field.handleChange}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </Field>
+                    )}
+                  </form.Field>
+                </View>
+                <View className="flex-1">
+                  <form.Field name="owner_phone">
+                    {(field) => (
+                      <Field label="TELÉFONO (OPCIONAL)">
+                        <Input
+                          placeholder="123456789"
+                          icon={<Phone size={15} color={ui.text.muted} />}
+                          value={field.state.value}
+                          onChangeText={field.handleChange}
+                          keyboardType="numeric"
+                        />
+                      </Field>
+                    )}
+                  </form.Field>
+                </View>
+              </View>
+
+              <View className="flex-row items-center gap-2 bg-brandPrimary-50 rounded-xl px-3.5 py-2.5 border border-brandPrimary-200">
+                <ShieldHalf size={14} color={brandPrimary[600]} />
+                <Text className="flex-1 text-[11px] font-manrope text-ui-text-muted">
+                  Se crea su cuenta con rol Dueño y contraseña temporal{" "}
+                  <Text className="font-manrope-bold text-ui-text-main">
+                    tugimnasio123
+                  </Text>
+                  . El email queda confirmado automáticamente.
+                </Text>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Divider */}
+        <View className="w-full h-px bg-ui-input-light my-7" />
+
+        {/* ── Sección 3 · Theme ── */}
+        <SectionTitle
+          step="3"
+          title="Theme"
+          subtitle="Logo y colores que ven los miembros del gym"
+        />
+        <View className="gap-y-5">
+          {/* Logo picker */}
+          <View className="items-center">
+            <Pressable
+              onPress={() => fileInputRef.current?.click()}
+              className="items-center gap-3 hover:opacity-80"
+              style={{ cursor: "pointer" }}
+            >
+              <View className="relative">
+                {previewUrl ? (
+                  <Image
+                    source={{ uri: previewUrl }}
+                    style={{ width: 88, height: 88, borderRadius: 22 }}
+                    contentFit="cover"
+                    transition={200}
+                  />
+                ) : (
+                  <View className="w-[88px] h-[88px] rounded-[22px] bg-brandPrimary-50 items-center justify-center border-2 border-dashed border-brandPrimary-300">
+                    <Polaroid size={30} color={brandPrimary[500]} />
+                  </View>
+                )}
+                <View className="absolute bottom-0 right-0 bg-brandPrimary-600 p-2 rounded-full border-2 border-white shadow-sm">
+                  <CameraPlus size={13} color="white" />
+                </View>
+              </View>
+              <View className="items-center">
+                <Text className="text-[13px] font-manrope-bold text-ui-text-main">
+                  Logo del gimnasio
+                </Text>
+                <Text className="text-[11px] font-manrope text-ui-text-muted">
+                  Hacé clic para elegir una imagen
+                </Text>
+              </View>
+            </Pressable>
+          </View>
+
+          {/* Row: Colores del tema */}
+          <View className="flex-row gap-4">
+            <View className="flex-1">
+              <form.Field
+                name="theme_primary"
+                validators={{
+                  onChange: z.string().regex(HEX_RE, "Hex inválido (#RRGGBB)"),
+                }}
+              >
+                {(field) => (
+                  <ColorField
+                    label="COLOR PRIMARIO"
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    error={field.state.meta.errors[0]?.message}
+                  />
+                )}
+              </form.Field>
+            </View>
+            <View className="flex-1">
+              <form.Field
+                name="theme_accent"
+                validators={{
+                  onChange: z.string().regex(HEX_RE, "Hex inválido (#RRGGBB)"),
+                }}
+              >
+                {(field) => (
+                  <ColorField
+                    label="COLOR DE ACENTO"
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    error={field.state.meta.errors[0]?.message}
+                  />
+                )}
+              </form.Field>
+            </View>
+          </View>
         </View>
 
         {/* Submit */}
