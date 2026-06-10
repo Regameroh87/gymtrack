@@ -34,19 +34,28 @@ const lerp = (a, b, t) => a + (b - a) * t;
 // ── hex ↔ rgb ───────────────────────────────────────────────────────────────
 function hexToRgb(hex) {
   let h = String(hex).trim().replace(/^#/, "");
-  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length === 3)
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
   const int = parseInt(h, 16);
   return { r: (int >> 16) & 255, g: (int >> 8) & 255, b: int & 255 };
 }
 
 function rgbToHex({ r, g, b }) {
-  const to = (n) => Math.round(clamp01(n / 255) * 255).toString(16).padStart(2, "0");
+  const to = (n) =>
+    Math.round(clamp01(n / 255) * 255)
+      .toString(16)
+      .padStart(2, "0");
   return `#${to(r)}${to(g)}${to(b)}`;
 }
 
 // ── rgb ↔ hsl ─────────────────────────────────────────────────────────────
 function rgbToHsl({ r, g, b }) {
-  r /= 255; g /= 255; b /= 255;
+  r /= 255;
+  g /= 255;
+  b /= 255;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const l = (max + min) / 2;
@@ -56,9 +65,14 @@ function rgbToHsl({ r, g, b }) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) {
-      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: h = (b - r) / d + 2; break;
-      default: h = (r - g) / d + 4;
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
     }
     h /= 6;
   }
@@ -110,7 +124,9 @@ export function generateRamp(seedHex) {
     } else {
       targetL = lerp(l, NEAR_BLACK_L, DARK_FACTOR[step]);
     }
-    ramp[step] = rgbToHex(hslToRgb({ h, s: clamp01(targetS), l: clamp01(targetL) }));
+    ramp[step] = rgbToHex(
+      hslToRgb({ h, s: clamp01(targetS), l: clamp01(targetL) })
+    );
   }
   return ramp;
 }
