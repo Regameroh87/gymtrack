@@ -35,6 +35,8 @@ import {
 
 // Lib
 import { queryClient } from "../src/lib/queryClient";
+import { AuthProvider } from "../src/auth/lib/getSession";
+import { GymThemeProvider } from "../src/contexts/gym-theme-context";
 
 export default function RootLayoutWeb() {
   const { colorScheme } = useColorScheme();
