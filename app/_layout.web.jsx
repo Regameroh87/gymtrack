@@ -84,18 +84,25 @@ export default function RootLayoutWeb() {
   };
 
   return (
-    <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(protected)" options={{ headerShown: false }} />
-          </Stack>
-          <Toast config={toastConfig} />
-        </ThemeProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <GymThemeProvider>
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(protected)"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+              <Toast config={toastConfig} />
+            </ThemeProvider>
+          </GymThemeProvider>
+        </QueryClientProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );
