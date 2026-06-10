@@ -20,7 +20,8 @@
       "PowerShell(npx tailwindcss -c tailwind.config.js -i global.css -o build-debug.css 2>$null; Select-String -Path build-debug.css -Pattern 'brandSecondary-N|tengan color' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line\\)\" }; Remove-Item build-debug.css -Force -Confirm:$false)",
       "PowerShell(node -e \"console.log\\(require\\('./node_modules/@tanstack/react-form/package.json'\\).version\\)\")",
       "PowerShell(node -e \"console.log\\(require\\('./package.json'\\).dependencies['@tanstack/react-form']\\)\")",
-      "PowerShell(npx prettier --check src/hooks/plans/use-custom-training-plan-form.js)"
+      "PowerShell(npx prettier --check src/hooks/plans/use-custom-training-plan-form.js)",
+      "PowerShell($line = \\(Select-String -Path \"app\\\\\\(protected\\)\\\\\\(tabs\\)\\\\admin\\\\gyms\\\\new.web.jsx\" -Pattern 'replace'\\).Line[0]; [System.Text.Encoding]::Unicode.GetBytes\\($line.Trim\\(\\)\\) -join ',')"
     ],
     "defaultMode": "default"
   }
