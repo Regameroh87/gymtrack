@@ -6,7 +6,7 @@
    Canales "R G B" de las rampas hand-tuned de src/theme/colors.js.
    GymThemeProvider sobreescribe estas vars en runtime con vars() para los gyms
    con theme_primary/theme_accent custom. Acá viven los defaults para que las
-   clases brandPrimary-*/brandSecondary-* tengan color incluso fuera del subtree
+   clases brandPrimary-N / brandSecondary-N tengan color incluso fuera del subtree
    del provider (portales de Toast/BottomSheet, primer frame). */
 :root {
   --brand-primary-50: 238 240 255;

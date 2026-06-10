@@ -16,7 +16,8 @@
       "Bash(node -e \"require\\('@babel/core'\\).transformFileSync\\('src/components/forms/PlanDayExerciseCard.jsx',{presets:[['@babel/preset-react',{runtime:'automatic'}]]}\\);console.log\\('PARSE OK'\\)\")",
       "Bash(node -e \"const p=require\\('c:/Users/Adminneco/OneDrive/Desktop/gymtrack/package.json'\\); console.log\\('nativewind:', \\(p.dependencies||{}\\).nativewind||\\(p.devDependencies||{}\\).nativewind\\); console.log\\('tailwindcss:', \\(p.dependencies||{}\\).tailwindcss||\\(p.devDependencies||{}\\).tailwindcss\\); console.log\\('expo:', \\(p.dependencies||{}\\).expo\\);\")",
       "Bash(node -e \"const p=require\\('c:/Users/Adminneco/OneDrive/Desktop/gymtrack/package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\); console.log\\('asyncstorage:', \\(p.dependencies||{}\\)['@react-native-async-storage/async-storage']\\);\")",
-      "Bash(node --input-type=module -e ' *)"
+      "Bash(node --input-type=module -e ' *)",
+      "PowerShell(npx tailwindcss -c tailwind.config.js -i global.css -o build-debug.css 2>$null; Select-String -Path build-debug.css -Pattern 'brandSecondary-N|tengan color' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line\\)\" }; Remove-Item build-debug.css -Force -Confirm:$false)"
     ],
     "defaultMode": "default"
   }
