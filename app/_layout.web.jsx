@@ -103,7 +103,7 @@ export default function RootLayoutWeb() {
             </ThemeProvider>
           </GymThemeProvider>
         </QueryClientProvider>
-      </QueryClientProvider>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
