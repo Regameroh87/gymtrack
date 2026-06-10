@@ -17,12 +17,14 @@ import {
   Home,
   Logout,
   QrCode,
+  ShieldHalf,
 } from "../../../assets/icons";
 
 // Nota: el campo `color` no se usa en el render (los íconos usan colores fijos
 // sobre el sidebar oscuro). Se conserva como metadata.
 const NAV_ITEMS = [
   { icon: Home, label: "Dashboard", path: "", color: "#3023cd" },
+  { icon: ShieldHalf, label: "Gimnasios", path: "gyms", color: "#2dd4bf" },
   { icon: Users, label: "Usuarios", path: "users", color: "#3023cd" },
   {
     icon: Barbell,

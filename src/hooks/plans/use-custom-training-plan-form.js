@@ -199,8 +199,10 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const form = useForm({
     defaultValues,
     validators: {
-      // Bloquea el guardado si la rutina está incompleta o el nombre está duplicado.
-      onSubmit: async ({ value }) => {
+      // Bloquea el guardado si la rutina está incompleta. Debe ser sync:
+      // un validador async en este slot devuelve una Promise que TanStack
+      // Form trata como error truthy y el submit queda bloqueado siempre.
+      onSubmit: ({ value }) => {
         const weeks = value.weeks ?? [];
         if (
           weeks.length === 0 ||
@@ -216,6 +218,10 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         )
           return "Cada sesión asignada debe tener al menos un ejercicio.";
 
+        return undefined;
+      },
+      // Chequeo de nombre duplicado: consulta SQLite, va en el slot async.
+      onSubmitAsync: async ({ value }) => {
         try {
           const existing = await database
             .select({ id: custom_plans.id, name: custom_plans.name })

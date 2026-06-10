@@ -17,7 +17,10 @@
       "Bash(node -e \"const p=require\\('c:/Users/Adminneco/OneDrive/Desktop/gymtrack/package.json'\\); console.log\\('nativewind:', \\(p.dependencies||{}\\).nativewind||\\(p.devDependencies||{}\\).nativewind\\); console.log\\('tailwindcss:', \\(p.dependencies||{}\\).tailwindcss||\\(p.devDependencies||{}\\).tailwindcss\\); console.log\\('expo:', \\(p.dependencies||{}\\).expo\\);\")",
       "Bash(node -e \"const p=require\\('c:/Users/Adminneco/OneDrive/Desktop/gymtrack/package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\); console.log\\('asyncstorage:', \\(p.dependencies||{}\\)['@react-native-async-storage/async-storage']\\);\")",
       "Bash(node --input-type=module -e ' *)",
-      "PowerShell(npx tailwindcss -c tailwind.config.js -i global.css -o build-debug.css 2>$null; Select-String -Path build-debug.css -Pattern 'brandSecondary-N|tengan color' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line\\)\" }; Remove-Item build-debug.css -Force -Confirm:$false)"
+      "PowerShell(npx tailwindcss -c tailwind.config.js -i global.css -o build-debug.css 2>$null; Select-String -Path build-debug.css -Pattern 'brandSecondary-N|tengan color' | ForEach-Object { \"$\\($_.LineNumber\\): $\\($_.Line\\)\" }; Remove-Item build-debug.css -Force -Confirm:$false)",
+      "PowerShell(node -e \"console.log\\(require\\('./node_modules/@tanstack/react-form/package.json'\\).version\\)\")",
+      "PowerShell(node -e \"console.log\\(require\\('./package.json'\\).dependencies['@tanstack/react-form']\\)\")",
+      "PowerShell(npx prettier --check src/hooks/plans/use-custom-training-plan-form.js)"
     ],
     "defaultMode": "default"
   }
