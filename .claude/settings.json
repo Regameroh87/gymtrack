@@ -34,7 +34,8 @@
       "Bash(sed -n '59p' \"app/\\(protected\\)/\\(tabs\\)/admin/gyms/new.web.jsx\")",
       "Bash(node -e ' *)",
       "mcp__claude_ai_Supabase__list_edge_functions",
-      "PowerShell(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);p.parse\\(fs.readFileSync\\('app/\\(protected\\)/\\(tabs\\)/planes/index.web.jsx','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\)\")"
+      "PowerShell(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);p.parse\\(fs.readFileSync\\('app/\\(protected\\)/\\(tabs\\)/planes/index.web.jsx','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\)\")",
+      "mcp__claude_ai_Supabase__get_logs"
     ],
     "defaultMode": "default"
   }
