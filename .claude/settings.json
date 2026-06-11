@@ -37,7 +37,8 @@
       "PowerShell(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);p.parse\\(fs.readFileSync\\('app/\\(protected\\)/\\(tabs\\)/planes/index.web.jsx','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\)\")",
       "mcp__claude_ai_Supabase__get_logs",
       "PowerShell(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);for\\(const f of ['src/database/sync.js','src/database/schemas.js','src/database/migrations/migrations.js']\\){p.parse\\(fs.readFileSync\\(f,'utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK '+f\\)};JSON.parse\\(fs.readFileSync\\('src/database/migrations/meta/_journal.json','utf8'\\)\\);console.log\\('journal OK'\\)\")",
-      "PowerShell($content = Get-Content -Raw \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\supabase\\\\migrations\\\\20260611121000_rls_v2_memberships.sql\" -Encoding UTF8; $content.Length)"
+      "PowerShell($content = Get-Content -Raw \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\supabase\\\\migrations\\\\20260611121000_rls_v2_memberships.sql\" -Encoding UTF8; $content.Length)",
+      "PowerShell(node scripts/check-syntax.js \"app/_layout.web.jsx\")"
     ],
     "defaultMode": "default"
   }

@@ -8,6 +8,7 @@ import {
   useMemo,
   useCallback,
 } from "react";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery } from "@tanstack/react-query";
 
@@ -15,7 +16,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../auth/lib/getSession";
 import { supabase } from "../database/supabase";
 import { queryClient } from "../lib/queryClient";
-import { requestGymSwitch, checkNetInfoAndSync } from "../database/sync";
+
+// El motor de sync escribe en SQLite local, que solo existe en native (la web
+// consulta Supabase directo). Carga diferida para no inicializar expo-sqlite
+// en el bundle web al importar este contexto.
+const loadSync = () =>
+  Platform.OS === "web" ? null : require("../database/sync");
 
 // ─── Gym activo (multi-gym) ───
 // Una persona puede tener memberships en varios gyms (tabla memberships).
@@ -104,9 +110,11 @@ export function ActiveGymProvider({ children }) {
     if (!activeGymId || !isLoggedIn) return;
     if (lastSyncedGymRef.current === activeGymId) return;
     lastSyncedGymRef.current = activeGymId;
-    checkNetInfoAndSync().catch((e) =>
-      console.error("ActiveGym: sync post-selección falló:", e)
-    );
+    const sync = loadSync();
+    if (!sync) return;
+    sync
+      .checkNetInfoAndSync()
+      .catch((e) => console.error("ActiveGym: sync post-selección falló:", e));
   }, [activeGymId, isLoggedIn]);
 
   const switchGym = useCallback(
@@ -116,9 +124,15 @@ export function ActiveGymProvider({ children }) {
       if (!target) {
         throw new Error("No tenés membresía activa en ese gimnasio.");
       }
-      // Empuja pendientes del gym actual y purga la base local; tira error
-      // claro si hay cambios sin subir y no hay conexión.
-      await requestGymSwitch(gymId);
+      // Native: empuja pendientes del gym actual y purga la base local; tira
+      // error claro si hay cambios sin subir y no hay conexión. Web: no hay
+      // base local, alcanza con persistir el gym elegido.
+      const sync = loadSync();
+      if (sync) {
+        await sync.requestGymSwitch(gymId);
+      } else {
+        await AsyncStorage.setItem(ACTIVE_GYM_KEY, gymId);
+      }
       lastSyncedGymRef.current = gymId;
       setActiveGymId(gymId);
       // Todo lo cacheado pertenece al gym anterior.

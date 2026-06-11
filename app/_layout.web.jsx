@@ -37,6 +37,7 @@ import {
 import { queryClient } from "../src/lib/queryClient";
 import { AuthProvider } from "../src/auth/lib/getSession";
 import { GymThemeProvider } from "../src/contexts/gym-theme-context";
+import { ActiveGymProvider } from "../src/contexts/active-gym-context";
 
 export default function RootLayoutWeb() {
   const { colorScheme } = useColorScheme();
@@ -87,6 +88,7 @@ export default function RootLayoutWeb() {
     <AuthProvider>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
+          <ActiveGymProvider>
           <GymThemeProvider>
             <ThemeProvider
               value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
@@ -102,6 +104,7 @@ export default function RootLayoutWeb() {
               <Toast config={toastConfig} />
             </ThemeProvider>
           </GymThemeProvider>
+          </ActiveGymProvider>
         </QueryClientProvider>
       </SafeAreaProvider>
     </AuthProvider>
