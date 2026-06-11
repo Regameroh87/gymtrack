@@ -14,6 +14,7 @@ import { Image } from "expo-image";
 import { supabase } from "../../../../../src/database/supabase";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 
 import {
@@ -42,16 +43,21 @@ const formatDate = (iso) => {
 
 export default function EquipmentsListWeb() {
   const router = useRouter();
+  const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
 
+  // Multi-gym: la RLS devuelve todos los gyms del usuario; el filtro por
+  // gym activo es del cliente.
   const { data: equipments, isLoading } = useQuery({
-    queryKey: ["admin_equipments_web"],
+    queryKey: ["admin_equipments_web", gymId],
+    enabled: !!gymId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("equipment")
         .select("*")
+        .eq("gym_id", gymId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;

@@ -25,9 +25,9 @@ import {
 import { supabase } from "../../database/supabase";
 import { checkNetInfoAndSync } from "../../database/sync";
 import { recomputePlanPublishState } from "./plan-publish";
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Constantes
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 const DRAFT_KEY = "training_plan_form_draft";
 
 const persistWeeks = async (planId, weeks, now, db = database) => {
@@ -215,6 +215,7 @@ const enrichExercisesFromBase = async (weeks) => {
 
 export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
+  const { gymId } = useActiveGym();
   const saveTimerRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -308,7 +309,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         await database.transaction(async (tx) => {
           await tx.insert(training_plans).values({
             id: planId,
-            gym_id: GYM_ID,
+            gym_id: gymId,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             objective: value.objective || null,

@@ -6,7 +6,7 @@ import QRCode from "react-native-qrcode-svg";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { supabase } from "../../../../../src/database/supabase";
-import { useAuth } from "../../../../../src/auth/lib/getSession";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 import { ArrowLeft, QrCode, Clock } from "../../../../../assets/icons";
 
@@ -24,8 +24,7 @@ function randomToken() {
 
 export default function AttendanceKioskWeb() {
   const router = useRouter();
-  const { user } = useAuth();
-  const gymId = user?.gym_id || process.env.EXPO_PUBLIC_GYM_ID;
+  const { gymId } = useActiveGym();
 
   // Tick que dispara refetch cada ROTATE_MS
   const [tick, setTick] = useState(0);
@@ -166,8 +165,8 @@ export default function AttendanceKioskWeb() {
               Falta gym_id
             </Text>
             <Text className="text-ui-text-muted text-xs font-manrope text-center">
-              Tu perfil no tiene gym asignado y EXPO_PUBLIC_GYM_ID no está
-              definido.
+              No hay un gimnasio activo seleccionado. Elegí uno desde tu
+              perfil.
             </Text>
           </View>
         ) : isLoading || !payload ? (

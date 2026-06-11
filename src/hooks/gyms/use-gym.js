@@ -2,15 +2,14 @@
 import { useQuery } from "@tanstack/react-query";
 
 // Auth y datos
-import { useAuth } from "../../auth/lib/getSession";
+import { useActiveGym } from "../../contexts/active-gym-context";
 import { supabase } from "../../database/supabase";
 
-// Lee el gym del usuario autenticado (incluye branding: logo + theme).
-// El gym_id sale del perfil (useAuth), no de una env var — la app es un solo
-// build multitenant. Cacheado por TanStack Query; lo consume el GymThemeProvider.
+// Lee el gym ACTIVO del usuario (incluye branding: logo + theme). Con multi-gym
+// el gym sale del contexto de gym activo (memberships), no del perfil ni de una
+// env var. Cacheado por TanStack Query; lo consume el GymThemeProvider.
 export const useGym = () => {
-  const { user } = useAuth();
-  const gymId = user?.gym_id;
+  const { gymId } = useActiveGym();
 
   return useQuery({
     queryKey: ["gym", gymId],

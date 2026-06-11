@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { supabase } from "../../../src/database/supabase";
 import { useAuth } from "../../../src/auth/lib/getSession";
+import { useActiveGym } from "../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
@@ -40,6 +41,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, userId, refreshProfile } = useAuth();
+  const { gym: activeGym, memberships } = useActiveGym();
   const { role } = useUserRole();
   const { brandPrimary, brandSecondary, gradient } = useGymTheme();
   const BRAND = brandPrimary[700];
@@ -286,6 +288,40 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Multi-gym: switcher visible solo si la cuenta pertenece a varios gyms */}
+        {memberships.length > 1 && (
+          <Pressable
+            onPress={() => router.push("/(protected)/select-gym")}
+            className="flex-row items-center px-4 py-4 border-t border-ui-text-main/5 dark:border-white/5 active:opacity-70"
+          >
+            <IconBox color={BRAND}>
+              <MapPin size={14} color={BRAND} />
+            </IconBox>
+            <View className="flex-1">
+              <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.4px] text-ui-text-muted mb-[3px]">
+                Gimnasio activo
+              </Text>
+              <Text
+                className="text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark capitalize"
+                numberOfLines={1}
+              >
+                {activeGym?.name ?? "—"}
+              </Text>
+            </View>
+            <View
+              className="px-3 py-1.5 rounded-full"
+              style={{ backgroundColor: `${BRAND}15` }}
+            >
+              <Text
+                className="text-[11px] font-jakarta-bold"
+                style={{ color: BRAND }}
+              >
+                Cambiar
+              </Text>
+            </View>
+          </Pressable>
+        )}
       </View>
 
       {/* ── Datos personales ── */}

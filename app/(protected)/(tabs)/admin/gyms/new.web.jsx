@@ -17,7 +17,7 @@ import { supabase } from "../../../../../src/database/supabase";
 import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { ROLES, ROLE_LABELS } from "../../../../../src/constants/roles";
+import { ROLE_LABELS } from "../../../../../src/constants/roles";
 import {
   Polaroid,
   Mail,
@@ -235,77 +235,42 @@ export default function NewGymWeb() {
           }
         }
 
-        if (ownerMode === "new") {
-          // La edge function crea auth user + gym + profile owner con
-          // rollback en cascada si algún paso falla.
-          const response = await supabase.functions.invoke("crear-gym", {
-            body: {
-              gym_name: value.name.trim(),
-              gym_slug: value.slug.trim(),
-              logo_url,
-              theme_primary: value.theme_primary,
-              theme_accent: value.theme_accent,
-              gym_address: value.address.trim() || null,
-              gym_phone: value.phone.trim() || null,
-              gym_email: value.email.trim() || null,
-              gym_instagram: value.instagram.trim() || null,
-              email: value.owner_email.trim(),
-              name: value.owner_name.trim(),
-              last_name: value.owner_last_name.trim() || null,
-              phone: value.owner_phone.trim() || null,
-            },
-          });
+        // La edge function crea el gym con rollback en cascada. Si el email
+        // del dueño ya tiene cuenta (multi-gym), reutiliza la cuenta y solo
+        // agrega la membresía de owner del gym nuevo; si no, crea auth user
+        // + profile. Vale para ambos modos (dueño nuevo o existente).
+        const ownerEmail =
+          ownerMode === "new"
+            ? value.owner_email.trim()
+            : selectedOwner.email;
 
-          if (response.error) {
-            let msg = "Ha ocurrido un error inesperado.";
-            if (response.error.context) {
-              try {
-                const body = await response.error.context.json();
-                if (body?.error) msg = body.error;
-              } catch {}
-            }
-            throw new Error(msg);
-          }
-        } else {
-          const { data: gym, error } = await supabase
-            .from("gyms")
-            .insert({
-              name: value.name.trim(),
-              slug: value.slug.trim(),
-              owner_id: selectedOwner.user_id,
-              logo_url,
-              theme_primary: value.theme_primary,
-              theme_accent: value.theme_accent,
-              address: value.address.trim() || null,
-              phone: value.phone.trim() || null,
-              email: value.email.trim() || null,
-              instagram: value.instagram.trim() || null,
-            })
-            .select("id")
-            .single();
+        const response = await supabase.functions.invoke("crear-gym", {
+          body: {
+            gym_name: value.name.trim(),
+            gym_slug: value.slug.trim(),
+            logo_url,
+            theme_primary: value.theme_primary,
+            theme_accent: value.theme_accent,
+            gym_address: value.address.trim() || null,
+            gym_phone: value.phone.trim() || null,
+            gym_email: value.email.trim() || null,
+            gym_instagram: value.instagram.trim() || null,
+            email: ownerEmail,
+            name: value.owner_name.trim() || null,
+            last_name: value.owner_last_name.trim() || null,
+            phone: value.owner_phone.trim() || null,
+          },
+        });
 
-          if (error) {
-            if (error.code === "23505") {
-              throw new Error("Ya existe un gimnasio con ese slug.");
-            }
-            throw new Error(error.message);
+        if (response.error) {
+          let msg = "Ha ocurrido un error inesperado.";
+          if (response.error.context) {
+            try {
+              const body = await response.error.context.json();
+              if (body?.error) msg = body.error;
+            } catch {}
           }
-
-          // Vincula al dueño con su nuevo gym. Si el elegido es el propio
-          // super_admin no se toca su perfil (sigue siendo cross-gym).
-          if (selectedOwner.role !== ROLES.SUPER_ADMIN) {
-            const { error: ownerError } = await supabase
-              .from("profiles")
-              .update({ role: ROLES.OWNER, gym_id: gym.id })
-              .eq("user_id", selectedOwner.user_id);
-            if (ownerError) {
-              notify(
-                "error",
-                "Gimnasio creado, pero no se pudo asignar el perfil del dueño. Asignalo manualmente desde Usuarios."
-              );
-              return;
-            }
-          }
+          throw new Error(msg);
         }
 
         queryClient.invalidateQueries({ queryKey: ["admin_gyms_web"] });

@@ -9,13 +9,15 @@ import { plan_assignments, training_plans, custom_plans } from "../../database/s
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 export const usePlanAssignments = () => {
   const { userId } = useAuth();
+  const { gymId } = useActiveGym();
 
   return useQuery({
-    queryKey: ["plan_assignments"],
-    enabled: !!userId,
+    queryKey: ["plan_assignments", gymId],
+    enabled: !!userId && !!gymId,
     queryFn: async () => {
       const rows = await database
         .select({
@@ -48,6 +50,10 @@ export const usePlanAssignments = () => {
         .where(
           and(
             eq(plan_assignments.user_id, userId),
+            // Defensa en profundidad multi-gym: la base local solo debería
+            // contener el gym activo, pero un switch interrumpido podría dejar
+            // restos del gym anterior.
+            eq(plan_assignments.gym_id, gymId),
             ne(plan_assignments.sync_status, "deleted")
           )
         )

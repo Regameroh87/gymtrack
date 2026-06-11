@@ -16,6 +16,7 @@ import { supabase } from "../../../../../src/database/supabase";
 import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 import {
   Polaroid,
@@ -73,6 +74,7 @@ function Input({ icon, ...props }) {
 
 export default function RegisterUserWeb() {
   const router = useRouter();
+  const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -106,7 +108,14 @@ export default function RegisterUserWeb() {
         }
 
         const response = await supabase.functions.invoke("crear-socio", {
-          body: { ...value, image_profile, gender: value.gender || null },
+          // gym_id: el gym activo del caller (multi-gym); el backend valida
+          // contra memberships que realmente sea staff de ese gym.
+          body: {
+            ...value,
+            image_profile,
+            gender: value.gender || null,
+            gym_id: gymId,
+          },
         });
 
         if (response.error) {
@@ -120,7 +129,12 @@ export default function RegisterUserWeb() {
           throw new Error(msg);
         }
 
-        notify("success", "Socio registrado exitosamente.");
+        notify(
+          "success",
+          response.data?.linked_existing
+            ? "Esta persona ya tenía cuenta: se la vinculó a tu gimnasio con sus datos existentes."
+            : "Socio registrado exitosamente."
+        );
         form.reset();
         setPreviewUrl(null);
         setSelectedFile(null);

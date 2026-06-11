@@ -28,6 +28,7 @@ import {
 // Tema
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 // Componentes
 import FormField from "../../../../../src/components/forms/FormField";
@@ -46,6 +47,7 @@ import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 export default function RegisterUser() {
   const scrollRef = useRef(null);
   const { role: currentRole } = useUserRole();
+  const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
 
   // Roles que el usuario logueado puede asignar (estrictamente por debajo del suyo).
@@ -82,7 +84,14 @@ export default function RegisterUser() {
         }
 
         const response = await supabase.functions.invoke("crear-socio", {
-          body: { ...value, image_profile, gender: value.gender || null },
+          // gym_id: el gym activo del caller (multi-gym); el backend valida
+          // contra memberships que realmente sea staff de ese gym.
+          body: {
+            ...value,
+            image_profile,
+            gender: value.gender || null,
+            gym_id: gymId,
+          },
         });
 
         if (response.error) {
@@ -102,7 +111,9 @@ export default function RegisterUser() {
         Toast.show({
           type: "success",
           text1: "¡Éxito!",
-          text2: "Usuario registrado exitosamente.",
+          text2: response.data?.linked_existing
+            ? "Esta persona ya tenía cuenta: se la vinculó a tu gimnasio con sus datos existentes."
+            : "Usuario registrado exitosamente.",
           position: "bottom",
         });
         form.reset();

@@ -33,7 +33,11 @@ import { queryClient } from "../lib/queryClient";
 
 const LAST_SYNC_KEY = "last_sync_at";
 const DB_EPOCH_KEY = "db_initialized_at";
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+// Gym activo (multi-gym): la base SQLite contiene UN solo gym a la vez. La
+// clave la escribe el ActiveGymProvider; sync_meta guarda a qué gym pertenece
+// el contenido actual de la base para detectar switches (aún tras un crash).
+const ACTIVE_GYM_KEY = "active-gym:id";
+const ACTIVE_GYM_META_KEY = "active_gym_id";
 let isSyncing = false;
 
 // Los watermarks last_sync_at_* viven en AsyncStorage, pero describen el
@@ -61,6 +65,116 @@ async function resetWatermarksIfDbWasRecreated() {
   await database
     .insert(sync_meta)
     .values({ key: DB_EPOCH_KEY, value: new Date().toISOString() });
+}
+
+// Todas las tablas pobladas por el sync. Se purgan completas al cambiar de
+// gym activo: los watermarks son por tabla (no por gym), así que mezclar gyms
+// rompería el pull incremental del gym nuevo.
+const SYNCED_TABLES = {
+  exercises_base,
+  equipment,
+  exercise_equipment,
+  sessions,
+  session_exercises,
+  training_plans,
+  plan_assignments,
+  plan_weeks,
+  plan_week_days,
+  plan_week_day_exercises,
+  plan_week_day_exercise_sets,
+  session_logs,
+  session_set_logs,
+  custom_exercises,
+  custom_sessions,
+  custom_session_exercises,
+  custom_plans,
+  custom_plan_weeks,
+  custom_plan_week_days,
+  custom_plan_week_day_exercises,
+  custom_plan_week_day_exercise_sets,
+};
+
+export async function hasPendingChanges() {
+  for (const schemaTable of Object.values(SYNCED_TABLES)) {
+    const [pending] = await database
+      .select({ id: schemaTable.id })
+      .from(schemaTable)
+      .where(ne(schemaTable.sync_status, "synced"))
+      .limit(1);
+    if (pending) return true;
+  }
+  return false;
+}
+
+// Guard idempotente: corre al inicio de CADA sync. Si el contenido local
+// pertenece a otro gym (switch, incluso interrumpido por un crash), purga
+// tablas + watermarks de una sola vez para forzar un full pull del gym nuevo.
+async function ensureDbMatchesActiveGym(activeGymId) {
+  if (!activeGymId) return;
+
+  const [marker] = await database
+    .select()
+    .from(sync_meta)
+    .where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
+
+  if (marker?.value === activeGymId) return;
+
+  if (!marker) {
+    // Base sin marcar (primer sync multi-gym o base nueva): se adopta el gym
+    // activo sin purgar — el único contenido posible es de builds viejos del
+    // mismo gym del usuario.
+    await database
+      .insert(sync_meta)
+      .values({ key: ACTIVE_GYM_META_KEY, value: activeGymId });
+    return;
+  }
+
+  console.log(
+    `🔁 [SYNC] Gym activo cambió (${marker.value} → ${activeGymId}): purga local + full pull`
+  );
+
+  for (const schemaTable of Object.values(SYNCED_TABLES)) {
+    await database.delete(schemaTable);
+  }
+
+  const allKeys = await AsyncStorage.getAllKeys();
+  const staleKeys = allKeys.filter((k) => k.startsWith(LAST_SYNC_KEY));
+  if (staleKeys.length > 0) {
+    await AsyncStorage.multiRemove(staleKeys);
+  }
+
+  await database
+    .update(sync_meta)
+    .set({ value: activeGymId })
+    .where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
+}
+
+// Cambio de gym activo. Primero empuja los pendientes del gym actual (la purga
+// posterior los borraría); recién después persiste el gym nuevo y dispara el
+// sync cuyo guard purga y re-puebla. Lanza error si hay pendientes sin red.
+export async function requestGymSwitch(newGymId) {
+  const current = await AsyncStorage.getItem(ACTIVE_GYM_KEY);
+  if (current === newGymId) return { success: true };
+
+  if (await hasPendingChanges()) {
+    const net = await NetInfo.fetch();
+    if (!net.isConnected) {
+      throw new Error(
+        "Tenés cambios sin sincronizar y no hay conexión. Conectate a internet antes de cambiar de gimnasio."
+      );
+    }
+    const { success } = await syncWithSupabase();
+    if (!success || (await hasPendingChanges())) {
+      throw new Error(
+        "No se pudieron subir tus cambios pendientes. Intentá de nuevo en unos segundos."
+      );
+    }
+  }
+
+  await AsyncStorage.setItem(ACTIVE_GYM_KEY, newGymId);
+  // Aun sin red conviene sincronizar ya: el guard purga la base local para no
+  // mostrar datos del gym anterior; el pull se completará cuando haya conexión.
+  return await syncWithSupabase();
 }
 
 const TABLE_QUERY_KEYS = {
@@ -2326,17 +2440,38 @@ export async function syncWithSupabase(
 
     await resetWatermarksIfDbWasRecreated();
 
+    // Gym activo: lo persiste el ActiveGymProvider. Si la base local pertenece
+    // a otro gym (switch), el guard la purga antes de pull/push.
+    const activeGymId = await AsyncStorage.getItem(ACTIVE_GYM_KEY);
+    await ensureDbMatchesActiveGym(activeGymId);
+
     // --- DOWNLOAD PHASE ---
     const {
       data: { user },
     } = await supabase.auth.getUser();
     const currentUserId = user?.id ?? null;
 
-    const GYM_SCOPED_TABLES = new Set([
+    // session_logs/plan_assignments referencian profiles.id (PK interna del
+    // perfil), NO auth.uid — ver getSession.jsx. Las custom_* sí usan auth.uid.
+    let currentProfileId = null;
+    if (currentUserId) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", currentUserId)
+        .maybeSingle();
+      currentProfileId = prof?.id ?? null;
+    }
+
+    // Tablas con columna gym_id: el pull se limita al gym activo (la RLS ahora
+    // devuelve TODOS los gyms del usuario; el recorte por gym es del cliente).
+    const GYM_COLUMN_TABLES = new Set([
       "exercises_base",
       "equipment",
       "sessions",
       "training_plans",
+      "plan_assignments",
+      "session_logs",
     ]);
     const USER_SCOPED_TABLES = new Set([
       "session_logs",
@@ -2350,6 +2485,8 @@ export async function syncWithSupabase(
       "custom_plan_week_day_exercises",
       "custom_plan_week_day_exercise_sets",
     ]);
+    // user_id de estas tablas = profiles.id; el resto de las user-scoped usa auth.uid.
+    const PROFILE_SCOPED_TABLES = new Set(["session_logs", "plan_assignments"]);
 
     for (const table of tablesToSync) {
       const syncKey = `${LAST_SYNC_KEY}_${table}`;
@@ -2385,8 +2522,26 @@ export async function syncWithSupabase(
         schemaTable = custom_plan_week_day_exercise_sets;
 
       if (schemaTable) {
-        const gymId = GYM_SCOPED_TABLES.has(table) ? GYM_ID : null;
-        const userId = USER_SCOPED_TABLES.has(table) ? currentUserId : null;
+        // Sin gym activo todavía (primer arranque multi-gym, antes de la
+        // selección) no se puede scopear el pull: se saltea esta tabla si
+        // depende del gym. El ActiveGymProvider re-dispara el sync al elegir.
+        const needsGym = GYM_COLUMN_TABLES.has(table);
+        if (needsGym && !activeGymId) {
+          console.log(`⏭️  [PULL] "${table}" omitida: sin gym activo`);
+          continue;
+        }
+        const gymId = needsGym ? activeGymId : null;
+        const userId = USER_SCOPED_TABLES.has(table)
+          ? PROFILE_SCOPED_TABLES.has(table)
+            ? currentProfileId
+            : currentUserId
+          : null;
+        // Una tabla user-scoped sin id resuelto pullearía sin filtro (mezcla
+        // de usuarios/gyms vía la visibilidad de staff): mejor saltearla.
+        if (USER_SCOPED_TABLES.has(table) && !userId) {
+          console.log(`⏭️  [PULL] "${table}" omitida: sin user/profile id`);
+          continue;
+        }
         const compositeUniqueColumns = COMPOSITE_UNIQUE_COLUMNS[table] ?? null;
         const softDelete = SOFT_DELETE_TABLES.has(table);
         const { success, changed, newLastSync } = await pullTableChanges(

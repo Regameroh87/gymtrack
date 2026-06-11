@@ -10,8 +10,7 @@ import { checkNetInfoAndSync } from "../../database/sync";
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
-
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 const todayDate = () => new Date().toISOString().split("T")[0];
 
@@ -30,6 +29,7 @@ const usePlanAssignmentMutation = (mutationFn) => {
 
 export const useAssignPlan = () => {
   const { userId } = useAuth();
+  const { gymId } = useActiveGym();
 
   return usePlanAssignmentMutation(async ({ planId }) => {
     const today = todayDate();
@@ -57,7 +57,7 @@ export const useAssignPlan = () => {
       plan_id: planId,
       user_id: userId,
       assigned_by: userId,
-      gym_id: GYM_ID,
+      gym_id: gymId,
       start_date: today,
       status: "active",
       sync_status: "pending",

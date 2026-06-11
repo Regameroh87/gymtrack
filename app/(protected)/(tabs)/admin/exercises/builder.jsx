@@ -12,13 +12,13 @@ import { checkNetInfoAndSync } from "../../../../../src/database/sync";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
-
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 export default function AddExerciseScreen() {
   const formRef = useRef(null);
   const queryClient = useQueryClient();
   const { userId } = useAuth();
+  const { gymId } = useActiveGym();
   const addExerciseForm = useForm({
     defaultValues: {
       name: "",
@@ -47,7 +47,7 @@ export default function AddExerciseScreen() {
         // Inserto el ejercicio en la tabla exercises_base
         await database.insert(exercises_base).values({
           id: exerciseId,
-          gym_id: GYM_ID,
+          gym_id: gymId,
           created_by: userId ?? null,
           ...exerciseValues,
         });

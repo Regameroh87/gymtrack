@@ -73,11 +73,11 @@ Deno.serve(async (req) => {
 
     const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('role')
+      .select('is_super_admin')
       .eq('user_id', callerAuth.user.id)
       .single()
 
-    if (callerProfileError || callerProfile?.role !== 'super_admin') {
+    if (callerProfileError || !callerProfile?.is_super_admin) {
       return new Response(JSON.stringify({ error: 'Solo el super_admin puede crear gyms.' }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         status: 403,
@@ -111,27 +111,44 @@ Deno.serve(async (req) => {
       })
     }
 
-    // 1. Crear owner en Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: 'tugimnasio123',
-      email_confirm: true
-    })
-    if (authError) {
-      return new Response(JSON.stringify({ error: getErrorMessage(authError) }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 400,
-      })
-    }
-    createdUserId = authData.user.id
+    // 1. Crear owner en Auth. Si el email ya tiene cuenta (multi-gym: un profe
+    // o dueño puede ya ser usuario de otro gym), se reutiliza esa cuenta y solo
+    // se le agrega la membresía de owner del gym nuevo.
+    let ownerUserId: string
+    let ownerIsExisting = false
 
-    // 2. Crear gym con owner_id = nuevo user
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id, user_id')
+      .eq('email', email.toLowerCase())
+      .maybeSingle()
+
+    if (existingProfile) {
+      ownerUserId = existingProfile.user_id
+      ownerIsExisting = true
+    } else {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: 'tugimnasio123',
+        email_confirm: true
+      })
+      if (authError) {
+        return new Response(JSON.stringify({ error: getErrorMessage(authError) }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          status: 400,
+        })
+      }
+      createdUserId = authData.user.id
+      ownerUserId = authData.user.id
+    }
+
+    // 2. Crear gym con owner_id = user del owner
     const { data: gymData, error: gymError } = await supabaseAdmin
       .from('gyms')
       .insert({
         name: gym_name,
         slug: gym_slug,
-        owner_id: createdUserId,
+        owner_id: ownerUserId,
         logo_url: logo_url ?? null,
         theme_primary: theme_primary ?? null,
         theme_accent: theme_accent ?? null,
@@ -144,34 +161,54 @@ Deno.serve(async (req) => {
       .single()
 
     if (gymError) {
-      await rollbackUser(createdUserId)
+      if (createdUserId) await rollbackUser(createdUserId)
       throw gymError
     }
     createdGymId = gymData.id
 
-    // 3. Crear profile vinculado al gym y con role=owner
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        user_id: createdUserId,
-        gym_id: createdGymId,
-        role: 'owner',
-        email: email?.toLowerCase() ?? null,
-        name: name?.toLowerCase() ?? null,
-        last_name: last_name?.toLowerCase() ?? null,
-        image_profile: image_profile || null,
-        phone: phone ?? null,
-        document_number: document_number ?? null,
-        address: address?.toLowerCase() ?? null,
-      })
+    // 3. Crear profile (solo si la cuenta es nueva; un owner existente conserva
+    // sus datos). gym_id/role quedan por compat; el trigger de memberships los mantiene.
+    if (!ownerIsExisting) {
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          user_id: ownerUserId,
+          gym_id: createdGymId,
+          role: 'owner',
+          email: email?.toLowerCase() ?? null,
+          name: name?.toLowerCase() ?? null,
+          last_name: last_name?.toLowerCase() ?? null,
+          image_profile: image_profile || null,
+          phone: phone ?? null,
+          document_number: document_number ?? null,
+          address: address?.toLowerCase() ?? null,
+        })
 
-    if (profileError) {
-      await rollbackGym(createdGymId)
-      await rollbackUser(createdUserId)
-      throw profileError
+      if (profileError) {
+        await rollbackGym(createdGymId)
+        if (createdUserId) await rollbackUser(createdUserId)
+        throw profileError
+      }
     }
 
-    return new Response(JSON.stringify({ done: true, gym_id: createdGymId, user_id: createdUserId }), {
+    // 4. Membresía de owner (fuente de verdad del vínculo persona↔gym).
+    const { error: membershipError } = await supabaseAdmin
+      .from('memberships')
+      .insert({
+        user_id: ownerUserId,
+        gym_id: createdGymId,
+        role: 'owner',
+        added_by: callerAuth.user.id,
+      })
+
+    if (membershipError) {
+      // El delete del gym arrastra la membresía por cascade.
+      await rollbackGym(createdGymId)
+      if (createdUserId) await rollbackUser(createdUserId)
+      throw membershipError
+    }
+
+    return new Response(JSON.stringify({ done: true, gym_id: createdGymId, user_id: ownerUserId, linked_existing: ownerIsExisting }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       status: 200,
     })

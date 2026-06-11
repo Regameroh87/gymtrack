@@ -69,17 +69,25 @@ export function GymThemeProvider({ children }) {
   const { data: gym } = useGym();
   const [theme, setTheme] = useState(DEFAULT_THEME);
 
-  // 1) Hidratación temprana: último theme conocido (antes de que resuelva auth).
+  // 1) Hidratación temprana: theme del gym ACTIVO persistido (multi-gym),
+  // con fallback al último theme conocido — antes de que resuelva auth.
   useEffect(() => {
     let mounted = true;
-    AsyncStorage.getItem(LAST_KEY)
-      .then((raw) => {
+    (async () => {
+      try {
+        const activeGymId = await AsyncStorage.getItem("active-gym:id");
+        let raw = activeGymId
+          ? await AsyncStorage.getItem(`${STORAGE_PREFIX}${activeGymId}`)
+          : null;
+        if (!raw) raw = await AsyncStorage.getItem(LAST_KEY);
         if (!mounted || !raw) return;
         const { theme_primary, theme_accent } = JSON.parse(raw);
         const resolved = resolveTheme(theme_primary, theme_accent);
         if (resolved.source === "custom") setTheme(resolved);
-      })
-      .catch(() => {});
+      } catch {
+        // sin cache: queda el default
+      }
+    })();
     return () => {
       mounted = false;
     };

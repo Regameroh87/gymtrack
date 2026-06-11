@@ -88,8 +88,10 @@ export default function MemberDetail() {
 
   const assignPlan = (planId) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // El gym_id de la asignación es el gym activo del staff (lo resuelve el
+    // hook); el del perfil del alumno ya no es confiable con multi-gym.
     assignMutation.mutate(
-      { planId, gymId: data?.profile?.gym_id },
+      { planId },
       {
         onSuccess: () => {
           setPickerOpen(false);

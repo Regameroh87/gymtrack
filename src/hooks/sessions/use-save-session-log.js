@@ -7,11 +7,11 @@ import { database } from "../../database";
 import { session_logs, session_set_logs } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
 import { useAuth } from "../../auth/lib/getSession";
-
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 export const useSaveSessionLog = () => {
   const { userId } = useAuth();
+  const { gymId } = useActiveGym();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -27,7 +27,7 @@ export const useSaveSessionLog = () => {
 
       await database.insert(session_logs).values({
         id: logId,
-        gym_id: GYM_ID,
+        gym_id: gymId,
         user_id: userId,
         // session_id referencia sessions (del gym). En planes custom la sesión
         // del día puede ser custom, así que lo dejamos null para no violar la FK:

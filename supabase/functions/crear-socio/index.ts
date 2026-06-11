@@ -36,6 +36,13 @@ async function rollbackUser(userId: string) {
   return false
 }
 
+function jsonResponse(body: Record<string, unknown>, status: number) {
+  return new Response(JSON.stringify(body), {
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    status,
+  })
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
@@ -46,35 +53,49 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization') ?? ''
     const jwt = authHeader.replace('Bearer ', '').trim()
     if (!jwt) {
-      return new Response(JSON.stringify({ error: 'No autorizado.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 401,
-      })
+      return jsonResponse({ error: 'No autorizado.' }, 401)
     }
 
     const { data: callerAuth, error: callerAuthError } = await supabaseAdmin.auth.getUser(jwt)
     if (callerAuthError || !callerAuth?.user) {
-      return new Response(JSON.stringify({ error: 'Token inválido.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 401,
-      })
+      return jsonResponse({ error: 'Token inválido.' }, 401)
     }
 
-    // gym_id y role vienen del caller — el cliente nunca los pasa en el body.
+    const body = await req.json()
+    const { email, name, last_name, image_profile, phone, document_number, address, gender } = body
+    const newRole: string = body.role ?? 'member'
+
+    // El gym objetivo viene del body (gym activo del caller); el rol del caller
+    // en ESE gym se resuelve server-side contra memberships — nunca del body.
     const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('gym_id, role')
+      .select('gym_id, is_super_admin')
       .eq('user_id', callerAuth.user.id)
       .single()
 
     if (callerProfileError || !callerProfile) {
-      return new Response(JSON.stringify({ error: 'Perfil del caller no encontrado.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 403,
-      })
+      return jsonResponse({ error: 'Perfil del caller no encontrado.' }, 403)
     }
 
-    const { gym_id: callerGymId, role: callerRole } = callerProfile
+    // Fallback a profiles.gym_id para builds viejos que no mandan gym_id.
+    const targetGymId: string | null = body.gym_id ?? callerProfile.gym_id
+    if (!targetGymId) {
+      return jsonResponse({ error: 'gym_id es requerido.' }, 400)
+    }
+
+    let callerRole: string | null = null
+    if (callerProfile.is_super_admin) {
+      callerRole = 'super_admin'
+    } else {
+      const { data: callerMembership } = await supabaseAdmin
+        .from('memberships')
+        .select('role')
+        .eq('user_id', callerAuth.user.id)
+        .eq('gym_id', targetGymId)
+        .eq('status', 'active')
+        .maybeSingle()
+      callerRole = callerMembership?.role ?? null
+    }
 
     // Matriz de roles asignables: cada rol crea estrictamente por debajo del suyo.
     // Debe mantenerse en sync con ASSIGNABLE_ROLES en src/constants/roles.js.
@@ -84,35 +105,65 @@ Deno.serve(async (req) => {
       admin: ['coach', 'member'],
       coach: ['member'],
     }
-    const allowed = ASSIGNABLE[callerRole] ?? []
+    const allowed = callerRole ? (ASSIGNABLE[callerRole] ?? []) : []
 
     if (allowed.length === 0) {
-      return new Response(JSON.stringify({ error: 'No tenés permisos para crear usuarios.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 403,
-      })
+      return jsonResponse({ error: 'No tenés permisos para crear usuarios en este gimnasio.' }, 403)
     }
-
-    const body = await req.json()
-    const { email, name, last_name, image_profile, phone, document_number, address, gender } = body
-    const newRole: string = body.role ?? 'member'
 
     // Whitelist: cualquier valor fuera de la taxonomía se descarta a null.
     const VALID_GENDERS = ['hombre', 'mujer', 'prefiero_no_decir']
     const newGender = VALID_GENDERS.includes(gender) ? gender : null
 
     if (!email) {
-      return new Response(JSON.stringify({ error: 'email es requerido.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 400,
-      })
+      return jsonResponse({ error: 'email es requerido.' }, 400)
     }
 
     if (!allowed.includes(newRole)) {
-      return new Response(JSON.stringify({ error: `El rol '${callerRole}' no puede crear usuarios con rol '${newRole}'.` }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 403,
-      })
+      return jsonResponse({ error: `El rol '${callerRole}' no puede crear usuarios con rol '${newRole}'.` }, 403)
+    }
+
+    // ¿Ya existe una cuenta con este email? Si existe, en vez de fallar se le
+    // agrega una membresía al gym del caller (multi-gym: misma cuenta, varios gyms).
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('id, user_id')
+      .eq('email', email.toLowerCase())
+      .maybeSingle()
+
+    if (existingProfile) {
+      const { data: existingMembership } = await supabaseAdmin
+        .from('memberships')
+        .select('id, status')
+        .eq('user_id', existingProfile.user_id)
+        .eq('gym_id', targetGymId)
+        .maybeSingle()
+
+      if (existingMembership?.status === 'active') {
+        return jsonResponse({ error: 'Esta persona ya es socio de este gimnasio.' }, 400)
+      }
+
+      if (existingMembership) {
+        // Membresía inactiva: se reactiva con el rol nuevo.
+        const { error: reactivateError } = await supabaseAdmin
+          .from('memberships')
+          .update({ status: 'active', role: newRole, added_by: callerAuth.user.id })
+          .eq('id', existingMembership.id)
+        if (reactivateError) throw reactivateError
+      } else {
+        const { error: membershipError } = await supabaseAdmin
+          .from('memberships')
+          .insert({
+            user_id: existingProfile.user_id,
+            gym_id: targetGymId,
+            role: newRole,
+            added_by: callerAuth.user.id,
+          })
+        if (membershipError) throw membershipError
+      }
+
+      // No se pisan los datos personales de la cuenta existente.
+      return jsonResponse({ done: true, linked_existing: true }, 200)
     }
 
     // 1. Crear user en Auth
@@ -122,18 +173,16 @@ Deno.serve(async (req) => {
       email_confirm: true,
     })
     if (authError) {
-      return new Response(JSON.stringify({ error: getErrorMessage(authError) }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        status: 400,
-      })
+      return jsonResponse({ error: getErrorMessage(authError) }, 400)
     }
 
-    // 2. Crear profile con gym_id heredado del caller
+    // 2. Crear profile (identidad global). gym_id/role quedan también acá por
+    // compatibilidad con builds viejos; el trigger de memberships los mantiene.
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
         user_id: authData.user.id,
-        gym_id: callerGymId,
+        gym_id: targetGymId,
         role: newRole,
         email: email?.toLowerCase() ?? null,
         name: name?.toLowerCase() ?? null,
@@ -150,17 +199,27 @@ Deno.serve(async (req) => {
       throw profileError
     }
 
-    return new Response(JSON.stringify({ done: true }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      status: 200,
-    })
+    // 3. Crear la membresía (fuente de verdad del vínculo persona↔gym).
+    const { error: membershipError } = await supabaseAdmin
+      .from('memberships')
+      .insert({
+        user_id: authData.user.id,
+        gym_id: targetGymId,
+        role: newRole,
+        added_by: callerAuth.user.id,
+      })
+
+    if (membershipError) {
+      await supabaseAdmin.from('profiles').delete().eq('user_id', authData.user.id)
+      await rollbackUser(authData.user.id)
+      throw membershipError
+    }
+
+    return jsonResponse({ done: true, linked_existing: false }, 200)
 
   } catch (error: any) {
     const message = error?.message || error?.msg || "Error interno del servidor"
     console.error("Error crítico al crear socio:", message)
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      status: 400,
-    })
+    return jsonResponse({ error: message }, 400)
   }
 })

@@ -1,5 +1,5 @@
 // Librerías externas
-import { useAuth } from "../../auth/lib/getSession";
+import { useActiveGym } from "../../contexts/active-gym-context";
 import {
   ROLES,
   isStaffRole,
@@ -8,10 +8,9 @@ import {
 } from "../../constants/roles";
 
 export const useUserRole = () => {
-  const { user, loading } = useAuth();
-
-  // Fuente única de verdad: profiles.role (NOT NULL, default 'member').
-  const role = user?.role ?? null;
+  // Multi-gym: el rol es POR GYM (memberships.role del gym activo).
+  // super_admin es un flag global de la persona y pisa al rol local.
+  const { role, loading } = useActiveGym();
 
   const isSuperAdmin = isSuperAdminRole(role);
   const isOwner = role === ROLES.OWNER;

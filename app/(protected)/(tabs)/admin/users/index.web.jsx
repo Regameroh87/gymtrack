@@ -8,10 +8,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 
-import { supabase } from "../../../../../src/database/supabase";
+import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
@@ -59,17 +58,8 @@ export default function UsersListWeb() {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["admin_users"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Multi-gym: lista por memberships del gym activo (rol por gym incluido).
+  const { data: users, isLoading } = useGymMembers();
 
   // El super_admin solo es visible para otro super_admin (defensa en UI; la RLS
   // de profiles ya lo oculta a roles inferiores a nivel API).

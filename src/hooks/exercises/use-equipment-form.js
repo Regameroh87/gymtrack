@@ -8,12 +8,11 @@ import * as Haptics from "expo-haptics";
 import { database } from "../../database";
 import { equipment } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
-
-// Constantes
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 export const useEquipmentForm = ({ onSuccess, initialValues = {} } = {}) => {
   const queryClient = useQueryClient();
+  const { gymId } = useActiveGym();
 
   const form = useForm({
     defaultValues: {
@@ -27,7 +26,7 @@ export const useEquipmentForm = ({ onSuccess, initialValues = {} } = {}) => {
 
         const newEquipment = {
           id: newId,
-          gym_id: GYM_ID,
+          gym_id: gymId,
           name: trimmedName,
           image_uri: value.image_uri,
           sync_status: "pending",

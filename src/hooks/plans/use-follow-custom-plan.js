@@ -6,12 +6,13 @@ import { database } from "../../database";
 import { plan_assignments } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
 import { useAuth } from "../../auth/lib/getSession";
+import { useActiveGym } from "../../contexts/active-gym-context";
 
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 const todayDate = () => new Date().toISOString().split("T")[0];
 
 export const useFollowCustomPlan = () => {
   const { userId } = useAuth();
+  const { gymId } = useActiveGym();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -40,7 +41,7 @@ export const useFollowCustomPlan = () => {
         custom_plan_id: customPlanId,
         user_id: userId,
         assigned_by: userId,
-        gym_id: GYM_ID,
+        gym_id: gymId,
         start_date: today,
         status: "active",
         sync_status: "pending",

@@ -1,14 +1,13 @@
 import { supabase } from "../../database/supabase";
 
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
-
 const sendCodeVerify = async (email) => {
   console.log("Enviando email a verificar");
-  // Chequeo de existencia pre-login (sin sesión). Con RLS activo en profiles ya
-  // no se puede leer la tabla directo desde anon: usamos la RPC SECURITY DEFINER.
-  const { data: exists, error } = await supabase.rpc("email_exists_in_gym", {
+  // Chequeo de existencia pre-login (sin sesión). Multi-gym: el login autentica
+  // a la PERSONA, no a un gym — el gym se elige después (ActiveGymProvider).
+  // Con RLS activo en profiles no se puede leer la tabla directo desde anon:
+  // usamos la RPC SECURITY DEFINER global.
+  const { data: exists, error } = await supabase.rpc("email_exists", {
     p_email: email,
-    p_gym_id: GYM_ID,
   });
 
   if (error) {

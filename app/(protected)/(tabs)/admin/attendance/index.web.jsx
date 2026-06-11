@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 
 import { supabase } from "../../../../../src/database/supabase";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
@@ -63,7 +64,7 @@ export default function AttendanceListWeb() {
   const qc = useQueryClient();
   const { user } = useAuth();
   const { brandPrimary } = useGymTheme();
-  const gymId = user?.gym_id || process.env.EXPO_PUBLIC_GYM_ID;
+  const { gymId } = useActiveGym();
   const staffProfileId = user?.id;
 
   const [search, setSearch] = useState("");
@@ -348,13 +349,25 @@ function ManualCheckInModal({ gymId, staffProfileId, onClose, onDone }) {
     queryKey: ["gym_members", gymId],
     enabled: !!gymId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, name, last_name, email, image_profile")
+      // Multi-gym: la pertenencia y el rol viven en memberships, no en
+      // profiles.gym_id (dos pasos: PostgREST no joinea memberships→profiles).
+      const { data: rows, error } = await supabase
+        .from("memberships")
+        .select("user_id")
         .eq("gym_id", gymId)
         .eq("role", "member")
-        .order("name");
+        .eq("status", "active");
       if (error) throw error;
+      if (!rows?.length) return [];
+      const { data, error: pErr } = await supabase
+        .from("profiles")
+        .select("id, name, last_name, email, image_profile")
+        .in(
+          "user_id",
+          rows.map((r) => r.user_id)
+        )
+        .order("name");
+      if (pErr) throw pErr;
       return data ?? [];
     },
   });

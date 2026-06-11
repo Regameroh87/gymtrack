@@ -6,12 +6,11 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { supabase } from "../../../../../src/database/supabase";
+import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
 import Screen from "../../../../../src/components/Screen";
 import SearchBar from "../../../../../src/components/SearchBar";
 import FilterChips from "../../../../../src/components/FilterChips";
@@ -36,17 +35,8 @@ export default function UsersList() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ["admin_users"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Multi-gym: lista por memberships del gym activo (rol por gym incluido).
+  const { data: users, isLoading } = useGymMembers();
 
   const filtered = users?.filter((u) => {
     // El super_admin solo es visible para otro super_admin (defensa en UI;

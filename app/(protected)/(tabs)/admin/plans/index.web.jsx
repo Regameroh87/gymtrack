@@ -14,6 +14,7 @@ import { Image } from "expo-image";
 import { supabase } from "../../../../../src/database/supabase";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
@@ -51,17 +52,22 @@ const formatDate = (iso) => {
 
 export default function PlansListWeb() {
   const router = useRouter();
+  const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("all");
   const [page, setPage] = useState(0);
 
+  // Multi-gym: la RLS devuelve todos los gyms del usuario; el filtro por
+  // gym activo es del cliente.
   const { data: plans, isLoading } = useQuery({
-    queryKey: ["admin_plans_web"],
+    queryKey: ["admin_plans_web", gymId],
+    enabled: !!gymId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("training_plans")
         .select("*")
+        .eq("gym_id", gymId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -69,12 +75,14 @@ export default function PlansListWeb() {
   });
 
   const { data: assignments } = useQuery({
-    queryKey: ["admin_plan_assignments_active"],
+    queryKey: ["admin_plan_assignments_active", gymId],
+    enabled: !!gymId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("plan_assignments")
         .select("plan_id, status")
-        .eq("status", "active");
+        .eq("status", "active")
+        .eq("gym_id", gymId);
       if (error) throw error;
       return data;
     },

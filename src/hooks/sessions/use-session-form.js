@@ -22,13 +22,12 @@ import {
 import { supabase } from "../../database/supabase";
 import { checkNetInfoAndSync } from "../../database/sync";
 import { planIdsUsingSessions, recomputePlanPublishState } from "../plans/plan-publish";
-
-// Constantes
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 
 export const useSessionForm = ({ id = null, onSuccess } = {}) => {
   const queryClient = useQueryClient();
+  const { gymId } = useActiveGym();
 
   const form = useForm({
     defaultValues: {
@@ -177,7 +176,7 @@ export const useSessionForm = ({ id = null, onSuccess } = {}) => {
 
           await database.insert(sessions).values({
             id: sessionId,
-            gym_id: GYM_ID,
+            gym_id: gymId,
             name: value.name.trim(),
             description: value.description?.trim() || null,
             level: value.level || null,

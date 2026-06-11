@@ -10,8 +10,7 @@ import { checkNetInfoAndSync } from "../../database/sync";
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
-
-const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Registra manualmente un entrenamiento ya realizado. A diferencia de
 // useSaveSessionLog (sesión guiada por un plan activo), acá el log no pertenece
@@ -19,6 +18,7 @@ const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 // elige la fecha (completed_at).
 export const useCreateManualLog = () => {
   const { userId } = useAuth();
+  const { gymId } = useActiveGym();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -32,7 +32,7 @@ export const useCreateManualLog = () => {
 
       await database.insert(session_logs).values({
         id: logId,
-        gym_id: GYM_ID,
+        gym_id: gymId,
         user_id: userId,
         session_id: sessionId ?? null,
         plan_id: null,
