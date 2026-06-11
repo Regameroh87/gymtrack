@@ -9,6 +9,9 @@ import * as Haptics from "expo-haptics";
 // Utilidades
 import { getCloudinaryUrl } from "../../utils/cloudinary";
 
+// Constantes
+import { PLAN_GENDER_BADGES } from "../../constants/gender-options";
+
 // Tema / assets
 import {
   Barbell,
@@ -43,6 +46,7 @@ const TrainingPlanCard = ({ plan, onPress, isDraft = false }) => {
     OBJECTIVE_CONFIG[plan.objective] ?? OBJECTIVE_CONFIG.hipertrofia;
   const { Icon } = config;
   const objectiveLabel = OBJECTIVE_LABELS[plan.objective];
+  const genderBadge = PLAN_GENDER_BADGES[plan.target_gender];
 
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
@@ -66,18 +70,27 @@ const TrainingPlanCard = ({ plan, onPress, isDraft = false }) => {
       >
         {/* ── Contenido izquierdo ── */}
         <View className="flex-1 px-4 py-4 justify-between gap-2">
-          {/* Objetivo / Badge borrador */}
-          {isDraft ? (
-            <View className="self-start px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30">
-              <Text className="font-manrope-bold text-[10px] uppercase tracking-wider text-amber-500">
-                Borrador
+          {/* Objetivo / Badge borrador / Badge género */}
+          <View className="flex-row items-center gap-2">
+            {isDraft ? (
+              <View className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30">
+                <Text className="font-manrope-bold text-[10px] uppercase tracking-wider text-amber-500">
+                  Borrador
+                </Text>
+              </View>
+            ) : objectiveLabel ? (
+              <Text className="font-manrope-semi text-[11px] text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-label">
+                {objectiveLabel}
               </Text>
-            </View>
-          ) : objectiveLabel ? (
-            <Text className="font-manrope-semi text-[11px] text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-label">
-              {objectiveLabel}
-            </Text>
-          ) : null}
+            ) : null}
+            {genderBadge ? (
+              <View className="px-2 py-0.5 rounded-md bg-brandPrimary-500/10 border border-brandPrimary-500/25">
+                <Text className="font-manrope-bold text-[10px] uppercase tracking-wider text-brandPrimary-500">
+                  {genderBadge}
+                </Text>
+              </View>
+            ) : null}
+          </View>
 
           {/* Nombre */}
           <Text

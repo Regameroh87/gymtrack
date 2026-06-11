@@ -41,6 +41,7 @@ import {
   ROLE_LABELS,
   DEFAULT_ROLE,
 } from "../../../../../src/constants/roles";
+import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 
 export default function RegisterUser() {
   const scrollRef = useRef(null);
@@ -60,6 +61,7 @@ export default function RegisterUser() {
       phone: "",
       document_number: "",
       address: "",
+      gender: "",
       role: DEFAULT_ROLE,
     },
     onSubmit: async ({ value }) => {
@@ -80,7 +82,7 @@ export default function RegisterUser() {
         }
 
         const response = await supabase.functions.invoke("crear-socio", {
-          body: { ...value, image_profile },
+          body: { ...value, image_profile, gender: value.gender || null },
         });
 
         if (response.error) {
@@ -321,6 +323,41 @@ export default function RegisterUser() {
                 value={field.state.value}
                 onChangeText={field.handleChange}
               />
+            )}
+          </form.Field>
+        </FormField>
+
+        <FormField label="GÉNERO (opcional)">
+          <form.Field name="gender">
+            {(field) => (
+              <View className="flex-row flex-wrap gap-2">
+                {PROFILE_GENDERS.map((g) => {
+                  const active = field.state.value === g.value;
+                  return (
+                    <Pressable
+                      key={g.value}
+                      onPress={() =>
+                        field.handleChange(active ? "" : g.value)
+                      }
+                      className={`px-4 py-2 rounded-xl border ${
+                        active
+                          ? "bg-brandPrimary-600 border-brandPrimary-600"
+                          : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-input-border"
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm font-manrope-semi ${
+                          active
+                            ? "text-white"
+                            : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                        }`}
+                      >
+                        {g.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             )}
           </form.Field>
         </FormField>

@@ -25,6 +25,13 @@ import { useCustomPlans } from "../../../../src/hooks/plans/use-custom-plans";
 import { usePlanAssignments } from "../../../../src/hooks/plans/use-plan-assignments";
 import { useActivePlanSummary } from "../../../../src/hooks/plans/use-active-plan-summary";
 import { useDropPlan } from "../../../../src/hooks/plans/use-assign-plan";
+import { useAuth } from "../../../../src/auth/lib/getSession";
+
+// Constantes
+import {
+  PLAN_GENDER_BADGES,
+  planMatchesGender,
+} from "../../../../src/constants/gender-options";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
@@ -432,6 +439,7 @@ const ORIGIN_TABS = [
 
 function ExplorarContent({ router, insets }) {
   const { brandPrimary } = useGymTheme();
+  const { user } = useAuth();
   const [origin, setOrigin] = useState("gym");
   const [activeObjective, setActiveObjective] = useState(null);
 
@@ -440,22 +448,30 @@ function ExplorarContent({ router, insets }) {
   });
   const { data: myPlans = [], isLoading: myLoading } = useCustomPlans();
 
+  // Solo planes para "ambos" o para el género del member; sin género ve todo
+  const visibleGymPlans = useMemo(
+    () => gymPlans.filter((p) => planMatchesGender(p, user?.gender)),
+    [gymPlans, user?.gender]
+  );
+
   const availableObjectiveFilters = useMemo(() => {
-    const usedObjs = new Set(gymPlans.map((p) => p.objective).filter(Boolean));
+    const usedObjs = new Set(
+      visibleGymPlans.map((p) => p.objective).filter(Boolean)
+    );
     return [
       { key: null, label: "Todos" },
       ...Object.entries(OBJECTIVE_CONFIG)
         .filter(([key]) => usedObjs.has(key))
         .map(([key, cfg]) => ({ key, label: cfg.label })),
     ];
-  }, [gymPlans]);
+  }, [visibleGymPlans]);
 
   const filteredGym = useMemo(
     () =>
       activeObjective === null
-        ? gymPlans
-        : gymPlans.filter((p) => p.objective === activeObjective),
-    [gymPlans, activeObjective]
+        ? visibleGymPlans
+        : visibleGymPlans.filter((p) => p.objective === activeObjective),
+    [visibleGymPlans, activeObjective]
   );
 
   const isLoading = origin === "gym" ? gymLoading : myLoading;
@@ -838,27 +854,39 @@ function PlanTile({
           {/* Columna izquierda — título + meta */}
           <View className="flex-1" style={{ gap: 8 }}>
             <View style={{ gap: 8 }}>
-              {/* Objetivo label minimalista */}
-              {config.label && (
+              {/* Objetivo label minimalista + badge de género */}
+              {(config.label ||
+                (!isPersonalized && PLAN_GENDER_BADGES[plan.target_gender])) && (
                 <View className="flex-row items-center" style={{ gap: 6 }}>
-                  <View
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: overlay(0.4),
-                    }}
-                  />
-                  <Text
-                    className="font-manrope-bold uppercase"
-                    style={{
-                      fontSize: 9,
-                      color: overlay(0.55),
-                      letterSpacing: 1.6,
-                    }}
-                  >
-                    {config.label}
-                  </Text>
+                  {config.label && (
+                    <>
+                      <View
+                        style={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: 2,
+                          backgroundColor: overlay(0.4),
+                        }}
+                      />
+                      <Text
+                        className="font-manrope-bold uppercase"
+                        style={{
+                          fontSize: 9,
+                          color: overlay(0.55),
+                          letterSpacing: 1.6,
+                        }}
+                      >
+                        {config.label}
+                      </Text>
+                    </>
+                  )}
+                  {!isPersonalized && PLAN_GENDER_BADGES[plan.target_gender] ? (
+                    <View className="px-2 py-0.5 rounded-md bg-brandPrimary-500/10 border border-brandPrimary-500/25">
+                      <Text className="font-manrope-bold text-[9px] uppercase tracking-wider text-brandPrimary-500">
+                        {PLAN_GENDER_BADGES[plan.target_gender]}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
               )}
 

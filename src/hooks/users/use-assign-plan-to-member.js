@@ -15,7 +15,9 @@ export const useAssignablePlans = () =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("training_plans")
-        .select("id, name, objective, level, weekly_days, duration_weeks")
+        .select(
+          "id, name, objective, level, target_gender, weekly_days, duration_weeks"
+        )
         .eq("is_published", true)
         .order("name", { ascending: true });
       if (error) throw error;

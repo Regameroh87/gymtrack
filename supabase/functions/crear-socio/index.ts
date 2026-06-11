@@ -94,8 +94,12 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json()
-    const { email, name, last_name, image_profile, phone, document_number, address } = body
+    const { email, name, last_name, image_profile, phone, document_number, address, gender } = body
     const newRole: string = body.role ?? 'member'
+
+    // Whitelist: cualquier valor fuera de la taxonomía se descarta a null.
+    const VALID_GENDERS = ['hombre', 'mujer', 'prefiero_no_decir']
+    const newGender = VALID_GENDERS.includes(gender) ? gender : null
 
     if (!email) {
       return new Response(JSON.stringify({ error: 'email es requerido.' }), {
@@ -138,6 +142,7 @@ Deno.serve(async (req) => {
         phone: phone ?? null,
         document_number: document_number ?? null,
         address: address?.toLowerCase() ?? null,
+        gender: newGender,
       })
 
     if (profileError) {

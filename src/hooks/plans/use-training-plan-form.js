@@ -224,6 +224,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
       description: "",
       objective: "",
       level: "",
+      target_gender: "ambos",
       duration_weeks: DEFAULT_DURATION_WEEKS,
       cover_image_uri: "",
       weekly_days: DEFAULT_WEEKLY_DAYS,
@@ -254,6 +255,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               description: value.description?.trim() || null,
               objective: value.objective || null,
               level: value.level || null,
+              target_gender: value.target_gender || "ambos",
               duration_weeks: value.duration_weeks,
               cover_image_uri: value.cover_image_uri || null,
               weekly_days: value.weekly_days,
@@ -311,6 +313,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
             description: value.description?.trim() || null,
             objective: value.objective || null,
             level: value.level || null,
+            target_gender: value.target_gender || "ambos",
             duration_weeks: value.duration_weeks,
             cover_image_uri: value.cover_image_uri || null,
             weekly_days: value.weekly_days,
@@ -540,6 +543,7 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               description: planRow.description ?? "",
               objective: planRow.objective ?? "",
               level: planRow.level ?? "",
+              target_gender: planRow.target_gender ?? "ambos",
               duration_weeks: planRow.duration_weeks,
               cover_image_uri: planRow.cover_image_uri ?? "",
               weekly_days: planRow.weekly_days,
@@ -562,6 +566,8 @@ export const useTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
+            // Backfill: borradores guardados antes de agregar target_gender
+            parsed.target_gender = parsed.target_gender ?? "ambos";
             if (
               parsed.duration_weeks === 0 &&
               (!parsed.weeks || parsed.weeks.length === 0)

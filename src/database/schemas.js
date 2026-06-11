@@ -105,6 +105,7 @@ export const training_plans = sqliteTable("training_plans", {
   description: text("description"),
   objective: text("objective"),
   level: text("level"),
+  target_gender: text("target_gender").notNull().default("ambos"),
   weekly_days: integer("weekly_days").notNull().default(3),
   duration_weeks: integer("duration_weeks").notNull().default(8),
   cover_image_uri: text("cover_image_uri"),

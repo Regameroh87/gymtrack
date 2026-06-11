@@ -18,6 +18,7 @@ import { z } from "zod";
 
 // Constantes
 import { PLAN_LEVELS, PLAN_OBJECTIVES } from "../../constants/planOptions";
+import { PLAN_TARGET_GENDERS } from "../../constants/gender-options";
 
 // Hooks
 import {
@@ -288,6 +289,24 @@ export default function FormTrainingPlan({
                       value={field.state.value}
                       onChange={field.handleChange}
                       placeholder="Seleccionar nivel..."
+                      error={field.state.meta.errors?.[0]}
+                      searchable={false}
+                      snapPoints={["40%"]}
+                    />
+                  )}
+                </form.Field>
+              )}
+
+              {/* ─── DIRIGIDO A ─── */}
+              {!simplified && (
+                <form.Field name="target_gender">
+                  {(field) => (
+                    <CustomSelect
+                      label="DIRIGIDO A"
+                      options={PLAN_TARGET_GENDERS}
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      placeholder="Seleccionar público..."
                       error={field.state.meta.errors?.[0]}
                       searchable={false}
                       snapPoints={["40%"]}

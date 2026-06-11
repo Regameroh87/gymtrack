@@ -32,7 +32,9 @@
       "Bash(perl -i -pe 's/\\\\\\\\\\\\\\\\u0300-\\\\\\\\\\\\\\\\u036f/\\\\\\\\u0300-\\\\\\\\u036f/' \"app/\\(protected\\)/\\(tabs\\)/admin/gyms/new.web.jsx\")",
       "Bash(python -c ' *)",
       "Bash(sed -n '59p' \"app/\\(protected\\)/\\(tabs\\)/admin/gyms/new.web.jsx\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "mcp__claude_ai_Supabase__list_edge_functions",
+      "PowerShell(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);p.parse\\(fs.readFileSync\\('app/\\(protected\\)/\\(tabs\\)/planes/index.web.jsx','utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK'\\)\")"
     ],
     "defaultMode": "default"
   }

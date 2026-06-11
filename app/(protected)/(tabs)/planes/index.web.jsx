@@ -14,6 +14,10 @@ import { useDropPlan } from "../../../../src/hooks/plans/use-assign-plan.js";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary.js";
+import {
+  PLAN_GENDER_BADGES,
+  planMatchesGender,
+} from "../../../../src/constants/gender-options.js";
 
 // Componentes
 import MemberNavbar from "../../../../src/components/web/MemberNavbar.jsx";
@@ -295,8 +299,15 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
 // ─── Tab: Catálogo ───────────────────────────────────────────────────────────
 function CatalogoContent({ router }) {
   const { brandPrimary } = useGymTheme();
-  const { data: plans = [], isLoading } = useTrainingPlans({ publishedOnly: true });
+  const { user } = useAuth();
+  const { data: allPlans = [], isLoading } = useTrainingPlans({ publishedOnly: true });
   const [activeObjective, setActiveObjective] = useState(null);
+
+  // Solo planes para "ambos" o para el género del member; sin género ve todo
+  const plans = useMemo(
+    () => allPlans.filter((p) => planMatchesGender(p, user?.gender)),
+    [allPlans, user?.gender]
+  );
 
   const availableObjectives = useMemo(() => {
     const seen = new Set();
@@ -501,12 +512,23 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
       {/* Body: título + imagen */}
       <View className="flex-row px-[22px] pt-4 pb-3.5 gap-4">
         <View className="flex-1 gap-2">
-          {config.label && (
+          {(config.label || PLAN_GENDER_BADGES[plan.target_gender]) && (
             <View className="flex-row items-center gap-1.5">
-              <View className="w-1 h-1 rounded-full" style={{ backgroundColor: "rgba(15,13,32,0.4)" }} />
-              <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-ui-text-muted">
-                {config.label}
-              </Text>
+              {config.label && (
+                <>
+                  <View className="w-1 h-1 rounded-full" style={{ backgroundColor: "rgba(15,13,32,0.4)" }} />
+                  <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-ui-text-muted">
+                    {config.label}
+                  </Text>
+                </>
+              )}
+              {PLAN_GENDER_BADGES[plan.target_gender] && (
+                <View className="px-2 py-0.5 rounded-md bg-brandPrimary-500/10 border border-brandPrimary-500/25">
+                  <Text className="text-[9px] font-manrope-bold uppercase tracking-wider text-brandPrimary-600">
+                    {PLAN_GENDER_BADGES[plan.target_gender]}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
           <Text

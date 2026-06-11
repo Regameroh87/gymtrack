@@ -39,6 +39,7 @@ import { useAssignPlan } from "../../../../../src/hooks/plans/use-assign-plan";
 
 // Constantes
 import { SESSION_OBJECTIVES } from "../../../../../src/constants/sessionOptions";
+import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
@@ -437,6 +438,13 @@ export default function PlanDetail() {
                 >
                   {objectiveLabel}
                 </Text>
+                {PLAN_GENDER_BADGES[plan.target_gender] ? (
+                  <View className="px-2 py-0.5 rounded-md bg-white/10 border border-white/25">
+                    <Text className="font-manrope-bold text-[9px] uppercase tracking-wider text-white/80">
+                      {PLAN_GENDER_BADGES[plan.target_gender]}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             )}
 

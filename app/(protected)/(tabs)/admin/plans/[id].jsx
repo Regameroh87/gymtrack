@@ -45,6 +45,7 @@ import {
   SESSION_OBJECTIVES,
   SESSION_LEVELS,
 } from "../../../../../src/constants/sessionOptions";
+import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
 // Utils
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
@@ -573,6 +574,9 @@ export default function PlanDetail() {
               value={null}
               label={LEVEL_LABELS[plan.level] ?? plan.level}
             />
+          ) : null}
+          {PLAN_GENDER_BADGES[plan.target_gender] ? (
+            <StatChip value={null} label={PLAN_GENDER_BADGES[plan.target_gender]} />
           ) : null}
         </View>
 

@@ -22,6 +22,7 @@ import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
 import { ROLE_LABELS } from "../../../src/constants/roles";
+import { PROFILE_GENDERS } from "../../../src/constants/gender-options";
 import { ui } from "../../../src/theme/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import {
@@ -57,6 +58,7 @@ export default function ProfileScreen() {
     phone: user?.phone ?? "",
     document_number: user?.document_number ?? "",
     address: user?.address ?? "",
+    gender: user?.gender ?? "",
   });
 
   const [localImageUri, setLocalImageUri] = useState(null);
@@ -123,6 +125,7 @@ export default function ProfileScreen() {
         phone: form.phone?.trim() || null,
         document_number: form.document_number?.trim() || null,
         address: norm(form.address),
+        gender: form.gender || null,
         ...(imageProfileUpdate !== undefined && {
           image_profile: imageProfileUpdate,
         }),
@@ -326,8 +329,45 @@ export default function ProfileScreen() {
           value={form.address}
           placeholder="Ej: Calle 123"
           onChangeText={set("address")}
-          last
         />
+
+        {/* Género — chips seleccionables */}
+        <View className="flex-row items-center px-4 py-3.5">
+          <IconBox color={BRAND}>
+            <IdBadge size={14} color={BRAND} />
+          </IconBox>
+          <View className="flex-1">
+            <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.4px] text-ui-text-muted mb-2">
+              Género
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {PROFILE_GENDERS.map((g) => {
+                const active = form.gender === g.value;
+                return (
+                  <Pressable
+                    key={g.value}
+                    onPress={() => set("gender")(active ? "" : g.value)}
+                    className={`px-3 py-1.5 rounded-xl border ${
+                      active
+                        ? "bg-brandPrimary-600 border-brandPrimary-600"
+                        : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-input-border"
+                    }`}
+                  >
+                    <Text
+                      className={`text-[12px] font-manrope-semi ${
+                        active
+                          ? "text-white"
+                          : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                      }`}
+                    >
+                      {g.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </View>
       </View>
 
       {/* ── Acciones ── */}

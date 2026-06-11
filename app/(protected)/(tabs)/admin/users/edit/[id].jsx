@@ -1,5 +1,11 @@
 ﻿import { useState, useEffect } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
 import { useLocalSearchParams, useRouter, Redirect } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -8,6 +14,7 @@ import { useMemberDetail } from "../../../../../../src/hooks/users/use-member-de
 import { useUpdateMember } from "../../../../../../src/hooks/users/use-update-member";
 import { useUserRole } from "../../../../../../src/hooks/shared/use-user-role";
 import { canManageMemberData } from "../../../../../../src/constants/roles";
+import { PROFILE_GENDERS } from "../../../../../../src/constants/gender-options";
 import FormField from "../../../../../../src/components/forms/FormField";
 import StyledTextInput from "../../../../../../src/components/forms/StyledTextInput";
 import SubmitButton from "../../../../../../src/components/forms/SubmitButton";
@@ -33,6 +40,7 @@ export default function EditMember() {
     phone: "",
     document_number: "",
     address: "",
+    gender: "",
   });
 
   // Precargar con los datos actuales del alumno una vez disponibles.
@@ -44,6 +52,7 @@ export default function EditMember() {
         phone: data.profile.phone ?? "",
         document_number: data.profile.document_number ?? "",
         address: data.profile.address ?? "",
+        gender: data.profile.gender ?? "",
       });
     }
   }, [data?.profile]);
@@ -58,6 +67,7 @@ export default function EditMember() {
         phone: form.phone?.trim() || null,
         document_number: form.document_number?.trim() || null,
         address: norm(form.address),
+        gender: form.gender || null,
       },
       {
         onSuccess: () => {
@@ -148,6 +158,35 @@ export default function EditMember() {
             value={form.address}
             onChangeText={set("address")}
           />
+        </FormField>
+
+        <FormField label="GÉNERO (opcional)">
+          <View className="flex-row flex-wrap gap-2">
+            {PROFILE_GENDERS.map((g) => {
+              const active = form.gender === g.value;
+              return (
+                <Pressable
+                  key={g.value}
+                  onPress={() => set("gender")(active ? "" : g.value)}
+                  className={`px-4 py-2 rounded-xl border ${
+                    active
+                      ? "bg-brandPrimary-600 border-brandPrimary-600"
+                      : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-input-border"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-manrope-semi ${
+                      active
+                        ? "text-white"
+                        : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                    }`}
+                  >
+                    {g.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </FormField>
       </View>
 

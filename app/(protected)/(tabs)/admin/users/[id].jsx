@@ -19,6 +19,7 @@ import {
   useAssignablePlans,
   useAssignPlanToMember,
 } from "../../../../../src/hooks/users/use-assign-plan-to-member";
+import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 import { useToggleMemberActive } from "../../../../../src/hooks/users/use-update-member";
 import {
   ROLE_LABELS,
@@ -401,6 +402,7 @@ export default function MemberDetail() {
                         <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
                           {[
                             p.level,
+                            PLAN_GENDER_BADGES[p.target_gender],
                             p.weekly_days ? `${p.weekly_days} días/sem` : null,
                             p.duration_weeks ? `${p.duration_weeks} sem` : null,
                           ]

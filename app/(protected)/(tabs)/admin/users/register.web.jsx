@@ -16,6 +16,7 @@ import { supabase } from "../../../../../src/database/supabase";
 import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 import {
   Polaroid,
   Mail,
@@ -91,6 +92,7 @@ export default function RegisterUserWeb() {
       phone: "",
       document_number: "",
       address: "",
+      gender: "",
     },
     onSubmit: async ({ value }) => {
       try {
@@ -104,7 +106,7 @@ export default function RegisterUserWeb() {
         }
 
         const response = await supabase.functions.invoke("crear-socio", {
-          body: { ...value, image_profile },
+          body: { ...value, image_profile, gender: value.gender || null },
         });
 
         if (response.error) {
@@ -356,6 +358,41 @@ export default function RegisterUserWeb() {
                   value={field.state.value}
                   onChangeText={field.handleChange}
                 />
+              </Field>
+            )}
+          </form.Field>
+
+          {/* Género */}
+          <form.Field name="gender">
+            {(field) => (
+              <Field label="GÉNERO (OPCIONAL)">
+                <View className="flex-row flex-wrap gap-2">
+                  {PROFILE_GENDERS.map((g) => {
+                    const active = field.state.value === g.value;
+                    return (
+                      <Pressable
+                        key={g.value}
+                        onPress={() =>
+                          field.handleChange(active ? "" : g.value)
+                        }
+                        className={`px-4 py-2 rounded-xl border ${
+                          active
+                            ? "bg-brandPrimary-600 border-brandPrimary-600"
+                            : "bg-white border-ui-input-border hover:bg-brandPrimary-50/60"
+                        }`}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Text
+                          className={`text-[13px] font-manrope-semi ${
+                            active ? "text-white" : "text-ui-text-muted"
+                          }`}
+                        >
+                          {g.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </Field>
             )}
           </form.Field>

@@ -33,6 +33,7 @@ export const useTrainingPlans = ({ publishedOnly = false } = {}) =>
           name: training_plans.name,
           objective: training_plans.objective,
           level: training_plans.level,
+          target_gender: training_plans.target_gender,
           weekly_days: training_plans.weekly_days,
           duration_weeks: training_plans.duration_weeks,
           cover_image_uri: training_plans.cover_image_uri,

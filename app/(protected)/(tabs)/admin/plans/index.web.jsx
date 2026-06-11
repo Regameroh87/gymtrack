@@ -15,6 +15,7 @@ import { supabase } from "../../../../../src/database/supabase";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
 import {
   ClipboardList,
@@ -430,6 +431,13 @@ function PlanCard({ plan, activeAssignments, onPress }) {
                 {plan.weekly_days}×/sem
               </Text>
             </View>
+            {PLAN_GENDER_BADGES[plan.target_gender] && (
+              <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-md bg-brandPrimary-500/10 border border-brandPrimary-500/25">
+                <Text className="text-[10px] font-manrope-bold tracking-wider uppercase text-brandPrimary-600">
+                  {PLAN_GENDER_BADGES[plan.target_gender]}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Footer */}
