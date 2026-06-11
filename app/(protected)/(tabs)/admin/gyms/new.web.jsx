@@ -17,7 +17,6 @@ import { supabase } from "../../../../../src/database/supabase";
 import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { ROLE_LABELS } from "../../../../../src/constants/roles";
 import {
   Polaroid,
   Mail,
@@ -176,7 +175,7 @@ export default function NewGymWeb() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, user_id, name, last_name, email, role, gym_id")
+        .select("id, user_id, name, last_name, email")
         .order("name", { ascending: true });
       if (error) throw error;
       return data;
@@ -565,11 +564,7 @@ export default function NewGymWeb() {
           {ownerMode === "existing" ? (
             <Field
               label="DUEÑO"
-              hint={
-                selectedOwner && selectedOwner.gym_id
-                  ? "Este usuario ya pertenece a un gym; al crear se lo reasigna como dueño del nuevo."
-                  : "Su perfil pasa a rol Dueño vinculado a este gimnasio."
-              }
+              hint="Recibe la membresía de Dueño del gimnasio nuevo; si ya pertenece a otros gyms, conserva esas membresías."
             >
               {selectedOwner ? (
                 <View className="flex-row items-center gap-2.5 bg-brandPrimary-50 rounded-xl px-3.5 py-2.5 border border-brandPrimary-300">
@@ -579,7 +574,7 @@ export default function NewGymWeb() {
                       selectedOwner.email}
                     <Text className="font-manrope text-ui-text-muted">
                       {"  ·  "}
-                      {selectedOwner.email} · {ROLE_LABELS[selectedOwner.role]}
+                      {selectedOwner.email}
                     </Text>
                   </Text>
                   <Pressable
@@ -623,11 +618,6 @@ export default function NewGymWeb() {
                             </Text>
                             <Text className="text-[11px] font-manrope text-ui-text-muted">
                               {p.email}
-                            </Text>
-                          </View>
-                          <View className="px-2 py-0.5 rounded-md bg-ui-background-light">
-                            <Text className="text-[10px] font-manrope-semi text-ui-text-muted">
-                              {ROLE_LABELS[p.role] || p.role}
                             </Text>
                           </View>
                         </Pressable>

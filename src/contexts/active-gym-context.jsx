@@ -141,11 +141,11 @@ export function ActiveGymProvider({ children }) {
   const value = useMemo(
     () => ({
       gymId: activeMembership?.gym_id ?? null,
-      // Rol efectivo en el gym activo. Fallback a profiles.role mientras las
-      // memberships cargan (transición; mismo valor para usuarios de 1 gym).
+      // Rol efectivo en el gym activo (memberships.role); el flag global
+      // super_admin pisa al rol local.
       role: user?.is_super_admin
         ? "super_admin"
-        : (activeMembership?.role ?? user?.role ?? null),
+        : (activeMembership?.role ?? null),
       gym: activeMembership?.gyms ?? null,
       memberships: memberships ?? [],
       needsSelection,

@@ -167,14 +167,12 @@ Deno.serve(async (req) => {
     createdGymId = gymData.id
 
     // 3. Crear profile (solo si la cuenta es nueva; un owner existente conserva
-    // sus datos). gym_id/role quedan por compat; el trigger de memberships los mantiene.
+    // sus datos). El vínculo con el gym y el rol viven solo en memberships.
     if (!ownerIsExisting) {
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .insert({
           user_id: ownerUserId,
-          gym_id: createdGymId,
-          role: 'owner',
           email: email?.toLowerCase() ?? null,
           name: name?.toLowerCase() ?? null,
           last_name: last_name?.toLowerCase() ?? null,

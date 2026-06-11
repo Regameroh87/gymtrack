@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     // en ESE gym se resuelve server-side contra memberships — nunca del body.
     const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('gym_id, is_super_admin')
+      .select('is_super_admin')
       .eq('user_id', callerAuth.user.id)
       .single()
 
@@ -77,8 +77,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Perfil del caller no encontrado.' }, 403)
     }
 
-    // Fallback a profiles.gym_id para builds viejos que no mandan gym_id.
-    const targetGymId: string | null = body.gym_id ?? callerProfile.gym_id
+    const targetGymId: string | null = body.gym_id ?? null
     if (!targetGymId) {
       return jsonResponse({ error: 'gym_id es requerido.' }, 400)
     }
@@ -176,14 +175,12 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: getErrorMessage(authError) }, 400)
     }
 
-    // 2. Crear profile (identidad global). gym_id/role quedan también acá por
-    // compatibilidad con builds viejos; el trigger de memberships los mantiene.
+    // 2. Crear profile (identidad global de la persona; el vínculo con el gym
+    // y el rol viven solo en memberships).
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
         user_id: authData.user.id,
-        gym_id: targetGymId,
-        role: newRole,
         email: email?.toLowerCase() ?? null,
         name: name?.toLowerCase() ?? null,
         last_name: last_name?.toLowerCase() ?? null,

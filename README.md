@@ -70,12 +70,9 @@ EXPO_PUBLIC_SUPABASE_KEY=
 
 # Cloudinary
 EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME=
-
-# Identificador del gimnasio para este build
-EXPO_PUBLIC_GYM_ID=
 ```
 
-> `EXPO_PUBLIC_GYM_ID` es el campo clave del modelo multi-tenant: cada build compilado corresponde a un gimnasio específico. Ver sección [Arquitectura multi-tenant](#arquitectura-multi-tenant).
+> No hay variable de gym: la app es un único build multitenant. El gimnasio activo se resuelve en runtime a partir de las membresías del usuario. Ver sección [Arquitectura multi-tenant](#arquitectura-multi-tenant).
 
 ---
 
@@ -97,32 +94,34 @@ npm run ios
 ### Build de producción (EAS)
 
 ```bash
-EXPO_PUBLIC_GYM_ID=<uuid-del-gym> eas build --platform android
-EXPO_PUBLIC_GYM_ID=<uuid-del-gym> eas build --platform ios
+eas build --platform android
+eas build --platform ios
 ```
 
 ---
 
 ## Arquitectura
 
-### Modelo multi-tenant
+### Modelo multi-tenant (multi-gym)
 
-GymTrack es un white-label SaaS: hay un único proyecto de Supabase y una única codebase, pero se compila una APK/IPA diferente por gimnasio.
+GymTrack es un SaaS multitenant de **un solo build**: un único proyecto de Supabase, una única codebase y una única app. El tenant es "el negocio que paga": un gimnasio físico o un profe de personalizados con su gym virtual.
 
-- Cada build lleva el `EXPO_PUBLIC_GYM_ID` "tatuado" en tiempo de compilación
-- El logo y los colores del gimnasio se configuran antes de compilar
-- Todos los datos se aíslan por `gym_id` a nivel de BD
+- **Una cuenta puede pertenecer a varios gimnasios** vía la tabla `memberships (user_id, gym_id, role, status)`. `profiles` es la identidad global de la persona (sin `gym_id` ni `role`).
+- El **gym activo** se elige en el cliente (`ActiveGymProvider`): con una sola membresía se entra directo; con varias aparece la pantalla `select-gym` y hay un switcher en el perfil. La elección se persiste en AsyncStorage (`active-gym:id`).
+- El logo y los colores (`gyms.theme_primary/theme_accent`) se aplican en **runtime** según el gym activo (`GymThemeProvider`).
+- Aislamiento de datos por **RLS basada en membresías**: la RLS devuelve los datos de TODOS los gyms del usuario; el recorte por gym activo lo hace el cliente (toda query remota a tablas gym-scoped lleva `.eq("gym_id", gymId)`).
+- El login autentica a la **persona** (RPC global `email_exists` + OTP), no a un gym.
 
-**Flujo para dar de alta un nuevo gimnasio:**
-1. Llamar a la Edge Function `crear-gym` (solo `super_admin`) — crea el gym + owner + profile
-2. Actualizar logo/colores en el proyecto
-3. Compilar con `EXPO_PUBLIC_GYM_ID=<uuid> eas build`
-4. Entregar el APK/IPA al gimnasio
+**Flujo para dar de alta un nuevo gimnasio (o profe):**
+1. Llamar a la Edge Function `crear-gym` (solo `super_admin`) — crea el gym + membresía de owner; si el email del dueño ya tiene cuenta, la reutiliza
+2. Cargar logo/colores del gym (quedan en la tabla `gyms`, sin recompilar)
+3. Listo: los usuarios del gym nuevo usan la misma app
 
-**Roles:**
+**Roles (por gym, en `memberships.role`):**
 ```
-super_admin → owner → admin → coach → member
+owner → admin → coach → member
 ```
+`super_admin` es un flag global de la persona (`profiles.is_super_admin`), cross-gym.
 
 ---
 
@@ -132,12 +131,14 @@ Las tablas de contenido (ejercicios, equipamiento, sesiones, planes) son offline
 
 **Tablas sincronizadas:**
 
-| Tabla | Scoped por gym_id |
+| Tabla | Scoped por gym_id (gym activo) |
 |-------|:-----------------:|
 | `exercises_base` | ✓ |
 | `equipment` | ✓ |
 | `sessions` | ✓ |
 | `training_plans` | ✓ |
+| `plan_assignments` | ✓ (+ user) |
+| `session_logs` | ✓ (+ user) |
 | `exercise_equipment` | — |
 | `session_exercises` | — |
 | `plan_weeks` | — |
@@ -162,6 +163,8 @@ PUSH (todas las tablas)
 ```
 
 El sync se dispara automáticamente al recuperar conectividad (via `NetInfo`). Hay un flag `isSyncing` que previene ejecuciones concurrentes.
+
+**Multi-gym — gym activo:** la base SQLite contiene los datos de **un solo gym a la vez** (el gym activo, leído de AsyncStorage `active-gym:id`). `sync_meta.active_gym_id` marca a qué gym pertenece el contenido local; un guard idempotente (`ensureDbMatchesActiveGym`, corre al inicio de cada sync) detecta el cambio de gym y purga tablas + watermarks para forzar un full pull del gym nuevo. `requestGymSwitch()` empuja los cambios pendientes ANTES de cambiar de gym y bloquea el switch con error claro si hay pendientes sin conexión.
 
 ---
 
@@ -353,30 +356,35 @@ Ubicadas en `supabase/functions/`. Todas validan el JWT del caller antes de ejec
 
 | Función | Quién puede llamarla | Qué hace |
 |---------|----------------------|----------|
-| `crear-gym` | `super_admin` | Crea un nuevo gym, su owner y el profile correspondiente |
-| `crear-socio` | `owner`, `admin` | Crea un usuario con rol dentro del gym del caller. Hereda el `gym_id` del caller — el cliente nunca lo pasa en el body |
+| `crear-gym` | `super_admin` | Crea un gym + membresía de owner. Si el email del dueño ya tiene cuenta, la reutiliza (multi-gym) |
+| `crear-socio` | staff del gym (ver matriz) | Crea un usuario con membresía en el gym indicado (`gym_id` del body = gym activo del caller; el rol del caller se valida server-side contra `memberships`). Si el email ya tiene cuenta, le agrega la membresía y responde `linked_existing: true` |
 | `sync-cloudinary-webhook` | Cloudinary (webhook) | Sincroniza eventos de Cloudinary |
 | `cleanUp-cloudinary` | Scheduled / manual | Elimina assets de Cloudinary sin referencia en la BD |
 
-**Regla de negocio de roles en `crear-socio`:**
-- `admin` solo puede crear `member`
-- `owner` puede crear `admin`, `coach`, `member`
+**Matriz de roles asignables en `crear-socio`** (cada rol crea estrictamente por debajo del suyo):
+- `super_admin` → owner, admin, coach, member
+- `owner` → admin, coach, member
+- `admin` → coach, member
+- `coach` → member
 
 ---
 
 ### Base de datos (PostgreSQL)
 
-**Tablas principales (con `gym_id`):**
+**Tablas de identidad y tenancy:**
 - `gyms` — configuración del gimnasio (slug, nombre, owner, logo, colores)
-- `profiles` — extensión de `auth.users` con `gym_id` y `role`
-- `exercises_base`, `equipment`, `sessions`, `training_plans`
+- `profiles` — identidad global de la persona (extensión de `auth.users`, sin gym ni rol; `is_super_admin` es flag global)
+- `memberships` — vínculo persona↔gym con rol por gym (`user_id, gym_id, role, status`, UNIQUE por par)
+
+**Tablas de contenido (con `gym_id`):**
+- `exercises_base`, `equipment`, `sessions`, `training_plans`, `plan_assignments`, `session_logs`
 
 **Tablas secundarias (heredan el gym por FK):**
 - `exercise_equipment`, `session_exercises`
 - `plan_weeks`, `plan_week_days`, `plan_week_day_exercises`, `plan_week_day_exercise_sets`
 
 **Row Level Security (RLS):**
-Diseñada con helpers `auth.user_gym()` y `auth.user_role()` (`SECURITY DEFINER`). Deshabilitada en desarrollo para no interferir con el sync offline-first. Se activa en producción.
+Activa en todas las tablas. Helpers `SECURITY DEFINER` basados en memberships: `auth_gym_ids()`, `is_staff_of(g)`, `is_admin_of(g)`, `is_super_admin()`, `shares_gym_with(u)`, `user_in_admin_gym(u)`. Patrón de lectura: `gym_id IN (SELECT auth_gym_ids())` — el usuario ve todos sus gyms y el cliente filtra por gym activo. Anti-recursión en `memberships`: la fila propia se chequea por columna directa; las ramas de staff usan helpers DEFINER. Las migraciones están versionadas en `supabase/migrations/`.
 
 ---
 

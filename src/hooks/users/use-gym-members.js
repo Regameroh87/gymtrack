@@ -44,7 +44,7 @@ export const useGymMembers = ({ onlyRole = null } = {}) => {
 
       return (profiles ?? []).map((p) => ({
         ...p,
-        role: roleByUser[p.user_id] ?? p.role,
+        role: roleByUser[p.user_id] ?? null,
       }));
     },
   });

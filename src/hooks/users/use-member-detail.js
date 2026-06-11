@@ -18,13 +18,23 @@ export const useMemberDetail = (memberId) => {
     queryKey: ["member_detail", memberId, gymId],
     enabled: !!memberId && !!gymId,
     queryFn: async () => {
-      // 1. Perfil del alumno.
+      // 1. Perfil del alumno + su rol en el gym activo (el rol vive en
+      // memberships, ya no en profiles).
       const { data: profile, error: pErr } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", memberId)
         .single();
       if (pErr) throw pErr;
+
+      const { data: membership } = await supabase
+        .from("memberships")
+        .select("role, status")
+        .eq("user_id", profile.user_id)
+        .eq("gym_id", gymId)
+        .maybeSingle();
+      profile.role = membership?.role ?? null;
+      profile.membership_status = membership?.status ?? null;
 
       // 2. Asignaciones de plan (normales y custom).
       const { data: assignments, error: aErr } = await supabase
