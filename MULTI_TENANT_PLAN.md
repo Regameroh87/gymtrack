@@ -1,5 +1,12 @@
 # Plan Multi-Tenant — GymTrack
 
+> ⚠️ **DOCUMENTO HISTÓRICO (superado el 2026-06-11).** El modelo descripto acá
+> (un build por gym, `EXPO_PUBLIC_GYM_ID` en compile-time, `gym_id`/`role` en
+> `profiles`) fue reemplazado por el modelo **multi-gym**: un solo build, tabla
+> `memberships` (una cuenta puede pertenecer a varios gyms con rol por gym),
+> gym activo elegido en runtime, theme dinámico y RLS basada en membresías.
+> La descripción vigente está en la sección "Arquitectura" del [README](./README.md).
+
 Resumen del modelo SaaS white-label, decisiones de schema, plan de migraciones y estado actual.
 
 ---
