@@ -440,6 +440,14 @@ export const custom_plan_week_day_exercises = sqliteTable(
   (t) => [unique().on(t.week_day_id, t.session_exercise_id)]
 );
 
+// Metadatos locales del sync. Vive DENTRO de SQLite (a diferencia de los
+// watermarks last_sync_at_* que viven en AsyncStorage) justamente para poder
+// detectar cuando la base fue recreada y los watermarks quedaron huérfanos.
+export const sync_meta = sqliteTable("sync_meta", {
+  key: text("key").primaryKey(),
+  value: text("value"),
+});
+
 export const custom_plan_week_day_exercise_sets = sqliteTable(
   "custom_plan_week_day_exercise_sets",
   {

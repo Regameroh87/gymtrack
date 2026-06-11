@@ -23,6 +23,7 @@ import {
   custom_plan_week_days,
   custom_plan_week_day_exercises,
   custom_plan_week_day_exercise_sets,
+  sync_meta,
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, ne, or, and, inArray, isNotNull } from "drizzle-orm";
@@ -31,8 +32,36 @@ import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "../lib/queryClient";
 
 const LAST_SYNC_KEY = "last_sync_at";
+const DB_EPOCH_KEY = "db_initialized_at";
 const GYM_ID = process.env.EXPO_PUBLIC_GYM_ID;
 let isSyncing = false;
+
+// Los watermarks last_sync_at_* viven en AsyncStorage, pero describen el
+// contenido de la base SQLite. Si la base fue recreada (reinstalación parcial,
+// borrado de la DB, migración fallida que terminó en un reset) los watermarks
+// quedan huérfanos: los pulls incrementales devuelven 0 filas y la base nunca
+// se repuebla. Marcamos la base con una fila en sync_meta; si la fila no está,
+// la base es nueva y los watermarks que existan son de una base anterior.
+async function resetWatermarksIfDbWasRecreated() {
+  const [marker] = await database
+    .select()
+    .from(sync_meta)
+    .where(eq(sync_meta.key, DB_EPOCH_KEY));
+  if (marker) return;
+
+  const allKeys = await AsyncStorage.getAllKeys();
+  const staleKeys = allKeys.filter((k) => k.startsWith(LAST_SYNC_KEY));
+  if (staleKeys.length > 0) {
+    await AsyncStorage.multiRemove(staleKeys);
+    console.log(
+      `🧹 [SYNC] Base local nueva con ${staleKeys.length} watermark(s) huérfano(s): se fuerza sync completo`
+    );
+  }
+
+  await database
+    .insert(sync_meta)
+    .values({ key: DB_EPOCH_KEY, value: new Date().toISOString() });
+}
 
 const TABLE_QUERY_KEYS = {
   sessions: [["sessions"], ["session"]],
@@ -2294,6 +2323,8 @@ export async function syncWithSupabase(
     console.log(
       `🔄 [SYNC] Iniciando — tablas: [${tablesToSync.join(", ")}] — ${syncTime}`
     );
+
+    await resetWatermarksIfDbWasRecreated();
 
     // --- DOWNLOAD PHASE ---
     const {
