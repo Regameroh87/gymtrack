@@ -11,6 +11,8 @@ const ASSET_FIELDS = [
   { column: "image_uri", resource_type: "image" },
   { column: "video_uri", resource_type: "video" },
   { column: "cover_image_uri", resource_type: "image" },
+  { column: "image_profile", resource_type: "image" }, // profiles
+  { column: "logo_url", resource_type: "image" }, // gyms
 ] as const;
 
 serve(async (req) => {
