@@ -17,6 +17,12 @@ import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
+import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
+import {
+  ASSIGNABLE_ROLES,
+  ROLE_LABELS,
+  DEFAULT_ROLE,
+} from "../../../../../src/constants/roles";
 import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 import {
   Polaroid,
@@ -75,7 +81,12 @@ function Input({ icon, ...props }) {
 export default function RegisterUserWeb() {
   const router = useRouter();
   const { gymId } = useActiveGym();
+  const { role: currentRole } = useUserRole();
   const { brandPrimary } = useGymTheme();
+
+  // Roles que el usuario logueado puede asignar (estrictamente por debajo del suyo).
+  // crear-socio revalida esto en el backend (defensa en profundidad).
+  const assignableRoles = ASSIGNABLE_ROLES[currentRole] ?? [DEFAULT_ROLE];
   const fileInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -95,6 +106,7 @@ export default function RegisterUserWeb() {
       document_number: "",
       address: "",
       gender: "",
+      role: DEFAULT_ROLE,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -410,6 +422,41 @@ export default function RegisterUserWeb() {
               </Field>
             )}
           </form.Field>
+
+          {/* Rol */}
+          {assignableRoles.length > 1 && (
+            <form.Field name="role">
+              {(field) => (
+                <Field label="ROL">
+                  <View className="flex-row flex-wrap gap-2">
+                    {assignableRoles.map((r) => {
+                      const active = field.state.value === r;
+                      return (
+                        <Pressable
+                          key={r}
+                          onPress={() => field.handleChange(r)}
+                          className={`px-4 py-2 rounded-xl border ${
+                            active
+                              ? "bg-brandPrimary-600 border-brandPrimary-600"
+                              : "bg-white border-ui-input-border hover:bg-brandPrimary-50/60"
+                          }`}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <Text
+                            className={`text-[13px] font-manrope-semi ${
+                              active ? "text-white" : "text-ui-text-muted"
+                            }`}
+                          >
+                            {ROLE_LABELS[r] ?? r}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </Field>
+              )}
+            </form.Field>
+          )}
         </View>
 
         {/* Submit */}
