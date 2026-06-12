@@ -15,8 +15,6 @@ export default function PlanBuilderLayout() {
   const { id } = useLocalSearchParams();
 
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
 
   const { form, isLoading } = useTrainingPlanForm({
     id: id ?? null,
@@ -27,13 +25,7 @@ export default function PlanBuilderLayout() {
     <PlanFormProvider value={{ form, planId: id ?? null, isLoading }}>
       <Stack
         screenOptions={{
-          headerTitle: "",
-          headerBackButtonDisplayMode: "minimal",
-          headerStyle: {
-            backgroundColor: isDark ? ui.background.dark : ui.background.light,
-          },
-          headerShadowVisible: false,
-          headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
+          headerShown: false,
         }}
       >
         <Stack.Screen name="[week]/index" />

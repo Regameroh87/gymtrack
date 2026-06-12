@@ -2,6 +2,7 @@
 import { useColorScheme } from "nativewind";
 import { ui } from "../../../../src/theme/colors";
 import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
+import { Platform } from "react-native";
 
 export default function AdminLayout() {
   const { colorScheme } = useColorScheme();
@@ -36,7 +37,8 @@ export default function AdminLayout() {
         name="users/index"
         options={{
           headerTitle: "",
-          headerBackButtonDisplayMode: "minimal",
+          headerBackButtonDisplayMode:
+            Platform.OS === "ios" ? "never" : "component",
         }}
       />
       <Stack.Screen
@@ -122,14 +124,23 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
-      <Stack.Screen name="plans/builder" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="plans/builder"
+        options={{
+          headerTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
+        }}
+      />
       <Stack.Screen
         name="plans/[id]"
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       {/* Placeholders */}

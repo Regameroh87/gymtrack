@@ -88,7 +88,7 @@ export default function PlansList() {
   return (
     <Screen>
       {/* Header */}
-      <View className="px-6 pt-4 pb-4 flex-row items-end justify-between">
+      <View className="px-6 pb-4 flex-row items-end justify-between">
         <View>
           <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
             Gestión de Entrenamientos
