@@ -27,7 +27,7 @@ const DevLoginPanel = () => {
       <Text className="font-manrope-bold text-[11px] uppercase tracking-widest text-[#2DD4BF] mb-3">
         Dev login
       </Text>
-      <View className="flex-row gap-3">
+      <View className="flex-row flex-wrap justify-center gap-3">
         {DEV_USERS.map(({ label, email }) => (
           <Pressable
             key={email}

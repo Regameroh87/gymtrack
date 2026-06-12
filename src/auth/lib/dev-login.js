@@ -6,6 +6,7 @@ import { supabase } from "../../database/supabase.js";
 export const DEV_PASSWORD = "dev123456";
 
 export const DEV_USERS = [
+  { label: "Owner", email: "dev-owner@test.com" },
   { label: "Admin", email: "dev-admin@test.com" },
   { label: "Coach", email: "dev-coach@test.com" },
   { label: "Member", email: "dev-member@test.com" },
