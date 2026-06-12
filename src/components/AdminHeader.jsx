@@ -12,7 +12,7 @@ const AdminHeader = ({ title, subtitle, showBack = false }) => {
   const router = useRouter();
 
   return (
-    <View className="px-5 pt-14 pb-6">
+    <View className="px-5 pt-4 pb-6">
       {showBack && (
         <Pressable
           onPress={() => router.back()}
