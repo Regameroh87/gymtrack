@@ -37,8 +37,8 @@ export default function AdminLayout() {
         name="users/index"
         options={{
           headerTitle: "",
-          headerBackButtonDisplayMode:
-            Platform.OS === "ios" ? "never" : "component",
+          headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -46,6 +46,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -53,6 +54,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "Ficha del alumno",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -60,6 +62,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "Editar alumno",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -67,6 +70,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -74,6 +78,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -81,6 +86,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -88,6 +94,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -95,6 +102,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -102,6 +110,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -109,6 +118,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -116,6 +126,7 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
         }}
       />
       {/* Planes */}
@@ -144,12 +155,30 @@ export default function AdminLayout() {
         }}
       />
       {/* Placeholders */}
-      <Stack.Screen name="billing/index" options={{ title: "Contabilidad" }} />
+      <Stack.Screen
+        name="billing/index"
+        options={{
+          title: "Contabilidad",
+          headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
+        }}
+      />
       <Stack.Screen
         name="settings/index"
-        options={{ title: "Configuración" }}
+        options={{
+          title: "Configuración",
+          headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
+        }}
       />
-      <Stack.Screen name="reports/index" options={{ title: "Reportes" }} />
+      <Stack.Screen
+        name="reports/index"
+        options={{
+          title: "Reportes",
+          headerBackButtonDisplayMode: "minimal",
+          headerBackVisible: Platform.OS === "ios",
+        }}
+      />
     </Stack>
   );
 }
