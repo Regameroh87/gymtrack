@@ -6,6 +6,7 @@ import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormConte
 
 // Componentes
 import FormTrainingPlan from "../../../../../../src/components/forms/FormTrainingPlan";
+import Screen from "../../../../../../src/components/Screen";
 
 // Tema
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
@@ -23,15 +24,13 @@ export default function UserPlanBuilder() {
   }
 
   return (
-    <>
-      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-4"} flex-1`}>
-        <FormTrainingPlan
-          form={form}
-          plan={planId}
-          simplified
-          weekPathname="/planes/builder/custom-plan/[week]"
-        />
-      </View>
-    </>
+    <Screen safe={Platform.OS === "android"}>
+      <FormTrainingPlan
+        form={form}
+        plan={planId}
+        simplified
+        weekPathname="/planes/builder/custom-plan/[week]"
+      />
+    </Screen>
   );
 }

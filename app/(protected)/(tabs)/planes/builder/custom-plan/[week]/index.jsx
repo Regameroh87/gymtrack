@@ -1,9 +1,10 @@
-﻿import { Platform, View } from "react-native";
+﻿import { Platform } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useStore } from "@tanstack/react-form";
 
 import { usePlanFormContext } from "../../../../../../../src/contexts/PlanFormContext";
 import FormPlanWeek from "../../../../../../../src/components/forms/FormPlanWeek";
+import Screen from "../../../../../../../src/components/Screen";
 import { useAllSessions } from "../../../../../../../src/hooks/sessions/use-all-sessions";
 import { fetchCustomSessionExercises } from "../../../../../../../src/hooks/sessions/use-custom-session-exercises";
 import { fetchSessionExercises } from "../../../../../../../src/hooks/sessions/use-session-exercises";
@@ -25,18 +26,16 @@ export default function UserPlanWeekEditor() {
     durationWeeks === 0 ? "Semana tipo" : `Semana ${weekNumber}`;
 
   return (
-    <>
-      <View className={`${Platform.OS === "ios" ? "pt-0" : "pt-5"} flex-1`}>
-        <FormPlanWeek
-          form={form}
-          weekNumber={weekNumber}
-          weekTitle={weekTitle}
-          sessionsHook={useAllSessions}
-          fetchExercisesFnMap={fetchExercisesFnMap}
-          planId={planId}
-          prescriptionPathname="/planes/builder/custom-plan/[week]/[day]"
-        />
-      </View>
-    </>
+    <Screen safe={Platform.OS === "android"}>
+      <FormPlanWeek
+        form={form}
+        weekNumber={weekNumber}
+        weekTitle={weekTitle}
+        sessionsHook={useAllSessions}
+        fetchExercisesFnMap={fetchExercisesFnMap}
+        planId={planId}
+        prescriptionPathname="/planes/builder/custom-plan/[week]/[day]"
+      />
+    </Screen>
   );
 }

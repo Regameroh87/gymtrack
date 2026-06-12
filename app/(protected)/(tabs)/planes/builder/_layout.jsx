@@ -31,7 +31,7 @@ export default function PlanBuilderLayout() {
           headerShown: Platform.OS === "ios",
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerTintColor: isDark ? ui.text.mainDark : ui.text.mutedDark,
+          headerTintColor: isDark ? ui.text.mainDark : ui.text.main,
         }}
       >
         <Stack.Screen
@@ -47,7 +47,7 @@ export default function PlanBuilderLayout() {
                 <View>
                   <ChevronLeft
                     size={30}
-                    color={isDark ? ui.text.mainDark : ui.text.mutedDark}
+                    color={isDark ? ui.text.mainDark : ui.text.main}
                   />
                 </View>
               </Pressable>
