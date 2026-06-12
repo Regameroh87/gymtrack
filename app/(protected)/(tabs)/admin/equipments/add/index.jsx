@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -44,10 +44,13 @@ export default function AddEquipmentScreen() {
   return (
     <KeyboardAwareScrollView
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-      contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+      contentContainerStyle={{
+        paddingTop: Platform.OS === "android" ? insets.top : 0,
+        paddingBottom: insets.bottom + 40,
+      }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="px-5 pt-6 pb-2">
+      <View className="px-5 pb-2">
         <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark mb-1">
           Agregar Máquina
         </Text>

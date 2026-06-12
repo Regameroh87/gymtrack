@@ -1,5 +1,11 @@
 ﻿// React Native
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
 import { useCallback } from "react";
 
 // Librerías externas
@@ -77,9 +83,9 @@ export default function SessionsList() {
   };
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       {/* Header sticky */}
-      <View className="px-6 pt-4 pb-5 flex-row items-end justify-between">
+      <View className=" flex px-6 pb-5 flex-row items-end justify-between">
         <View>
           <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
             Gestión de Entrenamientos

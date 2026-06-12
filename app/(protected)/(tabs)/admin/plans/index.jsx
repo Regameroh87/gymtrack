@@ -1,5 +1,11 @@
 ﻿// React Native
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { useCallback, useMemo, useState } from "react";
 
 // Librerías externas
@@ -86,7 +92,7 @@ export default function PlansList() {
   };
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       {/* Header */}
       <View className="px-6 pb-4 flex-row items-end justify-between">
         <View>

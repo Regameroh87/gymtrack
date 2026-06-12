@@ -1,5 +1,5 @@
 ﻿// React Native
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 
 // Librerías externas
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -9,6 +9,7 @@ import { useSessionForm } from "../../../../../src/hooks/sessions/use-session-fo
 
 // Componentes
 import FormSession from "../../../../../src/components/forms/FormSession";
+import Screen from "../../../../../src/components/Screen";
 
 // Tema / assets
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
@@ -33,5 +34,9 @@ export default function SessionBuilder() {
     );
   }
 
-  return <FormSession form={form} session={id ?? null} />;
+  return (
+    <Screen safe={Platform.OS === "android"}>
+      <FormSession form={form} session={id ?? null} />
+    </Screen>
+  );
 }

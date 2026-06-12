@@ -5,6 +5,7 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -118,13 +119,12 @@ export default function UsersList() {
   );
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{
-          paddingTop: 16,
           paddingBottom: insets.bottom + 100,
         }}
         showsVerticalScrollIndicator={false}

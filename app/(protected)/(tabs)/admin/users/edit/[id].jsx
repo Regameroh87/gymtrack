@@ -5,7 +5,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Pressable,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Redirect } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -28,6 +30,7 @@ const norm = (s) => (s ? s.trim().toLowerCase() : null);
 export default function EditMember() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { role, loading: roleLoading } = useUserRole();
   const { brandPrimary } = useGymTheme();
   const canManage = canManageMemberData(role); // editar datos = admin+
@@ -107,7 +110,11 @@ export default function EditMember() {
   return (
     <ScrollView
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-      contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+      contentContainerStyle={{
+        paddingHorizontal: 24,
+        paddingTop: Platform.OS === "android" ? insets.top : 0,
+        paddingBottom: 40,
+      }}
       keyboardShouldPersistTaps="handled"
     >
       <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark mb-6">

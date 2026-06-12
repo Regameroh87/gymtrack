@@ -1,4 +1,6 @@
 ﻿import FormExercise from "../../../../../src/components/forms/FormExercise";
+import Screen from "../../../../../src/components/Screen";
+import { Platform } from "react-native";
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { database } from "../../../../../src/database";
@@ -96,11 +98,13 @@ export default function AddExerciseScreen() {
   });
 
   return (
-    <FormExercise
-      ref={formRef}
-      form={addExerciseForm}
-      headerTitle="Nuevo Ejercicio"
-      headerDescription="Completá los datos para agregar un ejercicio al catálogo."
-    />
+    <Screen safe={Platform.OS === "android"}>
+      <FormExercise
+        ref={formRef}
+        form={addExerciseForm}
+        headerTitle="Nuevo Ejercicio"
+        headerDescription="Completá los datos para agregar un ejercicio al catálogo."
+      />
+    </Screen>
   );
 }

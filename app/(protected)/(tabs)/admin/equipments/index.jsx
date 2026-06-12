@@ -6,6 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -166,13 +167,12 @@ export default function EquipmentsList() {
   };
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       <FlatList
         data={filteredEquipments}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{
-          paddingTop: 16,
           paddingBottom: insets.bottom + 100,
         }}
         showsVerticalScrollIndicator={false}

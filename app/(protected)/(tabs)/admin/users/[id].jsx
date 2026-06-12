@@ -6,6 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
   Modal,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
@@ -117,7 +118,7 @@ export default function MemberDetail() {
 
   if (isLoading) {
     return (
-      <Screen>
+      <Screen safe={Platform.OS === "android"}>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={brandPrimary[600]} />
         </View>
@@ -127,7 +128,7 @@ export default function MemberDetail() {
 
   if (isError || !data?.profile) {
     return (
-      <Screen>
+      <Screen safe={Platform.OS === "android"}>
         <View className="flex-1 items-center justify-center px-10">
           <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
             No se pudo cargar la información del alumno.
@@ -143,13 +144,13 @@ export default function MemberDetail() {
   const staff = isStaffRole(profile.role);
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
       >
         {/* ── Encabezado del perfil ── */}
-        <View className="items-center px-6 pt-4 pb-6">
+        <View className="items-center px-6 pb-6">
           {photo ? (
             <Image
               source={{ uri: photo }}

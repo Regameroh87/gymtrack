@@ -1,5 +1,5 @@
 ﻿// React Native
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 
 // Expo
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -26,6 +26,7 @@ import { useRecordById } from "../../../../../src/hooks/shared/use-record-by-id"
 
 // Componentes
 import FormExercise from "../../../../../src/components/forms/FormExercise";
+import Screen from "../../../../../src/components/Screen";
 
 export default function EditExercise() {
   const { id } = useLocalSearchParams();
@@ -74,9 +75,11 @@ export default function EditExercise() {
   }
 
   return (
-    <EditExerciseForm
-      data={{ ...exerciseRecord, equipments: exerciseEquipments ?? [] }}
-    />
+    <Screen safe={Platform.OS === "android"}>
+      <EditExerciseForm
+        data={{ ...exerciseRecord, equipments: exerciseEquipments ?? [] }}
+      />
+    </Screen>
   );
 }
 

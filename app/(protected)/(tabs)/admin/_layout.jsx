@@ -16,6 +16,8 @@ export default function AdminLayout() {
   return (
     <Stack
       screenOptions={{
+        // Header nativo solo en iOS; Android compensa con safe area en cada pantalla.
+        headerShown: Platform.OS === "ios",
         headerTitleStyle: {
           fontFamily: "Lexend_700Bold",
           color: isDark ? ui.text.mainDark : ui.text.main,
@@ -38,7 +40,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -46,7 +47,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -54,7 +54,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "Ficha del alumno",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -62,7 +61,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "Editar alumno",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -70,7 +68,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -78,7 +75,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -86,7 +82,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -94,7 +89,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -102,7 +96,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -110,7 +103,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -118,7 +110,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -126,7 +117,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       {/* Planes */}
@@ -135,7 +125,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -143,7 +132,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -151,7 +139,6 @@ export default function AdminLayout() {
         options={{
           headerTitle: "",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       {/* Placeholders */}
@@ -160,7 +147,6 @@ export default function AdminLayout() {
         options={{
           title: "Contabilidad",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -168,7 +154,6 @@ export default function AdminLayout() {
         options={{
           title: "Configuración",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
       <Stack.Screen
@@ -176,7 +161,6 @@ export default function AdminLayout() {
         options={{
           title: "Reportes",
           headerBackButtonDisplayMode: "minimal",
-          headerBackVisible: Platform.OS === "ios",
         }}
       />
     </Stack>

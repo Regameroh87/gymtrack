@@ -1,5 +1,5 @@
 ﻿import React, { useEffect } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Platform } from "react-native";
 import { database } from "../../../../../../src/database";
 import { equipment } from "../../../../../../src/database/schemas";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -64,10 +64,13 @@ export default function EditEquipmentScreen() {
   return (
     <KeyboardAwareScrollView
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-      contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
+      contentContainerStyle={{
+        paddingTop: Platform.OS === "android" ? insets.top : 0,
+        paddingBottom: insets.bottom + 40,
+      }}
       showsVerticalScrollIndicator={false}
     >
-      <View className="px-5 pt-6">
+      <View className="px-5">
         <Text className="text-2xl font-jakarta tracking-tighter text-ui-text-main dark:text-ui-text-mainDark mb-1">
           Editar Máquina o Accesorio
         </Text>

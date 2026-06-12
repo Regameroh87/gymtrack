@@ -9,6 +9,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 
 // Librerías externas
@@ -245,13 +246,12 @@ export default function ExercisesList() {
   };
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       <FlatList
         data={filteredExercises}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{
-          paddingTop: 16,
           paddingBottom: insets.bottom + 100,
         }}
         showsVerticalScrollIndicator={false}

@@ -1,5 +1,14 @@
 ﻿// React Native
-import { View, Text, Image, Pressable, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  Alert,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Librerías
 import { useRef } from "react";
@@ -46,6 +55,7 @@ import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 
 export default function RegisterUser() {
   const scrollRef = useRef(null);
+  const insets = useSafeAreaInsets();
   const { role: currentRole } = useUserRole();
   const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
@@ -156,7 +166,11 @@ export default function RegisterUser() {
     <ScrollView
       ref={scrollRef}
       className="flex-1 bg-ui-background-light dark:bg-ui-background-dark"
-      contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+      contentContainerStyle={{
+        paddingHorizontal: 24,
+        paddingTop: Platform.OS === "android" ? insets.top : 0,
+        paddingBottom: 40,
+      }}
       keyboardShouldPersistTaps="handled"
     >
       {/* ── Photo Picker ── */}

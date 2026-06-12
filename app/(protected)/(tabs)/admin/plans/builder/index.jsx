@@ -1,11 +1,12 @@
 ﻿// React Native
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Platform } from "react-native";
 
 // Contexto
 import { usePlanFormContext } from "../../../../../../src/contexts/PlanFormContext";
 
 // Componentes
 import FormTrainingPlan from "../../../../../../src/components/forms/FormTrainingPlan";
+import Screen from "../../../../../../src/components/Screen";
 
 // Tema y assets
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
@@ -22,5 +23,9 @@ export default function PlanBuilder() {
     );
   }
 
-  return <FormTrainingPlan form={form} plan={planId} />;
+  return (
+    <Screen safe={Platform.OS === "android"}>
+      <FormTrainingPlan form={form} plan={planId} />
+    </Screen>
+  );
 }

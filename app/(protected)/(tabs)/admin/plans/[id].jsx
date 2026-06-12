@@ -2,6 +2,7 @@
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -474,13 +475,13 @@ export default function PlanDetail() {
   const accent = OBJECTIVE_ACCENT[plan.objective] ?? brandPrimary[600];
 
   return (
-    <Screen>
+    <Screen safe={Platform.OS === "android"}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <View className="px-5 pt-5 pb-4">
+        <View className="px-5 pb-4">
           <View className="flex-row items-start justify-between mb-1">
             <View className="flex-1 mr-3">
               <Text className="text-2xl font-jakarta text-ui-text-main dark:text-ui-text-mainDark leading-tight">
