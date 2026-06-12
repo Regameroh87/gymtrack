@@ -20,6 +20,7 @@ import sendCodeVerify from "../../src/auth/lib/sendCode.js";
 
 // Componentes
 import Screen from "../../src/components/Screen";
+import DevLoginPanel from "../../src/components/dev-login-panel.jsx";
 
 // Assets
 import { Barbell, Mail, ArrowRight } from "../../assets/icons";
@@ -233,6 +234,10 @@ export default function LoginWeb() {
               Al continuar aceptas nuestros términos de uso y política de
               privacidad.
             </Text>
+
+            <View className="items-center">
+              <DevLoginPanel />
+            </View>
           </View>
         </View>
       </View>

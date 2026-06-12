@@ -8,6 +8,7 @@ import sendCodeVerify from "../../src/auth/lib/sendCode.js";
 import { useMutation } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { useState } from "react";
+import DevLoginPanel from "../../src/components/dev-login-panel.jsx";
 
 export default function Login() {
   const router = useRouter();
@@ -186,6 +187,8 @@ export default function Login() {
             </Text>
           </View>
         </View>
+
+        <DevLoginPanel />
       </View>
     </Screen>
   );

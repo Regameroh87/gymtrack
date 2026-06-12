@@ -8,6 +8,7 @@ import {
   useCallback,
 } from "react";
 import { supabase } from "../../database/supabase.js";
+import { devSignIn } from "./dev-login.js";
 
 // Una sola suscripción onAuthStateChange para toda la app.
 // Expone refreshProfile() para recargar el perfil tras un self-update sin
@@ -67,7 +68,15 @@ export const AuthProvider = ({ children }) => {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        if (session) await applySession(session);
+        if (session) {
+          await applySession(session);
+        } else if (__DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN) {
+          // Auto-login de desarrollo: la sesión resultante llega por el
+          // onAuthStateChange de abajo, no hace falta aplicarla acá.
+          await devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch(
+            (err) => console.error("Dev auto-login:", err.message)
+          );
+        }
       } catch (error) {
         console.error("useAuth: Error al obtener la sesión inicial:", error);
       } finally {
