@@ -5,6 +5,12 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 const AUTH_ERRORS: Record<string, string> = {
   "User already registered": "Este correo ya se encuentra registrado.",
   "email_exists":            "Este correo ya se encuentra registrado.",
@@ -46,7 +52,7 @@ async function rollbackGym(gymId: string) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   let createdUserId: string | null = null
@@ -58,7 +64,7 @@ Deno.serve(async (req) => {
     const jwt = authHeader.replace('Bearer ', '').trim()
     if (!jwt) {
       return new Response(JSON.stringify({ error: 'No autorizado.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       })
     }
@@ -66,7 +72,7 @@ Deno.serve(async (req) => {
     const { data: callerAuth, error: callerAuthError } = await supabaseAdmin.auth.getUser(jwt)
     if (callerAuthError || !callerAuth?.user) {
       return new Response(JSON.stringify({ error: 'Token inválido.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
       })
     }
@@ -79,7 +85,7 @@ Deno.serve(async (req) => {
 
     if (callerProfileError || !callerProfile?.is_super_admin) {
       return new Response(JSON.stringify({ error: 'Solo el super_admin puede crear gyms.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,
       })
     }
@@ -106,7 +112,7 @@ Deno.serve(async (req) => {
 
     if (!gym_name || !gym_slug || !email) {
       return new Response(JSON.stringify({ error: 'gym_name, gym_slug y email son requeridos.' }), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       })
     }
@@ -134,7 +140,7 @@ Deno.serve(async (req) => {
       })
       if (authError) {
         return new Response(JSON.stringify({ error: getErrorMessage(authError) }), {
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
         })
       }
@@ -207,7 +213,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ done: true, gym_id: createdGymId, user_id: ownerUserId, linked_existing: ownerIsExisting }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
 
@@ -215,7 +221,7 @@ Deno.serve(async (req) => {
     const message = error?.message || error?.msg || "Error interno del servidor"
     console.error("Error crítico al crear gym:", message)
     return new Response(JSON.stringify({ error: message }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
   }

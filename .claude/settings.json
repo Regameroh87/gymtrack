@@ -39,7 +39,8 @@
       "PowerShell(node -e \"const p=require\\('@babel/parser'\\);const fs=require\\('fs'\\);for\\(const f of ['src/database/sync.js','src/database/schemas.js','src/database/migrations/migrations.js']\\){p.parse\\(fs.readFileSync\\(f,'utf8'\\),{sourceType:'module',plugins:['jsx']}\\);console.log\\('OK '+f\\)};JSON.parse\\(fs.readFileSync\\('src/database/migrations/meta/_journal.json','utf8'\\)\\);console.log\\('journal OK'\\)\")",
       "PowerShell($content = Get-Content -Raw \"c:\\\\Users\\\\Adminneco\\\\OneDrive\\\\Desktop\\\\gymtrack\\\\supabase\\\\migrations\\\\20260611121000_rls_v2_memberships.sql\" -Encoding UTF8; $content.Length)",
       "PowerShell(node scripts/check-syntax.js \"app/_layout.web.jsx\")",
-      "Bash(curl -s -X POST \"https://claoplxdhdxoixfdsatz.supabase.co/auth/v1/token?grant_type=password\" -H \"apikey: sb_publishable_Zj7L3qxYBvV72mzsPeejJw__-YOnitt\" -H \"Content-Type: application/json\" -d '{\"email\":\"dev-owner@test.com\",\"password\":\"dev123456\"}')"
+      "Bash(curl -s -X POST \"https://claoplxdhdxoixfdsatz.supabase.co/auth/v1/token?grant_type=password\" -H \"apikey: sb_publishable_Zj7L3qxYBvV72mzsPeejJw__-YOnitt\" -H \"Content-Type: application/json\" -d '{\"email\":\"dev-owner@test.com\",\"password\":\"dev123456\"}')",
+      "Bash(curl -s -i -X OPTIONS \"https://claoplxdhdxoixfdsatz.supabase.co/functions/v1/crear-gym\" -H \"Origin: http://localhost:8081\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: authorization, content-type, apikey\")"
     ],
     "defaultMode": "default"
   }

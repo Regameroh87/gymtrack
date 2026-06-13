@@ -5,6 +5,12 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
 const AUTH_ERRORS: Record<string, string> = {
   "User already registered": "Este correo ya se encuentra registrado.",
   "email_exists":            "Este correo ya se encuentra registrado.",
@@ -38,14 +44,14 @@ async function rollbackUser(userId: string) {
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status,
   })
 }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {

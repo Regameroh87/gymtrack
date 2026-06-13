@@ -41,6 +41,7 @@ export function ActiveGymProvider({ children }) {
   const [activeGymId, setActiveGymId] = useState(null);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const lastSyncedGymRef = useRef(null);
+  const prevAuthUserIdRef = useRef(null);
 
   // Memberships activas con el branding del gym embebido (alcanza para el
   // selector sin queries extra).
@@ -81,6 +82,19 @@ export function ActiveGymProvider({ children }) {
       mounted = false;
     };
   }, []);
+
+  // Logout: al perder la sesión se limpia el gym activo (estado + storage) para
+  // que la próxima cuenta arranque sin gym persistido; un owner con >1 gym vuelve
+  // a elegir. Solo en la transición usuario→null: en el arranque con sesión
+  // persistida (prev=null) no toca el storage, así se preserva la elección.
+  useEffect(() => {
+    const prev = prevAuthUserIdRef.current;
+    prevAuthUserIdRef.current = authUserId;
+    if (prev && !authUserId) {
+      setActiveGymId(null);
+      AsyncStorage.removeItem(ACTIVE_GYM_KEY).catch(() => {});
+    }
+  }, [authUserId]);
 
   // Validación contra memberships: un gym persistido en el que ya no se tiene
   // membership se descarta; con una sola membership se auto-selecciona.
