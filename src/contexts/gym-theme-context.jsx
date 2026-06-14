@@ -116,6 +116,7 @@ export function GymThemeProvider({ children }) {
       brandSecondary: theme.brandSecondary,
       gradient: theme.gradient,
       logoUrl: gym?.logo_url ?? null,
+      gymName: gym?.name ?? null,
       source: theme.source,
       isDark,
     }),

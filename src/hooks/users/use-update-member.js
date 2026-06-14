@@ -1,5 +1,6 @@
 // React / libs
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 
 // DB
 import { supabase } from "../../database/supabase";
@@ -20,6 +21,30 @@ export const useUpdateMember = (memberId) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["member_detail", memberId] });
       queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+    },
+  });
+};
+
+// Eliminación permanente del socio del gym (solo owner/super_admin).
+// Si el usuario no tiene otras membresías, elimina también la cuenta completa.
+export const useDeleteMember = ({ gymId, targetUserId }) => {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error, data } = await supabase.functions.invoke("eliminar-socio", {
+        body: { gym_id: gymId, target_user_id: targetUserId },
+      });
+      if (error) {
+        const body = await error.context?.json?.();
+        throw new Error(body?.error ?? "Error al eliminar el socio.");
+      }
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+      router.replace("/admin/users");
     },
   });
 };

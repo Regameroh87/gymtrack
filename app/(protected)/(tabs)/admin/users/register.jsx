@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Librerías
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -56,6 +57,7 @@ import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 export default function RegisterUser() {
   const scrollRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const { role: currentRole } = useUserRole();
   const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
@@ -126,6 +128,7 @@ export default function RegisterUser() {
             : "Usuario registrado exitosamente.",
           position: "bottom",
         });
+        queryClient.invalidateQueries({ queryKey: ["admin_users"] });
         form.reset();
         scrollRef.current?.scrollTo({ y: 0, animated: true });
       } catch (error) {

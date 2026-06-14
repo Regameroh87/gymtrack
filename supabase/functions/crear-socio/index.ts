@@ -128,6 +128,29 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: `El rol '${callerRole}' no puede crear usuarios con rol '${newRole}'.` }, 403)
     }
 
+    // Verificar DNI único dentro del gym (solo si se provee document_number).
+    if (document_number) {
+      const { data: gymMembers } = await supabaseAdmin
+        .from('memberships')
+        .select('user_id')
+        .eq('gym_id', targetGymId)
+        .eq('status', 'active')
+
+      if (gymMembers?.length) {
+        const userIds = gymMembers.map((m: { user_id: string }) => m.user_id)
+        const { data: dniConflict } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('document_number', document_number)
+          .in('user_id', userIds)
+          .maybeSingle()
+
+        if (dniConflict) {
+          return jsonResponse({ error: 'Ya existe un socio con ese número de documento en este gimnasio.' }, 400)
+        }
+      }
+    }
+
     // ¿Ya existe una cuenta con este email? Si existe, en vez de fallar se le
     // agrega una membresía al gym del caller (multi-gym: misma cuenta, varios gyms).
     const { data: existingProfile } = await supabaseAdmin

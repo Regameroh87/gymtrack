@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, Image } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -6,6 +6,7 @@ import { supabase } from "../../database/supabase.js";
 import { useAuth } from "../../auth/lib/getSession";
 import { useUserRole } from "../../hooks/shared/use-user-role";
 import { canAccessModule } from "../../constants/roles";
+import { useGymTheme } from "../../contexts/gym-theme-context";
 
 import {
   Users,
@@ -60,6 +61,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { role } = useUserRole();
+  const { brandPrimary, brandSecondary, logoUrl, gymName } = useGymTheme();
 
   // El Dashboard ("") siempre visible; el resto según permisos del rol.
   const navItems = NAV_ITEMS.filter(
@@ -85,25 +87,33 @@ export default function AdminSidebar() {
     <View className="w-[248px] h-screen bg-[#0C0B14] shrink-0">
       {/* Brand */}
       <LinearGradient
-        colors={["#2518b8", "#0C0B14"]}
+        colors={[brandPrimary[800], "#0C0B14"]}
         style={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: 24 }}
       >
         <View className="flex-row items-center gap-2.5">
-          <LinearGradient
-            colors={["#4a44e4", "#3023cd"]}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 11,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Barbell size={18} color="#fff" />
-          </LinearGradient>
+          {logoUrl ? (
+            <Image
+              source={{ uri: logoUrl }}
+              style={{ width: 38, height: 38, borderRadius: 9 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <LinearGradient
+              colors={[brandPrimary[700], brandPrimary[600]]}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 11,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Barbell size={18} color="#fff" />
+            </LinearGradient>
+          )}
           <View>
             <Text className="text-white text-base font-jakarta-bold tracking-tight">
-              GymTrack
+              {gymName ?? "GymTrack"}
             </Text>
             <Text className="text-white/40 text-[10px] font-manrope tracking-wide">
               Panel de Control
@@ -137,7 +147,7 @@ export default function AdminSidebar() {
               style={{ cursor: disabled ? "default" : "pointer" }}
             >
               {active && (
-                <View className="absolute -left-2 w-[3px] h-[22px] rounded-sm bg-[#2dd4bf]" />
+                <View className="absolute -left-2 w-[3px] h-[22px] rounded-sm bg-brandSecondary-400" />
               )}
 
               <View
@@ -175,8 +185,8 @@ export default function AdminSidebar() {
         <View className="h-px bg-white/5 mx-4 my-4" />
 
         {/* Status card */}
-        <View className="mx-4 mb-3 rounded-xl p-3.5 bg-[#2dd4bf]/[0.07] border border-[#2dd4bf]/10">
-          <Text className="text-[#2dd4bf] text-[11px] font-manrope-semi mb-0.5">
+        <View className="mx-4 mb-3 rounded-xl p-3.5 bg-brandSecondary-400/7 border border-brandSecondary-400/10">
+          <Text className="text-brandSecondary-400 text-[11px] font-manrope-semi mb-0.5">
             Sistema activo
           </Text>
           <Text className="text-white/35 text-[10px] font-manrope leading-[15px]">
@@ -189,7 +199,7 @@ export default function AdminSidebar() {
       <View className="p-3.5 border-t border-white/5">
         <View className="flex-row items-center gap-2.5 mb-2.5">
           <LinearGradient
-            colors={["#4a44e4", "#3023cd"]}
+            colors={[brandPrimary[700], brandPrimary[600]]}
             style={{
               width: 34,
               height: 34,

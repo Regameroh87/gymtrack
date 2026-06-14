@@ -19,14 +19,14 @@ import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { canAccessModule } from "../../../../src/constants/roles";
 
-const STATS = [
+const buildStats = (brandPrimary) => [
   {
     label: "Socios activos",
     value: "—",
     icon: Users,
     dot: "bg-brandPrimary-600",
     bubble: "bg-brandPrimary-50",
-    iconColor: "#3023cd",
+    iconColor: brandPrimary[600],
   },
   {
     label: "Sesiones totales",
@@ -54,13 +54,13 @@ const STATS = [
   },
 ];
 
-const buildModules = (brandSecondary) => [
+const buildModules = (brandPrimary, brandSecondary) => [
   {
     icon: Users,
     label: "Usuarios",
     sub: "Socios y Staff",
     path: "users",
-    color: "#3023cd",
+    color: brandPrimary[600],
     bar: "bg-brandPrimary-600",
     bubble: "bg-brandPrimary-600/10",
   },
@@ -111,12 +111,12 @@ const buildModules = (brandSecondary) => [
   },
 ];
 
-const buildQuickActions = (brandSecondary) => [
+const buildQuickActions = (brandPrimary, brandSecondary) => [
   {
     label: "Registrar socio",
     sub: "Nuevo miembro",
     path: "users/register",
-    color: "#3023cd",
+    color: brandPrimary[600],
     bubble: "bg-brandPrimary-600/10",
     icon: UserPlus,
   },
@@ -154,11 +154,12 @@ const COMING_SOON = [
 export default function AdminDashboardWeb() {
   const router = useRouter();
   const { role } = useUserRole();
-  const { brandSecondary } = useGymTheme();
-  const QUICK_ACTIONS = buildQuickActions(brandSecondary);
+  const { brandPrimary, brandSecondary, gymName } = useGymTheme();
+  const STATS = buildStats(brandPrimary);
+  const QUICK_ACTIONS = buildQuickActions(brandPrimary, brandSecondary);
 
   // Solo los módulos permitidos para el rol (coach no ve Contabilidad).
-  const modules = buildModules(brandSecondary).filter((mod) =>
+  const modules = buildModules(brandPrimary, brandSecondary).filter((mod) =>
     canAccessModule(role, mod.path)
   );
 
@@ -198,7 +199,7 @@ export default function AdminDashboardWeb() {
 
       {/* Welcome Banner */}
       <LinearGradient
-        colors={["#2518b8", "#4a44e4", "#6366f1"]}
+        colors={[brandPrimary[800], brandPrimary[600], brandPrimary[400]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{ borderRadius: 22, padding: 30, marginBottom: 24, overflow: "hidden" }}
@@ -210,7 +211,7 @@ export default function AdminDashboardWeb() {
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-2">
-              <View className="w-1.5 h-1.5 rounded-full bg-[#2dd4bf]" />
+              <View className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400" />
               <Text className="text-xs font-manrope-semi text-white/65 tracking-wide">
                 Bienvenido de vuelta
               </Text>
@@ -242,7 +243,7 @@ export default function AdminDashboardWeb() {
           <View className="ml-8 bg-white/10 rounded-[20px] p-6 items-center justify-center border border-white/10">
             <Barbell size={36} color="rgba(255,255,255,0.9)" />
             <Text className="text-[9px] font-manrope-semi text-white/55 mt-2 tracking-widest uppercase">
-              GymTrack
+              {gymName ?? "GymTrack"}
             </Text>
           </View>
         </View>

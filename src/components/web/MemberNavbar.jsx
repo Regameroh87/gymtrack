@@ -91,9 +91,8 @@ export default function MemberNavbar() {
               }`}
               style={({ hovered, pressed }) => ({
                 cursor: "pointer",
-                backgroundColor: active
-                  ? "rgba(48,35,205,0.08)"
-                  : hovered || pressed
+                backgroundColor:
+                  hovered || pressed
                     ? "rgba(15,13,32,0.04)"
                     : "transparent",
               })}

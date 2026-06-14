@@ -21,12 +21,17 @@ import {
   useAssignPlanToMember,
 } from "../../../../../src/hooks/users/use-assign-plan-to-member";
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
-import { useToggleMemberActive } from "../../../../../src/hooks/users/use-update-member";
+import {
+  useToggleMemberActive,
+  useDeleteMember,
+} from "../../../../../src/hooks/users/use-update-member";
 import {
   ROLE_LABELS,
   isStaffRole,
   canManageMemberData,
+  canDeleteMember,
 } from "../../../../../src/constants/roles";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 import {
@@ -59,14 +64,45 @@ export default function MemberDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { role } = useUserRole();
+  const { gymId } = useActiveGym();
   const { brandPrimary } = useGymTheme();
   const canManage = canManageMemberData(role); // editar / dar de baja (admin+)
+  const canDelete = canDeleteMember(role);     // eliminar permanente (owner+)
   const { data, isLoading, isError } = useMemberDetail(id);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const { data: plans, isLoading: plansLoading } = useAssignablePlans();
   const assignMutation = useAssignPlanToMember(id);
   const toggleActive = useToggleMemberActive(id);
+  const deleteMember = useDeleteMember({
+    gymId,
+    targetUserId: data?.profile?.user_id,
+  });
+
+  const onDeleteMember = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    Alert.alert(
+      "Eliminar socio",
+      `¿Eliminar permanentemente a ${[data?.profile?.name, data?.profile?.last_name].filter(Boolean).join(" ") || "este socio"}? Esta acción no puede deshacerse.`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: () =>
+            deleteMember.mutate(undefined, {
+              onError: (e) =>
+                Toast.show({
+                  type: "error",
+                  text1: "No se pudo eliminar",
+                  text2: e?.message,
+                  position: "bottom",
+                }),
+            }),
+        },
+      ]
+    );
+  };
 
   const onToggleActive = (nextActive) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -340,6 +376,18 @@ export default function MemberDetail() {
                 {profile.is_active ? "Dar de baja" : "Reactivar alumno"}
               </Text>
             </Pressable>
+
+            {canDelete && (
+              <Pressable
+                onPress={onDeleteMember}
+                disabled={deleteMember.isPending}
+                className="flex-row items-center justify-center gap-2 py-3 rounded-2xl bg-red-500 active:opacity-80"
+              >
+                <Text className="text-sm font-jakarta-semi text-white">
+                  Eliminar definitivamente
+                </Text>
+              </Pressable>
+            )}
           </View>
         )}
       </ScrollView>

@@ -54,6 +54,8 @@ export const canAccessModule = (role, path) =>
 //   - admin/owner/super_admin: lo del coach + administrativo (editar datos, baja).
 export const canManageMemberData = (role) => isAdminRole(role);
 export const canManageTraining = (role) => isStaffRole(role);
+export const canDeleteMember = (role) =>
+  [ROLES.SUPER_ADMIN, ROLES.OWNER].includes(role);
 
 // Roles que un rol dado puede asignar al crear/editar usuarios
 // (cada rol solo puede asignar roles estrictamente por debajo del suyo).
