@@ -27,18 +27,26 @@ export const useUpdateMember = (memberId) => {
 
 // Eliminación permanente del socio del gym (solo owner/super_admin).
 // Si el usuario no tiene otras membresías, elimina también la cuenta completa.
-export const useDeleteMember = ({ gymId, targetUserId }) => {
+// Los parámetros se pasan como variables al llamar mutate({ gymId, targetUserId })
+// para garantizar que los valores son frescos al momento de la ejecución.
+export const useDeleteMember = () => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ gymId, targetUserId }) => {
       const { error, data } = await supabase.functions.invoke("eliminar-socio", {
         body: { gym_id: gymId, target_user_id: targetUserId },
       });
       if (error) {
-        const body = await error.context?.json?.();
-        throw new Error(body?.error ?? "Error al eliminar el socio.");
+        let errorMsg = "Error al eliminar el socio.";
+        if (error.context) {
+          try {
+            const body = await error.context.json();
+            if (body?.error) errorMsg = body.error;
+          } catch {}
+        }
+        throw new Error(errorMsg);
       }
       return data;
     },

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
@@ -74,31 +75,35 @@ export default function MemberDetail() {
   const { data: plans, isLoading: plansLoading } = useAssignablePlans();
   const assignMutation = useAssignPlanToMember(id);
   const toggleActive = useToggleMemberActive(id);
-  const deleteMember = useDeleteMember({
-    gymId,
-    targetUserId: data?.profile?.user_id,
-  });
+  const deleteMember = useDeleteMember();
 
   const onDeleteMember = () => {
+    if (!data?.profile?.user_id) return;
+    const name = [data.profile.name, data.profile.last_name]
+      .filter(Boolean)
+      .join(" ");
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert(
       "Eliminar socio",
-      `¿Eliminar permanentemente a ${[data?.profile?.name, data?.profile?.last_name].filter(Boolean).join(" ") || "este socio"}? Esta acción no puede deshacerse.`,
+      `¿Eliminar permanentemente a ${name || "este socio"}? Esta acción no puede deshacerse.`,
       [
         { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
           onPress: () =>
-            deleteMember.mutate(undefined, {
-              onError: (e) =>
-                Toast.show({
-                  type: "error",
-                  text1: "No se pudo eliminar",
-                  text2: e?.message,
-                  position: "bottom",
-                }),
-            }),
+            deleteMember.mutate(
+              { gymId, targetUserId: data.profile.user_id },
+              {
+                onError: (e) =>
+                  Toast.show({
+                    type: "error",
+                    text1: "No se pudo eliminar",
+                    text2: e?.message,
+                    position: "bottom",
+                  }),
+              }
+            ),
         },
       ]
     );
