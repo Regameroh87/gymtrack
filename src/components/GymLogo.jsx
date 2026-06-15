@@ -17,8 +17,10 @@ import { getCloudinaryUrl } from "../utils/cloudinary";
  * el ícono nativo de la app es genérico (build-time, no runtime).
  */
 export default function GymLogo({ size = 32, showName = false, variant = "icon" }) {
-  const { logoUrl, gymName } = useGymTheme();
-  const resolvedLogo = getCloudinaryUrl(logoUrl);
+  const { logoUrl, logoUrlDark, gymName, isDark } = useGymTheme();
+  // En dark mode usa el logo dark si el gym lo cargó; si no, cae al principal.
+  const activeLogo = isDark && logoUrlDark ? logoUrlDark : logoUrl;
+  const resolvedLogo = getCloudinaryUrl(activeLogo);
 
   // Si el gym no tiene nombre, la app se presenta como "GymTrack".
   const name = gymName ?? "GymTrack";

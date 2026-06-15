@@ -2655,6 +2655,10 @@ export function startSyncListener() {
     const isConnected = !!(state.isConnected && state.isInternetReachable);
     if (previouslyConnected === false && isConnected) {
       syncWithSupabase();
+      // Al recuperar conexión, refrescar memberships (única fuente de
+      // gyms.is_active): si el gym activo fue suspendido offline, el contexto
+      // lo detecta al volver datos frescos y fuerza el logout.
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
     }
     previouslyConnected = isConnected;
   });

@@ -125,9 +125,12 @@ function EditGymForm({ gym }) {
   const router = useRouter();
   const { brandPrimary } = useGymTheme();
   const fileInputRef = useRef(null);
+  const fileInputDarkRef = useRef(null);
 
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrlDark, setPreviewUrlDark] = useState(null);
+  const [selectedFileDark, setSelectedFileDark] = useState(null);
   const [notification, setNotification] = useState(null);
   const [slugTouched, setSlugTouched] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -146,6 +149,13 @@ function EditGymForm({ gym }) {
   const currentLogoUrl = useMemo(
     () => getCloudinaryUrl(gym.logo_url) || (gym.logo_url ? `${gym.logo_url}` : null),
     [gym.logo_url]
+  );
+
+  const currentLogoUrlDark = useMemo(
+    () =>
+      getCloudinaryUrl(gym.logo_url_dark) ||
+      (gym.logo_url_dark ? `${gym.logo_url_dark}` : null),
+    [gym.logo_url_dark]
   );
 
   const ownerLabel = gym.owner
@@ -179,10 +189,21 @@ function EditGymForm({ gym }) {
           }
         }
 
+        // Logo dark (opcional): solo se sube si el usuario eligió uno nuevo.
+        let logoUrlDark = gym.logo_url_dark ?? null;
+        if (selectedFileDark) {
+          try {
+            logoUrlDark = await uploadImageWeb(selectedFileDark);
+          } catch {
+            logoUrlDark = gym.logo_url_dark ?? null;
+          }
+        }
+
         await updateGym.mutateAsync({
           name: value.name.trim(),
           slug: value.slug.trim(),
           logo_url: logoUrl,
+          logo_url_dark: logoUrlDark,
           theme_primary: value.theme_primary,
           theme_accent: value.theme_accent,
           address: value.address.trim() || null,
@@ -214,7 +235,15 @@ function EditGymForm({ gym }) {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
+  const handleFileChangeDark = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFileDark(file);
+    setPreviewUrlDark(URL.createObjectURL(file));
+  };
+
   const logoToShow = previewUrl || currentLogoUrl;
+  const logoToShowDark = previewUrlDark || currentLogoUrlDark;
   const canConfirmDelete = confirmSlug.trim() === gym.slug;
 
   const handleDelete = async () => {
@@ -336,6 +365,13 @@ function EditGymForm({ gym }) {
           ref={fileInputRef}
           style={{ display: "none" }}
           onChange={handleFileChange}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputDarkRef}
+          style={{ display: "none" }}
+          onChange={handleFileChangeDark}
         />
 
         {/* ── Sección 1 · Datos del gimnasio ── */}
@@ -518,8 +554,9 @@ function EditGymForm({ gym }) {
           subtitle="Logo y colores que ven los miembros del gym"
         />
         <View className="gap-y-5">
-          {/* Logo picker */}
-          <View className="items-center">
+          {/* Logo picker: claro (principal) + oscuro (opcional) */}
+          <View className="flex-row gap-8 justify-center">
+            {/* Logo principal (light) */}
             <Pressable
               onPress={() => fileInputRef.current?.click()}
               className="items-center gap-3 hover:opacity-80"
@@ -544,10 +581,54 @@ function EditGymForm({ gym }) {
               </View>
               <View className="items-center">
                 <Text className="text-[13px] font-manrope-bold text-ui-text-main">
-                  Logo del gimnasio
+                  Logo principal
                 </Text>
                 <Text className="text-[11px] font-manrope text-ui-text-muted">
-                  Hacé clic para cambiar la imagen
+                  Se usa en modo claro
+                </Text>
+              </View>
+            </Pressable>
+
+            {/* Logo oscuro (opcional). Thumbnail sobre fondo oscuro. */}
+            <Pressable
+              onPress={() => fileInputDarkRef.current?.click()}
+              className="items-center gap-3 hover:opacity-80"
+              style={{ cursor: "pointer" }}
+            >
+              <View className="relative">
+                {logoToShowDark ? (
+                  <View
+                    className="w-[88px] h-[88px] rounded-[22px] items-center justify-center overflow-hidden"
+                    style={{ backgroundColor: ui.background.dark }}
+                  >
+                    <Image
+                      source={{ uri: logoToShowDark }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </View>
+                ) : (
+                  <View
+                    className="w-[88px] h-[88px] rounded-[22px] items-center justify-center border-2 border-dashed"
+                    style={{
+                      backgroundColor: ui.background.dark,
+                      borderColor: "rgba(255,255,255,0.18)",
+                    }}
+                  >
+                    <Polaroid size={30} color="rgba(255,255,255,0.55)" />
+                  </View>
+                )}
+                <View className="absolute bottom-0 right-0 bg-brandPrimary-600 p-2 rounded-full border-2 border-white shadow-sm">
+                  <CameraPlus size={13} color="white" />
+                </View>
+              </View>
+              <View className="items-center">
+                <Text className="text-[13px] font-manrope-bold text-ui-text-main">
+                  Logo modo oscuro
+                </Text>
+                <Text className="text-[11px] font-manrope text-ui-text-muted">
+                  Opcional · cae al principal
                 </Text>
               </View>
             </Pressable>
@@ -613,6 +694,7 @@ function EditGymForm({ gym }) {
             {({ name, primary, size, position, showTitle }) => (
               <HeaderPreview
                 logoUri={logoToShow}
+                logoUriDark={logoToShowDark}
                 name={name}
                 primaryColor={HEX_RE.test(primary) ? primary : DEFAULT_PRIMARY}
                 size={size}

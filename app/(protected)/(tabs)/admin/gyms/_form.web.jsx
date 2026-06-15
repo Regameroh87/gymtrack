@@ -192,26 +192,12 @@ export function Toggle({ label, hint, value, onChange }) {
   );
 }
 
-// Maqueta del header del celular. Presentacional puro: recibe los valores del
-// form (no usa useGymTheme/GymLogo, porque el gym editado puede no ser el
-// activo). Replica las reglas del wordmark: logo contain → nombre → "GYMTRACK".
-export function HeaderPreview({
-  logoUri,
-  name,
-  primaryColor,
-  size = "md",
-  position = "left",
-  showTitle = false,
-}) {
-  const px = HEADER_LOGO_PX[size] ?? HEADER_LOGO_PX.md;
-  const logoWidth = Math.min(px * 4, 200);
-  const centered = position === "center";
-
+// Una barra de header (claro u oscuro). Replica las reglas del wordmark:
+// logo contain → nombre → "GYMTRACK".
+function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, centered, showTitle }) {
+  const textColor = dark ? ui.text.mainDark : ui.text.main;
   const logoNode = logoUri ? (
-    <View
-      className="flex-row items-center"
-      style={{ gap: 10 }}
-    >
+    <View className="flex-row items-center" style={{ gap: 10 }}>
       <Image
         source={{ uri: logoUri }}
         style={{ height: px, width: logoWidth }}
@@ -220,8 +206,8 @@ export function HeaderPreview({
       />
       {showTitle && name ? (
         <Text
-          className="font-jakarta-bold text-ui-text-main capitalize"
-          style={{ fontSize: px * 0.45 }}
+          className="font-jakarta-bold capitalize"
+          style={{ fontSize: px * 0.45, color: textColor }}
           numberOfLines={1}
         >
           {name}
@@ -230,8 +216,8 @@ export function HeaderPreview({
     </View>
   ) : (
     <Text
-      className="font-jakarta-bold text-ui-text-main"
-      style={{ fontSize: px * 0.5 }}
+      className="font-jakarta-bold"
+      style={{ fontSize: px * 0.5, color: textColor }}
       numberOfLines={1}
     >
       {name || "GYMTRACK"}
@@ -239,15 +225,21 @@ export function HeaderPreview({
   );
 
   return (
-    <View className="gap-y-1.5">
-      <Text className="text-[10px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase">
-        VISTA PREVIA DEL HEADER
+    <View className="flex-1 gap-y-1">
+      <Text className="text-[9px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase">
+        {label}
       </Text>
-      <View className="rounded-2xl border border-ui-input-border overflow-hidden bg-white">
-        {/* Barra del header */}
+      <View
+        className="rounded-2xl border border-ui-input-border overflow-hidden"
+        style={{ backgroundColor: dark ? ui.background.dark : "#ffffff" }}
+      >
         <View
-          className="flex-row items-center justify-between px-4 border-b border-ui-input-light"
-          style={{ height: 64 }}
+          className="flex-row items-center justify-between px-4"
+          style={{
+            height: 64,
+            borderBottomWidth: 1,
+            borderBottomColor: dark ? "rgba(255,255,255,0.08)" : ui.input.light,
+          }}
         >
           <View className={`flex-1 ${centered ? "items-center" : "items-start"}`}>
             {logoNode}
@@ -264,10 +256,51 @@ export function HeaderPreview({
           </View>
         </View>
         {/* Cuerpo simulado */}
-        <View className="px-4 py-3 gap-y-2 bg-ui-background-light">
-          <View className="w-1/3 h-2 rounded-full bg-ui-input-border" />
-          <View className="w-2/3 h-2 rounded-full bg-ui-input-light" />
+        <View className="px-4 py-3 gap-y-2">
+          <View
+            className="w-1/3 h-2 rounded-full"
+            style={{ backgroundColor: dark ? "rgba(255,255,255,0.14)" : ui.input.border }}
+          />
+          <View
+            className="w-2/3 h-2 rounded-full"
+            style={{ backgroundColor: dark ? "rgba(255,255,255,0.07)" : ui.input.light }}
+          />
         </View>
+      </View>
+    </View>
+  );
+}
+
+// Maqueta del header del celular en claro y oscuro a la vez. Presentacional
+// puro: recibe los valores del form (no usa useGymTheme/GymLogo, porque el gym
+// editado puede no ser el activo). El logo oscuro cae al principal si no hay.
+export function HeaderPreview({
+  logoUri,
+  logoUriDark,
+  name,
+  primaryColor,
+  size = "md",
+  position = "left",
+  showTitle = false,
+}) {
+  const px = HEADER_LOGO_PX[size] ?? HEADER_LOGO_PX.md;
+  const logoWidth = Math.min(px * 4, 200);
+  const centered = position === "center";
+  const shared = { name, primaryColor, px, logoWidth, centered, showTitle };
+
+  return (
+    <View className="gap-y-1.5">
+      <Text className="text-[10px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase">
+        VISTA PREVIA DEL HEADER
+      </Text>
+      <View className="flex-row gap-3">
+        <PreviewBar label="Claro" dark={false} logoUri={logoUri} {...shared} />
+        <PreviewBar
+          label="Oscuro"
+          dark
+          logoUri={logoUriDark || logoUri}
+          {...shared}
+        />
       </View>
     </View>
   );

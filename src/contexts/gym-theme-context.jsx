@@ -116,6 +116,7 @@ export function GymThemeProvider({ children }) {
       brandSecondary: theme.brandSecondary,
       gradient: theme.gradient,
       logoUrl: gym?.logo_url ?? null,
+      logoUrlDark: gym?.logo_url_dark ?? null,
       gymName: gym?.name ?? null,
       // Config del header del home, editable por el superAdmin. Defaults
       // seguros mientras el gym resuelve (= comportamiento actual).

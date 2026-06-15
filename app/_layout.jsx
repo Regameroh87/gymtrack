@@ -88,6 +88,11 @@ export default function RootLayout() {
         nextState === "active"
       ) {
         checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
+        // Refresca las memberships (única fuente de gyms.is_active): si el gym
+        // activo fue suspendido mientras la app estaba en background, el contexto
+        // lo detecta y fuerza el logout. invalidateQueries refetchea aunque el
+        // staleTime no haya vencido.
+        queryClient.invalidateQueries({ queryKey: ["memberships"] });
       }
       appState.current = nextState;
     });

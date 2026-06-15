@@ -49,6 +49,11 @@ export function ActiveGymProvider({ children }) {
     queryKey: ["memberships", authUserId],
     enabled: !!authUserId,
     staleTime: 1000 * 60 * 5,
+    // Red de seguridad para detectar una suspensión del gym aunque la app quede
+    // abierta en foreground sin backgroundear ni perder red. Es una query mínima
+    // (memberships del usuario); no corre en background.
+    refetchInterval: 1000 * 60 * 2,
+    refetchIntervalInBackground: false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("memberships")
