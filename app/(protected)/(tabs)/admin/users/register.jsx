@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { z } from "zod";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -57,6 +58,7 @@ import { PROFILE_GENDERS } from "../../../../../src/constants/gender-options";
 export default function RegisterUser() {
   const scrollRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { role: currentRole } = useUserRole();
   const { gymId } = useActiveGym();
@@ -130,7 +132,7 @@ export default function RegisterUser() {
         });
         queryClient.invalidateQueries({ queryKey: ["admin_users"] });
         form.reset();
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        router.replace("/admin/users");
       } catch (error) {
         console.error(error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
