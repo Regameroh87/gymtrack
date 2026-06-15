@@ -5,6 +5,9 @@ import { View, Text, Pressable } from "react-native";
 // ── Expo ──
 import { useRouter } from "expo-router";
 
+// ── Components ──
+import GymLogo from "./GymLogo";
+
 // ── Assets ──
 import { ChevronRight } from "../../assets/icons";
 
@@ -24,9 +27,12 @@ const AdminHeader = ({ title, subtitle, showBack = false }) => {
         </Pressable>
       )}
 
-      <View className="flex-row items-center gap-2 mb-4">
-        <View className="bg-brandSecondary-400 w-7 h-1 rounded-sm" />
-        <View className="bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40 w-2.5 h-1 rounded-sm" />
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center gap-2">
+          <View className="bg-brandSecondary-400 w-7 h-1 rounded-sm" />
+          <View className="bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40 w-2.5 h-1 rounded-sm" />
+        </View>
+        <GymLogo size={30} />
       </View>
 
       {subtitle && (
