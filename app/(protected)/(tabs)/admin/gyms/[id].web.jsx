@@ -19,6 +19,7 @@ import { z } from "zod";
 import { supabase } from "../../../../../src/database/supabase";
 import { useUpdateGym } from "../../../../../src/hooks/gyms/use-update-gym";
 import { useDeleteGym } from "../../../../../src/hooks/gyms/use-delete-gym";
+import { useToggleGymActive } from "../../../../../src/hooks/gyms/use-toggle-gym-active";
 
 // Utils / tema
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
@@ -49,6 +50,7 @@ import {
   CheckCircle,
   CameraPlus,
   ShieldHalf,
+  Lock,
   Trash,
   X,
 } from "../../../../../assets/icons";
@@ -127,9 +129,11 @@ function EditGymForm({ gym }) {
   const [slugTouched, setSlugTouched] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmSlug, setConfirmSlug] = useState("");
+  const [suspendOpen, setSuspendOpen] = useState(false);
 
   const updateGym = useUpdateGym(gym.id);
   const deleteGym = useDeleteGym();
+  const toggleActive = useToggleGymActive(gym.id);
 
   const notify = (type, message) => {
     setNotification({ type, message });
@@ -214,6 +218,23 @@ function EditGymForm({ gym }) {
     }
   };
 
+  // Suspender es reversible: reactivar va directo, suspender pide confirmación
+  // (corta el acceso de todos los miembros, incluido el dueño).
+  const handleToggleActive = async () => {
+    const next = !gym.is_active;
+    try {
+      await toggleActive.mutateAsync(next);
+      setSuspendOpen(false);
+      notify(
+        "success",
+        next ? "Gimnasio reactivado." : "Gimnasio suspendido."
+      );
+    } catch (err) {
+      setSuspendOpen(false);
+      notify("error", err.message || "No se pudo actualizar el estado.");
+    }
+  };
+
   return (
     <ScrollView
       className="flex-1"
@@ -280,6 +301,20 @@ function EditGymForm({ gym }) {
           Editá la identidad, contacto y tema del gimnasio
         </Text>
       </View>
+
+      {/* Aviso de suspensión */}
+      {!gym.is_active && (
+        <View
+          className="flex-row items-center gap-2.5 p-3.5 rounded-xl mb-6 border bg-amber-50 border-amber-200 self-center w-full"
+          style={{ maxWidth: 680 }}
+        >
+          <Lock size={16} color="#b45309" />
+          <Text className="flex-1 text-sm font-manrope-semi text-amber-700">
+            Gimnasio suspendido. Sus miembros —incluido el dueño— no pueden
+            acceder a la app hasta reactivarlo.
+          </Text>
+        </View>
+      )}
 
       {/* Card */}
       <View
@@ -576,6 +611,53 @@ function EditGymForm({ gym }) {
         </View>
       </View>
 
+      {/* ── Suspensión (reversible) ── */}
+      <View
+        className="bg-amber-50/60 rounded-[20px] border border-amber-200 p-6 self-center w-full mt-6"
+        style={{ maxWidth: 680 }}
+      >
+        <View className="flex-row items-center justify-between gap-4">
+          <View className="flex-1">
+            <Text className="text-[14px] font-jakarta-bold text-amber-700 tracking-tight">
+              {gym.is_active ? "Suspender gimnasio" : "Reactivar gimnasio"}
+            </Text>
+            <Text className="text-[11px] font-manrope text-amber-700/80 mt-1">
+              {gym.is_active
+                ? "Corta el acceso de todos los miembros (incluido el dueño) sin borrar nada. Los datos se conservan y se restablecen al reactivar."
+                : "Restablece el acceso de todos los miembros. Los datos siguen intactos."}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              // Reactivar es seguro: va directo. Suspender pide confirmación.
+              if (gym.is_active) {
+                setSuspendOpen(true);
+              } else {
+                handleToggleActive();
+              }
+            }}
+            disabled={toggleActive.isPending}
+            className={`flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] shadow-md ${
+              gym.is_active
+                ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30"
+                : "bg-brandSecondary-600 hover:bg-brandSecondary-700 shadow-brandSecondary-600/30"
+            }`}
+            style={{ cursor: toggleActive.isPending ? "default" : "pointer" }}
+          >
+            {toggleActive.isPending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : gym.is_active ? (
+              <Lock size={15} color="#fff" />
+            ) : (
+              <CheckCircle size={15} color="#fff" />
+            )}
+            <Text className="text-[13px] font-manrope-bold text-white">
+              {gym.is_active ? "Suspender" : "Reactivar"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
       {/* ── Danger zone ── */}
       <View
         className="bg-red-50/60 rounded-[20px] border border-red-200 p-6 self-center w-full mt-6"
@@ -684,6 +766,73 @@ function EditGymForm({ gym }) {
                 )}
                 <Text className="text-[13px] font-manrope-bold text-white">
                   {deleteGym.isPending ? "Eliminando..." : "Eliminar"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de confirmación de suspensión */}
+      <Modal
+        visible={suspendOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSuspendOpen(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center p-6"
+          style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
+        >
+          <View
+            className="bg-white rounded-[20px] border border-ui-input-border p-7 w-full"
+            style={{ maxWidth: 460 }}
+          >
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 rounded-xl bg-amber-50 items-center justify-center">
+                <Lock size={18} color="#b45309" />
+              </View>
+              <Text className="text-[17px] font-jakarta-bold text-ui-text-main tracking-tight">
+                Suspender “{gym.name}”
+              </Text>
+            </View>
+
+            <Text className="text-[12px] font-manrope text-ui-text-muted leading-5 mb-5">
+              Todos los miembros del gimnasio —incluido el dueño— quedarán sin
+              acceso a la app y se cerrará su sesión. No se borra ningún dato:
+              podés reactivarlo cuando quieras y todo vuelve a estar disponible.
+            </Text>
+
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setSuspendOpen(false)}
+                disabled={toggleActive.isPending}
+                className="flex-1 items-center py-2.5 rounded-[11px] border border-ui-input-border bg-white hover:bg-ui-background-light"
+                style={{ cursor: "pointer" }}
+              >
+                <Text className="text-[13px] font-manrope-semi text-ui-text-main">
+                  Cancelar
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleToggleActive}
+                disabled={toggleActive.isPending}
+                className={`flex-1 flex-row items-center justify-center gap-2 py-2.5 rounded-[11px] ${
+                  toggleActive.isPending
+                    ? "bg-amber-300"
+                    : "bg-amber-500 hover:bg-amber-600"
+                }`}
+                style={{
+                  cursor: toggleActive.isPending ? "default" : "pointer",
+                }}
+              >
+                {toggleActive.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Lock size={14} color="#fff" />
+                )}
+                <Text className="text-[13px] font-manrope-bold text-white">
+                  {toggleActive.isPending ? "Suspendiendo..." : "Suspender"}
                 </Text>
               </Pressable>
             </View>

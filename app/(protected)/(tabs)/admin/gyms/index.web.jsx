@@ -271,12 +271,17 @@ function GymCard({ gym, router }) {
     ? `${gym.owner.name || ""} ${gym.owner.last_name || ""}`.trim() ||
       gym.owner.email
     : "Sin dueño asignado";
+  const suspended = gym.is_active === false;
 
   return (
     <Pressable
       onPress={() => router.push(`/admin/gyms/${gym.id}`)}
       className="bg-white rounded-[16px] border border-ui-input-border overflow-hidden hover:border-brandPrimary-300"
-      style={{ width: "calc(33.333% - 9.34px)", cursor: "pointer" }}
+      style={{
+        width: "calc(33.333% - 9.34px)",
+        cursor: "pointer",
+        opacity: suspended ? 0.55 : 1,
+      }}
     >
       <View className="p-4 flex-row items-center gap-3">
         {logoUrl ? (
@@ -293,12 +298,22 @@ function GymCard({ gym, router }) {
         )}
 
         <View className="flex-1">
-          <Text
-            className="text-[14px] font-jakarta-bold text-ui-text-main tracking-tight"
-            numberOfLines={1}
-          >
-            {gym.name}
-          </Text>
+          <View className="flex-row items-center gap-1.5">
+            <Text
+              className="text-[14px] font-jakarta-bold text-ui-text-main tracking-tight"
+              numberOfLines={1}
+              style={{ flexShrink: 1 }}
+            >
+              {gym.name}
+            </Text>
+            {suspended && (
+              <View className="px-1.5 py-0.5 rounded-md bg-amber-100 border border-amber-200">
+                <Text className="text-[9px] font-manrope-bold text-amber-700 tracking-wide uppercase">
+                  Suspendido
+                </Text>
+              </View>
+            )}
+          </View>
           <Text
             className="text-[11px] font-manrope text-ui-text-muted"
             numberOfLines={1}

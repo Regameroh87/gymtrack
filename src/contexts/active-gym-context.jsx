@@ -53,7 +53,7 @@ export function ActiveGymProvider({ children }) {
       const { data, error } = await supabase
         .from("memberships")
         .select(
-          "id, gym_id, role, status, gyms ( id, name, logo_url, theme_primary, theme_accent )"
+          "id, gym_id, role, status, gyms ( id, name, logo_url, theme_primary, theme_accent, is_active )"
         )
         .eq("user_id", authUserId)
         .eq("status", "active");
@@ -66,6 +66,18 @@ export function ActiveGymProvider({ children }) {
   });
 
   const memberships = membershipsQuery.data ?? null;
+
+  // Un gym suspendido (gyms.is_active=false) se trata como si la persona ya no
+  // tuviera acceso a él: las RLS ya cortan sus datos en el servidor; acá lo
+  // sacamos del selector y de la validación del gym activo. La membership sigue
+  // 'active' (no se toca), pero el gym no es "usable".
+  const usableMemberships = useMemo(
+    () =>
+      memberships
+        ? memberships.filter((m) => m.gyms?.is_active !== false)
+        : null,
+    [memberships]
+  );
 
   // Hidratación temprana del gym persistido (antes de que resuelvan las queries).
   useEffect(() => {
@@ -96,26 +108,39 @@ export function ActiveGymProvider({ children }) {
     }
   }, [authUserId]);
 
-  // Validación contra memberships: un gym persistido en el que ya no se tiene
-  // membership se descarta; con una sola membership se auto-selecciona.
+  // Validación contra memberships usables: un gym persistido en el que ya no se
+  // tiene membership —o que fue suspendido— se descarta; con una sola membership
+  // usable se auto-selecciona.
   useEffect(() => {
-    if (!storageLoaded || !memberships) return;
+    if (!storageLoaded || !usableMemberships) return;
 
     const isValid = (gymId) =>
-      !!gymId && memberships.some((m) => m.gym_id === gymId);
+      !!gymId && usableMemberships.some((m) => m.gym_id === gymId);
 
     if (isValid(activeGymId)) return;
 
-    if (memberships.length === 1) {
-      const only = memberships[0].gym_id;
+    if (usableMemberships.length === 1) {
+      const only = usableMemberships[0].gym_id;
       setActiveGymId(only);
       AsyncStorage.setItem(ACTIVE_GYM_KEY, only).catch(() => {});
     } else if (activeGymId) {
-      // Quedó huérfano (lo sacaron del gym o cambió de cuenta): forzar selección.
+      // Quedó huérfano (lo sacaron del gym, cambió de cuenta o el gym fue
+      // suspendido): forzar selección del resto.
       setActiveGymId(null);
       AsyncStorage.removeItem(ACTIVE_GYM_KEY).catch(() => {});
     }
-  }, [storageLoaded, memberships, activeGymId]);
+  }, [storageLoaded, usableMemberships, activeGymId]);
+
+  // Suspensión del gimnasio: si la persona tenía memberships pero ninguna quedó
+  // usable (su único gym fue suspendido, o todos), se cierra la sesión. Si le
+  // quedan otros gyms activos, el efecto de validación de arriba la reubica sin
+  // desloguear.
+  useEffect(() => {
+    if (!isLoggedIn || !memberships || !usableMemberships) return;
+    if (memberships.length > 0 && usableMemberships.length === 0) {
+      supabase.auth.signOut().catch(() => {});
+    }
+  }, [isLoggedIn, memberships, usableMemberships]);
 
   // El sync local solo conoce el gym activo. Cuando éste queda definido (arranque
   // o auto-selección) se dispara un sync; el guard interno purga y re-puebla si
@@ -134,7 +159,7 @@ export function ActiveGymProvider({ children }) {
   const switchGym = useCallback(
     async (gymId) => {
       if (gymId === activeGymId) return;
-      const target = memberships?.find((m) => m.gym_id === gymId);
+      const target = usableMemberships?.find((m) => m.gym_id === gymId);
       if (!target) {
         throw new Error("No tenés membresía activa en ese gimnasio.");
       }
@@ -152,18 +177,18 @@ export function ActiveGymProvider({ children }) {
       // Todo lo cacheado pertenece al gym anterior.
       queryClient.invalidateQueries();
     },
-    [activeGymId, memberships]
+    [activeGymId, usableMemberships]
   );
 
   const activeMembership = useMemo(
-    () => memberships?.find((m) => m.gym_id === activeGymId) ?? null,
-    [memberships, activeGymId]
+    () => usableMemberships?.find((m) => m.gym_id === activeGymId) ?? null,
+    [usableMemberships, activeGymId]
   );
 
   const needsSelection =
     isLoggedIn &&
-    !!memberships &&
-    memberships.length > 1 &&
+    !!usableMemberships &&
+    usableMemberships.length > 1 &&
     !activeMembership;
 
   const value = useMemo(
@@ -175,7 +200,7 @@ export function ActiveGymProvider({ children }) {
         ? "super_admin"
         : (activeMembership?.role ?? null),
       gym: activeMembership?.gyms ?? null,
-      memberships: memberships ?? [],
+      memberships: usableMemberships ?? [],
       needsSelection,
       switchGym,
       loading:
@@ -185,7 +210,7 @@ export function ActiveGymProvider({ children }) {
     }),
     [
       activeMembership,
-      memberships,
+      usableMemberships,
       needsSelection,
       switchGym,
       user,

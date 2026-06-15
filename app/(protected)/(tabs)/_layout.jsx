@@ -51,7 +51,7 @@ export default function TabsLayout() {
           headerTitle: () => null,
           headerLeft: () => (
             <View className="ml-4">
-              <GymLogo size={28} variant="wordmark" />
+              <GymLogo size={40} variant="wordmark" />
             </View>
           ),
           tabBarLabel: "Inicio",

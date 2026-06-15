@@ -38,7 +38,7 @@ export default function GymLogo({ size = 32, showName = false, variant = "icon" 
       return (
         <Image
           source={{ uri: resolvedLogo }}
-          style={{ height: size, width: 150 }}
+          style={{ height: size, width: 190 }}
           contentFit="contain"
           contentPosition="left"
           transition={150}
