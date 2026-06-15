@@ -82,31 +82,35 @@ export default function MemberDetail() {
     const name = [data.profile.name, data.profile.last_name]
       .filter(Boolean)
       .join(" ");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert(
-      "Eliminar socio",
-      `¿Eliminar permanentemente a ${name || "este socio"}? Esta acción no puede deshacerse.`,
-      [
-        { text: "Cancelar", style: "cancel" },
+    const message = `¿Eliminar permanentemente a ${
+      name || "este socio"
+    }? Esta acción no puede deshacerse.`;
+
+    const doDelete = () =>
+      deleteMember.mutate(
+        { gymId, targetUserId: data.profile.user_id },
         {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () =>
-            deleteMember.mutate(
-              { gymId, targetUserId: data.profile.user_id },
-              {
-                onError: (e) =>
-                  Toast.show({
-                    type: "error",
-                    text1: "No se pudo eliminar",
-                    text2: e?.message,
-                    position: "bottom",
-                  }),
-              }
-            ),
-        },
-      ]
-    );
+          onError: (e) =>
+            Toast.show({
+              type: "error",
+              text1: "No se pudo eliminar",
+              text2: e?.message,
+              position: "bottom",
+            }),
+        }
+      );
+
+    // RN Web no soporta Alert.alert con botones: usar el confirm del browser.
+    if (Platform.OS === "web") {
+      if (window.confirm(message)) doDelete();
+      return;
+    }
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    Alert.alert("Eliminar socio", message, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Eliminar", style: "destructive", onPress: doDelete },
+    ]);
   };
 
   const onToggleActive = (nextActive) => {
