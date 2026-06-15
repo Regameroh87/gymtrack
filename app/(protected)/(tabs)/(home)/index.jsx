@@ -95,7 +95,7 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── HEADER editorial ── */}
-        <View className=" px-5 mb-7">
+        <View className=" px-5 pt-4 mb-7">
           {/* Ticks */}
           <View className="flex-row items-center gap-2 mb-4">
             <View className="bg-brandSecondary-400 w-7 h-1 rounded-sm" />

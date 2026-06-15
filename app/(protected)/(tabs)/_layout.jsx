@@ -7,11 +7,23 @@ import { ui } from "../../../src/theme/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import GymLogo from "../../../src/components/GymLogo";
 
+// Tokens de tamaño del logo del header → px (alturas seguras para un header
+// de ~56). Configurable por gym desde el panel de superAdmin.
+const HEADER_LOGO_PX = { sm: 30, md: 40, lg: 48 };
+
 export default function TabsLayout() {
   const { isStaff } = useUserRole();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { brandPrimary } = useGymTheme();
+  const { brandPrimary, headerConfig } = useGymTheme();
+
+  const { logoSize, logoPosition, showTitle } = headerConfig;
+  const logoPx = HEADER_LOGO_PX[logoSize] ?? HEADER_LOGO_PX.md;
+  const isCentered = logoPosition === "center";
+
+  const HomeLogo = () => (
+    <GymLogo variant="wordmark" size={logoPx} showName={showTitle} />
+  );
 
   return (
     <Tabs
@@ -48,12 +60,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="(home)/index"
         options={{
-          headerTitle: () => null,
-          headerLeft: () => (
-            <View className="ml-4">
-              <GymLogo size={40} variant="wordmark" />
-            </View>
-          ),
+          // Posición configurable: izquierda (headerLeft) o centro
+          // (headerTitle). El centro evita el bug de Android porque el wordmark
+          // tiene ancho intrínseco acotado.
+          headerTitle: isCentered ? () => <HomeLogo /> : () => null,
+          headerLeft: isCentered
+            ? undefined
+            : () => (
+                <View className="ml-4">
+                  <HomeLogo />
+                </View>
+              ),
           tabBarLabel: "Inicio",
           tabBarIcon: ({ color }) => (
             <Home color={color} width={24} height={24} />

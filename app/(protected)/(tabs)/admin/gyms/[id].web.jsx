@@ -32,6 +32,9 @@ import {
   Input,
   ColorField,
   SectionTitle,
+  Segmented,
+  Toggle,
+  HeaderPreview,
   slugify,
   uploadImageWeb,
   HEX_RE,
@@ -160,6 +163,9 @@ function EditGymForm({ gym }) {
       phone: gym.phone ?? "",
       email: gym.email ?? "",
       instagram: gym.instagram ?? "",
+      header_logo_size: gym.header_logo_size ?? "md",
+      header_logo_position: gym.header_logo_position ?? "left",
+      header_show_title: gym.header_show_title ?? false,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -183,6 +189,9 @@ function EditGymForm({ gym }) {
           phone: value.phone.trim() || null,
           email: value.email.trim() || null,
           instagram: value.instagram.trim() || null,
+          header_logo_size: value.header_logo_size,
+          header_logo_position: value.header_logo_position,
+          header_show_title: value.header_show_title,
         });
 
         notify("success", "Gimnasio actualizado correctamente.");
@@ -581,6 +590,82 @@ function EditGymForm({ gym }) {
               </form.Field>
             </View>
           </View>
+
+          {/* ── Header del home: tamaño / posición / título + preview ── */}
+          <View className="w-full h-px bg-ui-input-light my-1" />
+          <Text className="text-[12px] font-jakarta-bold text-ui-text-main tracking-tight">
+            Header del home
+          </Text>
+          <Text className="text-[11px] font-manrope text-ui-text-muted -mt-3">
+            Cómo se ve el logo en la barra superior de la app de los miembros.
+          </Text>
+
+          {/* Preview en vivo: se suscribe a logo + nombre + color + los 3 campos */}
+          <form.Subscribe
+            selector={(s) => ({
+              name: s.values.name,
+              primary: s.values.theme_primary,
+              size: s.values.header_logo_size,
+              position: s.values.header_logo_position,
+              showTitle: s.values.header_show_title,
+            })}
+          >
+            {({ name, primary, size, position, showTitle }) => (
+              <HeaderPreview
+                logoUri={logoToShow}
+                name={name}
+                primaryColor={HEX_RE.test(primary) ? primary : DEFAULT_PRIMARY}
+                size={size}
+                position={position}
+                showTitle={showTitle}
+              />
+            )}
+          </form.Subscribe>
+
+          <View className="flex-row gap-4">
+            <View className="flex-1">
+              <form.Field name="header_logo_size">
+                {(field) => (
+                  <Segmented
+                    label="TAMAÑO DEL LOGO"
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    options={[
+                      { value: "sm", label: "Chico" },
+                      { value: "md", label: "Medio" },
+                      { value: "lg", label: "Grande" },
+                    ]}
+                  />
+                )}
+              </form.Field>
+            </View>
+            <View className="flex-1">
+              <form.Field name="header_logo_position">
+                {(field) => (
+                  <Segmented
+                    label="POSICIÓN"
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    options={[
+                      { value: "left", label: "Izquierda" },
+                      { value: "center", label: "Centro" },
+                    ]}
+                  />
+                )}
+              </form.Field>
+            </View>
+          </View>
+
+          <form.Field name="header_show_title">
+            {(field) => (
+              <Toggle
+                label="Mostrar el nombre del gym"
+                hint="Útil si el logo es solo un ícono, sin el nombre."
+                value={field.state.value}
+                onChange={field.handleChange}
+              />
+            )}
+          </form.Field>
         </View>
 
         {/* Submit */}

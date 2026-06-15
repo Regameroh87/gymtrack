@@ -30,26 +30,45 @@ export default function GymLogo({ size = 32, showName = false, variant = "icon" 
     .toUpperCase();
 
   // ── Variante wordmark: el logo funciona como título vectorizado ──
-  // La mayoría de los gyms tienen logos que ya incluyen su nombre, así que
-  // se muestra la imagen sin texto al lado ni fondo cuadrado. Cascada de
-  // fallback: logo → nombre del gym → "GYMTRACK".
+  // La mayoría de los gyms tienen logos que ya incluyen su nombre. Cascada de
+  // fallback: logo → nombre del gym → "GYMTRACK". Con showName, el nombre del
+  // gym acompaña al logo (cuando el logo es solo un ícono sin texto).
   if (variant === "wordmark") {
+    // Ancho acotado relativo al alto, para que en posición centro no choque
+    // con el headerRight (toggle de tema).
+    const logoWidth = Math.min(size * 4, 200);
+
     if (resolvedLogo) {
-      return (
+      const image = (
         <Image
           source={{ uri: resolvedLogo }}
-          style={{ height: size, width: 190 }}
+          style={{ height: size, width: logoWidth }}
           contentFit="contain"
           contentPosition="left"
           transition={150}
         />
+      );
+
+      if (!showName) return image;
+
+      return (
+        <View className="flex-row items-center gap-2.5">
+          {image}
+          <Text
+            className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark capitalize"
+            style={{ fontSize: size * 0.45 }}
+            numberOfLines={1}
+          >
+            {name}
+          </Text>
+        </View>
       );
     }
 
     return (
       <Text
         className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark"
-        style={{ fontSize: size * 0.62 }}
+        style={{ fontSize: size * 0.5 }}
         numberOfLines={1}
       >
         {gymName ?? "GYMTRACK"}

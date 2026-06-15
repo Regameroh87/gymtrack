@@ -18,7 +18,9 @@ export const useGym = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gyms")
-        .select("id, name, logo_url, theme_primary, theme_accent")
+        .select(
+          "id, name, logo_url, theme_primary, theme_accent, header_logo_size, header_logo_position, header_show_title"
+        )
         .eq("id", gymId)
         .single();
       if (error) {

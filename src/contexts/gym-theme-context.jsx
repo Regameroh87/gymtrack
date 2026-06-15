@@ -117,6 +117,13 @@ export function GymThemeProvider({ children }) {
       gradient: theme.gradient,
       logoUrl: gym?.logo_url ?? null,
       gymName: gym?.name ?? null,
+      // Config del header del home, editable por el superAdmin. Defaults
+      // seguros mientras el gym resuelve (= comportamiento actual).
+      headerConfig: {
+        logoSize: gym?.header_logo_size ?? "md",
+        logoPosition: gym?.header_logo_position ?? "left",
+        showTitle: gym?.header_show_title ?? false,
+      },
       source: theme.source,
       isDark,
     }),
