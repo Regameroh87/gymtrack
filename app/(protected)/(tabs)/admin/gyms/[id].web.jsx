@@ -240,7 +240,8 @@ function EditGymForm({ gym }) {
 
   const logoToShow = previewUrl || currentLogoUrl;
   const logoToShowDark = previewUrlDark || currentLogoUrlDark;
-  const canConfirmDelete = confirmSlug.trim() === gym.slug;
+  const canConfirmDelete =
+    confirmSlug.trim().toLowerCase() === (gym.slug ?? "").trim().toLowerCase();
 
   const handleDelete = async () => {
     try {
@@ -737,7 +738,7 @@ function EditGymForm({ gym }) {
 
             <Text className="text-[12px] font-manrope text-ui-text-muted leading-5 mb-4">
               Vas a borrar de forma permanente el gimnasio y todos sus datos.
-              Para confirmar, escribí su slug{" "}
+              Para confirmar, escribí el slug del gimnasio (no el nombre):{" "}
               <Text className="font-manrope-bold text-ui-text-main">
                 {gym.slug}
               </Text>
