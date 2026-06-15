@@ -163,7 +163,7 @@ export default function ProfileScreen() {
 
   const onLogout = async () => {
     await supabase.auth.signOut();
-    router.replace("/(auth)/login");
+    // El guard de ProtectedLayout redirige a login al detectar isLoggedIn = false
   };
 
   return (

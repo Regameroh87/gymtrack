@@ -2,7 +2,6 @@
 import { Alert, Platform, Pressable } from "react-native";
 
 // Librerías
-import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 // BD
@@ -12,11 +11,9 @@ import { supabase } from "../../database/supabase.js";
 import { Logout } from "../../../assets/icons.jsx";
 
 export default function ButtonLogout({ size = 24, className = "" }) {
-  const router = useRouter();
-
   const doLogout = async () => {
     await supabase.auth.signOut();
-    router.replace("/(auth)/login");
+    // El guard de ProtectedLayout redirige a login al detectar isLoggedIn = false
   };
 
   const handlePress = () => {
