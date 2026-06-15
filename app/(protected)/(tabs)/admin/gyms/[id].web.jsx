@@ -1,3 +1,4 @@
+// React / libs
 import { useMemo, useRef, useState } from "react";
 import {
   View,
@@ -6,16 +7,25 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useForm } from "@tanstack/react-form";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
+// BD / hooks
 import { supabase } from "../../../../../src/database/supabase";
+import { useUpdateGym } from "../../../../../src/hooks/gyms/use-update-gym";
+import { useDeleteGym } from "../../../../../src/hooks/gyms/use-delete-gym";
+
+// Utils / tema
+import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+
+// Helpers de formulario compartidos
 import {
   Field,
   Input,
@@ -27,6 +37,8 @@ import {
   DEFAULT_PRIMARY,
   DEFAULT_ACCENT,
 } from "./_form.web";
+
+// Iconos
 import {
   Polaroid,
   Mail,
@@ -36,158 +48,148 @@ import {
   ArrowLeft,
   CheckCircle,
   CameraPlus,
-  Search,
   ShieldHalf,
+  Trash,
   X,
 } from "../../../../../assets/icons";
 
-const OWNER_MODES = [
-  { value: "existing", label: "Usuario existente" },
-  { value: "new", label: "Crear nuevo" },
-];
+export default function EditGymWeb() {
+  const { id } = useLocalSearchParams();
+  const { brandPrimary } = useGymTheme();
 
-export default function NewGymWeb() {
+  const {
+    data: gym,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["gym", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gyms")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+
+      // El owner vive en profiles (FK por user_id hacia auth.users).
+      let owner = null;
+      if (data.owner_id) {
+        const { data: ownerRow } = await supabase
+          .from("profiles")
+          .select("user_id, name, last_name, email")
+          .eq("user_id", data.owner_id)
+          .maybeSingle();
+        owner = ownerRow ?? null;
+      }
+      return { ...data, owner };
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="small" color={brandPrimary[600]} />
+        <Text className="mt-3 text-xs font-manrope text-ui-text-muted">
+          Cargando gimnasio...
+        </Text>
+      </View>
+    );
+  }
+
+  if (isError || !gym) {
+    return (
+      <View className="flex-1 items-center justify-center px-8">
+        <View className="w-12 h-12 rounded-[14px] bg-red-50 items-center justify-center mb-3">
+          <X size={20} color="#dc2626" />
+        </View>
+        <Text className="text-sm font-manrope-bold text-ui-text-main mb-1">
+          No se pudo cargar el gimnasio
+        </Text>
+        <Text className="text-xs font-manrope text-ui-text-muted">
+          Es posible que ya no exista.
+        </Text>
+      </View>
+    );
+  }
+
+  // El form se monta recién con los datos cargados para poblar defaultValues.
+  return <EditGymForm gym={gym} />;
+}
+
+function EditGymForm({ gym }) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { brandPrimary } = useGymTheme();
   const fileInputRef = useRef(null);
+
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [notification, setNotification] = useState(null);
   const [slugTouched, setSlugTouched] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmSlug, setConfirmSlug] = useState("");
 
-  // Selector de dueño
-  const [ownerMode, setOwnerMode] = useState("existing");
-  const [ownerSearch, setOwnerSearch] = useState("");
-  const [ownerOpen, setOwnerOpen] = useState(false);
-  const [selectedOwner, setSelectedOwner] = useState(null);
+  const updateGym = useUpdateGym(gym.id);
+  const deleteGym = useDeleteGym();
 
   const notify = (type, message) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4500);
   };
 
-  const { data: profiles } = useQuery({
-    queryKey: ["admin_gyms_owner_candidates"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, user_id, name, last_name, email")
-        .order("name", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const currentLogoUrl = useMemo(
+    () => getCloudinaryUrl(gym.logo_url) || (gym.logo_url ? `${gym.logo_url}` : null),
+    [gym.logo_url]
+  );
 
-  const ownerOptions = useMemo(() => {
-    if (!profiles) return [];
-    const q = ownerSearch.trim().toLowerCase();
-    const rows = !q
-      ? profiles
-      : profiles.filter(
-          (p) =>
-            p.name?.toLowerCase().includes(q) ||
-            p.last_name?.toLowerCase().includes(q) ||
-            p.email?.toLowerCase().includes(q)
-        );
-    return rows.slice(0, 6);
-  }, [profiles, ownerSearch]);
+  const ownerLabel = gym.owner
+    ? `${gym.owner.name || ""} ${gym.owner.last_name || ""}`.trim() ||
+      gym.owner.email
+    : "Sin dueño asignado";
 
   const form = useForm({
     defaultValues: {
-      name: "",
-      slug: "",
-      theme_primary: DEFAULT_PRIMARY,
-      theme_accent: DEFAULT_ACCENT,
-      address: "",
-      phone: "",
-      email: "",
-      instagram: "",
-      owner_name: "",
-      owner_last_name: "",
-      owner_email: "",
-      owner_phone: "",
+      name: gym.name ?? "",
+      slug: gym.slug ?? "",
+      theme_primary: gym.theme_primary || DEFAULT_PRIMARY,
+      theme_accent: gym.theme_accent || DEFAULT_ACCENT,
+      address: gym.address ?? "",
+      phone: gym.phone ?? "",
+      email: gym.email ?? "",
+      instagram: gym.instagram ?? "",
     },
     onSubmit: async ({ value }) => {
       try {
-        if (ownerMode === "existing" && !selectedOwner) {
-          notify("error", "Seleccioná el dueño del gimnasio.");
-          return;
-        }
-        if (
-          ownerMode === "new" &&
-          (!value.owner_name.trim() || !value.owner_email.trim())
-        ) {
-          notify("error", "Completá nombre y email del nuevo dueño.");
-          return;
-        }
-
-        let logo_url = null;
+        // Solo se sube un logo nuevo si el usuario eligió un archivo.
+        let logoUrl = gym.logo_url ?? null;
         if (selectedFile) {
           try {
-            logo_url = await uploadImageWeb(selectedFile);
+            logoUrl = await uploadImageWeb(selectedFile);
           } catch {
-            logo_url = null;
+            logoUrl = gym.logo_url ?? null;
           }
         }
 
-        // La edge function crea el gym con rollback en cascada. Si el email
-        // del dueño ya tiene cuenta (multi-gym), reutiliza la cuenta y solo
-        // agrega la membresía de owner del gym nuevo; si no, crea auth user
-        // + profile. Vale para ambos modos (dueño nuevo o existente).
-        const ownerEmail =
-          ownerMode === "new"
-            ? value.owner_email.trim()
-            : selectedOwner.email;
-
-        const response = await supabase.functions.invoke("crear-gym", {
-          body: {
-            gym_name: value.name.trim(),
-            gym_slug: value.slug.trim(),
-            logo_url,
-            theme_primary: value.theme_primary,
-            theme_accent: value.theme_accent,
-            gym_address: value.address.trim() || null,
-            gym_phone: value.phone.trim() || null,
-            gym_email: value.email.trim() || null,
-            gym_instagram: value.instagram.trim() || null,
-            email: ownerEmail,
-            name: value.owner_name.trim() || null,
-            last_name: value.owner_last_name.trim() || null,
-            phone: value.owner_phone.trim() || null,
-          },
+        await updateGym.mutateAsync({
+          name: value.name.trim(),
+          slug: value.slug.trim(),
+          logo_url: logoUrl,
+          theme_primary: value.theme_primary,
+          theme_accent: value.theme_accent,
+          address: value.address.trim() || null,
+          phone: value.phone.trim() || null,
+          email: value.email.trim() || null,
+          instagram: value.instagram.trim() || null,
         });
 
-        if (response.error) {
-          let msg = "Ha ocurrido un error inesperado.";
-          if (response.error.context) {
-            try {
-              const body = await response.error.context.json();
-              if (body?.error) msg = body.error;
-            } catch {}
-          }
-          throw new Error(msg);
-        }
-
-        queryClient.invalidateQueries({ queryKey: ["admin_gyms_web"] });
-        queryClient.invalidateQueries({ queryKey: ["gyms"] });
-
-        notify(
-          "success",
-          ownerMode === "new"
-            ? "Gimnasio y cuenta del dueño creados exitosamente."
-            : "Gimnasio creado exitosamente."
-        );
-        form.reset();
-        setPreviewUrl(null);
-        setSelectedFile(null);
-        setSelectedOwner(null);
-        setOwnerSearch("");
-        setSlugTouched(false);
-        setOwnerMode("existing");
+        notify("success", "Gimnasio actualizado correctamente.");
         router.push("/admin/gyms");
       } catch (err) {
-        notify("error", err.message);
+        // Slug duplicado u otros errores de la BD.
+        const msg =
+          err?.code === "23505"
+            ? "Ese slug ya está en uso por otro gimnasio."
+            : err?.message || "No se pudo guardar el gimnasio.";
+        notify("error", msg);
       }
     },
   });
@@ -197,6 +199,19 @@ export default function NewGymWeb() {
     if (!file) return;
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const logoToShow = previewUrl || currentLogoUrl;
+  const canConfirmDelete = confirmSlug.trim() === gym.slug;
+
+  const handleDelete = async () => {
+    try {
+      await deleteGym.mutateAsync({ gymId: gym.id });
+      // onSuccess del hook redirige a /admin/gyms.
+    } catch (err) {
+      setConfirmOpen(false);
+      notify("error", err.message);
+    }
   };
 
   return (
@@ -255,14 +270,14 @@ export default function NewGymWeb() {
           </Pressable>
           <Text className="text-[11px] text-ui-text-muted">·</Text>
           <Text className="text-[11px] font-manrope-semi text-brandPrimary-600 tracking-[1.4px] uppercase">
-            Nuevo gimnasio
+            Editar
           </Text>
         </View>
         <Text className="text-[26px] font-jakarta-bold text-ui-text-main tracking-tight">
-          Crear gimnasio
+          {gym.name}
         </Text>
         <Text className="text-xs font-manrope text-ui-text-muted mt-1">
-          Alta de un nuevo gimnasio en la plataforma con su identidad y dueño
+          Editá la identidad, contacto y tema del gimnasio
         </Text>
       </View>
 
@@ -427,194 +442,27 @@ export default function NewGymWeb() {
         {/* Divider */}
         <View className="w-full h-px bg-ui-input-light my-7" />
 
-        {/* ── Sección 2 · Dueño ── */}
+        {/* ── Sección 2 · Dueño (solo lectura) ── */}
         <SectionTitle
           step="2"
           title="Dueño"
           subtitle="Quién administra este gimnasio"
         />
-        <View className="gap-y-5">
-          {/* Toggle: existente / nuevo */}
-          <View className="flex-row bg-ui-background-light rounded-xl p-1 self-start">
-            {OWNER_MODES.map((m) => (
-              <Pressable
-                key={m.value}
-                onPress={() => setOwnerMode(m.value)}
-                className={`px-4 py-1.5 rounded-lg ${
-                  ownerMode === m.value ? "bg-white shadow-sm" : ""
-                }`}
-                style={{ cursor: "pointer" }}
-              >
-                <Text
-                  className={`text-[12px] ${
-                    ownerMode === m.value
-                      ? "font-manrope-bold text-brandPrimary-600"
-                      : "font-manrope-semi text-ui-text-muted"
-                  }`}
-                >
-                  {m.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {ownerMode === "existing" ? (
-            <Field
-              label="DUEÑO"
-              hint="Recibe la membresía de Dueño del gimnasio nuevo; si ya pertenece a otros gyms, conserva esas membresías."
-            >
-              {selectedOwner ? (
-                <View className="flex-row items-center gap-2.5 bg-brandPrimary-50 rounded-xl px-3.5 py-2.5 border border-brandPrimary-300">
-                  <ShieldHalf size={15} color={brandPrimary[600]} />
-                  <Text className="flex-1 text-[13px] font-manrope-semi text-ui-text-main">
-                    {`${selectedOwner.name || ""} ${selectedOwner.last_name || ""}`.trim() ||
-                      selectedOwner.email}
-                    <Text className="font-manrope text-ui-text-muted">
-                      {"  ·  "}
-                      {selectedOwner.email}
-                    </Text>
-                  </Text>
-                  <Pressable
-                    onPress={() => setSelectedOwner(null)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <X size={14} color={ui.text.muted} />
-                  </Pressable>
-                </View>
-              ) : (
-                <View>
-                  <View className="flex-row items-center gap-2.5 bg-white rounded-xl px-3.5 py-2.5 border border-ui-input-border">
-                    <Search size={15} color={ui.text.muted} />
-                    <TextInput
-                      value={ownerSearch}
-                      onChangeText={setOwnerSearch}
-                      onFocus={() => setOwnerOpen(true)}
-                      placeholder="Buscar usuario por nombre o email..."
-                      placeholderTextColor={ui.text.muted}
-                      className="flex-1 text-[13px] font-manrope text-ui-text-main"
-                      style={{ outlineWidth: 0 }}
-                    />
-                  </View>
-
-                  {ownerOpen && ownerOptions.length > 0 && (
-                    <View className="mt-1.5 bg-white rounded-xl border border-ui-input-border overflow-hidden">
-                      {ownerOptions.map((p) => (
-                        <Pressable
-                          key={p.id}
-                          onPress={() => {
-                            setSelectedOwner(p);
-                            setOwnerOpen(false);
-                          }}
-                          className="flex-row items-center gap-2.5 px-3.5 py-2.5 hover:bg-brandPrimary-50/60 border-b border-ui-input-light"
-                          style={{ cursor: "pointer" }}
-                        >
-                          <View className="flex-1">
-                            <Text className="text-[13px] font-manrope-semi text-ui-text-main">
-                              {`${p.name || ""} ${p.last_name || ""}`.trim() ||
-                                p.email}
-                            </Text>
-                            <Text className="text-[11px] font-manrope text-ui-text-muted">
-                              {p.email}
-                            </Text>
-                          </View>
-                        </Pressable>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              )}
-            </Field>
-          ) : (
-            <View className="gap-y-5">
-              {/* Row: Nombre + Apellido */}
-              <View className="flex-row gap-4">
-                <View className="flex-1">
-                  <form.Field name="owner_name">
-                    {(field) => (
-                      <Field label="NOMBRE">
-                        <Input
-                          placeholder="Ej: Juan"
-                          value={field.state.value}
-                          onChangeText={field.handleChange}
-                        />
-                      </Field>
-                    )}
-                  </form.Field>
-                </View>
-                <View className="flex-1">
-                  <form.Field name="owner_last_name">
-                    {(field) => (
-                      <Field label="APELLIDO (OPCIONAL)">
-                        <Input
-                          placeholder="Ej: Pérez"
-                          value={field.state.value}
-                          onChangeText={field.handleChange}
-                        />
-                      </Field>
-                    )}
-                  </form.Field>
-                </View>
-              </View>
-
-              {/* Row: Email + Teléfono */}
-              <View className="flex-row gap-4">
-                <View className="flex-1">
-                  <form.Field
-                    name="owner_email"
-                    validators={{
-                      onChange: z
-                        .string()
-                        .email("Correo electrónico inválido")
-                        .or(z.literal("")),
-                    }}
-                  >
-                    {(field) => (
-                      <Field
-                        label="EMAIL"
-                        error={field.state.meta.errors[0]?.message}
-                      >
-                        <Input
-                          placeholder="dueno@energym.com"
-                          icon={<Mail size={15} color={ui.text.muted} />}
-                          value={field.state.value}
-                          onChangeText={field.handleChange}
-                          keyboardType="email-address"
-                          autoCapitalize="none"
-                        />
-                      </Field>
-                    )}
-                  </form.Field>
-                </View>
-                <View className="flex-1">
-                  <form.Field name="owner_phone">
-                    {(field) => (
-                      <Field label="TELÉFONO (OPCIONAL)">
-                        <Input
-                          placeholder="123456789"
-                          icon={<Phone size={15} color={ui.text.muted} />}
-                          value={field.state.value}
-                          onChangeText={field.handleChange}
-                          keyboardType="numeric"
-                        />
-                      </Field>
-                    )}
-                  </form.Field>
-                </View>
-              </View>
-
-              <View className="flex-row items-center gap-2 bg-brandPrimary-50 rounded-xl px-3.5 py-2.5 border border-brandPrimary-200">
-                <ShieldHalf size={14} color={brandPrimary[600]} />
-                <Text className="flex-1 text-[11px] font-manrope text-ui-text-muted">
-                  Se crea su cuenta con rol Dueño y contraseña temporal{" "}
-                  <Text className="font-manrope-bold text-ui-text-main">
-                    tugimnasio123
-                  </Text>
-                  . El email queda confirmado automáticamente.
-                </Text>
-              </View>
-            </View>
-          )}
+        <View className="flex-row items-center gap-2.5 bg-ui-background-light rounded-xl px-3.5 py-3 border border-ui-input-border">
+          <ShieldHalf size={15} color={brandPrimary[600]} />
+          <Text className="flex-1 text-[13px] font-manrope-semi text-ui-text-main">
+            {ownerLabel}
+            {gym.owner?.email ? (
+              <Text className="font-manrope text-ui-text-muted">
+                {"  ·  "}
+                {gym.owner.email}
+              </Text>
+            ) : null}
+          </Text>
         </View>
+        <Text className="text-[11px] font-manrope text-ui-text-muted mt-1.5">
+          El dueño no se modifica desde esta pantalla.
+        </Text>
 
         {/* Divider */}
         <View className="w-full h-px bg-ui-input-light my-7" />
@@ -634,9 +482,9 @@ export default function NewGymWeb() {
               style={{ cursor: "pointer" }}
             >
               <View className="relative">
-                {previewUrl ? (
+                {logoToShow ? (
                   <Image
-                    source={{ uri: previewUrl }}
+                    source={{ uri: logoToShow }}
                     style={{ width: 88, height: 88, borderRadius: 22 }}
                     contentFit="cover"
                     transition={200}
@@ -655,7 +503,7 @@ export default function NewGymWeb() {
                   Logo del gimnasio
                 </Text>
                 <Text className="text-[11px] font-manrope text-ui-text-muted">
-                  Hacé clic para elegir una imagen
+                  Hacé clic para cambiar la imagen
                 </Text>
               </View>
             </Pressable>
@@ -717,16 +565,131 @@ export default function NewGymWeb() {
                 {isSubmitting ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <ShieldHalf size={15} color="#fff" />
+                  <CheckCircle size={15} color="#fff" />
                 )}
                 <Text className="text-sm font-manrope-bold text-white">
-                  {isSubmitting ? "Creando..." : "Crear Gimnasio"}
+                  {isSubmitting ? "Guardando..." : "Guardar cambios"}
                 </Text>
               </Pressable>
             )}
           </form.Subscribe>
         </View>
       </View>
+
+      {/* ── Danger zone ── */}
+      <View
+        className="bg-red-50/60 rounded-[20px] border border-red-200 p-6 self-center w-full mt-6"
+        style={{ maxWidth: 680 }}
+      >
+        <View className="flex-row items-center justify-between gap-4">
+          <View className="flex-1">
+            <Text className="text-[14px] font-jakarta-bold text-red-700 tracking-tight">
+              Eliminar gimnasio
+            </Text>
+            <Text className="text-[11px] font-manrope text-red-600/80 mt-1">
+              Borra el gimnasio y todos sus datos (socios, planes, sesiones,
+              asistencias e historial). Las cuentas que solo pertenezcan a este
+              gym se eliminan. Esta acción no se puede deshacer.
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => {
+              setConfirmSlug("");
+              setConfirmOpen(true);
+            }}
+            className="flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] bg-red-600 hover:bg-red-700 shadow-md shadow-red-600/30"
+            style={{ cursor: "pointer" }}
+          >
+            <Trash size={15} color="#fff" />
+            <Text className="text-[13px] font-manrope-bold text-white">
+              Eliminar
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Modal de confirmación */}
+      <Modal
+        visible={confirmOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmOpen(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center p-6"
+          style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
+        >
+          <View
+            className="bg-white rounded-[20px] border border-ui-input-border p-7 w-full"
+            style={{ maxWidth: 460 }}
+          >
+            <View className="flex-row items-center gap-3 mb-3">
+              <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center">
+                <Trash size={18} color="#dc2626" />
+              </View>
+              <Text className="text-[17px] font-jakarta-bold text-ui-text-main tracking-tight">
+                Eliminar “{gym.name}”
+              </Text>
+            </View>
+
+            <Text className="text-[12px] font-manrope text-ui-text-muted leading-5 mb-4">
+              Vas a borrar de forma permanente el gimnasio y todos sus datos.
+              Para confirmar, escribí su slug{" "}
+              <Text className="font-manrope-bold text-ui-text-main">
+                {gym.slug}
+              </Text>
+              .
+            </Text>
+
+            <TextInput
+              value={confirmSlug}
+              onChangeText={setConfirmSlug}
+              placeholder={gym.slug}
+              placeholderTextColor={ui.text.muted}
+              autoCapitalize="none"
+              className="text-[13px] font-manrope text-ui-text-main bg-white rounded-xl px-3.5 py-2.5 border border-ui-input-border mb-5"
+              style={{ outlineWidth: 0 }}
+            />
+
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setConfirmOpen(false)}
+                disabled={deleteGym.isPending}
+                className="flex-1 items-center py-2.5 rounded-[11px] border border-ui-input-border bg-white hover:bg-ui-background-light"
+                style={{ cursor: "pointer" }}
+              >
+                <Text className="text-[13px] font-manrope-semi text-ui-text-main">
+                  Cancelar
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleDelete}
+                disabled={!canConfirmDelete || deleteGym.isPending}
+                className={`flex-1 flex-row items-center justify-center gap-2 py-2.5 rounded-[11px] ${
+                  !canConfirmDelete || deleteGym.isPending
+                    ? "bg-red-300"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
+                style={{
+                  cursor:
+                    !canConfirmDelete || deleteGym.isPending
+                      ? "default"
+                      : "pointer",
+                }}
+              >
+                {deleteGym.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Trash size={14} color="#fff" />
+                )}
+                <Text className="text-[13px] font-manrope-bold text-white">
+                  {deleteGym.isPending ? "Eliminando..." : "Eliminar"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

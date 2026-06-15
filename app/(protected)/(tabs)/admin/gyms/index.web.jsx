@@ -206,7 +206,7 @@ export default function GymsListWeb() {
       ) : (
         <View className="flex-row flex-wrap" style={{ gap: 14 }}>
           {pageRows.map((gym) => (
-            <GymCard key={gym.id} gym={gym} />
+            <GymCard key={gym.id} gym={gym} router={router} />
           ))}
         </View>
       )}
@@ -263,7 +263,7 @@ function StatCard({ icon: Icon, label, value, iconColor, bubble }) {
   );
 }
 
-function GymCard({ gym }) {
+function GymCard({ gym, router }) {
   const { brandSecondary } = useGymTheme();
   const logoUrl =
     getCloudinaryUrl(gym.logo_url) || (gym.logo_url ? `${gym.logo_url}` : null);
@@ -273,9 +273,10 @@ function GymCard({ gym }) {
     : "Sin dueño asignado";
 
   return (
-    <View
-      className="bg-white rounded-[16px] border border-ui-input-border overflow-hidden"
-      style={{ width: "calc(33.333% - 9.34px)" }}
+    <Pressable
+      onPress={() => router.push(`/admin/gyms/${gym.id}`)}
+      className="bg-white rounded-[16px] border border-ui-input-border overflow-hidden hover:border-brandPrimary-300"
+      style={{ width: "calc(33.333% - 9.34px)", cursor: "pointer" }}
     >
       <View className="p-4 flex-row items-center gap-3">
         {logoUrl ? (
@@ -342,7 +343,7 @@ function GymCard({ gym }) {
           </Text>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
