@@ -16,7 +16,7 @@ import { getCloudinaryUrl } from "../utils/cloudinary";
  * identidad del gimnasio sea visible una vez logueado, compensando que
  * el ícono nativo de la app es genérico (build-time, no runtime).
  */
-export default function GymLogo({ size = 32, showName = false }) {
+export default function GymLogo({ size = 32, showName = false, variant = "icon" }) {
   const { logoUrl, gymName } = useGymTheme();
   const resolvedLogo = getCloudinaryUrl(logoUrl);
 
@@ -28,6 +28,34 @@ export default function GymLogo({ size = 32, showName = false }) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+  // ── Variante wordmark: el logo funciona como título vectorizado ──
+  // La mayoría de los gyms tienen logos que ya incluyen su nombre, así que
+  // se muestra la imagen sin texto al lado ni fondo cuadrado. Cascada de
+  // fallback: logo → nombre del gym → "GYMTRACK".
+  if (variant === "wordmark") {
+    if (resolvedLogo) {
+      return (
+        <Image
+          source={{ uri: resolvedLogo }}
+          style={{ height: size, width: 150 }}
+          contentFit="contain"
+          contentPosition="left"
+          transition={150}
+        />
+      );
+    }
+
+    return (
+      <Text
+        className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark"
+        style={{ fontSize: size * 0.62 }}
+        numberOfLines={1}
+      >
+        {gymName ?? "GYMTRACK"}
+      </Text>
+    );
+  }
 
   const logo = (
     <View

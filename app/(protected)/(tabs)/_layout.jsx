@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { Barbell, Home, Logs, ShieldHalf } from "../../../assets/icons";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
-import { Pressable, Text } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useColorScheme } from "nativewind";
 import { ui } from "../../../src/theme/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
@@ -48,7 +48,12 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="(home)/index"
         options={{
-          headerTitle: () => <GymLogo size={28} showName />,
+          headerTitle: () => null,
+          headerLeft: () => (
+            <View className="ml-4">
+              <GymLogo size={28} variant="wordmark" />
+            </View>
+          ),
           tabBarLabel: "Inicio",
           tabBarIcon: ({ color }) => (
             <Home color={color} width={24} height={24} />
