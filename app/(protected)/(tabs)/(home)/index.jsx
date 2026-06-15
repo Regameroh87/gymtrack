@@ -30,7 +30,6 @@ import {
 
 // ── Components ──
 import HeroeCardHome from "../../../../src/components/cards/heroe-card-home.jsx";
-import GymLogo from "../../../../src/components/GymLogo.jsx";
 
 const BRAND_PRIMARY = brandPrimary[700];
 
@@ -97,9 +96,10 @@ export default function Home() {
       >
         {/* ── HEADER editorial ── */}
         <View className=" px-5 mb-7">
-          {/* Logo + nombre del gym */}
-          <View className="mb-4">
-            <GymLogo size={32} showName />
+          {/* Ticks */}
+          <View className="flex-row items-center gap-2 mb-4">
+            <View className="bg-brandSecondary-400 w-7 h-1 rounded-sm" />
+            <View className="bg-brandSecondary-700/50 dark:bg-brandSecondary-400/40 w-2.5 h-1 rounded-sm" />
           </View>
 
           {/* Fecha + LIVE */}

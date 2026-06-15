@@ -32,6 +32,7 @@ import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
+import { ui } from "../../../../src/theme/colors";
 import {
   Barbell,
   Calendar,
@@ -319,7 +320,9 @@ function StatTile({ value, label, accent }) {
 function EmptyState({ router, insets, onLogPast }) {
   // Si el usuario tiene un plan activo en curso, el CTA primario lo lleva a
   // continuar ese plan; si no, lo lleva a explorar el catálogo de rutinas.
-  const { brandPrimary, brandSecondary } = useGymTheme();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const { brandPrimary, brandSecondary, gradient } = useGymTheme();
   const BRAND_MINT = brandSecondary[400];
   const { data: summary } = useActivePlanSummary();
   const hasActivePlan = !!summary && !summary.isCompleted;
@@ -338,7 +341,7 @@ function EmptyState({ router, insets, onLogPast }) {
       >
         {/* Halo mint superior */}
         <LinearGradient
-          colors={["rgba(45,212,191,0.16)", "rgba(45,212,191,0)"]}
+          colors={gradient.mintHalo[isDark ? "dark" : "light"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0.7, y: 0.9 }}
           style={{
@@ -359,7 +362,7 @@ function EmptyState({ router, insets, onLogPast }) {
             right: -10,
             fontSize: 160,
             lineHeight: 160,
-            color: "rgba(255,255,255,0.04)",
+            color: ui.decor.ghostNumber[isDark ? "dark" : "light"],
             letterSpacing: -6,
           }}
         >
@@ -395,17 +398,16 @@ function EmptyState({ router, insets, onLogPast }) {
           </View>
 
           <Text
-            className="font-jakarta-bold text-white mb-2"
+            className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark mb-2"
             style={{ fontSize: 22, letterSpacing: -0.6 }}
           >
             Todavía no hay registros
           </Text>
           <Text
-            className="font-manrope mb-7"
+            className="font-manrope mb-7 text-ui-text-muted dark:text-ui-text-mutedDark"
             style={{
               fontSize: 13,
               lineHeight: 20,
-              color: "rgba(255,255,255,0.5)",
             }}
           >
             Cada entrenamiento que completes queda guardado acá con sus series,
@@ -445,13 +447,19 @@ function EmptyState({ router, insets, onLogPast }) {
                 paddingVertical: 15,
                 gap: 8,
                 borderWidth: 1,
-                borderColor: "rgba(255,255,255,0.12)",
+                borderColor: isDark ? ui.border.onDark : "rgba(15,13,32,0.12)",
               }}
             >
-              <ClipboardList size={16} color="rgba(255,255,255,0.7)" />
+              <ClipboardList
+                size={16}
+                color={isDark ? ui.icon.onDarkStrong : ui.icon.onLight}
+              />
               <Text
                 className="font-jakarta-semi"
-                style={{ fontSize: 14, color: "rgba(255,255,255,0.85)" }}
+                style={{
+                  fontSize: 14,
+                  color: isDark ? ui.icon.onDarkStrong : ui.text.main,
+                }}
               >
                 Registrar sesión pasada
               </Text>
@@ -462,10 +470,13 @@ function EmptyState({ router, insets, onLogPast }) {
 
       {/* Pista */}
       <View className="flex-row items-center mt-6" style={{ gap: 8 }}>
-        <Calendar size={13} color="rgba(255,255,255,0.3)" />
+        <Calendar
+          size={13}
+          color={isDark ? ui.icon.onDark : ui.icon.onLight}
+        />
         <Text
-          className="font-manrope"
-          style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}
+          className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
+          style={{ fontSize: 12 }}
         >
           Tu historial se ordena por mes automáticamente.
         </Text>

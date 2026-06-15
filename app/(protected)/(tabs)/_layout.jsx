@@ -5,6 +5,7 @@ import { Pressable, Text } from "react-native";
 import { useColorScheme } from "nativewind";
 import { ui } from "../../../src/theme/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
+import GymLogo from "../../../src/components/GymLogo";
 
 export default function TabsLayout() {
   const { isStaff } = useUserRole();
@@ -47,7 +48,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="(home)/index"
         options={{
-          title: "GYMTRACK",
+          headerTitle: () => <GymLogo size={28} showName />,
           tabBarLabel: "Inicio",
           tabBarIcon: ({ color }) => (
             <Home color={color} width={24} height={24} />
