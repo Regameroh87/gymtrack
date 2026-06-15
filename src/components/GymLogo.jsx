@@ -16,7 +16,12 @@ import { getCloudinaryUrl } from "../utils/cloudinary";
  * identidad del gimnasio sea visible una vez logueado, compensando que
  * el ícono nativo de la app es genérico (build-time, no runtime).
  */
-export default function GymLogo({ size = 32, showName = false, variant = "icon" }) {
+export default function GymLogo({
+  size = 32,
+  showName = false,
+  variant = "icon",
+  content = "logo",
+}) {
   const { logoUrl, logoUrlDark, gymName, isDark } = useGymTheme();
   // En dark mode usa el logo dark si el gym lo cargó; si no, cae al principal.
   const activeLogo = isDark && logoUrlDark ? logoUrlDark : logoUrl;
@@ -32,42 +37,12 @@ export default function GymLogo({ size = 32, showName = false, variant = "icon" 
     .toUpperCase();
 
   // ── Variante wordmark: el logo funciona como título vectorizado ──
-  // La mayoría de los gyms tienen logos que ya incluyen su nombre. Cascada de
-  // fallback: logo → nombre del gym → "GYMTRACK". Con showName, el nombre del
-  // gym acompaña al logo (cuando el logo es solo un ícono sin texto).
+  // El superAdmin elige el contenido por gym: "logo" (solo imagen),
+  // "logo_title" (imagen + nombre) o "title" (solo nombre). La cascada de
+  // fallback es red de seguridad: si falta el logo se cae al nombre; si falta
+  // el nombre, "GYMTRACK".
   if (variant === "wordmark") {
-    // Ancho acotado relativo al alto, para que en posición centro no choque
-    // con el headerRight (toggle de tema).
-    const logoWidth = Math.min(size * 4, 200);
-
-    if (resolvedLogo) {
-      const image = (
-        <Image
-          source={{ uri: resolvedLogo }}
-          style={{ height: size, width: logoWidth }}
-          contentFit="contain"
-          contentPosition="left"
-          transition={150}
-        />
-      );
-
-      if (!showName) return image;
-
-      return (
-        <View className="flex-row items-center gap-2.5">
-          {image}
-          <Text
-            className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark capitalize"
-            style={{ fontSize: size * 0.45 }}
-            numberOfLines={1}
-          >
-            {name}
-          </Text>
-        </View>
-      );
-    }
-
-    return (
+    const titleText = (
       <Text
         className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark"
         style={{ fontSize: size * 0.5 }}
@@ -75,6 +50,41 @@ export default function GymLogo({ size = 32, showName = false, variant = "icon" 
       >
         {gymName ?? "GYMTRACK"}
       </Text>
+    );
+
+    // Modo "title": solo el nombre, ignora la imagen aunque exista.
+    if (content === "title") return titleText;
+
+    // Sin logo cargado: cualquier modo cae al nombre.
+    if (!resolvedLogo) return titleText;
+
+    // Ancho acotado relativo al alto, para que en posición centro no choque
+    // con el headerRight (toggle de tema).
+    const logoWidth = Math.min(size * 4, 200);
+    const image = (
+      <Image
+        source={{ uri: resolvedLogo }}
+        style={{ height: size, width: logoWidth }}
+        contentFit="contain"
+        contentPosition="left"
+        transition={150}
+      />
+    );
+
+    if (content === "logo") return image;
+
+    // "logo_title": imagen + nombre al lado.
+    return (
+      <View className="flex-row items-center gap-2.5">
+        {image}
+        <Text
+          className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark capitalize"
+          style={{ fontSize: size * 0.45 }}
+          numberOfLines={1}
+        >
+          {name}
+        </Text>
+      </View>
     );
   }
 

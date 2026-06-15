@@ -17,12 +17,12 @@ export default function TabsLayout() {
   const isDark = colorScheme === "dark";
   const { brandPrimary, headerConfig } = useGymTheme();
 
-  const { logoSize, logoPosition, showTitle } = headerConfig;
+  const { logoSize, logoPosition, content } = headerConfig;
   const logoPx = HEADER_LOGO_PX[logoSize] ?? HEADER_LOGO_PX.md;
   const isCentered = logoPosition === "center";
 
   const HomeLogo = () => (
-    <GymLogo variant="wordmark" size={logoPx} showName={showTitle} />
+    <GymLogo variant="wordmark" size={logoPx} content={content} />
   );
 
   return (

@@ -194,27 +194,9 @@ export function Toggle({ label, hint, value, onChange }) {
 
 // Una barra de header (claro u oscuro). Replica las reglas del wordmark:
 // logo contain → nombre → "GYMTRACK".
-function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, centered, showTitle }) {
+function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, centered, content }) {
   const textColor = dark ? ui.text.mainDark : ui.text.main;
-  const logoNode = logoUri ? (
-    <View className="flex-row items-center" style={{ gap: 10 }}>
-      <Image
-        source={{ uri: logoUri }}
-        style={{ height: px, width: logoWidth }}
-        contentFit="contain"
-        contentPosition="left"
-      />
-      {showTitle && name ? (
-        <Text
-          className="font-jakarta-bold capitalize"
-          style={{ fontSize: px * 0.45, color: textColor }}
-          numberOfLines={1}
-        >
-          {name}
-        </Text>
-      ) : null}
-    </View>
-  ) : (
+  const titleText = (
     <Text
       className="font-jakarta-bold"
       style={{ fontSize: px * 0.5, color: textColor }}
@@ -223,6 +205,39 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
       {name || "GYMTRACK"}
     </Text>
   );
+
+  // Mismas reglas que GymLogo wordmark: title → nombre; sin logo → nombre;
+  // logo → imagen; logo_title → imagen + nombre.
+  let logoNode;
+  if (content === "title" || !logoUri) {
+    logoNode = titleText;
+  } else {
+    const image = (
+      <Image
+        source={{ uri: logoUri }}
+        style={{ height: px, width: logoWidth }}
+        contentFit="contain"
+        contentPosition="left"
+      />
+    );
+    logoNode =
+      content === "logo_title" ? (
+        <View className="flex-row items-center" style={{ gap: 10 }}>
+          {image}
+          {name ? (
+            <Text
+              className="font-jakarta-bold capitalize"
+              style={{ fontSize: px * 0.45, color: textColor }}
+              numberOfLines={1}
+            >
+              {name}
+            </Text>
+          ) : null}
+        </View>
+      ) : (
+        image
+      );
+  }
 
   return (
     <View className="flex-1 gap-y-1">
@@ -281,12 +296,12 @@ export function HeaderPreview({
   primaryColor,
   size = "md",
   position = "left",
-  showTitle = false,
+  content = "logo",
 }) {
   const px = HEADER_LOGO_PX[size] ?? HEADER_LOGO_PX.md;
   const logoWidth = Math.min(px * 4, 200);
   const centered = position === "center";
-  const shared = { name, primaryColor, px, logoWidth, centered, showTitle };
+  const shared = { name, primaryColor, px, logoWidth, centered, content };
 
   return (
     <View className="gap-y-1.5">

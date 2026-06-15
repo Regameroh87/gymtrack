@@ -123,7 +123,7 @@ export function GymThemeProvider({ children }) {
       headerConfig: {
         logoSize: gym?.header_logo_size ?? "md",
         logoPosition: gym?.header_logo_position ?? "left",
-        showTitle: gym?.header_show_title ?? false,
+        content: gym?.header_content ?? "logo",
       },
       source: theme.source,
       isDark,

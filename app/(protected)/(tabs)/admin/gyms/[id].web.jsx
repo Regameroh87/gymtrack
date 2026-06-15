@@ -33,7 +33,6 @@ import {
   ColorField,
   SectionTitle,
   Segmented,
-  Toggle,
   HeaderPreview,
   slugify,
   uploadImageWeb,
@@ -175,7 +174,7 @@ function EditGymForm({ gym }) {
       instagram: gym.instagram ?? "",
       header_logo_size: gym.header_logo_size ?? "md",
       header_logo_position: gym.header_logo_position ?? "left",
-      header_show_title: gym.header_show_title ?? false,
+      header_content: gym.header_content ?? "logo",
     },
     onSubmit: async ({ value }) => {
       try {
@@ -212,7 +211,7 @@ function EditGymForm({ gym }) {
           instagram: value.instagram.trim() || null,
           header_logo_size: value.header_logo_size,
           header_logo_position: value.header_logo_position,
-          header_show_title: value.header_show_title,
+          header_content: value.header_content,
         });
 
         notify("success", "Gimnasio actualizado correctamente.");
@@ -688,10 +687,10 @@ function EditGymForm({ gym }) {
               primary: s.values.theme_primary,
               size: s.values.header_logo_size,
               position: s.values.header_logo_position,
-              showTitle: s.values.header_show_title,
+              content: s.values.header_content,
             })}
           >
-            {({ name, primary, size, position, showTitle }) => (
+            {({ name, primary, size, position, content }) => (
               <HeaderPreview
                 logoUri={logoToShow}
                 logoUriDark={logoToShowDark}
@@ -699,7 +698,7 @@ function EditGymForm({ gym }) {
                 primaryColor={HEX_RE.test(primary) ? primary : DEFAULT_PRIMARY}
                 size={size}
                 position={position}
-                showTitle={showTitle}
+                content={content}
               />
             )}
           </form.Subscribe>
@@ -738,13 +737,17 @@ function EditGymForm({ gym }) {
             </View>
           </View>
 
-          <form.Field name="header_show_title">
+          <form.Field name="header_content">
             {(field) => (
-              <Toggle
-                label="Mostrar el nombre del gym"
-                hint="Útil si el logo es solo un ícono, sin el nombre."
+              <Segmented
+                label="CONTENIDO DEL HEADER"
                 value={field.state.value}
                 onChange={field.handleChange}
+                options={[
+                  { value: "logo", label: "Solo logo" },
+                  { value: "logo_title", label: "Logo + nombre" },
+                  { value: "title", label: "Solo nombre" },
+                ]}
               />
             )}
           </form.Field>
