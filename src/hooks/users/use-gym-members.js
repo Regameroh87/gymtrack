@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 // DB / hooks
 import { supabase } from "../../database/supabase";
 import { useActiveGym } from "../../contexts/active-gym-context";
+import { useAuth } from "../../auth/lib/getSession";
 
 // Usuarios del gym ACTIVO con su rol POR GYM (memberships.role). Reemplaza al
 // viejo listado directo de profiles: con multi-gym la pertenencia y el rol
@@ -12,9 +13,13 @@ import { useActiveGym } from "../../contexts/active-gym-context";
 // ambas apuntan a auth.users), así que se resuelve en dos pasos.
 export const useGymMembers = ({ onlyRole = null } = {}) => {
   const { gymId } = useActiveGym();
+  const { user } = useAuth();
+  // uid del usuario logueado (profiles.user_id = auth.uid()). Se excluye del
+  // listado: cada persona se gestiona desde su propia pantalla de perfil.
+  const currentUserId = user?.user_id ?? null;
 
   return useQuery({
-    queryKey: ["admin_users", gymId, onlyRole],
+    queryKey: ["admin_users", gymId, onlyRole, currentUserId],
     enabled: !!gymId,
     queryFn: async () => {
       let membershipQuery = supabase
@@ -42,10 +47,12 @@ export const useGymMembers = ({ onlyRole = null } = {}) => {
         .order("created_at", { ascending: false });
       if (pErr) throw pErr;
 
-      return (profiles ?? []).map((p) => ({
-        ...p,
-        role: roleByUser[p.user_id] ?? null,
-      }));
+      return (profiles ?? [])
+        .filter((p) => p.user_id !== currentUserId)
+        .map((p) => ({
+          ...p,
+          role: roleByUser[p.user_id] ?? null,
+        }));
     },
   });
 };
