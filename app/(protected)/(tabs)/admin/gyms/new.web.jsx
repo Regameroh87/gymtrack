@@ -7,7 +7,6 @@ import {
   TextInput,
   ActivityIndicator,
 } from "react-native";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +20,8 @@ import {
   Input,
   ColorField,
   SectionTitle,
+  LogoPickers,
+  HeaderConfigFields,
   slugify,
   uploadImageWeb,
   HEX_RE,
@@ -28,14 +29,12 @@ import {
   DEFAULT_ACCENT,
 } from "./_form.web";
 import {
-  Polaroid,
   Mail,
   Phone,
   MapPin,
   Link,
   ArrowLeft,
   CheckCircle,
-  CameraPlus,
   Search,
   ShieldHalf,
   X,
@@ -51,8 +50,11 @@ export default function NewGymWeb() {
   const queryClient = useQueryClient();
   const { brandPrimary } = useGymTheme();
   const fileInputRef = useRef(null);
+  const fileInputDarkRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrlDark, setPreviewUrlDark] = useState(null);
+  const [selectedFileDark, setSelectedFileDark] = useState(null);
   const [notification, setNotification] = useState(null);
   const [slugTouched, setSlugTouched] = useState(false);
 
@@ -99,6 +101,9 @@ export default function NewGymWeb() {
       slug: "",
       theme_primary: DEFAULT_PRIMARY,
       theme_accent: DEFAULT_ACCENT,
+      header_logo_size: "md",
+      header_logo_position: "left",
+      header_content: "logo",
       address: "",
       phone: "",
       email: "",
@@ -131,6 +136,15 @@ export default function NewGymWeb() {
           }
         }
 
+        let logo_url_dark = null;
+        if (selectedFileDark) {
+          try {
+            logo_url_dark = await uploadImageWeb(selectedFileDark);
+          } catch {
+            logo_url_dark = null;
+          }
+        }
+
         // La edge function crea el gym con rollback en cascada. Si el email
         // del dueño ya tiene cuenta (multi-gym), reutiliza la cuenta y solo
         // agrega la membresía de owner del gym nuevo; si no, crea auth user
@@ -145,8 +159,12 @@ export default function NewGymWeb() {
             gym_name: value.name.trim(),
             gym_slug: value.slug.trim(),
             logo_url,
+            logo_url_dark,
             theme_primary: value.theme_primary,
             theme_accent: value.theme_accent,
+            header_logo_size: value.header_logo_size,
+            header_logo_position: value.header_logo_position,
+            header_content: value.header_content,
             gym_address: value.address.trim() || null,
             gym_phone: value.phone.trim() || null,
             gym_email: value.email.trim() || null,
@@ -181,6 +199,8 @@ export default function NewGymWeb() {
         form.reset();
         setPreviewUrl(null);
         setSelectedFile(null);
+        setPreviewUrlDark(null);
+        setSelectedFileDark(null);
         setSelectedOwner(null);
         setOwnerSearch("");
         setSlugTouched(false);
@@ -197,6 +217,13 @@ export default function NewGymWeb() {
     if (!file) return;
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleFileChangeDark = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFileDark(file);
+    setPreviewUrlDark(URL.createObjectURL(file));
   };
 
   return (
@@ -277,6 +304,13 @@ export default function NewGymWeb() {
           ref={fileInputRef}
           style={{ display: "none" }}
           onChange={handleFileChange}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputDarkRef}
+          style={{ display: "none" }}
+          onChange={handleFileChangeDark}
         />
 
         {/* ── Sección 1 · Datos del gimnasio ── */}
@@ -626,40 +660,13 @@ export default function NewGymWeb() {
           subtitle="Logo y colores que ven los miembros del gym"
         />
         <View className="gap-y-5">
-          {/* Logo picker */}
-          <View className="items-center">
-            <Pressable
-              onPress={() => fileInputRef.current?.click()}
-              className="items-center gap-3 hover:opacity-80"
-              style={{ cursor: "pointer" }}
-            >
-              <View className="relative">
-                {previewUrl ? (
-                  <Image
-                    source={{ uri: previewUrl }}
-                    style={{ width: 88, height: 88, borderRadius: 22 }}
-                    contentFit="cover"
-                    transition={200}
-                  />
-                ) : (
-                  <View className="w-[88px] h-[88px] rounded-[22px] bg-brandPrimary-50 items-center justify-center border-2 border-dashed border-brandPrimary-300">
-                    <Polaroid size={30} color={brandPrimary[500]} />
-                  </View>
-                )}
-                <View className="absolute bottom-0 right-0 bg-brandPrimary-600 p-2 rounded-full border-2 border-white shadow-sm">
-                  <CameraPlus size={13} color="white" />
-                </View>
-              </View>
-              <View className="items-center">
-                <Text className="text-[13px] font-manrope-bold text-ui-text-main">
-                  Logo del gimnasio
-                </Text>
-                <Text className="text-[11px] font-manrope text-ui-text-muted">
-                  Hacé clic para elegir una imagen
-                </Text>
-              </View>
-            </Pressable>
-          </View>
+          {/* Logo picker: claro (principal) + oscuro (opcional) */}
+          <LogoPickers
+            logoUri={previewUrl}
+            logoUriDark={previewUrlDark}
+            onPickLight={() => fileInputRef.current?.click()}
+            onPickDark={() => fileInputDarkRef.current?.click()}
+          />
 
           {/* Row: Colores del tema */}
           <View className="flex-row gap-4">
@@ -698,6 +705,13 @@ export default function NewGymWeb() {
               </form.Field>
             </View>
           </View>
+
+          {/* ── Header del home: tamaño / posición / contenido + preview ── */}
+          <HeaderConfigFields
+            form={form}
+            logoUri={previewUrl}
+            logoUriDark={previewUrlDark}
+          />
         </View>
 
         {/* Submit */}

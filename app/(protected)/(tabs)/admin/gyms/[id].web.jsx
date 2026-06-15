@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
-import { Image } from "expo-image";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useForm } from "@tanstack/react-form";
 import { useQuery } from "@tanstack/react-query";
@@ -32,8 +31,8 @@ import {
   Input,
   ColorField,
   SectionTitle,
-  Segmented,
-  HeaderPreview,
+  LogoPickers,
+  HeaderConfigFields,
   slugify,
   uploadImageWeb,
   HEX_RE,
@@ -43,14 +42,12 @@ import {
 
 // Iconos
 import {
-  Polaroid,
   Mail,
   Phone,
   MapPin,
   Link,
   ArrowLeft,
   CheckCircle,
-  CameraPlus,
   ShieldHalf,
   Lock,
   Trash,
@@ -554,84 +551,12 @@ function EditGymForm({ gym }) {
         />
         <View className="gap-y-5">
           {/* Logo picker: claro (principal) + oscuro (opcional) */}
-          <View className="flex-row gap-8 justify-center">
-            {/* Logo principal (light) */}
-            <Pressable
-              onPress={() => fileInputRef.current?.click()}
-              className="items-center gap-3 hover:opacity-80"
-              style={{ cursor: "pointer" }}
-            >
-              <View className="relative">
-                {logoToShow ? (
-                  <Image
-                    source={{ uri: logoToShow }}
-                    style={{ width: 88, height: 88, borderRadius: 22 }}
-                    contentFit="cover"
-                    transition={200}
-                  />
-                ) : (
-                  <View className="w-[88px] h-[88px] rounded-[22px] bg-brandPrimary-50 items-center justify-center border-2 border-dashed border-brandPrimary-300">
-                    <Polaroid size={30} color={brandPrimary[500]} />
-                  </View>
-                )}
-                <View className="absolute bottom-0 right-0 bg-brandPrimary-600 p-2 rounded-full border-2 border-white shadow-sm">
-                  <CameraPlus size={13} color="white" />
-                </View>
-              </View>
-              <View className="items-center">
-                <Text className="text-[13px] font-manrope-bold text-ui-text-main">
-                  Logo principal
-                </Text>
-                <Text className="text-[11px] font-manrope text-ui-text-muted">
-                  Se usa en modo claro
-                </Text>
-              </View>
-            </Pressable>
-
-            {/* Logo oscuro (opcional). Thumbnail sobre fondo oscuro. */}
-            <Pressable
-              onPress={() => fileInputDarkRef.current?.click()}
-              className="items-center gap-3 hover:opacity-80"
-              style={{ cursor: "pointer" }}
-            >
-              <View className="relative">
-                {logoToShowDark ? (
-                  <View
-                    className="w-[88px] h-[88px] rounded-[22px] items-center justify-center overflow-hidden"
-                    style={{ backgroundColor: ui.background.dark }}
-                  >
-                    <Image
-                      source={{ uri: logoToShowDark }}
-                      style={{ width: "100%", height: "100%" }}
-                      contentFit="cover"
-                      transition={200}
-                    />
-                  </View>
-                ) : (
-                  <View
-                    className="w-[88px] h-[88px] rounded-[22px] items-center justify-center border-2 border-dashed"
-                    style={{
-                      backgroundColor: ui.background.dark,
-                      borderColor: "rgba(255,255,255,0.18)",
-                    }}
-                  >
-                    <Polaroid size={30} color="rgba(255,255,255,0.55)" />
-                  </View>
-                )}
-                <View className="absolute bottom-0 right-0 bg-brandPrimary-600 p-2 rounded-full border-2 border-white shadow-sm">
-                  <CameraPlus size={13} color="white" />
-                </View>
-              </View>
-              <View className="items-center">
-                <Text className="text-[13px] font-manrope-bold text-ui-text-main">
-                  Logo modo oscuro
-                </Text>
-                <Text className="text-[11px] font-manrope text-ui-text-muted">
-                  Opcional · cae al principal
-                </Text>
-              </View>
-            </Pressable>
-          </View>
+          <LogoPickers
+            logoUri={logoToShow}
+            logoUriDark={logoToShowDark}
+            onPickLight={() => fileInputRef.current?.click()}
+            onPickDark={() => fileInputDarkRef.current?.click()}
+          />
 
           {/* Row: Colores del tema */}
           <View className="flex-row gap-4">
@@ -671,86 +596,12 @@ function EditGymForm({ gym }) {
             </View>
           </View>
 
-          {/* ── Header del home: tamaño / posición / título + preview ── */}
-          <View className="w-full h-px bg-ui-input-light my-1" />
-          <Text className="text-[12px] font-jakarta-bold text-ui-text-main tracking-tight">
-            Header del home
-          </Text>
-          <Text className="text-[11px] font-manrope text-ui-text-muted -mt-3">
-            Cómo se ve el logo en la barra superior de la app de los miembros.
-          </Text>
-
-          {/* Preview en vivo: se suscribe a logo + nombre + color + los 3 campos */}
-          <form.Subscribe
-            selector={(s) => ({
-              name: s.values.name,
-              primary: s.values.theme_primary,
-              size: s.values.header_logo_size,
-              position: s.values.header_logo_position,
-              content: s.values.header_content,
-            })}
-          >
-            {({ name, primary, size, position, content }) => (
-              <HeaderPreview
-                logoUri={logoToShow}
-                logoUriDark={logoToShowDark}
-                name={name}
-                primaryColor={HEX_RE.test(primary) ? primary : DEFAULT_PRIMARY}
-                size={size}
-                position={position}
-                content={content}
-              />
-            )}
-          </form.Subscribe>
-
-          <View className="flex-row gap-4">
-            <View className="flex-1">
-              <form.Field name="header_logo_size">
-                {(field) => (
-                  <Segmented
-                    label="TAMAÑO DEL LOGO"
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    options={[
-                      { value: "sm", label: "Chico" },
-                      { value: "md", label: "Medio" },
-                      { value: "lg", label: "Grande" },
-                    ]}
-                  />
-                )}
-              </form.Field>
-            </View>
-            <View className="flex-1">
-              <form.Field name="header_logo_position">
-                {(field) => (
-                  <Segmented
-                    label="POSICIÓN"
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    options={[
-                      { value: "left", label: "Izquierda" },
-                      { value: "center", label: "Centro" },
-                    ]}
-                  />
-                )}
-              </form.Field>
-            </View>
-          </View>
-
-          <form.Field name="header_content">
-            {(field) => (
-              <Segmented
-                label="CONTENIDO DEL HEADER"
-                value={field.state.value}
-                onChange={field.handleChange}
-                options={[
-                  { value: "logo", label: "Solo logo" },
-                  { value: "logo_title", label: "Logo + nombre" },
-                  { value: "title", label: "Solo nombre" },
-                ]}
-              />
-            )}
-          </form.Field>
+          {/* ── Header del home: tamaño / posición / contenido + preview ── */}
+          <HeaderConfigFields
+            form={form}
+            logoUri={logoToShow}
+            logoUriDark={logoToShowDark}
+          />
         </View>
 
         {/* Submit */}
