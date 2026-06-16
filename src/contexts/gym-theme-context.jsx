@@ -17,6 +17,7 @@ import { generateRamp, rampToChannels, SHADES } from "../theme/generate-ramp";
 
 // Datos del gym (branding)
 import { useGym } from "../hooks/gyms/use-gym";
+import { useActiveGym } from "./active-gym-context";
 
 // ─── Theme multitenant en runtime ───
 // Resuelve la paleta de marca del gym activo (rampas generadas del seed o las
@@ -66,6 +67,7 @@ export function GymThemeProvider({ children }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
 
+  const { gymId } = useActiveGym();
   const { data: gym } = useGym();
   const [theme, setTheme] = useState(DEFAULT_THEME);
 
@@ -76,9 +78,10 @@ export function GymThemeProvider({ children }) {
     (async () => {
       try {
         const activeGymId = await AsyncStorage.getItem("active-gym:id");
-        let raw = activeGymId
-          ? await AsyncStorage.getItem(`${STORAGE_PREFIX}${activeGymId}`)
-          : null;
+        // Sin gym activo (modo plataforma del super_admin): queda DEFAULT_THEME.
+        // No se cae a LAST_KEY para no arrastrar el tema del último gym.
+        if (!activeGymId) return;
+        let raw = await AsyncStorage.getItem(`${STORAGE_PREFIX}${activeGymId}`);
         if (!raw) raw = await AsyncStorage.getItem(LAST_KEY);
         if (!mounted || !raw) return;
         const { theme_primary, theme_accent } = JSON.parse(raw);
@@ -93,8 +96,17 @@ export function GymThemeProvider({ children }) {
     };
   }, []);
 
-  // 2) Fuente de verdad: el gym del perfil. Resuelve, aplica y persiste.
+  // 2) Fuente de verdad: el gym activo. Resuelve, aplica y persiste.
   useEffect(() => {
+    // Sin gym activo (super_admin en modo plataforma, o logout): volver a la
+    // marca GymTrack default. DEFAULT_THEME es constante de módulo (referencia
+    // estable), así que no dispara renders en loop.
+    if (!gymId) {
+      setTheme(DEFAULT_THEME);
+      return;
+    }
+    // Gym seleccionado pero su branding aún no resolvió: mantener el theme
+    // actual (hidratado) para no parpadear a default mientras carga la query.
     if (!gym) return;
     const resolved = resolveTheme(gym.theme_primary, gym.theme_accent);
     setTheme(resolved);
@@ -106,7 +118,7 @@ export function GymThemeProvider({ children }) {
       [`${STORAGE_PREFIX}${gym.id}`, payload],
       [LAST_KEY, payload],
     ]).catch(() => {});
-  }, [gym]);
+  }, [gymId, gym]);
 
   const cssVars = useMemo(() => buildCssVars(theme), [theme]);
 
