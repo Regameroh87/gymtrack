@@ -304,10 +304,13 @@ export function ActiveGymProvider({ children }) {
     }));
   }, [isSuperAdmin, allGyms, usableMemberships]);
 
-  // El super_admin siempre pasa por el selector (su "home base"): necesita
-  // elegir mientras no haya un gym activo. El resto, solo con >1 membership.
+  // En WEB el super_admin NO se fuerza al selector: su "home base" es el panel
+  // de plataforma (lista de gyms + configuración), no un gym puntual; entra a un
+  // gym explícitamente desde ahí. En NATIVE no hay panel de plataforma, así que
+  // sigue pasando por el selector (modo administrador). El resto, solo con >1
+  // membership.
   const needsSelection = isSuperAdmin
-    ? isLoggedIn && !activeGymId
+    ? Platform.OS !== "web" && isLoggedIn && !activeGymId
     : isLoggedIn &&
       !!usableMemberships &&
       usableMemberships.length > 1 &&

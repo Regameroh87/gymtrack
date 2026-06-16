@@ -32,7 +32,6 @@ export const isSuperAdminRole = (role) => role === ROLES.SUPER_ADMIN;
 // Permisos por módulo del panel (clave = `path` de la ruta /admin/<path>).
 // Si un módulo no figura, se asume visible para todo el staff.
 export const MODULE_ROLES = {
-  gyms: [ROLES.SUPER_ADMIN],
   users: STAFF_ROLES,
   exercises: STAFF_ROLES,
   equipments: STAFF_ROLES,

@@ -205,7 +205,7 @@ export default function NewGymWeb() {
         setOwnerSearch("");
         setSlugTouched(false);
         setOwnerMode("existing");
-        router.push("/admin/gyms");
+        router.push("/platform/gyms");
       } catch (err) {
         notify("error", err.message);
       }
@@ -271,7 +271,7 @@ export default function NewGymWeb() {
       <View className="mb-8">
         <View className="flex-row items-center gap-1.5 mb-1.5">
           <Pressable
-            onPress={() => router.push("/admin/gyms")}
+            onPress={() => router.push("/platform/gyms")}
             className="flex-row items-center gap-1 hover:opacity-70"
             style={{ cursor: "pointer" }}
           >

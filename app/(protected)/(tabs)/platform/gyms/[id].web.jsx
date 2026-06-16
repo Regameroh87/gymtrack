@@ -212,7 +212,7 @@ function EditGymForm({ gym }) {
         });
 
         notify("success", "Gimnasio actualizado correctamente.");
-        router.push("/admin/gyms");
+        router.push("/platform/gyms");
       } catch (err) {
         // Slug duplicado u otros errores de la BD.
         const msg =
@@ -246,7 +246,7 @@ function EditGymForm({ gym }) {
   const handleDelete = async () => {
     try {
       await deleteGym.mutateAsync({ gymId: gym.id });
-      // onSuccess del hook redirige a /admin/gyms.
+      // onSuccess del hook redirige a /platform/gyms.
     } catch (err) {
       setConfirmOpen(false);
       notify("error", err.message);
@@ -315,7 +315,7 @@ function EditGymForm({ gym }) {
       <View className="mb-8">
         <View className="flex-row items-center gap-1.5 mb-1.5">
           <Pressable
-            onPress={() => router.push("/admin/gyms")}
+            onPress={() => router.push("/platform/gyms")}
             className="flex-row items-center gap-1 hover:opacity-70"
             style={{ cursor: "pointer" }}
           >

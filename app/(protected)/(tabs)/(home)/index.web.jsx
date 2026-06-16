@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 // Auth
 import { useAuth } from "../../../../src/auth/lib/getSession.jsx";
 import { useUserRole } from "../../../../src/hooks/shared/use-user-role.js";
+import { useActiveGym } from "../../../../src/contexts/active-gym-context.jsx";
 
 // Hooks
 import { useSessionLogs } from "../../../../src/hooks/sessions/use-session-logs.js";
@@ -114,7 +115,8 @@ function resolveLogLabels(log) {
 
 // ─── Gate ────────────────────────────────────────────────────────────────────
 export default function HomeWeb() {
-  const { isStaff, loading } = useUserRole();
+  const { isStaff, isSuperAdmin, loading } = useUserRole();
+  const { gymId } = useActiveGym();
 
   if (loading) {
     return (
@@ -139,6 +141,9 @@ export default function HomeWeb() {
     );
   }
 
+  // Super admin sin gym activo: su home base es el panel de plataforma.
+  // Si ya entró a un gym (gymId), va al panel operativo como cualquier staff.
+  if (isSuperAdmin && !gymId) return <Redirect href="/platform" />;
   if (isStaff) return <Redirect href="/admin" />;
 
   return <MemberHomeWeb />;

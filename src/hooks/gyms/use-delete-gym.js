@@ -34,7 +34,7 @@ export const useDeleteGym = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin_gyms_web"] });
       queryClient.invalidateQueries({ queryKey: ["gyms"] });
-      router.replace("/admin/gyms");
+      router.replace("/platform/gyms");
     },
   });
 };

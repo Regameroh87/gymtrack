@@ -11,18 +11,22 @@ import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 
+import Toast from "react-native-toast-message";
+
 import { supabase } from "../../../../../src/database/supabase";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 
 import {
   ShieldHalf,
   Users,
   Search,
-  ChevronRight,
   Plus,
   MapPin,
+  ArrowRight,
+  Pencil,
 } from "../../../../../assets/icons";
 
 const PAGE_SIZE = 12;
@@ -129,7 +133,7 @@ export default function GymsListWeb() {
         </View>
 
         <Pressable
-          onPress={() => router.push("/admin/gyms/new")}
+          onPress={() => router.push("/platform/gyms/new")}
           className="flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30"
           style={{ cursor: "pointer" }}
         >
@@ -265,6 +269,8 @@ function StatCard({ icon: Icon, label, value, iconColor, bubble }) {
 
 function GymCard({ gym, router }) {
   const { brandSecondary } = useGymTheme();
+  const { switchGym } = useActiveGym();
+  const [entering, setEntering] = useState(false);
   const logoUrl =
     getCloudinaryUrl(gym.logo_url) || (gym.logo_url ? `${gym.logo_url}` : null);
   const ownerLabel = gym.owner
@@ -273,15 +279,28 @@ function GymCard({ gym, router }) {
     : "Sin dueño asignado";
   const suspended = gym.is_active === false;
 
+  // Acción primaria: entrar al panel operativo del gym (modo administrador).
+  const handleEnter = async () => {
+    if (entering) return;
+    setEntering(true);
+    try {
+      await switchGym(gym.id);
+      router.push("/admin");
+    } catch (e) {
+      Toast.show({
+        type: "error",
+        text1: "No se pudo entrar al gimnasio",
+        text2: e?.message,
+        position: "bottom",
+      });
+      setEntering(false);
+    }
+  };
+
   return (
-    <Pressable
-      onPress={() => router.push(`/admin/gyms/${gym.id}`)}
+    <View
       className="bg-white rounded-[16px] border border-ui-input-border overflow-hidden hover:border-brandPrimary-300"
-      style={{
-        width: "calc(33.333% - 9.34px)",
-        cursor: "pointer",
-        opacity: suspended ? 0.55 : 1,
-      }}
+      style={{ width: "calc(33.333% - 9.34px)", opacity: suspended ? 0.55 : 1 }}
     >
       <View className="p-4 flex-row items-center gap-3">
         {logoUrl ? (
@@ -321,8 +340,6 @@ function GymCard({ gym, router }) {
             /{gym.slug}
           </Text>
         </View>
-
-        <ChevronRight size={14} color={ui.text.muted} />
       </View>
 
       <View className="px-4 pb-4">
@@ -357,8 +374,39 @@ function GymCard({ gym, router }) {
             {formatDate(gym.created_at)}
           </Text>
         </View>
+
+        {/* Acciones: Entrar (primaria) · Configurar (secundaria) */}
+        <View className="flex-row items-center gap-2 mt-3">
+          <Pressable
+            onPress={handleEnter}
+            disabled={entering}
+            className="flex-1 flex-row items-center justify-center gap-1.5 py-2 rounded-[9px] bg-brandPrimary-600 hover:bg-brandPrimary-700"
+            style={{ cursor: entering ? "default" : "pointer" }}
+          >
+            {entering ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Text className="text-[12px] font-manrope-bold text-white">
+                  Entrar
+                </Text>
+                <ArrowRight size={13} color="#fff" />
+              </>
+            )}
+          </Pressable>
+          <Pressable
+            onPress={() => router.push(`/platform/gyms/${gym.id}`)}
+            className="flex-row items-center justify-center gap-1.5 px-3 py-2 rounded-[9px] border border-ui-input-border bg-white hover:bg-brandPrimary-50/60"
+            style={{ cursor: "pointer" }}
+          >
+            <Pencil size={12} color={ui.text.muted} />
+            <Text className="text-[12px] font-manrope-semi text-ui-text-main">
+              Configurar
+            </Text>
+          </Pressable>
+        </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
