@@ -27,7 +27,7 @@ import {
   HEX_RE,
   DEFAULT_PRIMARY,
   DEFAULT_ACCENT,
-} from "./_form.web";
+} from "./_form";
 import {
   Mail,
   Phone,

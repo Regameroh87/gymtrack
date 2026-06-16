@@ -1,4 +1,4 @@
-import PlatformPlaceholder from "../../../../../src/components/admin/PlatformPlaceholder.web";
+import PlatformPlaceholder from "../../../../../src/components/admin/PlatformPlaceholder";
 
 import {
   Settings,
