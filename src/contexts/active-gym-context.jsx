@@ -87,12 +87,13 @@ export function ActiveGymProvider({ children }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gyms")
-        .select(
-          "id, name, logo_url, theme_primary, theme_accent, is_active"
-        )
+        .select("id, name, logo_url, theme_primary, theme_accent, is_active")
         .order("name");
       if (error) {
-        console.error("ActiveGym: error al leer todos los gyms:", error.message);
+        console.error(
+          "ActiveGym: error al leer todos los gyms:",
+          error.message
+        );
         throw error;
       }
       return data ?? [];

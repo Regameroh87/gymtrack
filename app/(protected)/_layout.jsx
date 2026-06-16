@@ -9,7 +9,11 @@ import { supabase } from "../../src/database/supabase";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading, user } = useAuth();
-  const { needsSelection, confirmedNoGym, loading: gymLoading } = useActiveGym();
+  const {
+    needsSelection,
+    confirmedNoGym,
+    loading: gymLoading,
+  } = useActiveGym();
   const { isDark } = useTheme();
   const pathname = usePathname();
 
