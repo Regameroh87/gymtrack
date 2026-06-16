@@ -3,8 +3,6 @@ import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useMemo } from "react";
 
 // Librerías externas
-import { useColorScheme } from "nativewind";
-import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
