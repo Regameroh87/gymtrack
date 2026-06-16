@@ -62,3 +62,46 @@ export const formatRelativeDay = (input) => {
   if (diffDays === 1) return "Ayer";
   return formatShortDate(date);
 };
+
+// ─── Helpers de semana (para la pestaña Progreso) ──────────────────────────────
+// Se calculan a mano para no sumar una dependencia de fechas (date-fns/dayjs).
+
+// 00:00 del día local que contiene `input`. Acepta Date o string ISO.
+export const startOfDay = (input) => {
+  const d = input instanceof Date ? new Date(input) : new Date(input);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+// Lunes 00:00 de la semana que contiene `input` (semana ISO, empieza lunes).
+export const startOfWeek = (input) => {
+  const d = startOfDay(input);
+  const dow = (d.getDay() + 6) % 7; // 0 = lunes … 6 = domingo
+  d.setDate(d.getDate() - dow);
+  return d;
+};
+
+// Clave estable de semana = fecha del lunes "YYYY-MM-DD". Sirve de id para agrupar.
+export const weekKey = (input) => {
+  const m = startOfWeek(input);
+  const mm = String(m.getMonth() + 1).padStart(2, "0");
+  const dd = String(m.getDate()).padStart(2, "0");
+  return `${m.getFullYear()}-${mm}-${dd}`;
+};
+
+// Las últimas `n` semanas (incluida la actual), de la más vieja a la más nueva.
+// Cada item: { key, start (Date del lunes), label "12 MAY" }.
+export const lastNWeeks = (n) => {
+  const current = startOfWeek(new Date());
+  const weeks = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const start = new Date(current);
+    start.setDate(start.getDate() - i * 7);
+    weeks.push({
+      key: weekKey(start),
+      start,
+      label: `${start.getDate()} ${MONTHS_ES[start.getMonth()]}`,
+    });
+  }
+  return weeks;
+};

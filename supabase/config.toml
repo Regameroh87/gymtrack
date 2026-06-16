@@ -397,3 +397,19 @@ entrypoint = "./functions/crear-socio/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/crear-socio/*.html" ]
+
+# Canal único de envío transaccional (Resend). Solo server-to-server: verify_jwt
+# off + secreto interno (x-internal-secret) validado dentro de la función.
+[functions.send-email]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-email/deno.json"
+entrypoint = "./functions/send-email/index.ts"
+
+# Webhook de Resend (estado de entrega). Externo: Resend no manda JWT, la firma
+# Svix se valida dentro de la función.
+[functions.resend-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/resend-webhook/deno.json"
+entrypoint = "./functions/resend-webhook/index.ts"

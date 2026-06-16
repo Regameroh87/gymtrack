@@ -50,6 +50,68 @@ async function rollbackGym(gymId: string) {
   return true
 }
 
+const APP_URL = Deno.env.get('APP_URL') ?? 'https://app.gymtrack.ar'
+
+function buildWelcomeOwnerHtml(gymName: string): string {
+  return `<!doctype html>
+<html lang="es"><body style="margin:0;background:#f4f4f7;font-family:'Manrope',Arial,sans-serif;color:#1c1c24;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:32px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr><td style="background:#4A44E4;padding:24px 32px;">
+          <span style="color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.3px;">GymTrack</span>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <h1 style="margin:0 0 12px;font-size:22px;color:#1c1c24;">¡${gymName} ya está en GymTrack!</h1>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#44444f;">
+            Creamos tu gimnasio <strong>${gymName}</strong> y te dejamos como dueño. Para
+            empezar a gestionarlo, entrá con tu email y te enviaremos un código de acceso
+            (no necesitás contraseña).
+          </p>
+          <a href="${APP_URL}" style="display:inline-block;background:#4A44E4;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:700;font-size:15px;">
+            Ingresar a GymTrack
+          </a>
+          <p style="margin:24px 0 0;font-size:12px;color:#9a9aa5;">
+            Si no esperabas este mail, podés ignorarlo.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`
+}
+
+// Best-effort: el mail de bienvenida nunca debe romper la creación del gym.
+async function sendWelcomeOwnerEmail(gymId: string, to: string, gymName: string) {
+  try {
+    const internalSecret = Deno.env.get('INTERNAL_FUNCTION_SECRET')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!internalSecret || !supabaseUrl) {
+      console.warn('[crear-gym] Falta config para enviar bienvenida; se omite.')
+      return
+    }
+
+    await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${serviceKey}`,
+        'x-internal-secret': internalSecret,
+      },
+      body: JSON.stringify({
+        gym_id: gymId,
+        to,
+        type: 'welcome_owner',
+        subject: `Tu gimnasio ${gymName} está listo`,
+        html: buildWelcomeOwnerHtml(gymName),
+      }),
+    })
+  } catch (err: any) {
+    console.warn('[crear-gym] No se pudo enviar el mail de bienvenida:', err?.message)
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -220,6 +282,9 @@ Deno.serve(async (req) => {
       if (createdUserId) await rollbackUser(createdUserId)
       throw membershipError
     }
+
+    // Mail de bienvenida al owner (best-effort).
+    await sendWelcomeOwnerEmail(createdGymId, email, gym_name)
 
     return new Response(JSON.stringify({ done: true, gym_id: createdGymId, user_id: ownerUserId, linked_existing: ownerIsExisting }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
