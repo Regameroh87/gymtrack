@@ -61,50 +61,26 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'El gimnasio no existe.' }, 404)
     }
 
-    // 1. Recolectar los user_id de todos los miembros del gym (para evaluar
-    // huérfanos después del borrado en cascada).
-    const { data: members } = await supabaseAdmin
-      .from('memberships')
-      .select('user_id')
-      .eq('gym_id', gymId)
-    const memberUserIds = [...new Set((members ?? []).map((m) => m.user_id).filter(Boolean))]
+    // 1. Borrado atómico de todo el contenido del gym en orden de dependencias.
+    // La RPC corre en una sola transacción (un delete directo del gym fallaba por
+    // las FK NO ACTION que session_exercises/session_set_logs tienen hacia
+    // exercises_base). Devuelve los user_id que quedaron sin ningún gym.
+    const { data: orphanUserIds, error: deleteError } = await supabaseAdmin
+      .rpc('delete_gym_cascade', { p_gym_id: gymId })
+    if (deleteError) throw deleteError
 
-    // 2. session_logs tiene FK ON DELETE NO ACTION hacia gyms, así que un delete
-    // directo del gym fallaría si hay historial. Lo limpiamos antes; sus
-    // session_set_logs caen por cascade de session_logs.
-    const { error: logsError } = await supabaseAdmin
-      .from('session_logs')
-      .delete()
-      .eq('gym_id', gymId)
-    if (logsError) throw logsError
-
-    // 3. Borrar el gym. El cascade arrastra memberships, exercises_base,
-    // equipment, sessions, training_plans, plan_assignments, attendances,
-    // gym_qr_tokens y sus árboles descendientes.
-    const { error: gymDeleteError } = await supabaseAdmin
-      .from('gyms')
-      .delete()
-      .eq('id', gymId)
-    if (gymDeleteError) throw gymDeleteError
-
-    // 4. Eliminar las cuentas de usuarios que ya no pertenecen a ningún gym.
-    // Quienes están en otros gyms conservan su cuenta. El delete del auth user
-    // arrastra su profile y datos personales por cascade.
+    // 2. Eliminar las cuentas de usuarios que ya no pertenecen a ningún gym.
+    // El gym ya se borró atómicamente, así que un fallo acá no debe abortar la
+    // operación: se loguea y se sigue. El delete del auth user arrastra su profile
+    // y datos personales por cascade.
     let deletedUsers = 0
-    for (const userId of memberUserIds) {
-      const { count } = await supabaseAdmin
-        .from('memberships')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-
-      if ((count ?? 0) === 0) {
-        const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
-        if (authDeleteError) {
-          console.error('[eliminar-gym] Error al borrar auth user:', authDeleteError.message)
-          continue
-        }
-        deletedUsers++
+    for (const userId of (orphanUserIds ?? [])) {
+      const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+      if (authDeleteError) {
+        console.error('[eliminar-gym] Error al borrar auth user:', authDeleteError.message)
+        continue
       }
+      deletedUsers++
     }
 
     return jsonResponse({ done: true, deleted_users: deletedUsers }, 200)
