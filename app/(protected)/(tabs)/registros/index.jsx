@@ -103,7 +103,7 @@ export default function RegistrosTab() {
       <View className="px-6 pt-4 pb-2 flex-row items-start justify-between">
         <View>
           <Text className="text-xs font-jakarta-semi uppercase tracking-widest mb-1 text-brandPrimary-500 dark:text-brandPrimary-400">
-            Mi Progreso
+            Mi Historial
           </Text>
           <Text className="text-[28px] font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark leading-8">
             Registros

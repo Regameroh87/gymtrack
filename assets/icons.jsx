@@ -802,6 +802,25 @@ export const CheckCircle = ({ size = 24, className, ...props }) => (
   </Svg>
 );
 
+export const Flame = ({ size = 24, className, ...props }) => (
+  <Svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+    className={`icon icon-tabler icons-tabler-outline icon-tabler-flame ${className}`}
+    {...props}
+  >
+    <Path stroke="none" d="M0 0h24v24H0z" />
+    <Path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a5 5 0 0 0 10 0c0-1.971-.8-3.752-2.091-5.039z" />
+  </Svg>
+);
+
 export const Logout = ({ size = 24, className, ...props }) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"

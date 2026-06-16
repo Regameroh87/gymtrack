@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Barbell, Home, Logs, ShieldHalf } from "../../../assets/icons";
+import { Barbell, ChartBar, Home, Logs, ShieldHalf } from "../../../assets/icons";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { Pressable, Text, View } from "react-native";
 import { useColorScheme } from "nativewind";
@@ -85,6 +85,17 @@ export default function TabsLayout() {
           popToTopOnBlur: true,
           tabBarIcon: ({ color }) => (
             <Logs color={color} width={24} height={24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="progreso"
+        options={{
+          title: "Progreso",
+          headerShown: false,
+          popToTopOnBlur: true,
+          tabBarIcon: ({ color }) => (
+            <ChartBar color={color} width={24} height={24} />
           ),
         }}
       />

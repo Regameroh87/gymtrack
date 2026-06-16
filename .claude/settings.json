@@ -43,7 +43,8 @@
       "Bash(curl -s -i -X OPTIONS \"https://claoplxdhdxoixfdsatz.supabase.co/functions/v1/crear-gym\" -H \"Origin: http://localhost:8081\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: authorization, content-type, apikey\")",
       "PowerShell(supabase --version)",
       "PowerShell(supabase projects list 2>&1)",
-      "PowerShell(if \\($env:SUPABASE_ACCESS_TOKEN\\) { Write-Output \"TOKEN_ENV: SET\" } else { Write-Output \"TOKEN_ENV: NOT SET\" }; Write-Output \"---linked?---\"; if \\(Test-Path \"supabase/.temp/project-ref\"\\) { Write-Output \\(\"LINKED: \" + \\(Get-Content supabase/.temp/project-ref\\)\\) } else { Write-Output \"NOT LINKED \\(no supabase/.temp/project-ref\\)\" })"
+      "PowerShell(if \\($env:SUPABASE_ACCESS_TOKEN\\) { Write-Output \"TOKEN_ENV: SET\" } else { Write-Output \"TOKEN_ENV: NOT SET\" }; Write-Output \"---linked?---\"; if \\(Test-Path \"supabase/.temp/project-ref\"\\) { Write-Output \\(\"LINKED: \" + \\(Get-Content supabase/.temp/project-ref\\)\\) } else { Write-Output \"NOT LINKED \\(no supabase/.temp/project-ref\\)\" })",
+      "PowerShell(supabase functions deploy send-email resend-webhook crear-socio crear-gym --project-ref claoplxdhdxoixfdsatz 2>&1)"
     ],
     "defaultMode": "default"
   }
