@@ -108,7 +108,28 @@ Deno.serve(async (req) => {
 
     let fullDelete = false
     if ((count ?? 0) === 0) {
-      // Sin otras membresías: eliminar cuenta completa (cascade borra profile y datos)
+      // Sin otras membresías: eliminar cuenta completa (cascade borra profile y datos).
+      // Antes encolamos su avatar en cloudinary_delete_queue para que el cron
+      // cleanUp-cloudinary lo borre de Cloudinary (el cascade del profile no lo limpia).
+      const { data: targetProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('image_profile')
+        .eq('user_id', targetUserId)
+        .maybeSingle()
+
+      if (targetProfile?.image_profile) {
+        const { error: queueError } = await supabaseAdmin
+          .from('cloudinary_delete_queue')
+          .upsert(
+            { public_id: targetProfile.image_profile, resource_type: 'image' },
+            { onConflict: 'public_id' }
+          )
+        // No abortamos si falla el encolado: el borrado del socio es lo prioritario.
+        if (queueError) {
+          console.error('[eliminar-socio] Error al encolar avatar:', queueError.message)
+        }
+      }
+
       const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId)
       if (authDeleteError) {
         console.error('[eliminar-socio] Error al borrar auth user:', authDeleteError.message)
