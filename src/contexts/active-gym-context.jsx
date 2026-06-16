@@ -46,6 +46,7 @@ export function ActiveGymProvider({ children }) {
   const [storageLoaded, setStorageLoaded] = useState(false);
   const lastSyncedGymRef = useRef(null);
   const prevAuthUserIdRef = useRef(null);
+  const didWipeNoGymRef = useRef(false);
 
   // Memberships activas con el branding del gym embebido (alcanza para el
   // selector sin queries extra).
@@ -75,6 +76,13 @@ export function ActiveGymProvider({ children }) {
   });
 
   const memberships = membershipsQuery.data ?? null;
+
+  // Confirmación POSITIVA del servidor de que la persona no tiene ninguna
+  // membership (su gym fue eliminado o la sacaron de todos): la query cargó con
+  // éxito y vino vacía. Si está offline / erroró / nunca corrió, es false, para
+  // no bloquear el uso offline-first con datos locales.
+  const confirmedNoGym =
+    membershipsQuery.isSuccess && (membershipsQuery.data?.length ?? 0) === 0;
 
   // Modo administrador: el super_admin puede entrar a cualquier gym, así que el
   // selector se alimenta del catálogo COMPLETO de gyms (no de sus memberships).
@@ -140,6 +148,8 @@ export function ActiveGymProvider({ children }) {
     if (prev && !authUserId) {
       setActiveGymId(null);
       AsyncStorage.removeItem(ACTIVE_GYM_KEY).catch(() => {});
+      // Permite que una próxima cuenta sin gym vuelva a purgar (device compartido).
+      didWipeNoGymRef.current = false;
     }
   }, [authUserId]);
 
@@ -181,6 +191,25 @@ export function ActiveGymProvider({ children }) {
       supabase.auth.signOut().catch(() => {});
     }
   }, [isSuperAdmin, isLoggedIn, memberships, usableMemberships]);
+
+  // Sin ninguna membership (confirmado online): el gym fue eliminado o la sacaron
+  // de todos. Se purga la base local (datos del gym que ya no existe) y se cierra
+  // sesión. No corre offline (confirmedNoGym es false) ni para el super_admin.
+  useEffect(() => {
+    if (isSuperAdmin) return;
+    if (!confirmedNoGym) return;
+    if (didWipeNoGymRef.current) return;
+    didWipeNoGymRef.current = true;
+    (async () => {
+      const sync = loadSync(); // null en web: no hay SQLite local que purgar
+      try {
+        if (sync) await sync.wipeLocalData();
+      } catch (e) {
+        console.error("ActiveGym: purga local tras quedar sin gym falló:", e);
+      }
+      await supabase.auth.signOut().catch(() => {});
+    })();
+  }, [isSuperAdmin, confirmedNoGym]);
 
   // El sync local solo conoce el gym activo. Cuando éste queda definido (arranque
   // o auto-selección) se dispara un sync; el guard interno purga y re-puebla si
@@ -283,13 +312,6 @@ export function ActiveGymProvider({ children }) {
       !!usableMemberships &&
       usableMemberships.length > 1 &&
       !activeMembership;
-
-  // Confirmación POSITIVA del servidor de que la persona no tiene ninguna
-  // membership (su gym fue eliminado o la sacaron de todos): la query cargó con
-  // éxito y vino vacía. Si está offline / erroró / nunca corrió, es false, para
-  // no bloquear el uso offline-first con datos locales.
-  const confirmedNoGym =
-    membershipsQuery.isSuccess && (membershipsQuery.data?.length ?? 0) === 0;
 
   const value = useMemo(
     () => ({

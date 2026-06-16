@@ -106,6 +106,29 @@ export async function hasPendingChanges() {
   return false;
 }
 
+// Vacía todas las tablas sincronizadas y descarta los watermarks por-tabla
+// (LAST_SYNC_KEY). Tras esto, un próximo sync hace full pull. No toca el
+// marcador de gym (ACTIVE_GYM_META_KEY): de eso se encarga cada caller.
+async function purgeSyncedTables() {
+  for (const schemaTable of Object.values(SYNCED_TABLES)) {
+    await database.delete(schemaTable);
+  }
+
+  const allKeys = await AsyncStorage.getAllKeys();
+  const staleKeys = allKeys.filter((k) => k.startsWith(LAST_SYNC_KEY));
+  if (staleKeys.length > 0) {
+    await AsyncStorage.multiRemove(staleKeys);
+  }
+}
+
+// Limpieza total de la base local (logout / cuenta sin gimnasio). Purga las
+// tablas y borra el marcador de gym, dejando la base "sin marcar" para que un
+// próximo login adopte su gym desde una base vacía sin disparar un falso switch.
+export async function wipeLocalData() {
+  await purgeSyncedTables();
+  await database.delete(sync_meta).where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
+}
+
 // Guard idempotente: corre al inicio de CADA sync. Si el contenido local
 // pertenece a otro gym (switch, incluso interrumpido por un crash), purga
 // tablas + watermarks de una sola vez para forzar un full pull del gym nuevo.
@@ -133,15 +156,7 @@ async function ensureDbMatchesActiveGym(activeGymId) {
     `🔁 [SYNC] Gym activo cambió (${marker.value} → ${activeGymId}): purga local + full pull`
   );
 
-  for (const schemaTable of Object.values(SYNCED_TABLES)) {
-    await database.delete(schemaTable);
-  }
-
-  const allKeys = await AsyncStorage.getAllKeys();
-  const staleKeys = allKeys.filter((k) => k.startsWith(LAST_SYNC_KEY));
-  if (staleKeys.length > 0) {
-    await AsyncStorage.multiRemove(staleKeys);
-  }
+  await purgeSyncedTables();
 
   await database
     .update(sync_meta)
