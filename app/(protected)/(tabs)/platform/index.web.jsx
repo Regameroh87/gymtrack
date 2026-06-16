@@ -50,8 +50,10 @@ export default function PlatformDashboardWeb() {
   const router = useRouter();
   const { brandPrimary, brandSecondary } = useGymTheme();
 
+  // Key propia (no comparte con la lista ["admin_gyms_web"], que trae un shape
+  // más rico con owner/logo): así ninguna pisa la cache de la otra.
   const { data: gyms, isLoading } = useQuery({
-    queryKey: ["admin_gyms_web"],
+    queryKey: ["platform_gyms_overview"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gyms")
