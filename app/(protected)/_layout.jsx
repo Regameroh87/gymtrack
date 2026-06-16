@@ -9,7 +9,7 @@ import { supabase } from "../../src/database/supabase";
 
 export default function ProtectedLayout() {
   const { isLoggedIn, loading, user } = useAuth();
-  const { needsSelection, memberships, loading: gymLoading } = useActiveGym();
+  const { needsSelection, confirmedNoGym, loading: gymLoading } = useActiveGym();
   const { isDark } = useTheme();
   const pathname = usePathname();
 
@@ -25,12 +25,15 @@ export default function ProtectedLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  // Sin gimnasio usable: la persona quedó sin ninguna membership (su gym fue
-  // eliminado o la sacaron de todos). Toda la UI de tabs depende de un gym
-  // activo, así que en vez de entrar a un estado vacío se muestra un aviso.
-  // El super_admin administra desde el panel web y normalmente no tiene gym acá.
-  if (memberships.length === 0) {
-    return <NoGymScreen isSuperAdmin={!!user?.is_super_admin} />;
+  // Sin gimnasio: el servidor confirmó que la persona no tiene ninguna membership
+  // (su gym fue eliminado o la sacaron de todos). Toda la UI de tabs depende de un
+  // gym activo, así que en vez de entrar a un estado vacío se muestra un aviso. Se
+  // usa confirmedNoGym (query isSuccess + vacía), no memberships.length, para no
+  // bloquear a un socio offline con gym válido (preserva el offline-first).
+  // El super_admin NO cae acá: aunque no tenga membership, entra al selector de
+  // todos los gyms (needsSelection lo redirige) para inspeccionar cualquiera.
+  if (confirmedNoGym && !user?.is_super_admin) {
+    return <NoGymScreen />;
   }
 
   // Multi-gym: con más de una membresía y sin gym activo elegido, primero se
@@ -58,13 +61,13 @@ export default function ProtectedLayout() {
   );
 }
 
-// Aviso para una sesión sin gimnasio usable (gym eliminado o sin membership).
-// No deja entrar a la app de socio y ofrece cerrar sesión.
-function NoGymScreen({ isSuperAdmin }) {
-  const title = isSuperAdmin ? "Panel de administración" : "Sin gimnasio";
-  const message = isSuperAdmin
-    ? "Gestioná los gimnasios desde el panel web. La app móvil es para los socios de cada gimnasio."
-    : "Tu gimnasio ya no está disponible. Si creés que es un error, contactá a tu gimnasio.";
+// Aviso para una sesión de socio sin gimnasio usable (gym eliminado o sin
+// membership). No deja entrar a la app y ofrece cerrar sesión. El super_admin
+// no llega acá: tiene su propio selector de todos los gyms.
+function NoGymScreen() {
+  const title = "Sin gimnasio";
+  const message =
+    "Tu gimnasio ya no está disponible. Si creés que es un error, contactá a tu gimnasio.";
 
   return (
     <View className="flex-1 items-center justify-center px-8 bg-ui-background-light dark:bg-ui-background-dark">

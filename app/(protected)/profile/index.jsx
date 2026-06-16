@@ -42,7 +42,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, userId, refreshProfile } = useAuth();
   const { gym: activeGym, memberships } = useActiveGym();
-  const { role } = useUserRole();
+  const { role, isSuperAdmin } = useUserRole();
   const { brandPrimary, brandSecondary, gradient } = useGymTheme();
   const BRAND = brandPrimary[700];
   const MINT = brandSecondary[400];
@@ -289,8 +289,9 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Multi-gym: switcher visible solo si la cuenta pertenece a varios gyms */}
-        {memberships.length > 1 && (
+        {/* Multi-gym: switcher visible si la cuenta pertenece a varios gyms, o
+            siempre para el super_admin (vuelve al selector de todos los gyms). */}
+        {(memberships.length > 1 || isSuperAdmin) && (
           <Pressable
             onPress={() => router.push("/(protected)/select-gym")}
             className="flex-row items-center px-4 py-4 border-t border-ui-text-main/5 dark:border-white/5 active:opacity-70"
@@ -300,7 +301,7 @@ export default function ProfileScreen() {
             </IconBox>
             <View className="flex-1">
               <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.4px] text-ui-text-muted mb-[3px]">
-                Gimnasio activo
+                {isSuperAdmin ? "Modo administrador" : "Gimnasio activo"}
               </Text>
               <Text
                 className="text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark capitalize"

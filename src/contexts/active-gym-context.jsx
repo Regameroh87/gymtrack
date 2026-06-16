@@ -37,6 +37,10 @@ const ActiveGymContext = createContext(null);
 export function ActiveGymProvider({ children }) {
   const { user, isLoggedIn, loading: authLoading } = useAuth();
   const authUserId = user?.user_id ?? null;
+  // Flag global de la persona (no depende del gym activo). Habilita el "modo
+  // administrador": entrar a CUALQUIER gym para inspeccionarlo, aunque no tenga
+  // membership. Las RLS ya dan bypass de lectura al super_admin.
+  const isSuperAdmin = !!user?.is_super_admin;
 
   const [activeGymId, setActiveGymId] = useState(null);
   const [storageLoaded, setStorageLoaded] = useState(false);
@@ -71,6 +75,31 @@ export function ActiveGymProvider({ children }) {
   });
 
   const memberships = membershipsQuery.data ?? null;
+
+  // Modo administrador: el super_admin puede entrar a cualquier gym, así que el
+  // selector se alimenta del catálogo COMPLETO de gyms (no de sus memberships).
+  // La RLS gyms_select ya permite al super_admin leer todos. El catálogo cambia
+  // poco, por eso un staleTime alto.
+  const allGymsQuery = useQuery({
+    queryKey: ["all-gyms", authUserId],
+    enabled: !!authUserId && isSuperAdmin,
+    staleTime: 1000 * 60 * 30,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("gyms")
+        .select(
+          "id, name, logo_url, theme_primary, theme_accent, is_active"
+        )
+        .order("name");
+      if (error) {
+        console.error("ActiveGym: error al leer todos los gyms:", error.message);
+        throw error;
+      }
+      return data ?? [];
+    },
+  });
+
+  const allGyms = allGymsQuery.data ?? null;
 
   // Un gym suspendido (gyms.is_active=false) se trata como si la persona ya no
   // tuviera acceso a él: las RLS ya cortan sus datos en el servidor; acá lo
@@ -116,7 +145,11 @@ export function ActiveGymProvider({ children }) {
   // Validación contra memberships usables: un gym persistido en el que ya no se
   // tiene membership —o que fue suspendido— se descarta; con una sola membership
   // usable se auto-selecciona.
+  // El super_admin queda exento: siempre elige explícitamente desde el selector
+  // (su "home base"), así que ni se auto-selecciona ni se invalida su elección
+  // contra memberships (puede estar parado en un gym donde no tiene membership).
   useEffect(() => {
+    if (isSuperAdmin) return;
     if (!storageLoaded || !usableMemberships) return;
 
     const isValid = (gymId) =>
@@ -134,18 +167,19 @@ export function ActiveGymProvider({ children }) {
       setActiveGymId(null);
       AsyncStorage.removeItem(ACTIVE_GYM_KEY).catch(() => {});
     }
-  }, [storageLoaded, usableMemberships, activeGymId]);
+  }, [isSuperAdmin, storageLoaded, usableMemberships, activeGymId]);
 
   // Suspensión del gimnasio: si la persona tenía memberships pero ninguna quedó
   // usable (su único gym fue suspendido, o todos), se cierra la sesión. Si le
   // quedan otros gyms activos, el efecto de validación de arriba la reubica sin
   // desloguear.
   useEffect(() => {
+    if (isSuperAdmin) return; // el super_admin tiene su propio selector, no se expulsa
     if (!isLoggedIn || !memberships || !usableMemberships) return;
     if (memberships.length > 0 && usableMemberships.length === 0) {
       supabase.auth.signOut().catch(() => {});
     }
-  }, [isLoggedIn, memberships, usableMemberships]);
+  }, [isSuperAdmin, isLoggedIn, memberships, usableMemberships]);
 
   // El sync local solo conoce el gym activo. Cuando éste queda definido (arranque
   // o auto-selección) se dispara un sync; el guard interno purga y re-puebla si
@@ -164,9 +198,17 @@ export function ActiveGymProvider({ children }) {
   const switchGym = useCallback(
     async (gymId) => {
       if (gymId === activeGymId) return;
-      const target = usableMemberships?.find((m) => m.gym_id === gymId);
+      // El super_admin valida contra el catálogo completo (puede entrar a
+      // cualquier gym); el resto, contra sus memberships usables.
+      const target = isSuperAdmin
+        ? allGyms?.find((g) => g.id === gymId)
+        : usableMemberships?.find((m) => m.gym_id === gymId);
       if (!target) {
-        throw new Error("No tenés membresía activa en ese gimnasio.");
+        throw new Error(
+          isSuperAdmin
+            ? "No se encontró ese gimnasio."
+            : "No tenés membresía activa en ese gimnasio."
+        );
       }
       // Native: empuja pendientes del gym actual y purga la base local; tira
       // error claro si hay cambios sin subir y no hay conexión. Web: no hay
@@ -182,47 +224,110 @@ export function ActiveGymProvider({ children }) {
       // Todo lo cacheado pertenece al gym anterior.
       queryClient.invalidateQueries();
     },
-    [activeGymId, usableMemberships]
+    [activeGymId, isSuperAdmin, allGyms, usableMemberships]
   );
+
+  // Volver al selector sin desloguear: limpia el gym activo (estado + storage).
+  // Pensado para el super_admin que salta entre gyms. needsSelection pasa a true
+  // y el layout redirige al selector. No toca la sesión de auth.
+  const exitGym = useCallback(() => {
+    lastSyncedGymRef.current = null;
+    setActiveGymId(null);
+    AsyncStorage.removeItem(ACTIVE_GYM_KEY).catch(() => {});
+  }, []);
 
   const activeMembership = useMemo(
     () => usableMemberships?.find((m) => m.gym_id === activeGymId) ?? null,
     [usableMemberships, activeGymId]
   );
 
-  const needsSelection =
-    isLoggedIn &&
-    !!usableMemberships &&
-    usableMemberships.length > 1 &&
-    !activeMembership;
+  // Gym activo del super_admin cuando no tiene membership en él: se resuelve
+  // desde el catálogo completo. Da el branding/id al resto de la app (useGym,
+  // theme) sin depender de memberships.
+  const activeAdminGym = useMemo(
+    () =>
+      isSuperAdmin && activeGymId
+        ? (allGyms?.find((g) => g.id === activeGymId) ?? null)
+        : null,
+    [isSuperAdmin, activeGymId, allGyms]
+  );
+
+  const resolvedGymId = activeMembership?.gym_id ?? activeAdminGym?.id ?? null;
+  const resolvedGym = activeMembership?.gyms ?? activeAdminGym ?? null;
+
+  // Opciones del selector: el super_admin elige sobre TODOS los gyms; el resto,
+  // sobre sus memberships usables. Forma unificada para select-gym.
+  const gymOptions = useMemo(() => {
+    if (isSuperAdmin) {
+      return (allGyms ?? []).map((g) => ({
+        key: g.id,
+        gym_id: g.id,
+        role: "super_admin",
+        gym: g,
+      }));
+    }
+    return (usableMemberships ?? []).map((m) => ({
+      key: m.id,
+      gym_id: m.gym_id,
+      role: m.role,
+      gym: m.gyms,
+    }));
+  }, [isSuperAdmin, allGyms, usableMemberships]);
+
+  // El super_admin siempre pasa por el selector (su "home base"): necesita
+  // elegir mientras no haya un gym activo. El resto, solo con >1 membership.
+  const needsSelection = isSuperAdmin
+    ? isLoggedIn && !activeGymId
+    : isLoggedIn &&
+      !!usableMemberships &&
+      usableMemberships.length > 1 &&
+      !activeMembership;
+
+  // Confirmación POSITIVA del servidor de que la persona no tiene ninguna
+  // membership (su gym fue eliminado o la sacaron de todos): la query cargó con
+  // éxito y vino vacía. Si está offline / erroró / nunca corrió, es false, para
+  // no bloquear el uso offline-first con datos locales.
+  const confirmedNoGym =
+    membershipsQuery.isSuccess && (membershipsQuery.data?.length ?? 0) === 0;
 
   const value = useMemo(
     () => ({
-      gymId: activeMembership?.gym_id ?? null,
+      gymId: resolvedGymId,
       // Rol efectivo en el gym activo (memberships.role); el flag global
       // super_admin pisa al rol local.
-      role: user?.is_super_admin
-        ? "super_admin"
-        : (activeMembership?.role ?? null),
-      gym: activeMembership?.gyms ?? null,
+      role: isSuperAdmin ? "super_admin" : (activeMembership?.role ?? null),
+      gym: resolvedGym,
       memberships: usableMemberships ?? [],
+      // Opciones para el selector (super_admin → todos los gyms; resto → memberships).
+      gymOptions,
+      isSuperAdmin,
       needsSelection,
+      confirmedNoGym,
       switchGym,
+      // Volver al selector sin desloguear (modo administrador).
+      exitGym,
       loading:
         authLoading ||
         !storageLoaded ||
-        (!!authUserId && membershipsQuery.isLoading),
+        (!!authUserId && membershipsQuery.isLoading) ||
+        (isSuperAdmin && allGymsQuery.isLoading),
     }),
     [
+      resolvedGymId,
+      resolvedGym,
       activeMembership,
       usableMemberships,
+      gymOptions,
+      isSuperAdmin,
       needsSelection,
+      confirmedNoGym,
       switchGym,
-      user,
+      exitGym,
       authLoading,
       storageLoaded,
       authUserId,
       membershipsQuery.isLoading,
+      allGymsQuery.isLoading,
     ]
   );
 

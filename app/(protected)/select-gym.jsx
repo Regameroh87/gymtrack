@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  TextInput,
+} from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,22 +22,38 @@ import { brandPrimary as defaultPrimary } from "../../src/theme/colors";
 // Multi-gym: el login autentica a la persona; acá elige en qué gimnasio entra.
 // Cada tarjeta usa el branding del propio gym (no el theme activo) para que la
 // elección sea visual. También funciona como switcher desde el perfil.
+// Para el super_admin el selector lista TODOS los gyms (modo administrador) y
+// suma un buscador, porque el catálogo puede ser largo.
 export default function SelectGymScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { memberships, gymId: activeGymId, needsSelection, switchGym } =
-    useActiveGym();
+  const {
+    gymOptions,
+    isSuperAdmin,
+    gymId: activeGymId,
+    needsSelection,
+    switchGym,
+  } = useActiveGym();
   const [switchingTo, setSwitchingTo] = useState(null);
+  const [query, setQuery] = useState("");
 
-  const onSelect = async (membership) => {
+  const visibleOptions = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return gymOptions;
+    return gymOptions.filter((o) =>
+      (o.gym?.name ?? "").toLowerCase().includes(q)
+    );
+  }, [gymOptions, query]);
+
+  const onSelect = async (option) => {
     if (switchingTo) return;
-    if (membership.gym_id === activeGymId) {
+    if (option.gym_id === activeGymId) {
       router.replace("/(protected)/(tabs)");
       return;
     }
-    setSwitchingTo(membership.gym_id);
+    setSwitchingTo(option.gym_id);
     try {
-      await switchGym(membership.gym_id);
+      await switchGym(option.gym_id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/(protected)/(tabs)");
     } catch (e) {
@@ -58,23 +81,37 @@ export default function SelectGymScreen() {
     >
       {/* ── Encabezado ── */}
       <Text className="text-[11px] font-jakarta-bold uppercase tracking-[2.5px] text-ui-text-muted mb-2">
-        Tu cuenta, tus gimnasios
+        {isSuperAdmin ? "Modo administrador" : "Tu cuenta, tus gimnasios"}
       </Text>
       <Text
         className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark tracking-tight mb-1"
         style={{ fontSize: 26, lineHeight: 32 }}
       >
-        Elegí tu gimnasio
+        {isSuperAdmin ? "Elegí un gimnasio" : "Elegí tu gimnasio"}
       </Text>
       <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mb-7">
-        Vas a ver los planes, registros y colores de este gimnasio. Podés
-        cambiarlo cuando quieras desde tu perfil.
+        {isSuperAdmin
+          ? "Entrá a cualquier gimnasio para revisar su funcionamiento. Vas a ver sus planes, registros y colores tal cual los ve un socio."
+          : "Vas a ver los planes, registros y colores de este gimnasio. Podés cambiarlo cuando quieras desde tu perfil."}
       </Text>
+
+      {/* ── Buscador (solo super_admin: el catálogo puede ser largo) ── */}
+      {isSuperAdmin && (
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Buscar gimnasio…"
+          autoCapitalize="none"
+          autoCorrect={false}
+          className="mb-4 px-4 py-3 rounded-2xl bg-white dark:bg-ui-surface-dark border border-ui-text-main/[8%] dark:border-white/[8%] text-[14px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+          placeholderTextColor="rgba(120,120,120,0.7)"
+        />
+      )}
 
       {/* ── Tarjetas de gym ── */}
       <View className="gap-3.5">
-        {memberships.map((m) => {
-          const gym = m.gyms ?? {};
+        {visibleOptions.map((m) => {
+          const gym = m.gym ?? {};
           const ramp = gym.theme_primary
             ? generateRamp(gym.theme_primary)
             : defaultPrimary;
@@ -91,7 +128,7 @@ export default function SelectGymScreen() {
 
           return (
             <Pressable
-              key={m.id}
+              key={m.key}
               onPress={() => onSelect(m)}
               disabled={!!switchingTo}
               className="flex-row items-center p-4 rounded-2xl bg-white dark:bg-ui-surface-dark border active:scale-[0.98]"
@@ -164,6 +201,14 @@ export default function SelectGymScreen() {
             </Pressable>
           );
         })}
+
+        {visibleOptions.length === 0 && (
+          <Text className="text-center text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark py-8">
+            {query.trim()
+              ? "No se encontraron gimnasios con ese nombre."
+              : "No hay gimnasios disponibles."}
+          </Text>
+        )}
       </View>
 
       {/* Volver (solo en modo switcher, cuando ya hay un gym activo) */}
