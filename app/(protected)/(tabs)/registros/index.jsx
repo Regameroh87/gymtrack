@@ -127,11 +127,7 @@ export default function RegistrosTab() {
           <ActivityIndicator color={brandPrimary[500]} />
         </View>
       ) : logs.length === 0 ? (
-        <EmptyState
-          router={router}
-          insets={insets}
-          onLogPast={goToNew}
-        />
+        <EmptyState router={router} insets={insets} onLogPast={goToNew} />
       ) : (
         <SectionList
           sections={sections}
@@ -336,9 +332,7 @@ function EmptyState({ router, insets, onLogPast }) {
       className="flex-1 px-6 items-center justify-center"
       style={{ paddingBottom: insets.bottom + 24 }}
     >
-      <View
-        className="rounded-3xl overflow-hidden w-full bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border"
-      >
+      <View className="rounded-3xl overflow-hidden w-full bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border">
         {/* Halo mint superior */}
         <LinearGradient
           colors={gradient.mintHalo[isDark ? "dark" : "light"]}
@@ -470,10 +464,7 @@ function EmptyState({ router, insets, onLogPast }) {
 
       {/* Pista */}
       <View className="flex-row items-center mt-6" style={{ gap: 8 }}>
-        <Calendar
-          size={13}
-          color={isDark ? ui.icon.onDark : ui.icon.onLight}
-        />
+        <Calendar size={13} color={isDark ? ui.icon.onDark : ui.icon.onLight} />
         <Text
           className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
           style={{ fontSize: 12 }}
