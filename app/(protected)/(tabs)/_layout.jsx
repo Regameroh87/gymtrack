@@ -111,6 +111,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="platform" options={{ href: null }} />
     </Tabs>
   );
 }
