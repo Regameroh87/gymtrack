@@ -370,7 +370,8 @@ function RecordsSection({ data, mint }) {
                     {r.name}
                   </Text>
                   <Text className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-[11px]">
-                    {r.weight_kg} kg × {r.reps} · {formatRelativeDay(r.completed_at)}
+                    {r.weight_kg} kg × {r.reps} ·{" "}
+                    {formatRelativeDay(r.completed_at)}
                   </Text>
                 </View>
                 <View className="items-end">

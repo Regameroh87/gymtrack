@@ -1,5 +1,11 @@
 import { Tabs } from "expo-router";
-import { Barbell, ChartBar, Home, Logs, ShieldHalf } from "../../../assets/icons";
+import {
+  Barbell,
+  ChartBar,
+  Home,
+  Logs,
+  ShieldHalf,
+} from "../../../assets/icons";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { Pressable, Text, View } from "react-native";
 import { useColorScheme } from "nativewind";

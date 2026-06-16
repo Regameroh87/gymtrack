@@ -10,10 +10,7 @@ const CELL = 13;
 const GAP = 3;
 
 export default function Heatmap({ weeks = [], color }) {
-  const max = Math.max(
-    1,
-    ...weeks.flatMap((w) => w.days.map((d) => d.count))
-  );
+  const max = Math.max(1, ...weeks.flatMap((w) => w.days.map((d) => d.count)));
 
   return (
     <View className="flex-row" style={{ gap: GAP }}>

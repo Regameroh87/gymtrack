@@ -31,8 +31,14 @@ export const fetchPersonalRecords = async (userId) => {
       completed_at: session_logs.completed_at,
     })
     .from(session_set_logs)
-    .innerJoin(session_logs, eq(session_set_logs.session_log_id, session_logs.id))
-    .leftJoin(exercises_base, eq(session_set_logs.exercise_id, exercises_base.id))
+    .innerJoin(
+      session_logs,
+      eq(session_set_logs.session_log_id, session_logs.id)
+    )
+    .leftJoin(
+      exercises_base,
+      eq(session_set_logs.exercise_id, exercises_base.id)
+    )
     .where(
       and(
         eq(session_logs.user_id, userId),

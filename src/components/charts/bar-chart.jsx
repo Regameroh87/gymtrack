@@ -15,8 +15,7 @@ export default function BarChart({ data = [], color, height = 120 }) {
     <View className="flex-row items-end justify-between" style={{ height }}>
       {data.map((d, i) => {
         const isLast = i === data.length - 1;
-        const h =
-          d.value > 0 ? Math.max((d.value / max) * barArea, 4) : 2;
+        const h = d.value > 0 ? Math.max((d.value / max) * barArea, 4) : 2;
         return (
           <View
             key={d.key ?? i}

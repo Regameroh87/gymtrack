@@ -53,8 +53,14 @@ export const fetchTrainingProgress = async (userId) => {
       muscle_group: exercises_base.muscle_group,
     })
     .from(session_set_logs)
-    .innerJoin(session_logs, eq(session_set_logs.session_log_id, session_logs.id))
-    .leftJoin(exercises_base, eq(session_set_logs.exercise_id, exercises_base.id))
+    .innerJoin(
+      session_logs,
+      eq(session_set_logs.session_log_id, session_logs.id)
+    )
+    .leftJoin(
+      exercises_base,
+      eq(session_set_logs.exercise_id, exercises_base.id)
+    )
     .where(
       and(
         eq(session_logs.user_id, userId),
@@ -64,9 +70,7 @@ export const fetchTrainingProgress = async (userId) => {
     );
 
   // Inicializa los buckets por semana en el orden de `weeks`.
-  const byWeek = new Map(
-    weeks.map((w) => [w.key, { workouts: 0, volume: 0 }])
-  );
+  const byWeek = new Map(weeks.map((w) => [w.key, { workouts: 0, volume: 0 }]));
   for (const log of logs) {
     const bucket = byWeek.get(weekKey(log.completed_at));
     if (bucket) bucket.workouts += 1;
