@@ -589,7 +589,7 @@ export const ChartBar = ({ size = 24, className, ...props }) => (
     {...props}
   >
     <Path stroke="none" d="M0 0h24v24H0z" />
-    <Path d="M3 12h4v8H3zM9 8h4v12H9zM15 4h4v16h4zM4 20h14" />
+    <Path d="M3 12h4v8H3zM9 8h4v12H9zM15 4h4v16H15zM4 20h14" />
   </Svg>
 );
 
