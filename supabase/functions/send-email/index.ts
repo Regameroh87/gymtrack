@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { renderEmail } from "./templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,23 @@ const supabaseAdmin = createClient(
 
 const FROM_DOMAIN = "mail.gymtrack.ar";
 const FROM_LOCAL = "noreply";
+
+// Tokens del design system (fallback cuando el gym no tiene theme propio).
+const DEFAULT_PRIMARY = "#4A44E4";
+const DEFAULT_ACCENT = "#2DD4BF";
+const APP_URL = Deno.env.get("APP_URL") ?? "https://app.gymtrack.ar";
+const CLOUD_NAME = Deno.env.get("CLOUDINARY_CLOUD_NAME") ?? "ddupuyeko";
+
+// Portado de src/utils/cloudinary.js: logo_url es un public_id crudo; solo es
+// imagen servible si tiene el prefijo conocido. Si no, null → fallback a wordmark.
+function getCloudinaryUrl(publicId: string | null): string | null {
+  if (!publicId) return null;
+  const cleanId = publicId.startsWith("/") ? publicId.slice(1) : publicId;
+  if (cleanId.startsWith("images/")) {
+    return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${cleanId}`;
+  }
+  return null;
+}
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
   return new Response(JSON.stringify(body), {
@@ -41,29 +59,42 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { gym_id, to, type, subject, html } = body as {
+    const { gym_id, to, type, data, subject: subjectOverride } = body as {
       gym_id?: string | null;
       to?: string;
       type?: string;
+      data?: { name?: string | null };
       subject?: string;
-      html?: string;
     };
 
-    if (!to || !type || !subject || !html) {
-      return jsonResponse({ error: "to, type, subject y html son requeridos." }, 400);
+    if (!to || !type) {
+      return jsonResponse({ error: "to y type son requeridos." }, 400);
     }
 
-    // Resolver el display name del `from` con el nombre del gym (branding por gym).
-    let senderName = "GymTrack";
+    // Branding del gym: nombre + seeds de theme + logo. Sin gym (plataforma) o sin
+    // theme propio → tokens default del design system.
+    let gymName = "GymTrack";
+    let primary = DEFAULT_PRIMARY;
+    let accent = DEFAULT_ACCENT;
+    let logoUrl: string | null = null;
     if (gym_id) {
       const { data: gym } = await supabaseAdmin
         .from("gyms")
-        .select("name")
+        .select("name, theme_primary, theme_accent, logo_url")
         .eq("id", gym_id)
         .maybeSingle();
-      if (gym?.name) senderName = gym.name;
+      if (gym?.name) gymName = gym.name;
+      if (gym?.theme_primary) primary = gym.theme_primary;
+      if (gym?.theme_accent) accent = gym.theme_accent;
+      logoUrl = getCloudinaryUrl(gym?.logo_url ?? null);
     }
-    const from = `${senderName} <${FROM_LOCAL}@${FROM_DOMAIN}>`;
+
+    const rendered = renderEmail(type, { gymName, primary, accent, logoUrl, appUrl: APP_URL, data });
+    if (!rendered) {
+      return jsonResponse({ error: `Tipo de mail desconocido: ${type}` }, 400);
+    }
+    const subject = subjectOverride ?? rendered.subject;
+    const from = `${gymName} <${FROM_LOCAL}@${FROM_DOMAIN}>`;
 
     // Enviar vía API de Resend.
     const resendRes = await fetch("https://api.resend.com/emails", {
@@ -72,7 +103,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, html }),
+      body: JSON.stringify({ from, to, subject, html: rendered.html }),
     });
     const resendResult = await resendRes.json();
 
