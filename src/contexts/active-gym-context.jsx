@@ -257,6 +257,14 @@ export function ActiveGymProvider({ children }) {
     [activeGymId, isSuperAdmin, allGyms, usableMemberships]
   );
 
+  // Refresca la fuente del selector bajo demanda (pull-to-refresh en select-gym):
+  // el super_admin lista el catálogo completo (all-gyms), el resto sus memberships.
+  // Útil cuando se creó un gym en otro cliente/web y el cache local quedó viejo.
+  const refetch = useCallback(
+    () => (isSuperAdmin ? allGymsQuery.refetch() : membershipsQuery.refetch()),
+    [isSuperAdmin, allGymsQuery, membershipsQuery]
+  );
+
   // Volver al selector sin desloguear: limpia el gym activo (estado + storage).
   // Pensado para el super_admin que salta entre gyms. needsSelection pasa a true
   // y el layout redirige al selector. No toca la sesión de auth.
@@ -332,6 +340,8 @@ export function ActiveGymProvider({ children }) {
       switchGym,
       // Volver al selector sin desloguear (modo administrador).
       exitGym,
+      // Refresco manual del selector (pull-to-refresh).
+      refetch,
       loading:
         authLoading ||
         !storageLoaded ||
@@ -349,6 +359,7 @@ export function ActiveGymProvider({ children }) {
       confirmedNoGym,
       switchGym,
       exitGym,
+      refetch,
       authLoading,
       storageLoaded,
       authUserId,

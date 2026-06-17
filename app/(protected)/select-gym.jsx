@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -14,6 +15,7 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 import { useActiveGym } from "../../src/contexts/active-gym-context";
+import { supabase } from "../../src/database/supabase";
 import { getCloudinaryUrl } from "../../src/utils/cloudinary";
 import { ROLE_LABELS } from "../../src/constants/roles";
 import { generateRamp } from "../../src/theme/generate-ramp";
@@ -33,9 +35,20 @@ export default function SelectGymScreen() {
     gymId: activeGymId,
     needsSelection,
     switchGym,
+    refetch,
   } = useActiveGym();
   const [switchingTo, setSwitchingTo] = useState(null);
   const [query, setQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const visibleOptions = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -78,6 +91,9 @@ export default function SelectGymScreen() {
         paddingHorizontal: 20,
       }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       {/* ── Encabezado ── */}
       <Text className="text-[11px] font-jakarta-bold uppercase tracking-[2.5px] text-ui-text-muted mb-2">
@@ -211,8 +227,9 @@ export default function SelectGymScreen() {
         )}
       </View>
 
-      {/* Volver (solo en modo switcher, cuando ya hay un gym activo) */}
-      {!needsSelection && (
+      {/* Volver (modo switcher, ya hay gym activo) o Cerrar sesión (sin gym
+          activo: única salida, ya que no hay back gesture ni acceso al perfil). */}
+      {!needsSelection ? (
         <Pressable
           onPress={() => router.back()}
           disabled={!!switchingTo}
@@ -220,6 +237,16 @@ export default function SelectGymScreen() {
         >
           <Text className="text-[14px] font-manrope-bold text-ui-text-muted dark:text-ui-text-mutedDark">
             Volver
+          </Text>
+        </Pressable>
+      ) : (
+        <Pressable
+          onPress={() => supabase.auth.signOut().catch(() => {})}
+          disabled={!!switchingTo}
+          className="items-center py-4 mt-5 rounded-2xl border border-ui-text-main/[8%] dark:border-white/[8%] active:opacity-70"
+        >
+          <Text className="text-[14px] font-manrope-bold text-ui-text-muted dark:text-ui-text-mutedDark">
+            Cerrar sesión
           </Text>
         </Pressable>
       )}

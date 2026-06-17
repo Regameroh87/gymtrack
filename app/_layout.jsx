@@ -93,6 +93,9 @@ export default function RootLayout() {
         // lo detecta y fuerza el logout. invalidateQueries refetchea aunque el
         // staleTime no haya vencido.
         queryClient.invalidateQueries({ queryKey: ["memberships"] });
+        // Catálogo del selector del super_admin: capta gyms creados en otro
+        // cliente mientras esta app estaba en background.
+        queryClient.invalidateQueries({ queryKey: ["all-gyms"] });
       }
       appState.current = nextState;
     });

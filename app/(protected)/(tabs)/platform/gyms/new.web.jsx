@@ -189,6 +189,10 @@ export default function NewGymWeb() {
 
         queryClient.invalidateQueries({ queryKey: ["admin_gyms_web"] });
         queryClient.invalidateQueries({ queryKey: ["gyms"] });
+        // Selectores de gym activo: all-gyms (super_admin) y memberships (owner
+        // recién creado). Sin esto, select-gym no refleja el gym nuevo.
+        queryClient.invalidateQueries({ queryKey: ["all-gyms"] });
+        queryClient.invalidateQueries({ queryKey: ["memberships"] });
 
         notify(
           "success",
