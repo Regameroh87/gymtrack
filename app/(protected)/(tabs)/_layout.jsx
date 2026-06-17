@@ -95,7 +95,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="progreso"
+        name="progreso/index"
         options={{
           title: "Progreso",
           headerShown: false,
