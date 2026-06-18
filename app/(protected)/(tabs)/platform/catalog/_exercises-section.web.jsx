@@ -138,8 +138,10 @@ export default function CatalogExercisesSection() {
     if (previewUrl) return previewUrl;
     if (values.image_uri)
       return (
-        getCloudinaryUrl(values.image_uri, "w_160,h_160,c_fill,f_auto,q_auto") ||
-        values.image_uri
+        getCloudinaryUrl(
+          values.image_uri,
+          "w_160,h_160,c_fill,f_auto,q_auto"
+        ) || values.image_uri
       );
     return null;
   }, [previewUrl, values.image_uri]);
@@ -148,8 +150,8 @@ export default function CatalogExercisesSection() {
     <View>
       <View className="mb-6 flex-row items-end justify-between gap-4">
         <Text className="text-xs font-manrope text-ui-text-muted flex-1">
-          Biblioteca central read-only. Los gimnasios con el catálogo activado la
-          ven en sus pickers; para editar, sus coaches la guardan en custom.
+          Biblioteca central read-only. Los gimnasios con el catálogo activado
+          la ven en sus pickers; para editar, sus coaches la guardan en custom.
         </Text>
         <Pressable
           onPress={openCreate}
@@ -186,8 +188,10 @@ export default function CatalogExercisesSection() {
         ) : (
           exercises.map((ex, i) => {
             const thumb = ex.image_uri
-              ? getCloudinaryUrl(ex.image_uri, "w_96,h_96,c_fill,f_auto,q_auto") ||
-                ex.image_uri
+              ? getCloudinaryUrl(
+                  ex.image_uri,
+                  "w_96,h_96,c_fill,f_auto,q_auto"
+                ) || ex.image_uri
               : null;
             return (
               <View

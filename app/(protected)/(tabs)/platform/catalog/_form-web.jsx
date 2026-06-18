@@ -39,11 +39,18 @@ export function WebSelect({ value, onChange, options, placeholder }) {
 
 // Picker de imagen de portada cuadrada. previewUrl es la URL local (objeto File);
 // imageUri es el public_id ya guardado. onPick abre el file dialog del padre.
-export function CoverPicker({ previewUrl, imageUri, onPick, brandPrimary, label }) {
+export function CoverPicker({
+  previewUrl,
+  imageUri,
+  onPick,
+  brandPrimary,
+  label,
+}) {
   const src = previewUrl
     ? previewUrl
     : imageUri
-      ? getCloudinaryUrl(imageUri, "w_240,h_240,c_fill,f_auto,q_auto") || imageUri
+      ? getCloudinaryUrl(imageUri, "w_240,h_240,c_fill,f_auto,q_auto") ||
+        imageUri
       : null;
   return (
     <View className="items-center">

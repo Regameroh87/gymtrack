@@ -47,7 +47,10 @@ import {
 } from "./_plan-week-helpers";
 
 // Constantes / utils / tema
-import { PLAN_OBJECTIVES, PLAN_LEVELS } from "../../../../../src/constants/planOptions";
+import {
+  PLAN_OBJECTIVES,
+  PLAN_LEVELS,
+} from "../../../../../src/constants/planOptions";
 import { PLAN_TARGET_GENDERS } from "../../../../../src/constants/gender-options";
 import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
@@ -114,9 +117,9 @@ export default function CatalogPlansSection() {
     <View>
       <View className="mb-6 flex-row items-end justify-between gap-4">
         <Text className="text-xs font-manrope text-ui-text-muted flex-1">
-          Planes completos (semanas → días → sesiones → prescripción) armados con
-          sesiones del catálogo. Los gimnasios con el catálogo activado los ven
-          read-only.
+          Planes completos (semanas → días → sesiones → prescripción) armados
+          con sesiones del catálogo. Los gimnasios con el catálogo activado los
+          ven read-only.
         </Text>
         <Pressable
           onPress={openCreate}
@@ -186,8 +189,10 @@ export default function CatalogPlansSection() {
 
 function PlanRow({ plan, first, onEdit, onDelete, brandPrimary }) {
   const thumb = plan.cover_image_uri
-    ? getCloudinaryUrl(plan.cover_image_uri, "w_96,h_96,c_fill,f_auto,q_auto") ||
-      plan.cover_image_uri
+    ? getCloudinaryUrl(
+        plan.cover_image_uri,
+        "w_96,h_96,c_fill,f_auto,q_auto"
+      ) || plan.cover_image_uri
     : null;
   return (
     <View
@@ -311,9 +316,7 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
           ? w
           : {
               ...w,
-              days: w.days.map((d, j) =>
-                j !== dIdx ? d : { ...d, ...patch }
-              ),
+              days: w.days.map((d, j) => (j !== dIdx ? d : { ...d, ...patch })),
             }
       )
     );
@@ -404,7 +407,10 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
                       exercises: d.exercises.map((ex, k) =>
                         k !== exIdx
                           ? ex
-                          : { ...ex, set_configs: [...ex.set_configs, makeEmptySet()] }
+                          : {
+                              ...ex,
+                              set_configs: [...ex.set_configs, makeEmptySet()],
+                            }
                       ),
                     }
               ),
@@ -703,9 +709,7 @@ function DayCard({
                 key={ex.session_exercise_id ?? ex.id ?? exIdx}
                 exercise={ex}
                 onPatch={(patch) => onPatchExercise(exIdx, patch)}
-                onPatchSet={(setIdx, patch) =>
-                  onPatchSet(exIdx, setIdx, patch)
-                }
+                onPatchSet={(setIdx, patch) => onPatchSet(exIdx, setIdx, patch)}
                 onAddSet={() => onAddSet(exIdx)}
                 onRemoveSet={(setIdx) => onRemoveSet(exIdx, setIdx)}
                 brandPrimary={brandPrimary}

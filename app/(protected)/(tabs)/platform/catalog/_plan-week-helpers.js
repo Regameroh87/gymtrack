@@ -26,7 +26,11 @@ export const buildEmptyWeeks = (durationWeeks, weeklyDays) =>
     makeEmptyWeek(i + 1, weeklyDays)
   );
 
-export const resizeWeeksByDuration = (currentWeeks, newDuration, weeklyDays) => {
+export const resizeWeeksByDuration = (
+  currentWeeks,
+  newDuration,
+  weeklyDays
+) => {
   if (newDuration === currentWeeks.length) return currentWeeks;
   if (newDuration > currentWeeks.length) {
     const extras = Array.from(
