@@ -4,6 +4,9 @@ import { View, Text, Pressable, Linking } from "react-native";
 // Librerías
 import { LinearGradient } from "expo-linear-gradient";
 
+// Theme
+import { brandPrimary } from "../../theme/colors";
+
 // Assets
 import { ArrowRight, Mail, Phone } from "../../../assets/icons";
 
@@ -19,9 +22,9 @@ export default function CtaSection() {
   return (
     <View className="w-full">
       <View className="w-full max-w-[1100px] mx-auto px-6 py-16">
-        <View className="rounded-[32px] overflow-hidden border border-[#4a44e4]/40">
+        <View className="rounded-[32px] overflow-hidden border border-brandPrimary-700/40">
           <LinearGradient
-            colors={["#3023cd", "#4a44e4"]}
+            colors={[brandPrimary[600], brandPrimary[700]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ paddingVertical: 56, paddingHorizontal: 32 }}
@@ -30,7 +33,7 @@ export default function CtaSection() {
               <Text className="text-white font-jakarta-ebold text-3xl lg:text-4xl tracking-tight text-center max-w-[640px]">
                 {CTA.title}
               </Text>
-              <Text className="text-[#e2dfff] font-manrope text-lg mt-4 text-center max-w-[560px] leading-relaxed">
+              <Text className="text-brandPrimary-100 font-manrope text-lg mt-4 text-center max-w-[560px] leading-relaxed">
                 {CTA.subtitle}
               </Text>
 
@@ -40,11 +43,11 @@ export default function CtaSection() {
                   onPress={() => Linking.openURL(MAILTO_HREF)}
                   style={{ cursor: "pointer" }}
                 >
-                  <Mail color="#4a44e4" size={18} />
-                  <Text className="text-[#3023cd] font-manrope-bold text-base mx-2">
+                  <Mail color={brandPrimary[600]} size={18} />
+                  <Text className="text-brandPrimary-600 font-manrope-bold text-base mx-2">
                     {CTA.primary}
                   </Text>
-                  <ArrowRight color="#4a44e4" size={18} />
+                  <ArrowRight color={brandPrimary[700]} size={18} />
                 </Pressable>
 
                 <Pressable
@@ -60,7 +63,7 @@ export default function CtaSection() {
               </View>
 
               <Pressable onPress={() => Linking.openURL(MAILTO_HREF)}>
-                <Text className="text-[#e2dfff] font-manrope text-sm mt-6 underline">
+                <Text className="text-brandPrimary-100 font-manrope text-sm mt-6 underline">
                   {CONTACT_EMAIL}
                 </Text>
               </Pressable>

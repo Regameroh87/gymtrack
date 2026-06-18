@@ -33,7 +33,7 @@ export default function LandingPage() {
   };
 
   return (
-    <View className="flex-1 bg-[#0c006a]">
+    <View className="flex-1 bg-brandPrimary-950">
       <LandingNavbar onNavigate={handleNavigate} />
 
       <ScrollView

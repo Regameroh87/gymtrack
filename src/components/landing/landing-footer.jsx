@@ -17,7 +17,7 @@ export default function LandingFooter({ onNavigate }) {
   const year = new Date().getFullYear();
 
   return (
-    <View className="w-full border-t border-white/10 bg-[#0a0050]">
+    <View className="w-full border-t border-white/10 bg-brandPrimary-950">
       <View className="w-full max-w-[1200px] mx-auto px-6 py-12">
         <View
           className={`gap-8 ${isWide ? "flex-row justify-between" : "flex-col"}`}
@@ -32,7 +32,7 @@ export default function LandingFooter({ onNavigate }) {
                 {BRAND_NAME}
               </Text>
             </View>
-            <Text className="text-[#c2c1ff] font-manrope text-sm leading-relaxed">
+            <Text className="text-brandPrimary-200 font-manrope text-sm leading-relaxed">
               Gestión de gimnasios y entrenamientos personalizados. Offline-first
               y con la identidad de tu marca.
             </Text>
@@ -45,7 +45,7 @@ export default function LandingFooter({ onNavigate }) {
             </Text>
             {NAV_LINKS.map((link) => (
               <Pressable key={link.target} onPress={() => onNavigate?.(link.target)}>
-                <Text className="text-[#c2c1ff] font-manrope text-sm hover:text-white transition">
+                <Text className="text-brandPrimary-200 font-manrope text-sm hover:text-white transition">
                   {link.label}
                 </Text>
               </Pressable>
@@ -58,12 +58,12 @@ export default function LandingFooter({ onNavigate }) {
               Empezá
             </Text>
             <Pressable onPress={() => Linking.openURL(MAILTO_HREF)}>
-              <Text className="text-[#c2c1ff] font-manrope text-sm hover:text-white transition">
+              <Text className="text-brandPrimary-200 font-manrope text-sm hover:text-white transition">
                 Solicitar demo
               </Text>
             </Pressable>
             <Pressable onPress={() => router.push("/login")}>
-              <Text className="text-[#c2c1ff] font-manrope text-sm hover:text-white transition">
+              <Text className="text-brandPrimary-200 font-manrope text-sm hover:text-white transition">
                 Iniciar sesión
               </Text>
             </Pressable>
@@ -71,7 +71,7 @@ export default function LandingFooter({ onNavigate }) {
         </View>
 
         <View className="border-t border-white/10 mt-10 pt-6">
-          <Text className="text-[#c2c1ff]/60 font-manrope text-xs text-center">
+          <Text className="text-brandPrimary-200/60 font-manrope text-xs text-center">
             © {year} {BRAND_NAME}. Todos los derechos reservados.
           </Text>
         </View>

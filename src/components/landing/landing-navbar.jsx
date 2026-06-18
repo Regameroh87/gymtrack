@@ -16,7 +16,7 @@ export default function LandingNavbar({ onNavigate }) {
   const isWide = width >= 900;
 
   return (
-    <View className="w-full border-b border-white/10 bg-[#0c006a]/80">
+    <View className="w-full border-b border-white/10 bg-brandPrimary-950/80">
       <View className="w-full max-w-[1200px] mx-auto flex-row items-center justify-between px-6 py-4">
         {/* Marca */}
         <Pressable
@@ -36,7 +36,7 @@ export default function LandingNavbar({ onNavigate }) {
           <View className="flex-row items-center gap-8">
             {NAV_LINKS.map((link) => (
               <Pressable key={link.target} onPress={() => onNavigate?.(link.target)}>
-                <Text className="text-[#c2c1ff] font-manrope text-base hover:text-white transition">
+                <Text className="text-brandPrimary-200 font-manrope text-base hover:text-white transition">
                   {link.label}
                 </Text>
               </Pressable>
@@ -59,7 +59,7 @@ export default function LandingNavbar({ onNavigate }) {
           </Pressable>
 
           <Pressable
-            className={`flex-row items-center rounded-xl bg-[#4a44e4] border border-[#d6d4ff]/30 hover:bg-[#3a34d4] hover:scale-[1.02] transition ${
+            className={`flex-row items-center rounded-xl bg-brandPrimary-700 border border-white/20 hover:bg-brandPrimary-600 hover:scale-[1.02] transition ${
               isWide ? "px-4 py-2.5" : "px-3 py-2"
             }`}
             onPress={() => Linking.openURL(MAILTO_HREF)}

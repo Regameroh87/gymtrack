@@ -12,6 +12,9 @@ import { ArrowRight, Flame } from "../../../assets/icons";
 // Contenido
 import { HERO, HERO_IMAGE_URI, MAILTO_HREF } from "./landing-content";
 
+// Acento mint del SaaS (brandSecondary-300) para íconos sobre fondo oscuro.
+const ACCENT = "#62fae3";
+
 export default function HeroSection() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -32,8 +35,8 @@ export default function HeroSection() {
                 isWide ? "self-start" : "self-center"
               }`}
             >
-              <Flame color="#2DD4BF" size={16} />
-              <Text className="text-[#c2c1ff] font-manrope-bold text-xs ml-2 tracking-wide shrink">
+              <Flame color={ACCENT} size={16} />
+              <Text className="text-brandPrimary-200 font-manrope-bold text-xs ml-2 tracking-wide shrink">
                 {HERO.eyebrow}
               </Text>
             </View>
@@ -44,12 +47,12 @@ export default function HeroSection() {
               }`}
             >
               {HERO.titleLead}{" "}
-              <Text className="text-[#2DD4BF]">{HERO.titleHighlight}</Text>{" "}
+              <Text className="text-brandSecondary-300">{HERO.titleHighlight}</Text>{" "}
               {HERO.titleTail}
             </Text>
 
             <Text
-              className={`text-[#d6d4ff] font-manrope text-lg mt-6 leading-relaxed ${
+              className={`text-brandPrimary-100 font-manrope text-lg mt-6 leading-relaxed ${
                 isWide ? "" : "text-center"
               }`}
             >
@@ -61,7 +64,7 @@ export default function HeroSection() {
               className={`flex-row gap-3 mt-9 ${isWide ? "" : "justify-center flex-wrap"}`}
             >
               <Pressable
-                className="flex-row items-center px-6 py-4 rounded-2xl bg-[#4a44e4] border border-[#d6d4ff]/30 hover:bg-[#3a34d4] hover:scale-[1.02] transition"
+                className="flex-row items-center px-6 py-4 rounded-2xl bg-brandPrimary-700 border border-white/20 hover:bg-brandPrimary-600 hover:scale-[1.02] transition"
                 onPress={() => Linking.openURL(MAILTO_HREF)}
                 style={{ cursor: "pointer" }}
               >
@@ -94,7 +97,7 @@ export default function HeroSection() {
                   transition={200}
                 />
                 <LinearGradient
-                  colors={["rgba(74,68,228,0.15)", "rgba(12,0,106,0.55)"]}
+                  colors={["rgba(74,68,228,0.15)", "rgba(30,27,75,0.55)"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 0, y: 1 }}
                   style={{ position: "absolute", inset: 0 }}
