@@ -252,19 +252,30 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
         style={{ backgroundColor: dark ? ui.background.dark : "#ffffff" }}
       >
         <View
-          className="flex-row items-center justify-between px-4"
+          className="relative flex-row items-center px-4"
           style={{
             height: 64,
             borderBottomWidth: 1,
             borderBottomColor: dark ? "rgba(255,255,255,0.08)" : ui.input.light,
           }}
         >
-          <View className={`flex-1 ${centered ? "items-center" : "items-start"}`}>
-            {logoNode}
-          </View>
-          {/* Punto que representa el toggle de tema (headerRight) */}
+          {/* Centro: como headerTitleAlign:"center" del header real, el logo se
+              centra sobre TODO el ancho (centro absoluto), no solo el espacio
+              a la izquierda del toggle. Izquierda: en flujo, como headerLeft. */}
+          {centered ? (
+            <View
+              pointerEvents="none"
+              className="absolute left-0 right-0 top-0 bottom-0 items-center justify-center"
+            >
+              {logoNode}
+            </View>
+          ) : (
+            <View className="flex-1 items-start">{logoNode}</View>
+          )}
+          {/* Punto que representa el toggle de tema (headerRight), siempre a la
+              derecha. */}
           <View
-            className="w-7 h-7 rounded-lg items-center justify-center"
+            className="ml-auto w-7 h-7 rounded-lg items-center justify-center"
             style={{ backgroundColor: `${primaryColor}1A` }}
           >
             <View
