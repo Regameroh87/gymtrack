@@ -35,7 +35,10 @@ export const useCatalogSessions = () => {
           eq(sessions.id, session_exercises.session_id)
         )
         .where(
-          and(ne(sessions.sync_status, "deleted"), eq(sessions.is_catalog, true))
+          and(
+            ne(sessions.sync_status, "deleted"),
+            eq(sessions.is_catalog, true)
+          )
         )
         .groupBy(sessions.id)
         .orderBy(desc(sessions.created_at)),

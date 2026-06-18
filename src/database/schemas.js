@@ -21,7 +21,9 @@ export const exercises_base = sqliteTable("exercises_base", {
     .notNull()
     .default(false),
   // Contenido de catálogo compartido (gym_id NULL), read-only para los gyms.
-  is_catalog: integer("is_catalog", { mode: "boolean" }).notNull().default(false),
+  is_catalog: integer("is_catalog", { mode: "boolean" })
+    .notNull()
+    .default(false),
   created_at: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
@@ -72,7 +74,9 @@ export const sessions = sqliteTable("sessions", {
   cover_image_uri: text("cover_image_uri"),
   created_by: text("created_by"),
   // Contenido de catálogo compartido (gym_id NULL), read-only para los gyms.
-  is_catalog: integer("is_catalog", { mode: "boolean" }).notNull().default(false),
+  is_catalog: integer("is_catalog", { mode: "boolean" })
+    .notNull()
+    .default(false),
   created_at: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
@@ -117,7 +121,9 @@ export const training_plans = sqliteTable("training_plans", {
   duration_weeks: integer("duration_weeks").notNull().default(8),
   cover_image_uri: text("cover_image_uri"),
   // Contenido de catálogo compartido (gym_id NULL), read-only para los gyms.
-  is_catalog: integer("is_catalog", { mode: "boolean" }).notNull().default(false),
+  is_catalog: integer("is_catalog", { mode: "boolean" })
+    .notNull()
+    .default(false),
   is_published: integer("is_published", { mode: "boolean" })
     .notNull()
     .default(false),

@@ -478,9 +478,7 @@ export default function DayPrescriptionEditor({
               placeholder="Buscar ejercicio..."
               placeholderTextColor={mutedColor}
               style={{
-                backgroundColor: isDark
-                  ? ui.input.dark
-                  : ui.input.light,
+                backgroundColor: isDark ? ui.input.dark : ui.input.light,
                 borderRadius: 10,
                 paddingHorizontal: 14,
                 paddingVertical: 10,

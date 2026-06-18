@@ -44,7 +44,11 @@ const ACTIVE_GYM_META_KEY = "active_gym_id";
 // por is_catalog, nunca por gym_id, así que el valor es opaco y nunca matchea un gym real.
 export const CATALOG_GYM_ID = "__catalog__";
 // Tablas padre que pueden contener filas de catálogo (gym_id NULL + is_catalog).
-const CATALOG_PARENT_TABLES = new Set(["exercises_base", "sessions", "training_plans"]);
+const CATALOG_PARENT_TABLES = new Set([
+  "exercises_base",
+  "sessions",
+  "training_plans",
+]);
 let isSyncing = false;
 
 // Los watermarks last_sync_at_* viven en AsyncStorage, pero describen el
@@ -133,7 +137,9 @@ async function purgeSyncedTables() {
 // próximo login adopte su gym desde una base vacía sin disparar un falso switch.
 export async function wipeLocalData() {
   await purgeSyncedTables();
-  await database.delete(sync_meta).where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
+  await database
+    .delete(sync_meta)
+    .where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
 }
 
 // Guard idempotente: corre al inicio de CADA sync. Si el contenido local
@@ -394,10 +400,16 @@ async function pullTableChanges(
     //  - catalogMode: solo filas de catálogo (no tocar el contenido del gym).
     //  - excludeCatalog: excluir las de catálogo (las gestiona su propio pase).
     const syncedFilter = catalogMode
-      ? and(eq(schemaTable.sync_status, "synced"), eq(schemaTable.is_catalog, true))
+      ? and(
+          eq(schemaTable.sync_status, "synced"),
+          eq(schemaTable.is_catalog, true)
+        )
       : excludeCatalog
-      ? and(eq(schemaTable.sync_status, "synced"), eq(schemaTable.is_catalog, false))
-      : eq(schemaTable.sync_status, "synced");
+        ? and(
+            eq(schemaTable.sync_status, "synced"),
+            eq(schemaTable.is_catalog, false)
+          )
+        : eq(schemaTable.sync_status, "synced");
     const localSynced = await database
       .select({ id: schemaTable.id })
       .from(schemaTable)

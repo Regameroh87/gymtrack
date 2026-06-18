@@ -144,7 +144,9 @@ function EditGymForm({ gym }) {
   };
 
   const currentLogoUrl = useMemo(
-    () => getCloudinaryUrl(gym.logo_url) || (gym.logo_url ? `${gym.logo_url}` : null),
+    () =>
+      getCloudinaryUrl(gym.logo_url) ||
+      (gym.logo_url ? `${gym.logo_url}` : null),
     [gym.logo_url]
   );
 
@@ -263,10 +265,7 @@ function EditGymForm({ gym }) {
     try {
       await toggleActive.mutateAsync(next);
       setSuspendOpen(false);
-      notify(
-        "success",
-        next ? "Gimnasio reactivado." : "Gimnasio suspendido."
-      );
+      notify("success", next ? "Gimnasio reactivado." : "Gimnasio suspendido.");
     } catch (err) {
       setSuspendOpen(false);
       notify("error", err.message || "No se pudo actualizar el estado.");

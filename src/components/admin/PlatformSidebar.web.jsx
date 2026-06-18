@@ -18,6 +18,7 @@ import {
   Settings,
   Home,
   Logout,
+  Barbell,
 } from "../../../assets/icons";
 
 // Sidebar del SUPER ADMIN (modo plataforma). A diferencia del panel de un gym,
@@ -26,6 +27,7 @@ import {
 const NAV_ITEMS = [
   { icon: Home, label: "Dashboard", path: "" },
   { icon: ShieldHalf, label: "Gimnasios", path: "gyms" },
+  { icon: Barbell, label: "Catálogo", path: "catalog" },
   { icon: Receipt, label: "Facturación", path: "billing", comingSoon: true },
   { icon: Users, label: "Usuarios globales", path: "users", comingSoon: true },
   { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
