@@ -8,7 +8,8 @@ import {
 
 export const exercises_base = sqliteTable("exercises_base", {
   id: text("id").primaryKey(),
-  gym_id: text("gym_id").notNull(),
+  // NULL = fila de catálogo (sin dueño). Ver is_catalog.
+  gym_id: text("gym_id"),
   name: text("name").notNull(),
   category: text("category").notNull(),
   muscle_group: text("muscle_group").notNull(),
@@ -19,6 +20,8 @@ export const exercises_base = sqliteTable("exercises_base", {
   is_unilateral: integer("is_unilateral", { mode: "boolean" })
     .notNull()
     .default(false),
+  // Contenido de catálogo compartido (gym_id NULL), read-only para los gyms.
+  is_catalog: integer("is_catalog", { mode: "boolean" }).notNull().default(false),
   created_at: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),
@@ -61,12 +64,15 @@ export const exercise_equipment = sqliteTable("exercise_equipment", {
 
 export const sessions = sqliteTable("sessions", {
   id: text("id").primaryKey(),
-  gym_id: text("gym_id").notNull(),
+  // NULL = sesión de catálogo (sin dueño). Ver is_catalog.
+  gym_id: text("gym_id"),
   name: text("name").notNull(),
   description: text("description"),
   level: text("level"),
   cover_image_uri: text("cover_image_uri"),
   created_by: text("created_by"),
+  // Contenido de catálogo compartido (gym_id NULL), read-only para los gyms.
+  is_catalog: integer("is_catalog", { mode: "boolean" }).notNull().default(false),
   created_at: text("created_at")
     .notNull()
     .$defaultFn(() => new Date().toISOString()),

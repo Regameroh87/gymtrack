@@ -83,15 +83,27 @@ serve(async (req) => {
     const record = payload.record || null;
     const old_record = payload.old_record || null;
 
+    // Contenido de catálogo (exercises_base/sessions/training_plans con is_catalog=true):
+    // media compartida curada por el super_admin y referenciada por muchos gyms. No la
+    // destruimos en un DELETE para no eliminar un asset que otro contenido pueda estar
+    // usando; su limpieza la gestiona el super_admin aparte. En UPDATE sí dejamos que
+    // reemplace su propia media (un solo dueño). Las tablas sin la columna devuelven
+    // undefined → comportamiento normal.
+    const oldRecordIsCatalog = old_record?.is_catalog === true;
+
     // Process each asset field (image and video) independently
     for (const { column, resource_type } of ASSET_FIELDS) {
       if (type === "INSERT" && record?.[column]) {
         await confirmAsset(record[column], resource_type);
-      } 
-      
+      }
+
       else if (type === "DELETE" && old_record?.[column]) {
+        if (oldRecordIsCatalog) {
+          console.log(`[skip] DELETE de fila is_catalog: no se destruye ${old_record[column]} (${resource_type}).`);
+          continue;
+        }
         await destroyAsset(old_record[column], resource_type);
-      } 
+      }
       
       else if (type === "UPDATE") {
         const newId = record?.[column];
