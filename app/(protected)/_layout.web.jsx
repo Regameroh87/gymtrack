@@ -8,6 +8,9 @@ import { Slot, Redirect, usePathname } from "expo-router";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { useActiveGym } from "../../src/contexts/active-gym-context";
 
+// Landing pública (solo web)
+import LandingPage from "../../src/components/landing/landing-page.web";
+
 export default function ProtectedLayoutWeb() {
   const { isLoggedIn, loading } = useAuth();
   const { needsSelection, loading: gymLoading } = useActiveGym();
@@ -21,8 +24,10 @@ export default function ProtectedLayoutWeb() {
     );
   }
 
+  // Sin sesión: en la web mostramos la landing pública en la raíz (no el login).
+  // La URL permanece en "/", y "Iniciar sesión" navega a /login desde la landing.
   if (!isLoggedIn) {
-    return <Redirect href="/(auth)/login" />;
+    return <LandingPage />;
   }
 
   // Multi-gym: con más de una membresía y sin gym activo elegido, primero se
