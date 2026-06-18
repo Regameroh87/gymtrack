@@ -8,6 +8,7 @@ import * as Haptics from "expo-haptics";
 // ── Tema / Assets ──
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Lock } from "../../../assets/icons";
+import { makeShadow } from "../../utils/box-shadow";
 
 const AdminModuleCard = ({
   icon: Icon,
@@ -49,12 +50,7 @@ const AdminModuleCard = ({
             style={
               comingSoon
                 ? null
-                : {
-                    shadowColor: accent,
-                    shadowOpacity: 0.25,
-                    shadowRadius: 8,
-                    shadowOffset: { width: 0, height: 4 },
-                  }
+                : makeShadow({ color: accent, opacity: 0.25, radius: 8, offset: { width: 0, height: 4 } })
             }
           >
             {comingSoon ? (

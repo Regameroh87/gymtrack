@@ -35,6 +35,7 @@ import {
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+import { makeShadow } from "../../../../src/utils/box-shadow";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
@@ -645,10 +646,7 @@ function ExplorarContent({ router, insets }) {
             alignItems: "center",
             gap: 8,
             backgroundColor: brandPrimary[500],
-            shadowColor: brandPrimary[500],
-            shadowOpacity: 0.4,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 4 },
+            ...makeShadow({ color: brandPrimary[500], opacity: 0.4, radius: 12, offset: { width: 0, height: 4 } }),
             elevation: 8,
           }}
         >
@@ -728,10 +726,7 @@ function PlanTile({
       <View
         className="rounded-3xl overflow-hidden bg-white dark:bg-[#0F0D20]"
         style={{
-          shadowColor: primaryColor,
-          shadowOpacity: isDark ? 0.18 : 0.1,
-          shadowRadius: 24,
-          shadowOffset: { width: 0, height: 10 },
+          ...makeShadow({ color: primaryColor, opacity: isDark ? 0.18 : 0.1, radius: 24, offset: { width: 0, height: 10 } }),
           elevation: 10,
         }}
       >
@@ -1093,10 +1088,7 @@ function PlanTile({
                 width: 30,
                 height: 30,
                 backgroundColor: primaryColor,
-                shadowColor: primaryColor,
-                shadowOpacity: 0.6,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 2 },
+                ...makeShadow({ color: primaryColor, opacity: 0.6, radius: 8, offset: { width: 0, height: 2 } }),
               }}
             >
               <ChevronRight size={14} color="white" />

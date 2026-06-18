@@ -40,6 +40,7 @@ import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-
 import { useSessionDraft } from "../../../src/hooks/sessions/use-session-draft.js";
 
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary.js";
+import { makeShadow } from "../../../src/utils/box-shadow.js";
 
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet.jsx";
 
@@ -346,10 +347,7 @@ export default function SesionActiva() {
                 height: 6,
                 borderRadius: 3,
                 backgroundColor: BRAND_MINT,
-                shadowColor: BRAND_MINT,
-                shadowOpacity: 0.9,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
+                ...makeShadow({ color: BRAND_MINT, opacity: 0.9, radius: 6 }),
               }}
             />
             <Text className="font-manrope-bold uppercase text-[10px] tracking-[2.2px] text-brandSecondary-700 dark:text-brandSecondary-400">
@@ -430,10 +428,7 @@ export default function SesionActiva() {
         <View
           className="mx-5 mb-3 rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-ui-text-main/8 dark:border-white/8"
           style={{
-            shadowColor: BRAND_PRIMARY,
-            shadowOpacity: 0.18,
-            shadowRadius: 24,
-            shadowOffset: { width: 0, height: 10 },
+            ...makeShadow({ color: BRAND_PRIMARY, opacity: 0.18, radius: 24, offset: { width: 0, height: 10 } }),
             elevation: 10,
           }}
         >
@@ -505,10 +500,7 @@ export default function SesionActiva() {
               <View
                 className="w-2 h-2 rounded-full bg-brandSecondary-400"
                 style={{
-                  shadowColor: BRAND_MINT,
-                  shadowOpacity: 0.9,
-                  shadowRadius: 5,
-                  shadowOffset: { width: 0, height: 0 },
+                  ...makeShadow({ color: BRAND_MINT, opacity: 0.9, radius: 5 }),
                 }}
               />
               <Text className="font-jakarta-bold text-xs tracking-[2px] text-brandSecondary-700 dark:text-brandSecondary-400">
@@ -598,10 +590,7 @@ export default function SesionActiva() {
                       <View
                         className="w-9 h-9 rounded-full items-center justify-center bg-brandPrimary-700/90"
                         style={{
-                          shadowColor: BRAND_PRIMARY,
-                          shadowOpacity: 0.5,
-                          shadowRadius: 8,
-                          shadowOffset: { width: 0, height: 2 },
+                          ...makeShadow({ color: BRAND_PRIMARY, opacity: 0.5, radius: 8, offset: { width: 0, height: 2 } }),
                         }}
                       >
                         <Play size={14} color={onPrimary} />
@@ -651,10 +640,7 @@ export default function SesionActiva() {
                       style={
                         done
                           ? {
-                              shadowColor: BRAND_MINT,
-                              shadowOpacity: 0.5,
-                              shadowRadius: 9,
-                              shadowOffset: { width: 0, height: 2 },
+                              ...makeShadow({ color: BRAND_MINT, opacity: 0.5, radius: 9, offset: { width: 0, height: 2 } }),
                             }
                           : undefined
                       }
@@ -703,10 +689,7 @@ export default function SesionActiva() {
                       style={
                         done
                           ? {
-                              shadowColor: BRAND_MINT,
-                              shadowOpacity: 0.65,
-                              shadowRadius: 10,
-                              shadowOffset: { width: 0, height: 2 },
+                              ...makeShadow({ color: BRAND_MINT, opacity: 0.65, radius: 10, offset: { width: 0, height: 2 } }),
                             }
                           : undefined
                       }
@@ -843,10 +826,7 @@ export default function SesionActiva() {
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  shadowColor: BRAND_PRIMARY,
-                  shadowOpacity: isSaving ? 0.25 : 0.5,
-                  shadowRadius: 18,
-                  shadowOffset: { width: 0, height: 8 },
+                  ...makeShadow({ color: BRAND_PRIMARY, opacity: isSaving ? 0.25 : 0.5, radius: 18, offset: { width: 0, height: 8 } }),
                   elevation: 10,
                 }}
               >
@@ -901,10 +881,7 @@ export default function SesionActiva() {
             <View
               className="mx-4 mb-8 rounded-3xl border border-ui-text-main/8 dark:border-white/10 bg-ui-surface-light dark:bg-ui-surface-dark p-5"
               style={{
-                shadowColor: ui.overlay.shadow,
-                shadowOpacity: 0.3,
-                shadowRadius: 24,
-                shadowOffset: { width: 0, height: -4 },
+                ...makeShadow({ color: ui.overlay.shadow, opacity: 0.3, radius: 24, offset: { width: 0, height: -4 } }),
                 elevation: 20,
               }}
             >
@@ -963,10 +940,7 @@ export default function SesionActiva() {
             <View
               className="mx-4 mb-8 rounded-3xl border border-ui-text-main/8 dark:border-white/10 bg-ui-surface-light dark:bg-ui-surface-dark p-5"
               style={{
-                shadowColor: ui.overlay.shadow,
-                shadowOpacity: 0.3,
-                shadowRadius: 24,
-                shadowOffset: { width: 0, height: -4 },
+                ...makeShadow({ color: ui.overlay.shadow, opacity: 0.3, radius: 24, offset: { width: 0, height: -4 } }),
                 elevation: 20,
               }}
             >
@@ -975,10 +949,7 @@ export default function SesionActiva() {
                   <View
                     className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
                     style={{
-                      shadowColor: BRAND_MINT,
-                      shadowOpacity: 1,
-                      shadowRadius: 6,
-                      shadowOffset: { width: 0, height: 0 },
+                      ...makeShadow({ color: BRAND_MINT, opacity: 1, radius: 6 }),
                     }}
                   />
                   <Text className="font-manrope-bold uppercase text-[10px] tracking-[2px] text-brandSecondary-700 dark:text-brandSecondary-400">

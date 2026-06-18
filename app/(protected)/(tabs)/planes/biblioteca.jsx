@@ -33,6 +33,7 @@ import { useCustomExercises } from "../../../../src/hooks/exercises/use-custom-e
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+import { makeShadow } from "../../../../src/utils/box-shadow";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
@@ -247,10 +248,7 @@ export default function BibliotecaScreen() {
           backgroundColor: brandPrimary[500],
           alignItems: "center",
           justifyContent: "center",
-          shadowColor: brandPrimary[500],
-          shadowOpacity: 0.4,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 4 },
+          ...makeShadow({ color: brandPrimary[500], opacity: 0.4, radius: 12, offset: { width: 0, height: 4 } }),
           elevation: 8,
         }}
       >

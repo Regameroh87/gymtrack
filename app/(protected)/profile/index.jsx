@@ -22,6 +22,7 @@ import { useActiveGym } from "../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
 import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
+import { makeShadow } from "../../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../../src/constants/roles";
 import { PROFILE_GENDERS } from "../../../src/constants/gender-options";
 import { ui } from "../../../src/theme/colors";
@@ -196,10 +197,7 @@ export default function ProfileScreen() {
                 height: 100,
                 borderRadius: 28,
                 padding: 2.5,
-                shadowColor: BRAND,
-                shadowOpacity: 0.4,
-                shadowRadius: 16,
-                shadowOffset: { width: 0, height: 8 },
+                ...makeShadow({ color: BRAND, opacity: 0.4, radius: 16, offset: { width: 0, height: 8 } }),
                 elevation: 10,
               }}
             >
@@ -414,10 +412,7 @@ export default function ProfileScreen() {
           disabled={saving}
           className="overflow-hidden rounded-2xl active:opacity-80"
           style={{
-            shadowColor: BRAND,
-            shadowOpacity: 0.45,
-            shadowRadius: 14,
-            shadowOffset: { width: 0, height: 6 },
+            ...makeShadow({ color: BRAND, opacity: 0.45, radius: 14, offset: { width: 0, height: 6 } }),
             elevation: 8,
           }}
         >

@@ -14,6 +14,7 @@ import { useDropPlan } from "../../../../src/hooks/plans/use-assign-plan.js";
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary.js";
+import { makeShadow } from "../../../../src/utils/box-shadow.js";
 import {
   PLAN_GENDER_BADGES,
   planMatchesGender,
@@ -92,10 +93,7 @@ export default function RutinasWeb() {
                 className="flex-row items-center gap-2 px-4 py-[11px] rounded-2xl bg-brandPrimary-600"
                 style={({ hovered, pressed }) => ({
                   cursor: "pointer",
-                  shadowColor: brandPrimary[600],
-                  shadowOpacity: hovered ? 0.45 : 0.28,
-                  shadowRadius: hovered ? 14 : 10,
-                  shadowOffset: { width: 0, height: 4 },
+                  ...makeShadow({ color: brandPrimary[600], opacity: hovered ? 0.45 : 0.28, radius: hovered ? 14 : 10, offset: { width: 0, height: 4 } }),
                   opacity: pressed ? 0.9 : 1,
                 })}
               >
@@ -196,7 +194,7 @@ function MisPlanesContent({ router, onBrowseCatalog }) {
               <View className="flex-row items-center gap-2 mb-2.5 pl-1">
                 <View
                   className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400"
-                  style={{ shadowColor: brandSecondary[400], shadowOpacity: 0.8, shadowRadius: 5 }}
+                  style={makeShadow({ color: brandSecondary[400], opacity: 0.8, radius: 5 })}
                 />
                 <Text className="text-[9px] font-manrope-bold uppercase tracking-[1.6px] text-brandSecondary-700">
                   Asignado por tu entrenador
@@ -435,10 +433,7 @@ function EmptyCurrentPlan({ onBrowseCatalog }) {
         className="self-start flex-row items-center gap-2 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600"
         style={({ hovered, pressed }) => ({
           cursor: "pointer",
-          shadowColor: brandPrimary[600],
-          shadowOpacity: hovered ? 0.4 : 0.25,
-          shadowRadius: hovered ? 12 : 8,
-          shadowOffset: { width: 0, height: 3 },
+          ...makeShadow({ color: brandPrimary[600], opacity: hovered ? 0.4 : 0.25, radius: hovered ? 12 : 8, offset: { width: 0, height: 3 } }),
           opacity: pressed ? 0.9 : 1,
         })}
       >
@@ -471,10 +466,7 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
       className="bg-ui-surface-light border border-ui-input-border rounded-[22px] overflow-hidden"
       style={({ hovered, pressed }) => ({
         cursor: "pointer",
-        shadowColor: brandPrimary[700],
-        shadowOpacity: hovered ? 0.14 : 0.07,
-        shadowRadius: hovered ? 28 : 18,
-        shadowOffset: { width: 0, height: hovered ? 12 : 8 },
+        ...makeShadow({ color: brandPrimary[700], opacity: hovered ? 0.14 : 0.07, radius: hovered ? 28 : 18, offset: { width: 0, height: hovered ? 12 : 8 } }),
         transform: pressed ? [{ scale: 0.995 }] : [],
       })}
     >
@@ -612,10 +604,7 @@ function PlanCardWeb({ plan, index = 0, onPress }) {
           <View
             className="w-[30px] h-[30px] rounded-full items-center justify-center bg-brandPrimary-600"
             style={{
-              shadowColor: brandPrimary[600],
-              shadowOpacity: 0.45,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 2 },
+              ...makeShadow({ color: brandPrimary[600], opacity: 0.45, radius: 8, offset: { width: 0, height: 2 } }),
             }}
           >
             <ChevronRight size={14} color="#fff" />
@@ -642,10 +631,7 @@ function ObjectiveChip({ label, Icon, active, onPress }) {
           : "rgba(15,13,32,0.04)",
         borderWidth: 1,
         borderColor: active ? "transparent" : "rgba(15,13,32,0.1)",
-        shadowColor: active ? brandPrimary[600] : "transparent",
-        shadowOpacity: active ? 0.3 : 0,
-        shadowRadius: active ? 8 : 0,
-        shadowOffset: { width: 0, height: 2 },
+        ...makeShadow({ color: active ? brandPrimary[600] : "transparent", opacity: active ? 0.3 : 0, radius: active ? 8 : 0, offset: { width: 0, height: 2 } }),
         opacity: pressed ? 0.85 : 1,
       })}
     >

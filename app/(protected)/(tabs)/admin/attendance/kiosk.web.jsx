@@ -9,6 +9,7 @@ import { supabase } from "../../../../../src/database/supabase";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 import { ArrowLeft, QrCode, Clock } from "../../../../../assets/icons";
+import { makeShadow } from "../../../../../src/utils/box-shadow";
 
 const ROTATE_MS = 30_000;
 const GRACE_MS = 5_000;
@@ -134,10 +135,7 @@ export default function AttendanceKioskWeb() {
         className="rounded-[28px] p-7 items-center justify-center"
         style={{
           backgroundColor: "#fff",
-          shadowColor: "#4a44e4",
-          shadowOpacity: 0.5,
-          shadowRadius: 32,
-          shadowOffset: { width: 0, height: 12 },
+          ...makeShadow({ color: "#4a44e4", opacity: 0.5, radius: 32, offset: { width: 0, height: 12 } }),
         }}
       >
         {queryError ? (

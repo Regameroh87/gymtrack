@@ -14,6 +14,7 @@ import { useAuth } from "../../auth/lib/getSession.jsx";
 // Tema / assets
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Barbell, ClipboardList, Home, Logout } from "../../../assets/icons.jsx";
+import { makeShadow } from "../../utils/box-shadow";
 
 const NAV = [
   { label: "Inicio",  icon: Home,          path: "/" },
@@ -49,10 +50,7 @@ export default function MemberNavbar() {
         position: "sticky",
         top: 0,
         zIndex: 100,
-        shadowColor: "#000",
-        shadowOpacity: 0.04,
-        shadowRadius: 12,
-        shadowOffset: { width: 0, height: 2 },
+        ...makeShadow({ color: "#000", opacity: 0.04, radius: 12, offset: { width: 0, height: 2 } }),
       }}
     >
       {/* Logo */}

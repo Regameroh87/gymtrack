@@ -19,6 +19,7 @@ import {
 
 // ── Utils ──
 import { getCloudinaryUrl } from "../../../../src/utils/cloudinary.js";
+import { makeShadow } from "../../../../src/utils/box-shadow.js";
 
 // ── Assets ──
 import {
@@ -244,10 +245,7 @@ function QuickAction({
             width: 44,
             height: 44,
             borderRadius: 14,
-            shadowColor: isPrimary ? BRAND_PRIMARY : "transparent",
-            shadowOpacity: isPrimary ? 0.5 : 0,
-            shadowRadius: 10,
-            shadowOffset: { width: 0, height: 4 },
+            ...makeShadow({ color: isPrimary ? BRAND_PRIMARY : "transparent", opacity: isPrimary ? 0.5 : 0, radius: 10, offset: { width: 0, height: 4 } }),
           }}
         >
           {icon}

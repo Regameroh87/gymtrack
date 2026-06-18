@@ -43,7 +43,6 @@ export default function TabsLayout() {
         headerStyle: {
           backgroundColor: isDark ? ui.background.dark : ui.background.light,
           elevation: 0,
-          shadowOpacity: 0,
         },
         headerTitleStyle: {
           fontFamily: "Lexend_700Bold",

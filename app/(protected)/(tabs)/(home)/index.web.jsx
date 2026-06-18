@@ -16,6 +16,7 @@ import { useSessionLogs } from "../../../../src/hooks/sessions/use-session-logs.
 
 // Utilidades
 import { formatDuration } from "../../../../src/utils/format-date.js";
+import { makeShadow } from "../../../../src/utils/box-shadow.js";
 
 // Componentes
 import MemberNavbar from "../../../../src/components/web/MemberNavbar.jsx";
@@ -318,9 +319,7 @@ function MemberHomeWeb() {
                       height: 5,
                       borderRadius: 2.5,
                       backgroundColor: MINT,
-                      shadowColor: MINT,
-                      shadowOpacity: 1,
-                      shadowRadius: 5,
+                      ...makeShadow({ color: MINT, opacity: 1, radius: 5 }),
                     }}
                   />
                   <Text
@@ -520,10 +519,7 @@ function MemberHomeWeb() {
                   backgroundColor: SURFACE,
                   borderWidth: 1,
                   borderColor: BORDER,
-                  shadowColor: P700,
-                  shadowOpacity: 0.08,
-                  shadowRadius: 24,
-                  shadowOffset: { width: 0, height: 8 },
+                  ...makeShadow({ color: P700, opacity: 0.08, radius: 24, offset: { width: 0, height: 8 } }),
                 }}
               >
                 {/* Ticks firma editorial */}
@@ -585,9 +581,7 @@ function MemberHomeWeb() {
                         height: 6,
                         borderRadius: 3,
                         backgroundColor: MINT,
-                        shadowColor: MINT,
-                        shadowOpacity: 0.8,
-                        shadowRadius: 6,
+                        ...makeShadow({ color: MINT, opacity: 0.8, radius: 6 }),
                       }}
                     />
                     <Text
@@ -932,10 +926,7 @@ function MemberHomeWeb() {
                         backgroundColor: P600,
                         alignItems: "center",
                         justifyContent: "center",
-                        shadowColor: P600,
-                        shadowOpacity: 0.45,
-                        shadowRadius: 10,
-                        shadowOffset: { width: 0, height: 3 },
+                        ...makeShadow({ color: P600, opacity: 0.45, radius: 10, offset: { width: 0, height: 3 } }),
                       }}
                     >
                       <ChevronRight size={15} color="white" />
@@ -1086,10 +1077,7 @@ function QuickCard({
         gap: 12,
         opacity: pressed ? 0.9 : 1,
         cursor: "pointer",
-        shadowColor: "#000",
-        shadowOpacity: hovered && !pressed ? 0.04 : 0,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
+        ...makeShadow({ color: "#000", opacity: hovered && !pressed ? 0.04 : 0, radius: 8, offset: { width: 0, height: 2 } }),
       })}
     >
       <View
@@ -1102,10 +1090,7 @@ function QuickCard({
           borderColor: isPrimary ? "rgba(255,255,255,0.3)" : iconBorder,
           alignItems: "center",
           justifyContent: "center",
-          shadowColor: isPrimary ? P600 : "transparent",
-          shadowOpacity: isPrimary ? 0.4 : 0,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 3 },
+          ...makeShadow({ color: isPrimary ? P600 : "transparent", opacity: isPrimary ? 0.4 : 0, radius: 10, offset: { width: 0, height: 3 } }),
         }}
       >
         {icon}

@@ -17,6 +17,7 @@ import Toast from "react-native-toast-message";
 import { useActiveGym } from "../../src/contexts/active-gym-context";
 import { supabase } from "../../src/database/supabase";
 import { getCloudinaryUrl } from "../../src/utils/cloudinary";
+import { makeShadow } from "../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../src/constants/roles";
 import { generateRamp } from "../../src/theme/generate-ramp";
 import { brandPrimary as defaultPrimary } from "../../src/theme/colors";
@@ -151,10 +152,7 @@ export default function SelectGymScreen() {
               style={{
                 borderColor: isActive ? brand : "rgba(0,0,0,0.06)",
                 borderWidth: isActive ? 1.5 : 1,
-                shadowColor: brand,
-                shadowOpacity: isActive ? 0.18 : 0.06,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 6 },
+                ...makeShadow({ color: brand, opacity: isActive ? 0.18 : 0.06, radius: 12, offset: { width: 0, height: 6 } }),
                 elevation: isActive ? 6 : 2,
               }}
             >

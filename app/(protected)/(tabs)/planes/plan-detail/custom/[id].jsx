@@ -45,6 +45,7 @@ import {
 
 // Utilidades
 import { getCloudinaryUrl } from "../../../../../../src/utils/cloudinary";
+import { makeShadow } from "../../../../../../src/utils/box-shadow";
 
 // Tema / assets
 import {
@@ -678,10 +679,7 @@ export default function CustomPlanDetail() {
                           height: 5,
                           borderRadius: 3,
                           backgroundColor: BRAND_MINT,
-                          shadowColor: BRAND_MINT,
-                          shadowOpacity: 1,
-                          shadowRadius: 4,
-                          shadowOffset: { width: 0, height: 0 },
+                          ...makeShadow({ color: BRAND_MINT, opacity: 1, radius: 4 }),
                         }}
                       />
                     )}
@@ -789,10 +787,7 @@ export default function CustomPlanDetail() {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              shadowColor: alreadyActive ? "transparent" : BRAND_PRIMARY,
-              shadowOpacity: alreadyActive ? 0 : 0.5,
-              shadowRadius: 16,
-              shadowOffset: { width: 0, height: 6 },
+              ...makeShadow({ color: alreadyActive ? "transparent" : BRAND_PRIMARY, opacity: alreadyActive ? 0 : 0.5, radius: 16, offset: { width: 0, height: 6 } }),
               opacity: isFollowing ? 0.7 : 1,
             }}
           >

@@ -24,6 +24,7 @@ import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exerc
 import { useActiveSessionDraft } from "../../../src/hooks/sessions/use-active-session-draft";
 
 import { formatShortDate } from "../../../src/utils/format-date";
+import { makeShadow } from "../../../src/utils/box-shadow";
 import PlanExerciseRow from "../../../src/components/cards/plan-exercise-row";
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";
 import EquipmentImageSheet from "../../../src/components/images/EquipmentImageSheet";
@@ -250,10 +251,7 @@ export default function SesionPreview() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
-                shadowColor: brandPrimary[700],
-                shadowOpacity: 0.55,
-                shadowRadius: 22,
-                shadowOffset: { width: 0, height: 8 },
+                ...makeShadow({ color: brandPrimary[700], opacity: 0.55, radius: 22, offset: { width: 0, height: 8 } }),
                 elevation: 12,
               }}
             >
