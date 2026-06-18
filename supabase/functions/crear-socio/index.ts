@@ -49,6 +49,23 @@ function jsonResponse(body: Record<string, unknown>, status: number) {
   })
 }
 
+// Best-effort: deja una fila 'failed' en email_log cuando el envío ni siquiera
+// llega a send-email (config faltante o error de red). Los fallos que ocurren
+// dentro de send-email (Resend, RESEND_API_KEY, etc.) los loguea send-email.
+async function logFailedWelcome(gymId: string, to: string, error: string) {
+  try {
+    await supabaseAdmin.from('email_log').insert({
+      gym_id: gymId,
+      to_email: to,
+      type: 'welcome_member',
+      status: 'failed',
+      error: error.slice(0, 500),
+    })
+  } catch (err: any) {
+    console.warn('[crear-socio] No se pudo registrar el fallo de email:', err?.message)
+  }
+}
+
 // Best-effort: el mail de bienvenida nunca debe romper la creación del socio.
 // El render branded (colores/logo del gym) vive en la función send-email.
 async function sendWelcomeMemberEmail(gymId: string, to: string, name?: string | null) {
@@ -58,10 +75,11 @@ async function sendWelcomeMemberEmail(gymId: string, to: string, name?: string |
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     if (!internalSecret || !supabaseUrl) {
       console.warn('[crear-socio] Falta config para enviar bienvenida; se omite.')
+      await logFailedWelcome(gymId, to, 'Falta INTERNAL_FUNCTION_SECRET o SUPABASE_URL en crear-socio')
       return
     }
 
-    await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+    const res = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,8 +93,14 @@ async function sendWelcomeMemberEmail(gymId: string, to: string, name?: string |
         data: { name: name ?? null },
       }),
     })
+    // send-email loguea sus propios fallos (Resend, RESEND_API_KEY); acá solo
+    // dejamos rastro en los logs de la función para correlacionar.
+    if (!res.ok) {
+      console.warn(`[crear-socio] send-email respondió ${res.status} al enviar bienvenida.`)
+    }
   } catch (err: any) {
     console.warn('[crear-socio] No se pudo enviar el mail de bienvenida:', err?.message)
+    await logFailedWelcome(gymId, to, err?.message ?? 'error de red al invocar send-email')
   }
 }
 

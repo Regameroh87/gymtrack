@@ -45,6 +45,12 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Hoisted para poder dejar una fila 'failed' en email_log desde el catch
+  // ante un fallo inesperado (sino el error quedaría solo en los logs).
+  let toEmail: string | undefined;
+  let emailType: string | undefined;
+  let gymId: string | null | undefined;
+
   try {
     // Canal solo server-side: verify_jwt está off, así que protegemos con un
     // secreto interno compartido entre edge functions.
@@ -53,11 +59,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "No autorizado." }, 401);
     }
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("Falta RESEND_API_KEY");
-    }
-
+    // Parseamos el body antes de validar RESEND_API_KEY: así, si el secret
+    // falta, podemos dejar una fila 'failed' en email_log con to/type/gym_id
+    // (en vez de un error invisible).
     const body = await req.json();
     const { gym_id, to, type, data, subject: subjectOverride } = body as {
       gym_id?: string | null;
@@ -66,9 +70,26 @@ Deno.serve(async (req) => {
       data?: { name?: string | null };
       subject?: string;
     };
+    toEmail = to;
+    emailType = type;
+    gymId = gym_id;
 
     if (!to || !type) {
       return jsonResponse({ error: "to y type son requeridos." }, 400);
+    }
+
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      const errMsg = "Falta RESEND_API_KEY";
+      console.error("[send-email]", errMsg);
+      await supabaseAdmin.from("email_log").insert({
+        gym_id: gym_id ?? null,
+        to_email: to,
+        type,
+        status: "failed",
+        error: errMsg,
+      });
+      return jsonResponse({ error: errMsg }, 500);
     }
 
     // Branding del gym: nombre + seeds de theme + logo. Sin gym (plataforma) o sin
@@ -139,6 +160,18 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = (error as Error)?.message ?? "Error interno del servidor";
     console.error("[send-email] Error crítico:", message);
+    // Best-effort: si ya conocíamos destinatario y tipo, dejamos rastro del fallo.
+    if (toEmail && emailType) {
+      await supabaseAdmin.from("email_log").insert({
+        gym_id: gymId ?? null,
+        to_email: toEmail,
+        type: emailType,
+        status: "failed",
+        error: String(message).slice(0, 500),
+      }).then(({ error: logErr }) => {
+        if (logErr) console.warn("[send-email] Falló también el log del error:", logErr.message);
+      });
+    }
     return jsonResponse({ error: message }, 400);
   }
 });

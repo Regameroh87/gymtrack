@@ -28,7 +28,12 @@ export default function TabsLayout() {
   const isCentered = logoPosition === "center";
 
   const HomeLogo = () => (
-    <GymLogo variant="wordmark" size={logoPx} content={content} />
+    <GymLogo
+      variant="wordmark"
+      size={logoPx}
+      content={content}
+      align={logoPosition}
+    />
   );
 
   return (

@@ -215,12 +215,22 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
   if (content === "title" || !logoUri) {
     logoNode = titleText;
   } else {
+    // Mismas reglas que GymLogo: en "logo_title" la caja es angosta y el logo
+    // se pega a la derecha (junto al nombre); en "logo" solo, caja ancha y
+    // contentPosition según la alineación.
+    const isLogoTitle = content === "logo_title";
+    const boxWidth = isLogoTitle ? Math.min(px * 2, 120) : logoWidth;
+    const contentPosition = isLogoTitle
+      ? "right"
+      : centered
+        ? "center"
+        : "left";
     const image = (
       <Image
         source={{ uri: logoUri }}
-        style={{ height: px, width: logoWidth }}
+        style={{ height: px, width: boxWidth }}
         contentFit="contain"
-        contentPosition="left"
+        contentPosition={contentPosition}
       />
     );
     logoNode =
@@ -252,19 +262,30 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
         style={{ backgroundColor: dark ? ui.background.dark : "#ffffff" }}
       >
         <View
-          className="flex-row items-center justify-between px-4"
+          className="relative flex-row items-center px-4"
           style={{
             height: 64,
             borderBottomWidth: 1,
             borderBottomColor: dark ? "rgba(255,255,255,0.08)" : ui.input.light,
           }}
         >
-          <View className={`flex-1 ${centered ? "items-center" : "items-start"}`}>
-            {logoNode}
-          </View>
-          {/* Punto que representa el toggle de tema (headerRight) */}
+          {/* Centro: como headerTitleAlign:"center" del header real, el logo se
+              centra sobre TODO el ancho (centro absoluto), no solo el espacio
+              a la izquierda del toggle. Izquierda: en flujo, como headerLeft. */}
+          {centered ? (
+            <View
+              pointerEvents="none"
+              className="absolute left-0 right-0 top-0 bottom-0 items-center justify-center"
+            >
+              {logoNode}
+            </View>
+          ) : (
+            <View className="flex-1 items-start">{logoNode}</View>
+          )}
+          {/* Punto que representa el toggle de tema (headerRight), siempre a la
+              derecha. */}
           <View
-            className="w-7 h-7 rounded-lg items-center justify-center"
+            className="ml-auto w-7 h-7 rounded-lg items-center justify-center"
             style={{ backgroundColor: `${primaryColor}1A` }}
           >
             <View

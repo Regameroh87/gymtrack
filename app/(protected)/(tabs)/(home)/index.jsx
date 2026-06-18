@@ -124,9 +124,9 @@ export default function Home() {
             </View>
 
             <Pressable
-              onPress={async () => {
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
-                router.push("/(protected)/profile");
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
+                router.navigate("/(protected)/profile");
               }}
               className="flex-row items-center gap-2 active:opacity-70 active:scale-110"
             >
