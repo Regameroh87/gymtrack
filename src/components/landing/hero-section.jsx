@@ -27,9 +27,13 @@ export default function HeroSection() {
         >
           {/* Columna de texto */}
           <View className={isWide ? "flex-1 max-w-[560px]" : "w-full items-center"}>
-            <View className="flex-row items-center self-start rounded-full bg-white/10 border border-white/15 px-4 py-1.5 mb-6">
+            <View
+              className={`flex-row items-center max-w-full rounded-full bg-white/10 border border-white/15 px-4 py-1.5 mb-6 ${
+                isWide ? "self-start" : "self-center"
+              }`}
+            >
               <Flame color="#2DD4BF" size={16} />
-              <Text className="text-[#c2c1ff] font-manrope-bold text-xs ml-2 tracking-wide">
+              <Text className="text-[#c2c1ff] font-manrope-bold text-xs ml-2 tracking-wide shrink">
                 {HERO.eyebrow}
               </Text>
             </View>

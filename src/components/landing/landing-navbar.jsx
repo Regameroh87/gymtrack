@@ -45,24 +45,28 @@ export default function LandingNavbar({ onNavigate }) {
         )}
 
         {/* Acciones */}
-        <View className="flex-row items-center gap-3">
+        <View className={`flex-row items-center ${isWide ? "gap-3" : "gap-2"}`}>
           <Pressable
-            className="px-4 py-2.5 rounded-xl hover:bg-white/10 transition"
+            className={`rounded-xl hover:bg-white/10 transition ${
+              isWide ? "px-4 py-2.5" : "px-3 py-2"
+            }`}
             onPress={() => router.push("/login")}
             style={{ cursor: "pointer" }}
           >
             <Text className="text-white font-manrope-bold text-sm">
-              Iniciar sesión
+              {isWide ? "Iniciar sesión" : "Ingresar"}
             </Text>
           </Pressable>
 
           <Pressable
-            className="flex-row items-center px-4 py-2.5 rounded-xl bg-[#4a44e4] border border-[#d6d4ff]/30 hover:bg-[#3a34d4] hover:scale-[1.02] transition"
+            className={`flex-row items-center rounded-xl bg-[#4a44e4] border border-[#d6d4ff]/30 hover:bg-[#3a34d4] hover:scale-[1.02] transition ${
+              isWide ? "px-4 py-2.5" : "px-3 py-2"
+            }`}
             onPress={() => Linking.openURL(MAILTO_HREF)}
             style={{ cursor: "pointer" }}
           >
             <Text className="text-white font-manrope-bold text-sm mr-1.5">
-              Solicitar demo
+              {isWide ? "Solicitar demo" : "Demo"}
             </Text>
             <ArrowRight color="#ffffff" size={16} />
           </Pressable>
