@@ -44,7 +44,7 @@ import {
   makePrescription,
   makeEmptySet,
   padLoadedWeeks,
-} from "./plan-week-helpers";
+} from "./_plan-week-helpers";
 
 // Constantes / utils / tema
 import { PLAN_OBJECTIVES, PLAN_LEVELS } from "../../../../../src/constants/planOptions";

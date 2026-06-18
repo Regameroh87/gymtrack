@@ -4,9 +4,9 @@
 import { useState } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 
-import CatalogExercisesSection from "./exercises-section.web";
-import CatalogSessionsSection from "./sessions-section.web";
-import CatalogPlansSection from "./plans-section.web";
+import CatalogExercisesSection from "./_exercises-section.web";
+import CatalogSessionsSection from "./_sessions-section.web";
+import CatalogPlansSection from "./_plans-section.web";
 
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { ui } from "../../../../../src/theme/colors";
