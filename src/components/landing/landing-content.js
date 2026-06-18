@@ -6,8 +6,8 @@ export const BRAND_NAME = "GymTrack";
 
 // --- Contacto / CTA ---
 // TODO: reemplazar por los datos reales de contacto del negocio.
-export const CONTACT_EMAIL = "hola@gymtrack.app";
-export const CONTACT_WHATSAPP = "5491100000000"; // formato internacional sin "+", para wa.me
+export const CONTACT_EMAIL = "contacto@gymtrack.ar";
+export const CONTACT_WHATSAPP = "5492262573568"; // formato internacional sin "+", para wa.me
 
 export const CONTACT_SUBJECT = "Quiero una demo de GymTrack";
 export const CONTACT_BODY =
