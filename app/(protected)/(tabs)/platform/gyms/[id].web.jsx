@@ -33,6 +33,7 @@ import {
   SectionTitle,
   LogoPickers,
   HeaderConfigFields,
+  Toggle,
   slugify,
   uploadImageWeb,
   HEX_RE,
@@ -172,6 +173,7 @@ function EditGymForm({ gym }) {
       header_logo_size: gym.header_logo_size ?? "md",
       header_logo_position: gym.header_logo_position ?? "left",
       header_content: gym.header_content ?? "logo",
+      default_catalog: gym.default_catalog ?? false,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -209,6 +211,7 @@ function EditGymForm({ gym }) {
           header_logo_size: value.header_logo_size,
           header_logo_position: value.header_logo_position,
           header_content: value.header_content,
+          default_catalog: value.default_catalog,
         });
 
         notify("success", "Gimnasio actualizado correctamente.");
@@ -604,6 +607,26 @@ function EditGymForm({ gym }) {
             logoUriDark={logoToShowDark}
           />
         </View>
+
+        {/* Divider */}
+        <View className="w-full h-px bg-ui-input-light my-7" />
+
+        {/* ── Sección 4 · Catálogo ── */}
+        <SectionTitle
+          step="4"
+          title="Catálogo por default"
+          subtitle="Biblioteca central de ejercicios, sesiones y planes"
+        />
+        <form.Field name="default_catalog">
+          {(field) => (
+            <Toggle
+              label="Activar catálogo de ejercicios"
+              hint="Cuando está activo, el gym ve el catálogo central (read-only) en su biblioteca y pickers. Para editar un ítem, sus coaches lo guardan en custom."
+              value={field.state.value}
+              onChange={field.handleChange}
+            />
+          )}
+        </form.Field>
 
         {/* Submit */}
         <View className="mt-8">

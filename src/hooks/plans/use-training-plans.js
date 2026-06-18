@@ -24,7 +24,11 @@ export const useTrainingPlans = ({ publishedOnly = false } = {}) =>
   useQuery({
     queryKey: ["training_plans", publishedOnly],
     queryFn: async () => {
-      const conds = [ne(training_plans.sync_status, "deleted")];
+      const conds = [
+        ne(training_plans.sync_status, "deleted"),
+        // Excluir catálogo: se sirve aparte vía useCatalogPlans (gateado por flag).
+        eq(training_plans.is_catalog, false),
+      ];
       if (publishedOnly) conds.push(eq(training_plans.is_published, true));
 
       const plans = await database

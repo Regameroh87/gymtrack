@@ -19,7 +19,7 @@ export const useGym = () => {
       const { data, error } = await supabase
         .from("gyms")
         .select(
-          "id, name, logo_url, logo_url_dark, theme_primary, theme_accent, header_logo_size, header_logo_position, header_content"
+          "id, name, logo_url, logo_url_dark, theme_primary, theme_accent, header_logo_size, header_logo_position, header_content, default_catalog"
         )
         .eq("id", gymId)
         .single();

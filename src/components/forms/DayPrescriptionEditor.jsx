@@ -35,6 +35,7 @@ import PlanDayExerciseCard from "./PlanDayExerciseCard";
 
 // Hooks
 import { useExercises } from "../../hooks/exercises/use-exercises";
+import { useCatalogExercises } from "../../hooks/exercises/use-catalog-exercises";
 
 // Utils
 import { forkSession } from "../../utils/fork-session";
@@ -115,7 +116,17 @@ export default function DayPrescriptionEditor({
   // ─── Add exercise ──────────────────────────────────────────────────────────
   const exerciseSheetRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: allExercises = [] } = useExercises();
+  const { data: gymExercises = [] } = useExercises();
+  // Ejercicios de catálogo (read-only): se agregan al plan referenciados por id igual
+  // que los del gym; el fork a custom los resuelve por exercise_source="base".
+  const { data: catalogExercises = [] } = useCatalogExercises();
+
+  const allExercises = useMemo(() => {
+    const byId = new Map();
+    for (const e of gymExercises) byId.set(e.id, e);
+    for (const e of catalogExercises) if (!byId.has(e.id)) byId.set(e.id, e);
+    return [...byId.values()];
+  }, [gymExercises, catalogExercises]);
 
   const pickerExercises = useMemo(
     () =>
@@ -507,12 +518,27 @@ export default function DayPrescriptionEditor({
                   <Plus size={14} color={brandPrimary[500]} />
                 </View>
                 <View className="flex-1">
-                  <Text
-                    className="text-sm font-manrope text-ui-text-main dark:text-ui-text-mainDark"
-                    numberOfLines={1}
-                  >
-                    {item.name}
-                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <Text
+                      className="text-sm font-manrope text-ui-text-main dark:text-ui-text-mainDark flex-shrink"
+                      numberOfLines={1}
+                    >
+                      {item.name}
+                    </Text>
+                    {item.is_catalog && (
+                      <View
+                        className="px-1.5 py-0.5 rounded-md flex-shrink-0"
+                        style={{ backgroundColor: brandPrimary[500] + "18" }}
+                      >
+                        <Text
+                          className="text-[10px] font-manrope-semi uppercase tracking-wide"
+                          style={{ color: brandPrimary[600] }}
+                        >
+                          Catálogo
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                   {item.muscle_group && (
                     <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
                       {item.muscle_group}
