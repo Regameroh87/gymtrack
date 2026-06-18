@@ -215,12 +215,22 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
   if (content === "title" || !logoUri) {
     logoNode = titleText;
   } else {
+    // Mismas reglas que GymLogo: en "logo_title" la caja es angosta y el logo
+    // se pega a la derecha (junto al nombre); en "logo" solo, caja ancha y
+    // contentPosition según la alineación.
+    const isLogoTitle = content === "logo_title";
+    const boxWidth = isLogoTitle ? Math.min(px * 2, 120) : logoWidth;
+    const contentPosition = isLogoTitle
+      ? "right"
+      : centered
+        ? "center"
+        : "left";
     const image = (
       <Image
         source={{ uri: logoUri }}
-        style={{ height: px, width: logoWidth }}
+        style={{ height: px, width: boxWidth }}
         contentFit="contain"
-        contentPosition={centered ? "center" : "left"}
+        contentPosition={contentPosition}
       />
     );
     logoNode =

@@ -32,7 +32,8 @@
     },
     "web": {
       "favicon": "./assets/app-icon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "output": "single"
     },
     "plugins": [
       "expo-font",
