@@ -38,6 +38,13 @@ const DB_EPOCH_KEY = "db_initialized_at";
 // el contenido actual de la base para detectar switches (aún tras un crash).
 const ACTIVE_GYM_KEY = "active-gym:id";
 const ACTIVE_GYM_META_KEY = "active_gym_id";
+// Las filas de catálogo (is_catalog=true) tienen gym_id NULL en Supabase, pero la
+// columna gym_id local es NOT NULL (SQLite no permite quitar el constraint con ALTER).
+// Al insertarlas localmente mapeamos gym_id → este sentinel; el catálogo se distingue
+// por is_catalog, nunca por gym_id, así que el valor es opaco y nunca matchea un gym real.
+export const CATALOG_GYM_ID = "__catalog__";
+// Tablas padre que pueden contener filas de catálogo (gym_id NULL + is_catalog).
+const CATALOG_PARENT_TABLES = new Set(["exercises_base", "sessions", "training_plans"]);
 let isSyncing = false;
 
 // Los watermarks last_sync_at_* viven en AsyncStorage, pero describen el
@@ -255,14 +262,22 @@ async function pullTableChanges(
   gymId = null,
   compositeUniqueColumns = null,
   userId = null,
-  softDelete = false
+  softDelete = false,
+  options = {}
 ) {
+  // catalogMode: pull SOLO filas de catálogo (is_catalog=true), sin filtro de gym,
+  //   mapeando gym_id → sentinel local y reconciliando dentro del set de catálogo.
+  // excludeCatalog: en el pull gym-scopeado de una tabla padre, NO borrar las filas
+  //   de catálogo en la reconciliación (no matchean el gym y se borrarían).
+  const { catalogMode = false, excludeCatalog = false } = options;
+
   let query = supabase
     .from(tableName)
     .select("*")
     .order("updated_at", { ascending: true });
 
-  if (gymId) query = query.eq("gym_id", gymId);
+  if (catalogMode) query = query.eq("is_catalog", true);
+  else if (gymId) query = query.eq("gym_id", gymId);
   if (userId) query = query.eq("user_id", userId);
   if (lastSync) query = query.gte("updated_at", lastSync);
 
@@ -347,6 +362,11 @@ async function pullTableChanges(
           );
       }
       remoteRow.sync_status = "synced";
+      // Filas de catálogo: gym_id viene NULL del server; mapeamos al sentinel para
+      // satisfacer el NOT NULL local (se distinguen por is_catalog, no por gym_id).
+      if (catalogMode && remoteRow.gym_id == null) {
+        remoteRow.gym_id = CATALOG_GYM_ID;
+      }
       await database.insert(schemaTable).values(remoteRow).onConflictDoUpdate({
         target: schemaTable.id,
         set: remoteRow,
@@ -363,16 +383,25 @@ async function pullTableChanges(
   // Reconciliar borrados remotos: detectar registros locales "synced" que ya
   // no existen en Supabase (fueron borrados desde otro dispositivo)
   let idsQuery = supabase.from(tableName).select("id");
-  if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
+  if (catalogMode) idsQuery = idsQuery.eq("is_catalog", true);
+  else if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
   if (userId) idsQuery = idsQuery.eq("user_id", userId);
   const { data: remoteIds, error: idsError } = await idsQuery;
 
   if (!idsError && remoteIds) {
     const remoteIdSet = new Set(remoteIds.map((r) => r.id));
+    // Acotar el set local a comparar:
+    //  - catalogMode: solo filas de catálogo (no tocar el contenido del gym).
+    //  - excludeCatalog: excluir las de catálogo (las gestiona su propio pase).
+    const syncedFilter = catalogMode
+      ? and(eq(schemaTable.sync_status, "synced"), eq(schemaTable.is_catalog, true))
+      : excludeCatalog
+      ? and(eq(schemaTable.sync_status, "synced"), eq(schemaTable.is_catalog, false))
+      : eq(schemaTable.sync_status, "synced");
     const localSynced = await database
       .select({ id: schemaTable.id })
       .from(schemaTable)
-      .where(eq(schemaTable.sync_status, "synced"));
+      .where(syncedFilter);
     const idsToDelete = localSynced
       .map((r) => r.id)
       .filter((id) => !remoteIdSet.has(id));
@@ -2566,7 +2595,10 @@ export async function syncWithSupabase(
           gymId,
           compositeUniqueColumns,
           userId,
-          softDelete
+          softDelete,
+          // En las tablas padre con catálogo, no borrar las filas is_catalog en la
+          // reconciliación gym-scopeada: las trae/limpia su propio pase de catálogo.
+          { excludeCatalog: CATALOG_PARENT_TABLES.has(table) }
         );
         if (success) {
           // Solo avanzamos el watermark si el servidor devolvió filas nuevas.
@@ -2576,6 +2608,40 @@ export async function syncWithSupabase(
           if (newLastSync) {
             await AsyncStorage.setItem(syncKey, newLastSync);
           }
+          if (changed) invalidateQueriesForTable(table);
+        }
+      }
+    }
+
+    // --- CATALOG PULL ---
+    // El contenido de catálogo (is_catalog=true, gym_id NULL) es compartido y read-only.
+    // Se pullea SIEMPRE —sin importar el gym activo ni el flag default_catalog del gym—
+    // para que las referencias de forks custom (exercise_source="base") nunca queden
+    // colgadas. Watermark propio por tabla (sufijo _catalog) para no pisar el del pase
+    // gym-scopeado. Las hijas (session_exercises, plan_*) bajan en el loop de arriba sin
+    // filtro de gym, así que su contenido de catálogo ya llegó vía RLS.
+    if (currentUserId) {
+      const CATALOG_TABLES = [
+        ["exercises_base", exercises_base],
+        ["sessions", sessions],
+        ["training_plans", training_plans],
+      ];
+      for (const [table, schemaTable] of CATALOG_TABLES) {
+        if (!tablesToSync.includes(table)) continue;
+        const syncKey = `${LAST_SYNC_KEY}_${table}_catalog`;
+        const lastSync = await AsyncStorage.getItem(syncKey);
+        const { success, changed, newLastSync } = await pullTableChanges(
+          table,
+          schemaTable,
+          lastSync,
+          null,
+          COMPOSITE_UNIQUE_COLUMNS[table] ?? null,
+          null,
+          false,
+          { catalogMode: true }
+        );
+        if (success) {
+          if (newLastSync) await AsyncStorage.setItem(syncKey, newLastSync);
           if (changed) invalidateQueriesForTable(table);
         }
       }

@@ -106,7 +106,8 @@ export const session_exercises = sqliteTable(
 
 export const training_plans = sqliteTable("training_plans", {
   id: text("id").primaryKey(),
-  gym_id: text("gym_id").notNull(),
+  // NULL = plan de catálogo (sin dueño). Ver is_catalog.
+  gym_id: text("gym_id"),
   name: text("name").notNull(),
   description: text("description"),
   objective: text("objective"),
@@ -115,6 +116,8 @@ export const training_plans = sqliteTable("training_plans", {
   weekly_days: integer("weekly_days").notNull().default(3),
   duration_weeks: integer("duration_weeks").notNull().default(8),
   cover_image_uri: text("cover_image_uri"),
+  // Contenido de catálogo compartido (gym_id NULL), read-only para los gyms.
+  is_catalog: integer("is_catalog", { mode: "boolean" }).notNull().default(false),
   is_published: integer("is_published", { mode: "boolean" })
     .notNull()
     .default(false),

@@ -33,6 +33,7 @@ import m0028 from './0028_uniq_active_plan_assignment.sql';
 import m0029 from './0029_session_logs_custom_plan_id.sql';
 import m0030 from './0030_training_plans_target_gender.sql';
 import m0031 from './0031_sync_meta.sql';
+import m0032 from './0032_default_catalog.sql';
 
   export default {
     journal,
@@ -68,7 +69,8 @@ m0027,
 m0028,
 m0029,
 m0030,
-m0031
+m0031,
+m0032
     }
   }
   
