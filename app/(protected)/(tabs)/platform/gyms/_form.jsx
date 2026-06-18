@@ -220,7 +220,7 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
         source={{ uri: logoUri }}
         style={{ height: px, width: logoWidth }}
         contentFit="contain"
-        contentPosition="left"
+        contentPosition={centered ? "center" : "left"}
       />
     );
     logoNode =

@@ -21,6 +21,7 @@ export default function GymLogo({
   showName = false,
   variant = "icon",
   content = "logo",
+  align = "left",
 }) {
   const { logoUrl, logoUrlDark, gymName, isDark } = useGymTheme();
   // En dark mode usa el logo dark si el gym lo cargó; si no, cae al principal.
@@ -61,12 +62,16 @@ export default function GymLogo({
     // Ancho acotado relativo al alto, para que en posición centro no choque
     // con el headerRight (toggle de tema).
     const logoWidth = Math.min(size * 4, 200);
+    // La caja del logo tiene ancho fijo; el contentPosition sigue a la
+    // alineación para que el logo quede pegado a la izquierda o realmente
+    // centrado dentro de esa caja (que el header ya centra).
+    const contentPosition = align === "center" ? "center" : "left";
     const image = (
       <Image
         source={{ uri: resolvedLogo }}
         style={{ height: size, width: logoWidth }}
         contentFit="contain"
-        contentPosition="left"
+        contentPosition={contentPosition}
         transition={150}
       />
     );
