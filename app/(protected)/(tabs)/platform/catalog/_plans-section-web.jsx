@@ -35,6 +35,7 @@ import {
   FormActions,
   DeleteConfirmModal,
 } from "./_form-web";
+import PlanDetailDrawer from "./_plan-detail-web";
 
 // Helpers de estructura
 import {
@@ -94,6 +95,7 @@ export default function CatalogPlansSection() {
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [detail, setDetail] = useState(null);
 
   const openCreate = () => {
     setEditingId(null);
@@ -159,6 +161,7 @@ export default function CatalogPlansSection() {
               key={p.id}
               plan={p}
               first={i === 0}
+              onView={() => setDetail(p)}
               onEdit={() => openEdit(p)}
               onDelete={() => setConfirmDelete(p)}
               brandPrimary={brandPrimary}
@@ -175,6 +178,19 @@ export default function CatalogPlansSection() {
         />
       )}
 
+      <PlanDetailDrawer
+        plan={detail}
+        onClose={() => setDetail(null)}
+        onEdit={(p) => {
+          setDetail(null);
+          openEdit(p);
+        }}
+        onDelete={(p) => {
+          setDetail(null);
+          setConfirmDelete(p);
+        }}
+      />
+
       <DeleteConfirmModal
         visible={!!confirmDelete}
         title="Eliminar plan"
@@ -187,7 +203,7 @@ export default function CatalogPlansSection() {
   );
 }
 
-function PlanRow({ plan, first, onEdit, onDelete, brandPrimary }) {
+function PlanRow({ plan, first, onView, onEdit, onDelete, brandPrimary }) {
   const thumb = plan.cover_image_uri
     ? getCloudinaryUrl(
         plan.cover_image_uri,
@@ -200,26 +216,32 @@ function PlanRow({ plan, first, onEdit, onDelete, brandPrimary }) {
         first ? "" : "border-t border-ui-input-light"
       }`}
     >
-      {thumb ? (
-        <Image
-          source={{ uri: thumb }}
-          style={{ width: 44, height: 44, borderRadius: 10 }}
-          contentFit="cover"
-        />
-      ) : (
-        <View className="w-11 h-11 rounded-[10px] bg-brandPrimary-50 items-center justify-center">
-          <Calendar size={16} color={brandPrimary[600]} />
+      <Pressable
+        onPress={onView}
+        className="flex-1 flex-row items-center gap-3"
+        style={{ cursor: "pointer" }}
+      >
+        {thumb ? (
+          <Image
+            source={{ uri: thumb }}
+            style={{ width: 44, height: 44, borderRadius: 10 }}
+            contentFit="cover"
+          />
+        ) : (
+          <View className="w-11 h-11 rounded-[10px] bg-brandPrimary-50 items-center justify-center">
+            <Calendar size={16} color={brandPrimary[600]} />
+          </View>
+        )}
+        <View className="flex-1">
+          <Text className="text-[14px] font-manrope-bold text-ui-text-main">
+            {plan.name}
+          </Text>
+          <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
+            {plan.duration_weeks} sem · {plan.weekly_days} días/sem
+            {plan.objective ? ` · ${plan.objective}` : ""}
+          </Text>
         </View>
-      )}
-      <View className="flex-1">
-        <Text className="text-[14px] font-manrope-bold text-ui-text-main">
-          {plan.name}
-        </Text>
-        <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
-          {plan.duration_weeks} sem · {plan.weekly_days} días/sem
-          {plan.objective ? ` · ${plan.objective}` : ""}
-        </Text>
-      </View>
+      </Pressable>
       <Pressable
         onPress={onEdit}
         className="w-9 h-9 rounded-[10px] items-center justify-center bg-ui-background-light hover:bg-ui-input-light"
