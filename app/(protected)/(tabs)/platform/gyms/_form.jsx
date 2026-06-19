@@ -197,7 +197,7 @@ export function Toggle({ label, hint, value, onChange }) {
 
 // Una barra de header (claro u oscuro). Replica las reglas del wordmark:
 // logo contain → nombre → "GYMTRACK".
-function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, centered, content }) {
+function PreviewBar({ label, dark, logoUri, name, px, logoWidth, centered, content }) {
   const textColor = dark ? ui.text.mainDark : ui.text.main;
   const titleText = (
     <Text
@@ -262,15 +262,13 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
       </Text>
       <View
         className="rounded-2xl border border-ui-input-border overflow-hidden"
-        style={{ backgroundColor: dark ? ui.background.dark : "#ffffff" }}
+        style={{
+          backgroundColor: dark ? ui.background.dark : ui.background.light,
+        }}
       >
         <View
           className="relative flex-row items-center px-4"
-          style={{
-            height: 64,
-            borderBottomWidth: 1,
-            borderBottomColor: dark ? "rgba(255,255,255,0.08)" : ui.input.light,
-          }}
+          style={{ height: 64 }}
         >
           {/* Centro: como headerTitleAlign:"center" del header real, el logo se
               centra sobre TODO el ancho (centro absoluto), no solo el espacio
@@ -287,16 +285,15 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
           ) : (
             <View className="flex-1 items-start">{logoNode}</View>
           )}
-          {/* Punto que representa el toggle de tema (headerRight), siempre a la
-              derecha. */}
-          <View
-            className="ml-auto w-7 h-7 rounded-lg items-center justify-center"
-            style={{ backgroundColor: `${primaryColor}1A` }}
-          >
-            <View
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: primaryColor }}
-            />
+          {/* Toggle de tema (headerRight): en la app es solo el texto del modo
+              ("LIGHT"/"DARK"), sin fondo (la clase bg-ui-secondary no existe). */}
+          <View className="ml-auto p-2 rounded-lg">
+            <Text
+              className="text-xs font-bold uppercase"
+              style={{ color: dark ? ui.text.mainDark : ui.text.main }}
+            >
+              {dark ? "dark" : "light"}
+            </Text>
           </View>
         </View>
         {/* Cuerpo simulado */}
@@ -322,7 +319,6 @@ export function HeaderPreview({
   logoUri,
   logoUriDark,
   name,
-  primaryColor,
   size = "md",
   position = "left",
   content = "logo",
@@ -330,7 +326,7 @@ export function HeaderPreview({
   const px = HEADER_LOGO_PX[size] ?? HEADER_LOGO_PX.md;
   const logoWidth = Math.min(px * 4, 200);
   const centered = position === "center";
-  const shared = { name, primaryColor, px, logoWidth, centered, content };
+  const shared = { name, px, logoWidth, centered, content };
 
   return (
     <View className="gap-y-1.5">
