@@ -1,6 +1,6 @@
 // Librerías externas
 import { useQuery } from "@tanstack/react-query";
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, isNull, ne } from "drizzle-orm";
 
 // Base de datos
 import { database } from "../../database";
@@ -34,7 +34,10 @@ export const useCatalogPlans = () => {
         .where(
           and(
             ne(training_plans.sync_status, "deleted"),
-            eq(training_plans.is_catalog, true)
+            eq(training_plans.is_catalog, true),
+            // Los archivados se siguen sincronizando (los seguidores los terminan),
+            // pero no se ofrecen para descubrir/empezar. Ver [[project_default_catalog]].
+            isNull(training_plans.archived_at)
           )
         )
         .orderBy(desc(training_plans.created_at)),

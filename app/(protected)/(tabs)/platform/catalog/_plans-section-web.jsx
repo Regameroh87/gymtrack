@@ -18,7 +18,7 @@ import { Image } from "expo-image";
 import {
   useCatalogPlansAdmin,
   useSaveCatalogPlan,
-  useDeleteCatalogPlan,
+  useArchiveCatalogPlan,
   fetchCatalogPlanDetail,
 } from "../../../../../src/hooks/catalog/use-catalog-plans-admin";
 import {
@@ -96,7 +96,7 @@ const EMPTY_META = {
 export default function CatalogPlansSection() {
   const { brandPrimary } = useGymTheme();
   const { data: plans = [], isLoading } = useCatalogPlansAdmin();
-  const deletePlan = useDeleteCatalogPlan();
+  const archivePlan = useArchiveCatalogPlan();
 
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -114,7 +114,7 @@ export default function CatalogPlansSection() {
 
   const handleDelete = async () => {
     try {
-      await deletePlan.mutateAsync(confirmDelete.id);
+      await archivePlan.mutateAsync(confirmDelete.id);
       setConfirmDelete(null);
     } catch {
       setConfirmDelete(null);
@@ -199,9 +199,9 @@ export default function CatalogPlansSection() {
 
       <DeleteConfirmModal
         visible={!!confirmDelete}
-        title="Eliminar plan"
-        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los gimnasios dejarán de verlo.`}
-        isPending={deletePlan.isPending}
+        title="Quitar plan del catálogo"
+        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los gimnasios dejarán de verlo, pero los members que ya lo están siguiendo podrán terminarlo.`}
+        isPending={archivePlan.isPending}
         onCancel={() => setConfirmDelete(null)}
         onConfirm={handleDelete}
       />

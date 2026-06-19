@@ -20,6 +20,7 @@ export const useCatalogPlansAdmin = () =>
           "id, name, objective, level, target_gender, weekly_days, duration_weeks, cover_image_uri, updated_at"
         )
         .eq("is_catalog", true)
+        .is("archived_at", null)
         .order("name", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -201,12 +202,15 @@ export const useSaveCatalogPlan = () => {
   });
 };
 
-export const useDeleteCatalogPlan = () => {
+// "Borrar" del catálogo = archivar (soft-delete). El plan sale del catálogo y deja de
+// descubrirse, pero los members que ya lo siguen conservan el árbol y lo terminan. El hard
+// delete (delete_catalog_plan) queda para la purga y rechaza si hay seguidores activos.
+export const useArchiveCatalogPlan = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.rpc("delete_catalog_plan", {
+      const { error } = await supabase.rpc("archive_catalog_plan", {
         p_plan_id: id,
       });
       if (error) throw error;

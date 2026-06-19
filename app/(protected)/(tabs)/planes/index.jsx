@@ -208,6 +208,11 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
       }
     : null;
 
+  // Plan activo cuyo contenido ya no está localmente (p. ej. archivado y purgado, o
+  // borrado). La asignación sigue pero el join no resuelve nombre: card recuperable.
+  const planMissing =
+    !!currentPlan && !(currentPlan.plan_name ?? currentPlan.custom_plan_name);
+
   // Progreso "Semana X / Y" — solo disponible para planes de catálogo.
   const weekNumber = summary?.currentDay?.week_number ?? null;
   const totalWeeks = summary?.plan?.duration_weeks ?? null;
@@ -228,7 +233,58 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
         Plan actual
       </Text>
 
-      {planObj ? (
+      {planMissing ? (
+        <View
+          className="rounded-2xl overflow-hidden mb-6"
+          style={{ borderWidth: 1, borderColor: ui.status.custom + "40" }}
+        >
+          <LinearGradient
+            colors={[ui.status.custom + "12", ui.status.custom + "04"]}
+            className="p-5"
+          >
+            <View className="flex-row items-center gap-3 mb-2.5">
+              <View
+                className="w-9 h-9 rounded-xl items-center justify-center"
+                style={{ backgroundColor: ui.status.custom + "20" }}
+              >
+                <ClipboardList size={18} color={ui.status.custom} />
+              </View>
+              <Text className="font-jakarta-bold text-[15px] text-ui-text-main dark:text-ui-text-mainDark">
+                Este plan ya no está disponible
+              </Text>
+            </View>
+            <Text className="font-manrope text-[13px] text-ui-text-muted dark:text-ui-text-mutedDark leading-5 mb-4">
+              El plan que estabas siguiendo fue retirado. Tu progreso quedó
+              guardado en el historial. Elegí otro para seguir entrenando.
+            </Text>
+            <View className="flex-row items-center gap-5">
+              <Pressable
+                onPress={onBrowseCatalog}
+                className="flex-row items-center gap-1 active:opacity-60"
+              >
+                <Text
+                  className="font-jakarta-semi text-[13px]"
+                  style={{ color: brandPrimary[500] }}
+                >
+                  Explorar planes →
+                </Text>
+              </Pressable>
+              <Pressable
+                disabled={isDropping}
+                onPress={() => dropPlan({ assignmentId: currentPlan.id })}
+                className="active:opacity-60"
+              >
+                <Text
+                  className="font-manrope text-[13px]"
+                  style={{ color: "rgba(255,255,255,0.35)" }}
+                >
+                  {isDropping ? "Abandonando…" : "Abandonar"}
+                </Text>
+              </Pressable>
+            </View>
+          </LinearGradient>
+        </View>
+      ) : planObj ? (
         <View className="mb-6">
           {/* Cabecera editorial del activo: estado + semana */}
           <View className="flex-row items-center justify-between mb-2.5">
