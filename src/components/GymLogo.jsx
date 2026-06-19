@@ -66,16 +66,15 @@ export default function GymLogo({
     // Sin logo cargado: cualquier modo cae al nombre.
     if (!resolvedLogo) return titleText;
 
-    // En "logo_title" el logo acompaña al nombre: caja angosta y pegado a la
-    // derecha para que quede junto al texto, sin hueco. En "logo" solo, la caja
-    // es ancha (acotada para no chocar con el headerRight) y el contentPosition
-    // sigue a la alineación (centro real o izquierda) dentro de esa caja.
+    // En "logo_title" el logo acompaña al nombre: caja cuadrada (ancho = alto)
+    // con el logo centrado, así queda como un marquito prolijo pegado al texto,
+    // sin huecos ni quedar flotando. En "logo" solo, la caja es ancha (acotada
+    // para no chocar con el headerRight) y el contentPosition sigue a la
+    // alineación (centro real o izquierda) dentro de esa caja.
     const isLogoTitle = content === "logo_title";
-    const logoWidth = isLogoTitle
-      ? Math.min(size * 2, 120)
-      : Math.min(size * 4, 200);
+    const logoWidth = isLogoTitle ? size : Math.min(size * 4, 200);
     const contentPosition = isLogoTitle
-      ? "right"
+      ? "center"
       : align === "center"
         ? "center"
         : "left";

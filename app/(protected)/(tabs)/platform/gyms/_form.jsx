@@ -310,15 +310,27 @@ function PreviewBar({
           ) : (
             <View className="flex-1 items-start">{logoNode}</View>
           )}
-          {/* Toggle de tema (headerRight): en la app es solo el texto del modo
-              ("LIGHT"/"DARK"), sin fondo (la clase bg-ui-secondary no existe). */}
-          <View className="ml-auto p-2 rounded-lg">
-            <Text
-              className="text-xs font-bold uppercase"
-              style={{ color: dark ? ui.text.mainDark : ui.text.main }}
-            >
-              {dark ? "dark" : "light"}
-            </Text>
+          {/* Toggle de tema (headerRight) representado como mini-switch neutro:
+              más prolijo que el texto y sin color de marca. La perilla va a la
+              izquierda en claro y a la derecha en oscuro. */}
+          <View
+            className="ml-auto rounded-full justify-center"
+            style={{
+              width: 34,
+              height: 20,
+              paddingHorizontal: 2,
+              backgroundColor: dark ? ui.toggle.offDark : ui.toggle.offLight,
+            }}
+          >
+            <View
+              className="rounded-full"
+              style={{
+                width: 16,
+                height: 16,
+                alignSelf: dark ? "flex-end" : "flex-start",
+                backgroundColor: dark ? ui.text.mutedDark : "#ffffff",
+              }}
+            />
           </View>
         </View>
         {/* Cuerpo simulado */}
