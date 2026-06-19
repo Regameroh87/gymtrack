@@ -2,7 +2,14 @@
 // Read-only: muestra metadata de la sesión y su lista de ejercicios (traída con
 // useCatalogSessionExercises). Editar/Eliminar delegan a los flujos del section padre.
 // Espeja _exercise-detail-web.jsx. Ver [[project_default_catalog]].
-import { View, Text, Pressable, Modal, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { Image } from "expo-image";
 
 import { useCatalogSessionExercises } from "../../../../../src/hooks/catalog/use-catalog-sessions-admin";
@@ -49,7 +56,9 @@ export default function SessionDetailDrawer({
           className="h-full bg-white border-l border-ui-input-border w-full"
           style={{ maxWidth: 440, cursor: "auto" }}
         >
-          <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
+          <ScrollView
+            contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+          >
             {/* Header */}
             <View className="flex-row items-center justify-between mb-5">
               <Text className="text-[18px] font-jakarta-bold text-ui-text-main tracking-tight">
@@ -82,7 +91,9 @@ export default function SessionDetailDrawer({
             </Text>
             <Text className="text-[12px] font-manrope text-ui-text-muted mt-1">
               {count} ejercicio{count === 1 ? "" : "s"}
-              {session.level ? ` · ${labelOf(SESSION_LEVELS, session.level)}` : ""}
+              {session.level
+                ? ` · ${labelOf(SESSION_LEVELS, session.level)}`
+                : ""}
             </Text>
 
             {/* Descripción */}

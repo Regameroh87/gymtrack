@@ -472,7 +472,14 @@ export default function CatalogSessionsSection() {
   );
 }
 
-function SessionRow({ session, first, onView, onEdit, onDelete, brandPrimary }) {
+function SessionRow({
+  session,
+  first,
+  onView,
+  onEdit,
+  onDelete,
+  brandPrimary,
+}) {
   const thumb = session.cover_image_uri
     ? getCloudinaryUrl(
         session.cover_image_uri,

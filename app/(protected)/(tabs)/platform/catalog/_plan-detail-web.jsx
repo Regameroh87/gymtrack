@@ -2,7 +2,14 @@
 // Read-only: muestra metadata del plan y el árbol semanas → días → sesiones → ejercicios
 // (traído con useCatalogPlanDetail). Editar/Eliminar delegan a los flujos del section
 // padre. Espeja _exercise-detail-web.jsx / _session-detail-web.jsx. Ver [[project_default_catalog]].
-import { View, Text, Pressable, Modal, ScrollView, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  Modal,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 import { Image } from "expo-image";
 
 import { useCatalogPlanDetail } from "../../../../../src/hooks/catalog/use-catalog-plans-admin";
@@ -14,7 +21,13 @@ import {
   PLAN_LEVELS,
 } from "../../../../../src/constants/planOptions";
 import { PLAN_TARGET_GENDERS } from "../../../../../src/constants/gender-options";
-import { Calendar, Barbell, Pencil, Trash, X } from "../../../../../assets/icons";
+import {
+  Calendar,
+  Barbell,
+  Pencil,
+  Trash,
+  X,
+} from "../../../../../assets/icons";
 
 // Devuelve el label legible de un value crudo; si no hay match usa el value tal cual.
 const labelOf = (options, value) =>
@@ -26,8 +39,10 @@ export default function PlanDetailDrawer({ plan, onClose, onEdit, onDelete }) {
   if (!plan) return null;
 
   const heroUrl = plan.cover_image_uri
-    ? getCloudinaryUrl(plan.cover_image_uri, "w_480,h_480,c_fill,f_auto,q_auto") ||
-      plan.cover_image_uri
+    ? getCloudinaryUrl(
+        plan.cover_image_uri,
+        "w_480,h_480,c_fill,f_auto,q_auto"
+      ) || plan.cover_image_uri
     : null;
 
   const meta = [
@@ -53,7 +68,9 @@ export default function PlanDetailDrawer({ plan, onClose, onEdit, onDelete }) {
           className="h-full bg-white border-l border-ui-input-border w-full"
           style={{ maxWidth: 440, cursor: "auto" }}
         >
-          <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>
+          <ScrollView
+            contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+          >
             {/* Header */}
             <View className="flex-row items-center justify-between mb-5">
               <Text className="text-[18px] font-jakarta-bold text-ui-text-main tracking-tight">
