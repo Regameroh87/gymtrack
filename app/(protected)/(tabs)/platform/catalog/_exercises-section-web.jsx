@@ -34,6 +34,7 @@ import {
   FormActions,
   DeleteConfirmModal,
 } from "./_form-web";
+import ExerciseDetailDrawer from "./_exercise-detail-web";
 
 // Constantes / utils / tema
 import {
@@ -57,6 +58,9 @@ import {
 
 // Límite de tamaño del video, alineado con el picker mobile (use-media-picker 50MB).
 const MAX_VIDEO_MB = 50;
+// Solo MP4 (H.264): es lo que carga mobile (saveMediaLocally → mp4) y lo más compatible
+// para preview web y reproducción en la app de los members.
+const VIDEO_ACCEPT = "video/mp4";
 
 const EMPTY_FORM = {
   name: "",
@@ -84,6 +88,7 @@ export default function CatalogExercisesSection() {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [detail, setDetail] = useState(null);
   const fileRef = useRef(null);
   const videoRef = useRef(null);
 
@@ -130,8 +135,16 @@ export default function CatalogExercisesSection() {
   const handleVideoFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const isMp4 =
+      file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
+    if (!isMp4) {
+      setError("El video debe ser MP4 (H.264) para ser compatible con la app.");
+      if (videoRef.current) videoRef.current.value = "";
+      return;
+    }
     if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
       setError(`El video supera el límite de ${MAX_VIDEO_MB} MB.`);
+      if (videoRef.current) videoRef.current.value = "";
       return;
     }
     setError(null);
@@ -255,26 +268,32 @@ export default function CatalogExercisesSection() {
                   i > 0 ? "border-t border-ui-input-light" : ""
                 }`}
               >
-                {thumb ? (
-                  <Image
-                    source={{ uri: thumb }}
-                    style={{ width: 44, height: 44, borderRadius: 10 }}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View className="w-11 h-11 rounded-[10px] bg-brandPrimary-50 items-center justify-center">
-                    <Barbell size={16} color={brandPrimary[600]} />
+                <Pressable
+                  onPress={() => setDetail(ex)}
+                  className="flex-1 flex-row items-center gap-3"
+                  style={{ cursor: "pointer" }}
+                >
+                  {thumb ? (
+                    <Image
+                      source={{ uri: thumb }}
+                      style={{ width: 44, height: 44, borderRadius: 10 }}
+                      contentFit="cover"
+                    />
+                  ) : (
+                    <View className="w-11 h-11 rounded-[10px] bg-brandPrimary-50 items-center justify-center">
+                      <Barbell size={16} color={brandPrimary[600]} />
+                    </View>
+                  )}
+                  <View className="flex-1">
+                    <Text className="text-[14px] font-manrope-bold text-ui-text-main">
+                      {ex.name}
+                    </Text>
+                    <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
+                      {ex.category} · {ex.muscle_group}
+                      {ex.is_unilateral ? " · unilateral" : ""}
+                    </Text>
                   </View>
-                )}
-                <View className="flex-1">
-                  <Text className="text-[14px] font-manrope-bold text-ui-text-main">
-                    {ex.name}
-                  </Text>
-                  <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
-                    {ex.category} · {ex.muscle_group}
-                    {ex.is_unilateral ? " · unilateral" : ""}
-                  </Text>
-                </View>
+                </Pressable>
                 <Pressable
                   onPress={() => openEdit(ex)}
                   className="w-9 h-9 rounded-[10px] items-center justify-center bg-ui-background-light hover:bg-ui-input-light"
@@ -393,7 +412,7 @@ export default function CatalogExercisesSection() {
               <Field label="VIDEO PROPIO (OPCIONAL)">
                 <input
                   type="file"
-                  accept="video/*"
+                  accept={VIDEO_ACCEPT}
                   ref={videoRef}
                   style={{ display: "none" }}
                   onChange={handleVideoFile}
@@ -441,7 +460,7 @@ export default function CatalogExercisesSection() {
                   >
                     <Movie size={16} color={brandPrimary[600]} />
                     <Text className="text-[12px] font-manrope-bold text-brandPrimary-600">
-                      Subir video (máx {MAX_VIDEO_MB} MB)
+                      Subir video MP4 (máx {MAX_VIDEO_MB} MB)
                     </Text>
                   </Pressable>
                 )}
@@ -477,6 +496,19 @@ export default function CatalogExercisesSection() {
           </ScrollViewModal>
         </View>
       </Modal>
+
+      <ExerciseDetailDrawer
+        exercise={detail}
+        onClose={() => setDetail(null)}
+        onEdit={(ex) => {
+          setDetail(null);
+          openEdit(ex);
+        }}
+        onDelete={(ex) => {
+          setDetail(null);
+          setConfirmDelete(ex);
+        }}
+      />
 
       <DeleteConfirmModal
         visible={!!confirmDelete}
