@@ -202,7 +202,7 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
   const titleText = (
     <Text
       className="font-jakarta-bold"
-      style={{ fontSize: px * 0.5, color: textColor }}
+      style={{ fontSize: px * 0.5, color: textColor, maxWidth: "100%" }}
       numberOfLines={1}
     >
       {name || "GYMTRACK"}
@@ -235,12 +235,15 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
     );
     logoNode =
       content === "logo_title" ? (
-        <View className="flex-row items-center" style={{ gap: 10 }}>
+        <View
+          className="flex-row items-center"
+          style={{ gap: 10, maxWidth: "100%" }}
+        >
           {image}
           {name ? (
             <Text
               className="font-jakarta-bold capitalize"
-              style={{ fontSize: px * 0.45, color: textColor }}
+              style={{ fontSize: px * 0.45, color: textColor, flexShrink: 1 }}
               numberOfLines={1}
             >
               {name}
@@ -253,7 +256,7 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
   }
 
   return (
-    <View className="flex-1 gap-y-1">
+    <View className="gap-y-1" style={{ width: "100%", maxWidth: 380 }}>
       <Text className="text-[9px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase">
         {label}
       </Text>
@@ -273,9 +276,11 @@ function PreviewBar({ label, dark, logoUri, name, primaryColor, px, logoWidth, c
               centra sobre TODO el ancho (centro absoluto), no solo el espacio
               a la izquierda del toggle. Izquierda: en flujo, como headerLeft. */}
           {centered ? (
+            // px-12 reserva lugar para el toggle (derecha) y simetría (izq), así
+            // el contenido centrado recorta con elipsis y no se mete bajo el toggle.
             <View
               pointerEvents="none"
-              className="absolute left-0 right-0 top-0 bottom-0 items-center justify-center"
+              className="absolute left-0 right-0 top-0 bottom-0 items-center justify-center px-12"
             >
               {logoNode}
             </View>
@@ -332,7 +337,10 @@ export function HeaderPreview({
       <Text className="text-[10px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase">
         VISTA PREVIA DEL HEADER
       </Text>
-      <View className="flex-row gap-3">
+      {/* Barras apiladas a ancho de celular: así el preview recorta el título
+          en el mismo punto que el header real (no antes, como pasaba al estar
+          lado a lado a media pantalla). */}
+      <View className="gap-y-3 items-start">
         <PreviewBar label="Claro" dark={false} logoUri={logoUri} {...shared} />
         <PreviewBar
           label="Oscuro"

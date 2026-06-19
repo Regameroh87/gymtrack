@@ -1,5 +1,5 @@
 // ── React Native ──
-import { View, Text } from "react-native";
+import { View, Text, useWindowDimensions } from "react-native";
 
 // ── Expo ──
 import { Image } from "expo-image";
@@ -28,6 +28,13 @@ export default function GymLogo({
   const activeLogo = isDark && logoUrlDark ? logoUrlDark : logoUrl;
   const resolvedLogo = getCloudinaryUrl(activeLogo);
 
+  // Ancho máximo del wordmark = ancho de pantalla menos el espacio reservado
+  // para márgenes y el toggle de tema (headerRight). Acota el título para que
+  // recorte con elipsis limpia y nunca se meta por debajo del toggle, tanto
+  // centrado como a la izquierda.
+  const { width: screenWidth } = useWindowDimensions();
+  const maxWordmarkWidth = Math.max(120, screenWidth - 160);
+
   // Si el gym no tiene nombre, la app se presenta como "GymTrack".
   const name = gymName ?? "GymTrack";
   const initials = name
@@ -46,7 +53,7 @@ export default function GymLogo({
     const titleText = (
       <Text
         className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark"
-        style={{ fontSize: size * 0.5 }}
+        style={{ fontSize: size * 0.5, maxWidth: maxWordmarkWidth }}
         numberOfLines={1}
       >
         {gymName ?? "GYMTRACK"}
@@ -84,13 +91,18 @@ export default function GymLogo({
 
     if (content === "logo") return image;
 
-    // "logo_title": imagen + nombre al lado.
+    // "logo_title": imagen + nombre al lado. El row se acota a maxWordmarkWidth;
+    // el logo conserva su caja (flexShrink 0) y el nombre toma el resto y
+    // recorta con elipsis (flexShrink 1) en vez de empujar y cortarse feo.
     return (
-      <View className="flex-row items-center gap-2.5">
+      <View
+        className="flex-row items-center gap-2.5"
+        style={{ maxWidth: maxWordmarkWidth }}
+      >
         {image}
         <Text
           className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark capitalize"
-          style={{ fontSize: size * 0.45 }}
+          style={{ fontSize: size * 0.45, flexShrink: 1 }}
           numberOfLines={1}
         >
           {name}
