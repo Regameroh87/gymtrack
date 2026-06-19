@@ -123,11 +123,13 @@ export function FormActions({ onCancel, onSubmit, isPending, submitLabel }) {
   );
 }
 
-// Modal de confirmación de borrado reutilizable.
+// Modal de confirmación de borrado reutilizable. `error` (opcional) muestra un banner
+// rojo y mantiene el modal abierto cuando el borrado falla (ej. FK protectora).
 export function DeleteConfirmModal({
   visible,
   title,
   message,
+  error,
   isPending,
   onCancel,
   onConfirm,
@@ -158,6 +160,7 @@ export function DeleteConfirmModal({
           <Text className="text-[12px] font-manrope text-ui-text-muted leading-5 mb-5">
             {message}
           </Text>
+          <ErrorBanner message={error} />
           <View className="flex-row gap-3">
             <Pressable
               onPress={onCancel}

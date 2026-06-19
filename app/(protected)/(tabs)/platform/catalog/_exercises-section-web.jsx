@@ -88,7 +88,13 @@ export default function CatalogExercisesSection() {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const [detail, setDetail] = useState(null);
+
+  const askDelete = (ex) => {
+    setDeleteError(null);
+    setConfirmDelete(ex);
+  };
   const fileRef = useRef(null);
   const videoRef = useRef(null);
 
@@ -185,12 +191,20 @@ export default function CatalogExercisesSection() {
   };
 
   const handleDelete = async () => {
+    setDeleteError(null);
     try {
       await deleteExercise.mutateAsync(confirmDelete.id);
       setConfirmDelete(null);
     } catch (err) {
-      setError(err?.message || "No se pudo eliminar.");
-      setConfirmDelete(null);
+      // 23503 = foreign_key_violation: el ejercicio está referenciado por
+      // session_exercises o session_set_logs (FKs ON DELETE NO ACTION). Mantenemos
+      // el modal abierto y mostramos el motivo en vez de fallar en silencio.
+      const inUse = err?.code === "23503";
+      setDeleteError(
+        inUse
+          ? "No se puede eliminar: el ejercicio está en uso en sesiones o registros del catálogo. Quitalo de esas sesiones primero."
+          : err?.message || "No se pudo eliminar."
+      );
     }
   };
 
@@ -302,7 +316,7 @@ export default function CatalogExercisesSection() {
                   <Pencil size={14} color={ui.text.main} />
                 </Pressable>
                 <Pressable
-                  onPress={() => setConfirmDelete(ex)}
+                  onPress={() => askDelete(ex)}
                   className="w-9 h-9 rounded-[10px] items-center justify-center bg-red-50 hover:bg-red-100"
                   style={{ cursor: "pointer" }}
                 >
@@ -506,7 +520,7 @@ export default function CatalogExercisesSection() {
         }}
         onDelete={(ex) => {
           setDetail(null);
-          setConfirmDelete(ex);
+          askDelete(ex);
         }}
       />
 
@@ -514,8 +528,12 @@ export default function CatalogExercisesSection() {
         visible={!!confirmDelete}
         title="Eliminar del catálogo"
         message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los gimnasios dejarán de verlo. Los forks a custom que ya lo referencian podrían quedar sin resolver.`}
+        error={deleteError}
         isPending={deleteExercise.isPending}
-        onCancel={() => setConfirmDelete(null)}
+        onCancel={() => {
+          setConfirmDelete(null);
+          setDeleteError(null);
+        }}
         onConfirm={handleDelete}
       />
     </View>
