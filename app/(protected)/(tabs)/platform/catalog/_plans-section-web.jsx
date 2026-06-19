@@ -67,14 +67,20 @@ import {
   X,
 } from "../../../../../assets/icons";
 
-const WEEKLY_DAYS_OPTS = Array.from({ length: 7 }, (_, i) => ({
-  value: String(i + 1),
-  label: `${i + 1} día${i === 0 ? "" : "s"}`,
+// Mínimo 2 días por semana (1 sola sesión semanal no constituye un plan).
+const WEEKLY_DAYS_OPTS = Array.from({ length: 6 }, (_, i) => ({
+  value: String(i + 2),
+  label: `${i + 2} días`,
 }));
-const DURATION_OPTS = Array.from({ length: 16 }, (_, i) => ({
-  value: String(i + 1),
-  label: `${i + 1} semana${i === 0 ? "" : "s"}`,
-}));
+// duration_weeks === 0 ⇒ plan flexible: se define UNA semana tipo que el usuario repite
+// indefinidamente (misma convención que el builder mobile).
+const DURATION_OPTS = [
+  { value: "0", label: "Flexible · semana tipo" },
+  ...Array.from({ length: 16 }, (_, i) => ({
+    value: String(i + 1),
+    label: `${i + 1} semana${i === 0 ? "" : "s"}`,
+  })),
+];
 
 const EMPTY_META = {
   name: "",
@@ -237,7 +243,8 @@ function PlanRow({ plan, first, onView, onEdit, onDelete, brandPrimary }) {
             {plan.name}
           </Text>
           <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
-            {plan.duration_weeks} sem · {plan.weekly_days} días/sem
+            {plan.duration_weeks ? `${plan.duration_weeks} sem` : "Flexible"} ·{" "}
+            {plan.weekly_days} días/sem
             {plan.objective ? ` · ${plan.objective}` : ""}
           </Text>
         </View>
@@ -312,10 +319,13 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
   const setMetaField = (key) => (v) => setMeta((p) => ({ ...p, [key]: v }));
 
   const handleDuration = (val) => {
-    const n = parseInt(val, 10) || 1;
-    setMeta((p) => ({ ...p, duration_weeks: n }));
-    setWeeks((w) => resizeWeeksByDuration(w, n, meta.weekly_days));
-    setActiveWeek((a) => Math.min(a, n - 1));
+    const parsed = parseInt(val, 10);
+    const duration = Number.isNaN(parsed) ? 1 : parsed;
+    // Flexible (0) ⇒ una única semana tipo; cualquier otro valor ⇒ esa cantidad de semanas.
+    const effectiveWeeks = duration === 0 ? 1 : duration;
+    setMeta((p) => ({ ...p, duration_weeks: duration }));
+    setWeeks((w) => resizeWeeksByDuration(w, effectiveWeeks, meta.weekly_days));
+    setActiveWeek((a) => Math.min(a, effectiveWeeks - 1));
   };
   const handleWeeklyDays = (val) => {
     const n = parseInt(val, 10) || 1;
@@ -495,6 +505,7 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
   };
 
   const week = weeks[activeWeek];
+  const isTemplate = meta.duration_weeks === 0;
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -619,38 +630,45 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
               {/* ── Semanas (tabs) ── */}
               <View className="mt-6">
                 <Text className="text-[10px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase mb-2">
-                  Programación
+                  {isTemplate ? "Semana tipo" : "Programación"}
                 </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8 }}
-                  className="mb-4"
-                >
-                  {weeks.map((w, i) => {
-                    const active = i === activeWeek;
-                    return (
-                      <Pressable
-                        key={w.id}
-                        onPress={() => setActiveWeek(i)}
-                        className={`px-4 py-2 rounded-[10px] border ${
-                          active
-                            ? "bg-brandPrimary-600 border-brandPrimary-600"
-                            : "bg-white border-ui-input-border hover:bg-ui-background-light"
-                        }`}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <Text
-                          className={`text-[12px] font-manrope-bold ${
-                            active ? "text-white" : "text-ui-text-muted"
+                {isTemplate ? (
+                  <Text className="text-[11px] font-manrope text-ui-text-muted mb-4">
+                    Plan flexible: definís una sola semana y el usuario la
+                    repite hasta donde quiera.
+                  </Text>
+                ) : (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 8 }}
+                    className="mb-4"
+                  >
+                    {weeks.map((w, i) => {
+                      const active = i === activeWeek;
+                      return (
+                        <Pressable
+                          key={w.id}
+                          onPress={() => setActiveWeek(i)}
+                          className={`px-4 py-2 rounded-[10px] border ${
+                            active
+                              ? "bg-brandPrimary-600 border-brandPrimary-600"
+                              : "bg-white border-ui-input-border hover:bg-ui-background-light"
                           }`}
+                          style={{ cursor: "pointer" }}
                         >
-                          Semana {w.week_number}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
+                          <Text
+                            className={`text-[12px] font-manrope-bold ${
+                              active ? "text-white" : "text-ui-text-muted"
+                            }`}
+                          >
+                            Semana {w.week_number}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                )}
 
                 {/* Días de la semana activa */}
                 {week?.days.map((day, dIdx) => (

@@ -102,7 +102,8 @@ export default function PlanDetailDrawer({ plan, onClose, onEdit, onDelete }) {
               {plan.name}
             </Text>
             <Text className="text-[12px] font-manrope text-ui-text-muted mt-1">
-              {plan.duration_weeks} sem · {plan.weekly_days} días/sem
+              {plan.duration_weeks ? `${plan.duration_weeks} sem` : "Flexible"}{" "}
+              · {plan.weekly_days} días/sem
               {meta.length ? ` · ${meta.join(" · ")}` : ""}
             </Text>
 
@@ -137,6 +138,7 @@ export default function PlanDetailDrawer({ plan, onClose, onEdit, onDelete }) {
                     <WeekBlock
                       key={week.week_number}
                       week={week}
+                      isTemplate={!plan.duration_weeks}
                       brandPrimary={brandPrimary}
                     />
                   ))}
@@ -175,13 +177,13 @@ export default function PlanDetailDrawer({ plan, onClose, onEdit, onDelete }) {
 }
 
 // Bloque de una semana: encabezado + sus días con sesión asignada.
-function WeekBlock({ week, brandPrimary }) {
+function WeekBlock({ week, isTemplate, brandPrimary }) {
   const activeDays = (week.days ?? []).filter((d) => d.session_id);
   return (
     <View className="rounded-[14px] border border-ui-input-border overflow-hidden">
       <View className="px-4 py-2.5 bg-ui-background-light border-b border-ui-input-light">
         <Text className="text-[12px] font-manrope-bold text-ui-text-main">
-          Semana {week.week_number}
+          {isTemplate ? "Semana tipo" : `Semana ${week.week_number}`}
         </Text>
       </View>
       {activeDays.length === 0 ? (
