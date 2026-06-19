@@ -21,7 +21,13 @@ import {
 } from "../../../../../src/hooks/catalog/use-catalog-admin";
 
 // Form helpers
-import { Field, Input, Toggle, uploadImageWeb } from "../gyms/_form";
+import {
+  Field,
+  Input,
+  Toggle,
+  uploadImageWeb,
+  uploadVideoWeb,
+} from "../gyms/_form";
 import {
   WebSelect,
   ErrorBanner,
@@ -39,7 +45,18 @@ import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 // Iconos
-import { Barbell, Plus, Pencil, Trash, X } from "../../../../../assets/icons";
+import {
+  Barbell,
+  Plus,
+  Pencil,
+  Trash,
+  X,
+  Movie,
+  Upload,
+} from "../../../../../assets/icons";
+
+// Límite de tamaño del video, alineado con el picker mobile (use-media-picker 50MB).
+const MAX_VIDEO_MB = 50;
 
 const EMPTY_FORM = {
   name: "",
@@ -48,6 +65,7 @@ const EMPTY_FORM = {
   instructions: "",
   youtube_video_url: "",
   image_uri: null,
+  video_uri: null,
   is_unilateral: false,
 };
 
@@ -62,15 +80,20 @@ export default function CatalogExercisesSection() {
   const [values, setValues] = useState(EMPTY_FORM);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const fileRef = useRef(null);
+  const videoRef = useRef(null);
 
   const openCreate = () => {
     setEditing(null);
     setValues(EMPTY_FORM);
     setSelectedFile(null);
     setPreviewUrl(null);
+    setSelectedVideo(null);
+    setVideoPreviewUrl(null);
     setError(null);
     setFormOpen(true);
   };
@@ -84,10 +107,13 @@ export default function CatalogExercisesSection() {
       instructions: ex.instructions ?? "",
       youtube_video_url: ex.youtube_video_url ?? "",
       image_uri: ex.image_uri ?? null,
+      video_uri: ex.video_uri ?? null,
       is_unilateral: !!ex.is_unilateral,
     });
     setSelectedFile(null);
     setPreviewUrl(null);
+    setSelectedVideo(null);
+    setVideoPreviewUrl(null);
     setError(null);
     setFormOpen(true);
   };
@@ -99,6 +125,25 @@ export default function CatalogExercisesSection() {
     if (!file) return;
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleVideoFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      setError(`El video supera el límite de ${MAX_VIDEO_MB} MB.`);
+      return;
+    }
+    setError(null);
+    setSelectedVideo(file);
+    setVideoPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const removeVideo = () => {
+    setSelectedVideo(null);
+    setVideoPreviewUrl(null);
+    setValues((prev) => ({ ...prev, video_uri: null }));
+    if (videoRef.current) videoRef.current.value = "";
   };
 
   const handleSubmit = async () => {
@@ -114,9 +159,11 @@ export default function CatalogExercisesSection() {
     try {
       let imageUri = values.image_uri;
       if (selectedFile) imageUri = await uploadImageWeb(selectedFile);
+      let videoUri = values.video_uri;
+      if (selectedVideo) videoUri = await uploadVideoWeb(selectedVideo);
       await saveExercise.mutateAsync({
         id: editing?.id,
-        values: { ...values, image_uri: imageUri },
+        values: { ...values, image_uri: imageUri, video_uri: videoUri },
       });
       setFormOpen(false);
     } catch (err) {
@@ -145,6 +192,14 @@ export default function CatalogExercisesSection() {
       );
     return null;
   }, [previewUrl, values.image_uri]);
+
+  // Fuente del preview de video: archivo recién elegido o el video ya guardado.
+  const videoToShow = useMemo(() => {
+    if (videoPreviewUrl) return videoPreviewUrl;
+    if (values.video_uri)
+      return getCloudinaryUrl(values.video_uri) || values.video_uri;
+    return null;
+  }, [videoPreviewUrl, values.video_uri]);
 
   return (
     <View>
@@ -332,6 +387,64 @@ export default function CatalogExercisesSection() {
                   onChangeText={set("youtube_video_url")}
                   autoCapitalize="none"
                 />
+              </Field>
+
+              {/* Video propio (subido directo a Cloudinary en el guardado) */}
+              <Field label="VIDEO PROPIO (OPCIONAL)">
+                <input
+                  type="file"
+                  accept="video/*"
+                  ref={videoRef}
+                  style={{ display: "none" }}
+                  onChange={handleVideoFile}
+                />
+                {videoToShow ? (
+                  <View className="gap-y-2">
+                    <video
+                      src={videoToShow}
+                      controls
+                      style={{
+                        width: "100%",
+                        maxHeight: 200,
+                        borderRadius: 12,
+                        background: "#000",
+                      }}
+                    />
+                    <View className="flex-row gap-2">
+                      <Pressable
+                        onPress={() => videoRef.current?.click()}
+                        className="flex-1 flex-row items-center justify-center gap-2 py-2.5 rounded-[11px] border border-ui-input-border bg-white hover:bg-ui-background-light"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Upload size={14} color={ui.text.main} />
+                        <Text className="text-[12px] font-manrope-semi text-ui-text-main">
+                          Reemplazar
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={removeVideo}
+                        className="flex-row items-center justify-center gap-2 px-4 py-2.5 rounded-[11px] bg-red-50 hover:bg-red-100"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Trash size={14} color="#dc2626" />
+                        <Text className="text-[12px] font-manrope-semi text-red-600">
+                          Quitar
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={() => videoRef.current?.click()}
+                    className="flex-row items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50 hover:bg-brandPrimary-100"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <Movie size={16} color={brandPrimary[600]} />
+                    <Text className="text-[12px] font-manrope-bold text-brandPrimary-600">
+                      Subir video (máx {MAX_VIDEO_MB} MB)
+                    </Text>
+                  </Pressable>
+                )}
               </Field>
 
               <Field label="INSTRUCCIONES">
