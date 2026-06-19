@@ -57,13 +57,13 @@ begin
   end if;
 
   -- IDs entrantes que ya existían
-  select coalesce(array_agg((e->>'id')::uuid), '{}')
+  select coalesce(array_agg((e->>'id')::uuid), '{}'::uuid[])
   into v_keep_ids
   from jsonb_array_elements(coalesce(payload->'exercises', '[]'::jsonb)) e
   where nullif(e->>'id', '') is not null;
 
   -- session_exercises a borrar (existían pero ya no están en el payload)
-  select coalesce(array_agg(se.id), '{}')
+  select coalesce(array_agg(se.id), '{}'::uuid[])
   into v_removed
   from public.session_exercises se
   where se.session_id = v_session_id
