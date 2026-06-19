@@ -31,6 +31,7 @@ import {
   FormActions,
   DeleteConfirmModal,
 } from "./_form-web";
+import SessionDetailDrawer from "./_session-detail-web";
 
 // Constantes / utils / tema
 import { SESSION_LEVELS } from "../../../../../src/constants/sessionOptions";
@@ -73,6 +74,7 @@ export default function CatalogSessionsSection() {
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [detail, setDetail] = useState(null);
   const fileRef = useRef(null);
 
   const set = (key) => (v) => setValues((prev) => ({ ...prev, [key]: v }));
@@ -225,6 +227,7 @@ export default function CatalogSessionsSection() {
               key={s.id}
               session={s}
               first={i === 0}
+              onView={() => setDetail(s)}
               onEdit={() => openEdit(s)}
               onDelete={() => setConfirmDelete(s)}
               brandPrimary={brandPrimary}
@@ -442,6 +445,20 @@ export default function CatalogSessionsSection() {
         brandPrimary={brandPrimary}
       />
 
+      {/* Drawer de detalle */}
+      <SessionDetailDrawer
+        session={detail}
+        onClose={() => setDetail(null)}
+        onEdit={(s) => {
+          setDetail(null);
+          openEdit(s);
+        }}
+        onDelete={(s) => {
+          setDetail(null);
+          setConfirmDelete(s);
+        }}
+      />
+
       {/* Confirmación de borrado */}
       <DeleteConfirmModal
         visible={!!confirmDelete}
@@ -455,7 +472,7 @@ export default function CatalogSessionsSection() {
   );
 }
 
-function SessionRow({ session, first, onEdit, onDelete, brandPrimary }) {
+function SessionRow({ session, first, onView, onEdit, onDelete, brandPrimary }) {
   const thumb = session.cover_image_uri
     ? getCloudinaryUrl(
         session.cover_image_uri,
@@ -468,27 +485,33 @@ function SessionRow({ session, first, onEdit, onDelete, brandPrimary }) {
         first ? "" : "border-t border-ui-input-light"
       }`}
     >
-      {thumb ? (
-        <Image
-          source={{ uri: thumb }}
-          style={{ width: 44, height: 44, borderRadius: 10 }}
-          contentFit="cover"
-        />
-      ) : (
-        <View className="w-11 h-11 rounded-[10px] bg-brandPrimary-50 items-center justify-center">
-          <Barbell size={16} color={brandPrimary[600]} />
+      <Pressable
+        onPress={onView}
+        className="flex-1 flex-row items-center gap-3"
+        style={{ cursor: "pointer" }}
+      >
+        {thumb ? (
+          <Image
+            source={{ uri: thumb }}
+            style={{ width: 44, height: 44, borderRadius: 10 }}
+            contentFit="cover"
+          />
+        ) : (
+          <View className="w-11 h-11 rounded-[10px] bg-brandPrimary-50 items-center justify-center">
+            <Barbell size={16} color={brandPrimary[600]} />
+          </View>
+        )}
+        <View className="flex-1">
+          <Text className="text-[14px] font-manrope-bold text-ui-text-main">
+            {session.name}
+          </Text>
+          <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
+            {session.exercise_count} ejercicio
+            {session.exercise_count === 1 ? "" : "s"}
+            {session.level ? ` · ${session.level}` : ""}
+          </Text>
         </View>
-      )}
-      <View className="flex-1">
-        <Text className="text-[14px] font-manrope-bold text-ui-text-main">
-          {session.name}
-        </Text>
-        <Text className="text-[11px] font-manrope text-ui-text-muted mt-0.5 capitalize">
-          {session.exercise_count} ejercicio
-          {session.exercise_count === 1 ? "" : "s"}
-          {session.level ? ` · ${session.level}` : ""}
-        </Text>
-      </View>
+      </Pressable>
       <Pressable
         onPress={onEdit}
         className="w-9 h-9 rounded-[10px] items-center justify-center bg-ui-background-light hover:bg-ui-input-light"
