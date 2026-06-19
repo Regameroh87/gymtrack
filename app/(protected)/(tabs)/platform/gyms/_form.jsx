@@ -213,7 +213,16 @@ export function Toggle({ label, hint, value, onChange }) {
 
 // Una barra de header (claro u oscuro). Replica las reglas del wordmark:
 // logo contain → nombre → "GYMTRACK".
-function PreviewBar({ label, dark, logoUri, name, px, logoWidth, centered, content }) {
+function PreviewBar({
+  label,
+  dark,
+  logoUri,
+  name,
+  px,
+  logoWidth,
+  centered,
+  content,
+}) {
   const textColor = dark ? ui.text.mainDark : ui.text.main;
   const titleText = (
     <Text
@@ -316,11 +325,17 @@ function PreviewBar({ label, dark, logoUri, name, px, logoWidth, centered, conte
         <View className="px-4 py-3 gap-y-2">
           <View
             className="w-1/3 h-2 rounded-full"
-            style={{ backgroundColor: dark ? "rgba(255,255,255,0.14)" : ui.input.border }}
+            style={{
+              backgroundColor: dark
+                ? "rgba(255,255,255,0.14)"
+                : ui.input.border,
+            }}
           />
           <View
             className="w-2/3 h-2 rounded-full"
-            style={{ backgroundColor: dark ? "rgba(255,255,255,0.07)" : ui.input.light }}
+            style={{
+              backgroundColor: dark ? "rgba(255,255,255,0.07)" : ui.input.light,
+            }}
           />
         </View>
       </View>
