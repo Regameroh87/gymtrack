@@ -127,6 +127,9 @@ export const training_plans = sqliteTable("training_plans", {
   is_published: integer("is_published", { mode: "boolean" })
     .notNull()
     .default(false),
+  // Soft-delete de catálogo: archivar saca el plan del descubrimiento pero conserva
+  // el árbol para que los seguidores actuales lo terminen. Ver [[project_default_catalog]].
+  archived_at: text("archived_at"),
   created_by: text("created_by"),
   created_at: text("created_at")
     .notNull()
