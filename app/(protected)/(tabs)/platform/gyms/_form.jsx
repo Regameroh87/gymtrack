@@ -240,13 +240,13 @@ function PreviewBar({
   if (content === "title" || !logoUri) {
     logoNode = titleText;
   } else {
-    // Mismas reglas que GymLogo: en "logo_title" la caja es angosta y el logo
-    // se pega a la derecha (junto al nombre); en "logo" solo, caja ancha y
-    // contentPosition según la alineación.
+    // Mismas reglas que GymLogo: en "logo_title" la caja es cuadrada (ancho =
+    // alto) con el logo centrado, prolijo junto al nombre; en "logo" solo, caja
+    // ancha y contentPosition según la alineación.
     const isLogoTitle = content === "logo_title";
-    const boxWidth = isLogoTitle ? Math.min(px * 2, 120) : logoWidth;
+    const boxWidth = isLogoTitle ? px : logoWidth;
     const contentPosition = isLogoTitle
-      ? "right"
+      ? "center"
       : centered
         ? "center"
         : "left";
