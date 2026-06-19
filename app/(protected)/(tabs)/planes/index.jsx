@@ -21,6 +21,7 @@ import { useColorScheme } from "nativewind";
 
 // Hooks
 import { useTrainingPlans } from "../../../../src/hooks/plans/use-training-plans";
+import { useCatalogPlans } from "../../../../src/hooks/plans/use-catalog-plans";
 import { useCustomPlans } from "../../../../src/hooks/plans/use-custom-plans";
 import { usePlanAssignments } from "../../../../src/hooks/plans/use-plan-assignments";
 import { useActivePlanSummary } from "../../../../src/hooks/plans/use-active-plan-summary";
@@ -447,12 +448,21 @@ function ExplorarContent({ router, insets }) {
   const { data: gymPlans = [], isLoading: gymLoading } = useTrainingPlans({
     publishedOnly: true,
   });
+  // Catálogo central (read-only), gateado por gym.default_catalog dentro del hook.
+  const { data: catalogPlans = [], isLoading: catalogLoading } =
+    useCatalogPlans();
   const { data: myPlans = [], isLoading: myLoading } = useCustomPlans();
+
+  // Catálogo + planes propios del gym, bajo la pestaña "Catálogo".
+  const allGymPlans = useMemo(
+    () => [...catalogPlans, ...gymPlans],
+    [catalogPlans, gymPlans]
+  );
 
   // Solo planes para "ambos" o para el género del member; sin género ve todo
   const visibleGymPlans = useMemo(
-    () => gymPlans.filter((p) => planMatchesGender(p, user?.gender)),
-    [gymPlans, user?.gender]
+    () => allGymPlans.filter((p) => planMatchesGender(p, user?.gender)),
+    [allGymPlans, user?.gender]
   );
 
   const availableObjectiveFilters = useMemo(() => {
@@ -475,7 +485,8 @@ function ExplorarContent({ router, insets }) {
     [visibleGymPlans, activeObjective]
   );
 
-  const isLoading = origin === "gym" ? gymLoading : myLoading;
+  const isLoading =
+    origin === "gym" ? gymLoading || catalogLoading : myLoading;
   const list = origin === "gym" ? filteredGym : myPlans;
   const isMine = origin === "mios";
 
