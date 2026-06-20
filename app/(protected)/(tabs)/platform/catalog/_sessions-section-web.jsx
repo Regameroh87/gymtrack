@@ -1,7 +1,7 @@
 // Sección SESIONES del catálogo (super_admin). Builder web reconstruido de cero que
 // escribe directo a Supabase vía el RPC save_catalog_session. No reutiliza useSessionForm
 // (ese persiste a SQLite local, inexistente en web). Ver [[project_default_catalog]].
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -62,125 +62,30 @@ const EMPTY = {
 export default function CatalogSessionsSection() {
   const { brandPrimary } = useGymTheme();
   const { data: sessions = [], isLoading } = useCatalogSessionsAdmin();
-  const saveSession = useSaveCatalogSession();
   const deleteSession = useDeleteCatalogSession();
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [values, setValues] = useState(EMPTY);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [error, setError] = useState(null);
-  const [loadingEdit, setLoadingEdit] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [detail, setDetail] = useState(null);
-  const fileRef = useRef(null);
-
-  const set = (key) => (v) => setValues((prev) => ({ ...prev, [key]: v }));
 
   const openCreate = () => {
-    setEditingId(null);
-    setValues(EMPTY);
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setError(null);
+    setEditing(null);
     setFormOpen(true);
   };
 
-  const openEdit = async (s) => {
-    setEditingId(s.id);
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setError(null);
-    setLoadingEdit(true);
+  const openEdit = (s) => {
+    setEditing(s);
     setFormOpen(true);
-    try {
-      const exercises = await fetchCatalogSessionExercises(s.id);
-      setValues({
-        name: s.name ?? "",
-        description: s.description ?? "",
-        level: s.level ?? "",
-        cover_image_uri: s.cover_image_uri ?? null,
-        exercises,
-      });
-    } catch (err) {
-      setError(err?.message || "No se pudieron cargar los ejercicios.");
-    } finally {
-      setLoadingEdit(false);
-    }
-  };
-
-  const handleFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const addExercise = (ex) => {
-    setValues((prev) => {
-      if (prev.exercises.some((e) => e.exercise_id === ex.id)) return prev;
-      return {
-        ...prev,
-        exercises: [
-          ...prev.exercises,
-          {
-            // sin id → session_exercise nuevo (el RPC lo genera)
-            exercise_id: ex.id,
-            name: ex.name,
-            muscle_group: ex.muscle_group,
-            image_uri: ex.image_uri,
-          },
-        ],
-      };
-    });
-  };
-
-  const removeExercise = (idx) =>
-    setValues((prev) => ({
-      ...prev,
-      exercises: prev.exercises.filter((_, i) => i !== idx),
-    }));
-
-  const moveExercise = (idx, dir) =>
-    setValues((prev) => {
-      const next = [...prev.exercises];
-      const target = idx + dir;
-      if (target < 0 || target >= next.length) return prev;
-      [next[idx], next[target]] = [next[target], next[idx]];
-      return { ...prev, exercises: next };
-    });
-
-  const handleSubmit = async () => {
-    setError(null);
-    if (values.name.trim().length < 3) {
-      setError("El nombre debe tener al menos 3 caracteres.");
-      return;
-    }
-    if (values.exercises.length === 0) {
-      setError("Agregá al menos un ejercicio.");
-      return;
-    }
-    try {
-      let coverUri = values.cover_image_uri;
-      if (selectedFile) coverUri = await uploadImageWeb(selectedFile);
-      await saveSession.mutateAsync({
-        id: editingId,
-        values: { ...values, cover_image_uri: coverUri },
-      });
-      setFormOpen(false);
-    } catch (err) {
-      setError(err?.message || "No se pudo guardar la sesión.");
-    }
   };
 
   const handleDelete = async () => {
     try {
       await deleteSession.mutateAsync(confirmDelete.id);
       setConfirmDelete(null);
-    } catch (err) {
-      setError(err?.message || "No se pudo eliminar.");
+    } catch {
+      // El DeleteConfirmModal de sesiones no muestra error; cerramos y dejamos que la
+      // invalidación de queries refleje el estado real.
       setConfirmDelete(null);
     }
   };
@@ -236,13 +141,159 @@ export default function CatalogSessionsSection() {
         )}
       </View>
 
-      {/* Modal builder */}
-      <Modal
-        visible={formOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setFormOpen(false)}
-      >
+      {/* Modal builder — montado condicionalmente para resetear su estado al cerrar */}
+      {formOpen && (
+        <SessionFormModal
+          session={editing}
+          onClose={() => setFormOpen(false)}
+          brandPrimary={brandPrimary}
+        />
+      )}
+
+      {/* Drawer de detalle */}
+      <SessionDetailDrawer
+        session={detail}
+        onClose={() => setDetail(null)}
+        onEdit={(s) => {
+          setDetail(null);
+          openEdit(s);
+        }}
+        onDelete={(s) => {
+          setDetail(null);
+          setConfirmDelete(s);
+        }}
+      />
+
+      {/* Confirmación de borrado */}
+      <DeleteConfirmModal
+        visible={!!confirmDelete}
+        title="Eliminar sesión"
+        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los días de planes de catálogo que la usaban quedarán sin sesión.`}
+        isPending={deleteSession.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleDelete}
+      />
+    </View>
+  );
+}
+
+// Modal del builder de sesión. Componente propio montado/desmontado con `formOpen`
+// (patrón PlanBuilderModal): hidrata los ejercicios en edición y arranca limpio al crear.
+function SessionFormModal({ session, onClose, brandPrimary }) {
+  const saveSession = useSaveCatalogSession();
+  const editingId = session?.id ?? null;
+
+  const [values, setValues] = useState(() =>
+    session
+      ? {
+          name: session.name ?? "",
+          description: session.description ?? "",
+          level: session.level ?? "",
+          cover_image_uri: session.cover_image_uri ?? null,
+          exercises: [],
+        }
+      : EMPTY
+  );
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [error, setError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(!!session);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const fileRef = useRef(null);
+
+  // Hidratar los ejercicios en edición (la lista solo trae el header de la sesión).
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const exercises = await fetchCatalogSessionExercises(session.id);
+        if (cancelled) return;
+        setValues((prev) => ({ ...prev, exercises }));
+      } catch (err) {
+        if (!cancelled)
+          setError(err?.message || "No se pudieron cargar los ejercicios.");
+      } finally {
+        if (!cancelled) setLoadingEdit(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
+
+  const set = (key) => (v) => setValues((prev) => ({ ...prev, [key]: v }));
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const addExercise = (ex) => {
+    setValues((prev) => {
+      if (prev.exercises.some((e) => e.exercise_id === ex.id)) return prev;
+      return {
+        ...prev,
+        exercises: [
+          ...prev.exercises,
+          {
+            // sin id → session_exercise nuevo (el RPC lo genera)
+            exercise_id: ex.id,
+            name: ex.name,
+            muscle_group: ex.muscle_group,
+            image_uri: ex.image_uri,
+          },
+        ],
+      };
+    });
+  };
+
+  const removeExercise = (idx) =>
+    setValues((prev) => ({
+      ...prev,
+      exercises: prev.exercises.filter((_, i) => i !== idx),
+    }));
+
+  const moveExercise = (idx, dir) =>
+    setValues((prev) => {
+      const next = [...prev.exercises];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return { ...prev, exercises: next };
+    });
+
+  const handleSubmit = async () => {
+    setError(null);
+    if (values.name.trim().length < 3) {
+      setError("El nombre debe tener al menos 3 caracteres.");
+      return;
+    }
+    if (values.exercises.length === 0) {
+      setError("Agregá al menos un ejercicio.");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      let coverUri = values.cover_image_uri;
+      if (selectedFile) coverUri = await uploadImageWeb(selectedFile);
+      await saveSession.mutateAsync({
+        id: editingId,
+        values: { ...values, cover_image_uri: coverUri },
+      });
+      onClose();
+    } catch (err) {
+      setError(err?.message || "No se pudo guardar la sesión.");
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <Modal visible transparent animationType="fade" onRequestClose={onClose}>
         <View
           className="flex-1 items-center justify-center p-6"
           style={{ backgroundColor: "rgba(0,0,0,0.45)" }}
@@ -256,10 +307,7 @@ export default function CatalogSessionsSection() {
               <Text className="text-[18px] font-jakarta-bold text-ui-text-main tracking-tight">
                 {editingId ? "Editar sesión" : "Nueva sesión"}
               </Text>
-              <Pressable
-                onPress={() => setFormOpen(false)}
-                style={{ cursor: "pointer" }}
-              >
+              <Pressable onPress={onClose} style={{ cursor: "pointer" }}>
                 <X size={18} color={ui.text.muted} />
               </Pressable>
             </View>
@@ -427,9 +475,9 @@ export default function CatalogSessionsSection() {
 
             {!loadingEdit && (
               <FormActions
-                onCancel={() => setFormOpen(false)}
+                onCancel={onClose}
                 onSubmit={handleSubmit}
-                isPending={saveSession.isPending}
+                isPending={saveSession.isPending || isSaving}
               />
             )}
           </ScrollView>
@@ -444,31 +492,7 @@ export default function CatalogSessionsSection() {
         selectedIds={values.exercises.map((e) => e.exercise_id)}
         brandPrimary={brandPrimary}
       />
-
-      {/* Drawer de detalle */}
-      <SessionDetailDrawer
-        session={detail}
-        onClose={() => setDetail(null)}
-        onEdit={(s) => {
-          setDetail(null);
-          openEdit(s);
-        }}
-        onDelete={(s) => {
-          setDetail(null);
-          setConfirmDelete(s);
-        }}
-      />
-
-      {/* Confirmación de borrado */}
-      <DeleteConfirmModal
-        visible={!!confirmDelete}
-        title="Eliminar sesión"
-        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los días de planes de catálogo que la usaban quedarán sin sesión.`}
-        isPending={deleteSession.isPending}
-        onCancel={() => setConfirmDelete(null)}
-        onConfirm={handleDelete}
-      />
-    </View>
+    </>
   );
 }
 
