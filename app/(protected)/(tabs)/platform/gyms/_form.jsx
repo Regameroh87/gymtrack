@@ -240,11 +240,13 @@ function PreviewBar({
   if (content === "title" || !logoUri) {
     logoNode = titleText;
   } else {
-    // Mismas reglas que GymLogo: en "logo_title" la caja es cuadrada (ancho =
-    // alto) con el logo centrado, prolijo junto al nombre; en "logo" solo, caja
-    // ancha y contentPosition según la alineación.
+    // Mismas reglas que GymLogo: en "logo_title" el logo es el ancla, caja
+    // cuadrada un poco más grande que el `px` base (acotada) con el logo
+    // centrado; en "logo" solo, caja ancha y contentPosition según la alineación.
     const isLogoTitle = content === "logo_title";
-    const boxWidth = isLogoTitle ? px : logoWidth;
+    const logoBox = Math.min(Math.round(px * 1.2), 50);
+    const imgHeight = isLogoTitle ? logoBox : px;
+    const boxWidth = isLogoTitle ? logoBox : logoWidth;
     const contentPosition = isLogoTitle
       ? "center"
       : centered
@@ -253,7 +255,7 @@ function PreviewBar({
     const image = (
       <Image
         source={{ uri: logoUri }}
-        style={{ height: px, width: boxWidth }}
+        style={{ height: imgHeight, width: boxWidth }}
         contentFit="contain"
         contentPosition={contentPosition}
       />
@@ -268,7 +270,7 @@ function PreviewBar({
           {name ? (
             <Text
               className="font-jakarta-bold capitalize"
-              style={{ fontSize: px * 0.45, color: textColor, flexShrink: 1 }}
+              style={{ fontSize: px * 0.42, color: textColor, flexShrink: 1 }}
               numberOfLines={1}
             >
               {name}

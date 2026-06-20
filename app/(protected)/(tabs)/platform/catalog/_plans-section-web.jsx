@@ -19,6 +19,9 @@ import {
   useCatalogPlansAdmin,
   useSaveCatalogPlan,
   useArchiveCatalogPlan,
+  useArchivedCatalogPlans,
+  useRestoreCatalogPlan,
+  useDeleteCatalogPlan,
   fetchCatalogPlanDetail,
 } from "../../../../../src/hooks/catalog/use-catalog-plans-admin";
 import {
@@ -65,6 +68,8 @@ import {
   Pencil,
   Trash,
   X,
+  Users,
+  ArrowLeft,
 } from "../../../../../assets/icons";
 
 // Mínimo 2 días por semana (1 sola sesión semanal no constituye un plan).
@@ -96,11 +101,18 @@ const EMPTY_META = {
 export default function CatalogPlansSection() {
   const { brandPrimary } = useGymTheme();
   const { data: plans = [], isLoading } = useCatalogPlansAdmin();
+  const { data: archived = [], isLoading: loadingArchived } =
+    useArchivedCatalogPlans();
   const archivePlan = useArchiveCatalogPlan();
+  const restorePlan = useRestoreCatalogPlan();
+  const deletePlan = useDeleteCatalogPlan();
 
+  const [view, setView] = useState("active"); // "active" | "archived"
   const [builderOpen, setBuilderOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmPurge, setConfirmPurge] = useState(null);
+  const [purgeError, setPurgeError] = useState(null);
   const [detail, setDetail] = useState(null);
 
   const openCreate = () => {
@@ -121,6 +133,17 @@ export default function CatalogPlansSection() {
     }
   };
 
+  const handlePurge = async () => {
+    setPurgeError(null);
+    try {
+      await deletePlan.mutateAsync(confirmPurge.id);
+      setConfirmPurge(null);
+    } catch (err) {
+      setPurgeError(err?.message || "No se pudo eliminar el plan.");
+      setConfirmPurge(null);
+    }
+  };
+
   return (
     <View>
       <View className="mb-6 flex-row items-end justify-between gap-4">
@@ -129,47 +152,115 @@ export default function CatalogPlansSection() {
           con sesiones del catálogo. Los gimnasios con el catálogo activado los
           ven read-only.
         </Text>
-        <Pressable
-          onPress={openCreate}
-          className="flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30"
-          style={{ cursor: "pointer" }}
-        >
-          <Plus size={15} color="#fff" />
-          <Text className="text-[13px] font-manrope-bold text-white">
-            Nuevo plan
-          </Text>
-        </Pressable>
+        {view === "active" && (
+          <Pressable
+            onPress={openCreate}
+            className="flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30"
+            style={{ cursor: "pointer" }}
+          >
+            <Plus size={15} color="#fff" />
+            <Text className="text-[13px] font-manrope-bold text-white">
+              Nuevo plan
+            </Text>
+          </Pressable>
+        )}
       </View>
+
+      {/* Toggle Activos / Archivados */}
+      <View
+        className="flex-row gap-1 mb-5 self-center w-full bg-ui-background-light rounded-[12px] p-1 border border-ui-input-border"
+        style={{ maxWidth: 880 }}
+      >
+        <SegBtn
+          label="Activos"
+          count={plans.length}
+          active={view === "active"}
+          onPress={() => setView("active")}
+          brandPrimary={brandPrimary}
+        />
+        <SegBtn
+          label="Archivados"
+          count={archived.length}
+          active={view === "archived"}
+          onPress={() => setView("archived")}
+          brandPrimary={brandPrimary}
+        />
+      </View>
+
+      {purgeError && view === "archived" ? (
+        <View
+          className="self-center w-full mb-3 px-4 py-3 rounded-xl bg-red-50 border border-red-200"
+          style={{ maxWidth: 880 }}
+        >
+          <Text className="text-[12px] font-manrope-bold text-red-700">
+            {purgeError}
+          </Text>
+        </View>
+      ) : null}
 
       <View
         className="bg-white rounded-[20px] border border-ui-input-border self-center w-full overflow-hidden"
         style={{ maxWidth: 880 }}
       >
-        {isLoading ? (
+        {view === "active" ? (
+          isLoading ? (
+            <View className="py-20 items-center">
+              <ActivityIndicator size="small" color={brandPrimary[600]} />
+            </View>
+          ) : plans.length === 0 ? (
+            <View className="py-20 items-center px-8">
+              <View className="w-12 h-12 rounded-[14px] bg-brandPrimary-50 items-center justify-center mb-3">
+                <Calendar size={20} color={brandPrimary[600]} />
+              </View>
+              <Text className="text-sm font-manrope-bold text-ui-text-main mb-1">
+                No hay planes de catálogo
+              </Text>
+              <Text className="text-xs font-manrope text-ui-text-muted">
+                Creá el primero con “Nuevo plan”.
+              </Text>
+            </View>
+          ) : (
+            plans.map((p, i) => (
+              <PlanRow
+                key={p.id}
+                plan={p}
+                first={i === 0}
+                onView={() => setDetail(p)}
+                onEdit={() => openEdit(p)}
+                onDelete={() => setConfirmDelete(p)}
+                brandPrimary={brandPrimary}
+              />
+            ))
+          )
+        ) : loadingArchived ? (
           <View className="py-20 items-center">
             <ActivityIndicator size="small" color={brandPrimary[600]} />
           </View>
-        ) : plans.length === 0 ? (
+        ) : archived.length === 0 ? (
           <View className="py-20 items-center px-8">
-            <View className="w-12 h-12 rounded-[14px] bg-brandPrimary-50 items-center justify-center mb-3">
-              <Calendar size={20} color={brandPrimary[600]} />
+            <View className="w-12 h-12 rounded-[14px] bg-ui-background-light items-center justify-center mb-3">
+              <Trash size={20} color={ui.text.muted} />
             </View>
             <Text className="text-sm font-manrope-bold text-ui-text-main mb-1">
-              No hay planes de catálogo
+              No hay planes archivados
             </Text>
-            <Text className="text-xs font-manrope text-ui-text-muted">
-              Creá el primero con “Nuevo plan”.
+            <Text className="text-xs font-manrope text-ui-text-muted text-center">
+              Cuando quites un plan del catálogo aparecerá acá. Los que no sigue
+              nadie por +30 días se borran solos.
             </Text>
           </View>
         ) : (
-          plans.map((p, i) => (
-            <PlanRow
+          archived.map((p, i) => (
+            <ArchivedPlanRow
               key={p.id}
               plan={p}
               first={i === 0}
-              onView={() => setDetail(p)}
-              onEdit={() => openEdit(p)}
-              onDelete={() => setConfirmDelete(p)}
+              isRestoring={restorePlan.isPending}
+              onRestore={() => restorePlan.mutate(p.id)}
+              onPurge={() => {
+                setPurgeError(null);
+                setConfirmPurge(p);
+              }}
               brandPrimary={brandPrimary}
             />
           ))
@@ -205,6 +296,132 @@ export default function CatalogPlansSection() {
         onCancel={() => setConfirmDelete(null)}
         onConfirm={handleDelete}
       />
+
+      <DeleteConfirmModal
+        visible={!!confirmPurge}
+        title="Eliminar definitivamente"
+        message={`Vas a borrar “${confirmPurge?.name}” y todo su contenido de forma permanente. Esta acción no se puede deshacer.`}
+        isPending={deletePlan.isPending}
+        onCancel={() => setConfirmPurge(null)}
+        onConfirm={handlePurge}
+      />
+    </View>
+  );
+}
+
+// Botón del segmented control Activos / Archivados.
+function SegBtn({ label, count, active, onPress, brandPrimary }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`flex-1 flex-row items-center justify-center gap-2 py-2 rounded-[9px] ${
+        active ? "bg-white shadow-sm" : "hover:bg-white/50"
+      }`}
+      style={{ cursor: "pointer" }}
+    >
+      <Text
+        className="text-[13px] font-manrope-bold"
+        style={{ color: active ? brandPrimary[600] : ui.text.muted }}
+      >
+        {label}
+      </Text>
+      <View
+        className="px-1.5 rounded-full"
+        style={{
+          backgroundColor: active ? brandPrimary[50] : "transparent",
+        }}
+      >
+        <Text
+          className="text-[11px] font-manrope-bold"
+          style={{ color: active ? brandPrimary[600] : ui.text.muted }}
+        >
+          {count}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+function ArchivedPlanRow({
+  plan,
+  first,
+  isRestoring,
+  onRestore,
+  onPurge,
+  brandPrimary,
+}) {
+  const thumb = plan.cover_image_uri
+    ? getCloudinaryUrl(
+        plan.cover_image_uri,
+        "w_96,h_96,c_fill,f_auto,q_auto"
+      ) || plan.cover_image_uri
+    : null;
+  const followers = Number(plan.active_followers ?? 0);
+  const blocked = followers > 0;
+
+  return (
+    <View
+      className={`flex-row items-center gap-3 px-5 py-3.5 ${
+        first ? "" : "border-t border-ui-input-light"
+      }`}
+    >
+      {thumb ? (
+        <Image
+          source={{ uri: thumb }}
+          style={{ width: 44, height: 44, borderRadius: 10, opacity: 0.65 }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="w-11 h-11 rounded-[10px] bg-ui-background-light items-center justify-center">
+          <Calendar size={16} color={ui.text.muted} />
+        </View>
+      )}
+
+      <View className="flex-1">
+        <Text className="text-[14px] font-manrope-bold text-ui-text-main">
+          {plan.name}
+        </Text>
+        <View className="flex-row items-center gap-2 mt-1">
+          <View className="flex-row items-center gap-1">
+            <Users size={12} color={blocked ? "#d97706" : ui.text.muted} />
+            <Text
+              className="text-[11px] font-manrope-bold"
+              style={{ color: blocked ? "#d97706" : ui.text.muted }}
+            >
+              {followers} {followers === 1 ? "seguidor" : "seguidores"}
+            </Text>
+          </View>
+          {blocked && (
+            <Text className="text-[11px] font-manrope text-ui-text-muted">
+              · no se puede borrar todavía
+            </Text>
+          )}
+        </View>
+      </View>
+
+      <Pressable
+        onPress={onRestore}
+        disabled={isRestoring}
+        className="flex-row items-center gap-1.5 px-3 h-9 rounded-[10px] bg-ui-background-light hover:bg-ui-input-light"
+        style={{ cursor: "pointer", opacity: isRestoring ? 0.5 : 1 }}
+      >
+        <ArrowLeft size={13} color={ui.text.main} />
+        <Text className="text-[12px] font-manrope-bold text-ui-text-main">
+          Restaurar
+        </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={blocked ? undefined : onPurge}
+        disabled={blocked}
+        className="w-9 h-9 rounded-[10px] items-center justify-center bg-red-50 hover:bg-red-100"
+        style={{
+          cursor: blocked ? "not-allowed" : "pointer",
+          opacity: blocked ? 0.35 : 1,
+        }}
+      >
+        <Trash size={14} color="#dc2626" />
+      </Pressable>
     </View>
   );
 }

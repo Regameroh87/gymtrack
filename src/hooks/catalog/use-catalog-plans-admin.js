@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../database/supabase";
 
 export const CATALOG_PLANS_KEY = ["catalog_admin", "plans"];
+export const ARCHIVED_PLANS_KEY = ["catalog_admin", "plans_archived"];
 
 // Lista de planes de catálogo.
 export const useCatalogPlansAdmin = () =>
@@ -218,6 +219,57 @@ export const useArchiveCatalogPlan = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CATALOG_PLANS_KEY });
+      queryClient.invalidateQueries({ queryKey: ARCHIVED_PLANS_KEY });
+    },
+  });
+};
+
+// Lista de planes archivados + cuántos members activos sigue cada uno (RPC seguro,
+// solo super_admin). active_followers > 0 ⇒ el hard delete está bloqueado.
+export const useArchivedCatalogPlans = () =>
+  useQuery({
+    queryKey: ARCHIVED_PLANS_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("list_archived_catalog_plans");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+// Restaurar (desarchivar): el plan vuelve al catálogo y al descubrimiento.
+export const useRestoreCatalogPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.rpc("restore_catalog_plan", {
+        p_plan_id: id,
+      });
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CATALOG_PLANS_KEY });
+      queryClient.invalidateQueries({ queryKey: ARCHIVED_PLANS_KEY });
+    },
+  });
+};
+
+// Borrado físico (purga). El RPC rechaza si hay seguidores activos; ese error sube tal
+// cual para que la UI lo muestre.
+export const useDeleteCatalogPlan = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase.rpc("delete_catalog_plan", {
+        p_plan_id: id,
+      });
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ARCHIVED_PLANS_KEY });
     },
   });
 };

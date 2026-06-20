@@ -66,13 +66,15 @@ export default function GymLogo({
     // Sin logo cargado: cualquier modo cae al nombre.
     if (!resolvedLogo) return titleText;
 
-    // En "logo_title" el logo acompaña al nombre: caja cuadrada (ancho = alto)
-    // con el logo centrado, así queda como un marquito prolijo pegado al texto,
-    // sin huecos ni quedar flotando. En "logo" solo, la caja es ancha (acotada
-    // para no chocar con el headerRight) y el contentPosition sigue a la
-    // alineación (centro real o izquierda) dentro de esa caja.
+    // En "logo_title" el logo es el elemento ancla: caja cuadrada un poco más
+    // grande que el `size` base (acotada para no desbordar el header) con el
+    // logo centrado, así queda prolijo y con más peso que el título. En "logo"
+    // solo, la caja es ancha (acotada para no chocar con el headerRight), de
+    // alto `size`, y el contentPosition sigue a la alineación.
     const isLogoTitle = content === "logo_title";
-    const logoWidth = isLogoTitle ? size : Math.min(size * 4, 200);
+    const logoBox = Math.min(Math.round(size * 1.2), 50);
+    const logoHeight = isLogoTitle ? logoBox : size;
+    const logoWidth = isLogoTitle ? logoBox : Math.min(size * 4, 200);
     const contentPosition = isLogoTitle
       ? "center"
       : align === "center"
@@ -81,7 +83,7 @@ export default function GymLogo({
     const image = (
       <Image
         source={{ uri: resolvedLogo }}
-        style={{ height: size, width: logoWidth }}
+        style={{ height: logoHeight, width: logoWidth }}
         contentFit="contain"
         contentPosition={contentPosition}
         transition={150}
@@ -101,7 +103,7 @@ export default function GymLogo({
         {image}
         <Text
           className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark capitalize"
-          style={{ fontSize: size * 0.45, flexShrink: 1 }}
+          style={{ fontSize: size * 0.42, flexShrink: 1 }}
           numberOfLines={1}
         >
           {name}
