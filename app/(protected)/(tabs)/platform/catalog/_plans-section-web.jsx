@@ -495,6 +495,7 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(!!planId);
+  const [isSaving, setIsSaving] = useState(false);
   const fileRef = useRef(null);
 
   const sessionOpts = useMemo(
@@ -708,6 +709,7 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
       setError("Asigná al menos una sesión a un día.");
       return;
     }
+    setIsSaving(true);
     try {
       let coverUri = meta.cover_image_uri;
       if (selectedFile) coverUri = await uploadImageWeb(selectedFile);
@@ -718,6 +720,7 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
       onClose();
     } catch (err) {
       setError(err?.message || "No se pudo guardar el plan.");
+      setIsSaving(false);
     }
   };
 
@@ -912,7 +915,7 @@ function PlanBuilderModal({ planId, onClose, brandPrimary }) {
               <FormActions
                 onCancel={onClose}
                 onSubmit={handleSubmit}
-                isPending={savePlan.isPending}
+                isPending={savePlan.isPending || isSaving}
                 submitLabel="Guardar plan"
               />
             </>
