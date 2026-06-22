@@ -78,6 +78,9 @@ export const useSaveSessionLog = () => {
       queryClient.invalidateQueries({
         queryKey: ["plan_assignments", "active", "summary", userId],
       });
+      // El log final puede cerrar la asignación (active → completed en el summary):
+      // invalidamos la key amplia para que Historial refleje el plan completado.
+      queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       queryClient.invalidateQueries({ queryKey: ["active_session_draft"] });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Toast.show({

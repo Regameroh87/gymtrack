@@ -289,6 +289,8 @@ const fetchCustomPlanSummary = async (userId, assignment) => {
   return summary;
 };
 
+const todayDate = () => new Date().toISOString().split("T")[0];
+
 export const fetchActivePlanSummary = async (userId) => {
   // Asignación activa (puede apuntar a un plan del gym o a uno custom)
   const [assignment] = await database
@@ -310,9 +312,28 @@ export const fetchActivePlanSummary = async (userId) => {
 
   if (!assignment) return null;
 
-  return assignment.custom_plan_id
-    ? fetchCustomPlanSummary(userId, assignment)
-    : fetchGymPlanSummary(userId, assignment);
+  const summary = assignment.custom_plan_id
+    ? await fetchCustomPlanSummary(userId, assignment)
+    : await fetchGymPlanSummary(userId, assignment);
+
+  // Reconciliación deliberada en el read (offline-first): isCompleted se calcula al
+  // vuelo pero el plan terminado nunca cierra su asignación, así que el member queda
+  // "activo" para siempre y el admin lo cuenta como seguidor. Si ya terminó, lo
+  // pasamos a 'completed' (sync_status dirty → sube a Supabase). Es one-shot: en el
+  // próximo fetch la query de arriba ya no trae la fila (filtra status='active').
+  if (summary?.isCompleted) {
+    await database
+      .update(plan_assignments)
+      .set({
+        status: "completed",
+        end_date: todayDate(),
+        updated_at: new Date().toISOString(),
+        sync_status: "dirty",
+      })
+      .where(eq(plan_assignments.id, assignment.assignment_id));
+  }
+
+  return summary;
 };
 
 export const useActivePlanSummary = () => {
