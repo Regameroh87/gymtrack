@@ -16,23 +16,31 @@ export const addOneMonth = (fromISO = todayDate()) => {
   return d.toISOString().split("T")[0];
 };
 
-// Inscripción de un socio a actividades (suscripciones con pago básico manual).
-// La escritura la habilita la rama is_admin_of de la RLS (solo admin/owner).
-export const useAssignActivityToMember = (memberId) => {
+// Mutaciones de inscripciones a actividades (membresías con pago básico manual),
+// member-agnósticas: el socio se pasa por llamada. Las usa Contabilidad (gym-wide)
+// y cualquier vista de lectura por-socio. La escritura la habilita la rama
+// is_admin_of de la RLS (solo admin/owner). Cada mutación invalida el listado
+// gym-wide y, si se conoce el socio, también su vista por-socio.
+export const useActivitySubscriptionMutations = () => {
   const queryClient = useQueryClient();
   const { userId: staffProfileId } = useAuth();
   const { gymId } = useActiveGym();
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: ["member_subscriptions", memberId],
-    });
+  const invalidate = (memberId) => {
+    queryClient.invalidateQueries({ queryKey: ["gym_subscriptions", gymId] });
+    if (memberId) {
+      queryClient.invalidateQueries({
+        queryKey: ["member_subscriptions", memberId],
+      });
+    }
+  };
 
-  // Inscribe al socio a un pase. Si ya tenía una inscripción activa de ESA
-  // actividad (p. ej. otra frecuencia), la cierra primero (cerrar-luego-insertar,
-  // igual que la asignación de planes) para respetar el único-activo por actividad.
+  // Inscribe a un socio a un pase. Si ya tenía una inscripción activa de ESA
+  // actividad (otra frecuencia), la cierra primero (cerrar-luego-insertar) para
+  // respetar el único-activo por actividad. Asume el primer mes pagado (vence el
+  // mes que viene) → el badge arranca "Al día".
   const assign = useMutation({
-    mutationFn: async ({ activityId, activityPlanId, price, dueDate }) => {
+    mutationFn: async ({ memberId, activityId, activityPlanId, price, dueDate }) => {
       const today = todayDate();
 
       const { error: closeErr } = await supabase
@@ -43,8 +51,6 @@ export const useAssignActivityToMember = (memberId) => {
         .eq("status", "active");
       if (closeErr) throw closeErr;
 
-      // Inscripción nueva: se asume el primer mes pagado (vence el mes que viene),
-      // así el badge de pago arranca "Al día". El admin lo ajusta con Registrar pago.
       const id = Crypto.randomUUID();
       const { error: insErr } = await supabase
         .from("activity_subscriptions")
@@ -64,7 +70,7 @@ export const useAssignActivityToMember = (memberId) => {
       if (insErr) throw insErr;
       return id;
     },
-    onSuccess: invalidate,
+    onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
   // Registra un pago: actualiza el último pago y mueve el vencimiento.
@@ -80,12 +86,12 @@ export const useAssignActivityToMember = (memberId) => {
       if (error) throw error;
       return id;
     },
-    onSuccess: invalidate,
+    onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
   // Da de baja una inscripción (no la borra: conserva el historial).
   const cancel = useMutation({
-    mutationFn: async (id) => {
+    mutationFn: async ({ id }) => {
       const { error } = await supabase
         .from("activity_subscriptions")
         .update({ status: "cancelled", end_date: todayDate() })
@@ -93,7 +99,7 @@ export const useAssignActivityToMember = (memberId) => {
       if (error) throw error;
       return id;
     },
-    onSuccess: invalidate,
+    onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
   return { assign, registerPayment, cancel };

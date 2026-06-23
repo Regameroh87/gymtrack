@@ -21,9 +21,8 @@ import {
   useAssignablePlans,
   useAssignPlanToMember,
 } from "../../../../../src/hooks/users/use-assign-plan-to-member";
-import { useActivities } from "../../../../../src/hooks/activities/use-activities";
 import { useMemberSubscriptions } from "../../../../../src/hooks/activities/use-member-subscriptions";
-import { useAssignActivityToMember } from "../../../../../src/hooks/activities/use-assign-activity-to-member";
+import { paymentBadge } from "../../../../../src/utils/payment-status";
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 import {
   useToggleMemberActive,
@@ -53,11 +52,7 @@ import {
   Barbell,
   ClipboardList,
   ChevronRight,
-  ChevronLeft,
   Flame,
-  Receipt,
-  Plus,
-  Trash,
 } from "../../../../../assets/icons";
 
 const avatarUri = (raw) => getCloudinaryUrl(raw) ?? raw ?? null;
@@ -66,16 +61,6 @@ const safeDate = (iso) => {
   if (!iso) return "—";
   const d = new Date(iso);
   return isNaN(d) ? "—" : formatShortDate(d);
-};
-
-// Estado de pago derivado del vencimiento (no se persiste).
-const paymentBadge = (dueDate) => {
-  if (!dueDate)
-    return { label: "Sin fecha", chip: "bg-ui-input-light dark:bg-ui-input-dark", text: "text-ui-text-muted dark:text-ui-text-mutedDark" };
-  const today = new Date().toISOString().split("T")[0];
-  return dueDate >= today
-    ? { label: "Al día", chip: "bg-green-500/10", text: "text-green-600" }
-    : { label: "Vencido", chip: "bg-red-500/10", text: "text-red-500" };
 };
 
 const freqText = (f) => (f == null ? "Libre" : `${f}x/sem`);
@@ -100,104 +85,9 @@ export default function MemberDetail() {
   const toggleActive = useToggleMemberActive(id);
   const deleteMember = useDeleteMember();
 
-  // Actividades (inscripciones con pago básico).
-  const [actPickerOpen, setActPickerOpen] = useState(false);
-  const [pickedActivity, setPickedActivity] = useState(null);
+  // Actividades del socio: solo lectura. La gestión (alta/baja/pagos) vive
+  // centralizada en la sección Contabilidad.
   const { data: subs, isLoading: subsLoading } = useMemberSubscriptions(id);
-  const { data: activities, isLoading: activitiesLoading } = useActivities();
-  const { assign, registerPayment, cancel } = useAssignActivityToMember(id);
-
-  // Solo actividades activas con al menos un pase activo (asignables).
-  const assignableActivities = (activities ?? []).filter(
-    (a) => a.is_active && (a.activity_plans ?? []).some((p) => p.is_active)
-  );
-
-  const openActivityPicker = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPickedActivity(null);
-    setActPickerOpen(true);
-  };
-
-  const assignPass = (activity, pass) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    assign.mutate(
-      {
-        activityId: activity.id,
-        activityPlanId: pass.id,
-        price: pass.price,
-      },
-      {
-        onSuccess: () => {
-          setActPickerOpen(false);
-          setPickedActivity(null);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          Toast.show({
-            type: "success",
-            text1: "Actividad asignada",
-            position: "bottom",
-          });
-        },
-        onError: (e) =>
-          Toast.show({
-            type: "error",
-            text1: "No se pudo asignar",
-            text2: e?.message,
-            position: "bottom",
-          }),
-      }
-    );
-  };
-
-  const onRegisterPayment = (sub) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    registerPayment.mutate(
-      { id: sub.id },
-      {
-        onSuccess: () =>
-          Toast.show({
-            type: "success",
-            text1: "Pago registrado",
-            position: "bottom",
-          }),
-        onError: (e) =>
-          Toast.show({
-            type: "error",
-            text1: "No se pudo registrar",
-            text2: e?.message,
-            position: "bottom",
-          }),
-      }
-    );
-  };
-
-  const onCancelSub = (sub) => {
-    const name = sub.activities?.name ?? "esta actividad";
-    const doCancel = () =>
-      cancel.mutate(sub.id, {
-        onSuccess: () =>
-          Toast.show({
-            type: "success",
-            text1: "Actividad quitada",
-            position: "bottom",
-          }),
-        onError: (e) =>
-          Toast.show({
-            type: "error",
-            text1: "No se pudo quitar",
-            text2: e?.message,
-            position: "bottom",
-          }),
-      });
-    if (Platform.OS === "web") {
-      if (window.confirm(`¿Quitar "${name}" de este socio?`)) doCancel();
-      return;
-    }
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert("Quitar actividad", `¿Quitar "${name}" de este socio?`, [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Quitar", style: "destructive", onPress: doCancel },
-    ]);
-  };
 
   const onDeleteMember = () => {
     if (!data?.profile?.user_id) return;
@@ -439,7 +329,7 @@ export default function MemberDetail() {
           </Pressable>
         </View>
 
-        {/* ── Actividades (inscripciones) ── */}
+        {/* ── Actividades (solo lectura; se gestionan en Contabilidad) ── */}
         {canManage && (
           <>
             <SectionTitle>Actividades</SectionTitle>
@@ -484,38 +374,17 @@ export default function MemberDetail() {
                               {priceText(sub.price)}
                             </Text>
                           </View>
-                          <View
-                            className={`px-2 py-0.5 rounded-md ${badge.chip}`}
-                          >
-                            <Text
-                              className={`text-[9px] font-manrope-bold tracking-wider uppercase ${badge.text}`}
-                            >
-                              {badge.label}
-                            </Text>
-                          </View>
-                        </View>
-
-                        <View className="flex-row items-center justify-between mt-3">
-                          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
-                            Vence {safeDate(sub.due_date)}
-                          </Text>
-                          <View className="flex-row items-center gap-2">
-                            <Pressable
-                              onPress={() => onRegisterPayment(sub)}
-                              disabled={registerPayment.isPending}
-                              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 active:scale-95"
-                            >
-                              <Receipt size={13} color="#16a34a" />
-                              <Text className="text-[11px] font-manrope-semi text-green-600">
-                                Registrar pago
+                          <View className="items-end">
+                            <View className={`px-2 py-0.5 rounded-md ${badge.chip}`}>
+                              <Text
+                                className={`text-[9px] font-manrope-bold tracking-wider uppercase ${badge.text}`}
+                              >
+                                {badge.label}
                               </Text>
-                            </Pressable>
-                            <Pressable
-                              onPress={() => onCancelSub(sub)}
-                              className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 active:scale-95"
-                            >
-                              <Trash size={14} color="#ef4444" />
-                            </Pressable>
+                            </View>
+                            <Text className="text-[10px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1">
+                              vence {safeDate(sub.due_date)}
+                            </Text>
                           </View>
                         </View>
                       </View>
@@ -524,15 +393,9 @@ export default function MemberDetail() {
                 </View>
               )}
 
-              <Pressable
-                onPress={openActivityPicker}
-                className="mt-3 flex-row items-center justify-center gap-2 py-3 rounded-2xl bg-brandPrimary-600 active:opacity-80"
-              >
-                <Plus size={16} color="#fff" />
-                <Text className="text-sm font-jakarta-semi text-white">
-                  Agregar actividad
-                </Text>
-              </Pressable>
+              <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-3 text-center">
+                Las membresías se gestionan desde Contabilidad.
+              </Text>
             </View>
           </>
         )}
@@ -706,124 +569,6 @@ export default function MemberDetail() {
         </Pressable>
       </Modal>
 
-      {/* ── Selector de actividad → pase ── */}
-      <Modal
-        visible={actPickerOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setActPickerOpen(false)}
-      >
-        <Pressable
-          className="flex-1 bg-black/40 justify-end"
-          onPress={() => setActPickerOpen(false)}
-        >
-          <Pressable
-            className="bg-ui-background-light dark:bg-ui-background-dark rounded-t-3xl max-h-[75%]"
-            style={{ paddingBottom: insets.bottom + 12 }}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View className="items-center pt-3 pb-1">
-              <View className="w-10 h-1 rounded-full bg-ui-input-border" />
-            </View>
-
-            <View className="flex-row items-center px-6 pt-2 pb-3 gap-2">
-              {pickedActivity && (
-                <Pressable
-                  onPress={() => setPickedActivity(null)}
-                  className="p-1 -ml-1"
-                >
-                  <ChevronLeft size={20} color={ui.text.muted} />
-                </Pressable>
-              )}
-              <Text className="text-lg font-jakarta tracking-tight text-ui-text-main dark:text-ui-text-mainDark">
-                {pickedActivity
-                  ? `Elegí el pase · ${pickedActivity.name}`
-                  : "Elegí la actividad"}
-              </Text>
-            </View>
-
-            {activitiesLoading ? (
-              <View className="py-12 items-center">
-                <ActivityIndicator color={brandPrimary[600]} />
-              </View>
-            ) : !pickedActivity ? (
-              // Paso 1: actividades asignables
-              assignableActivities.length === 0 ? (
-                <View className="py-12 px-10 items-center">
-                  <Text className="text-sm font-manrope text-ui-text-muted dark:text-ui-text-mutedDark text-center">
-                    No hay actividades con pases activos para asignar.
-                  </Text>
-                </View>
-              ) : (
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  {assignableActivities.map((a) => {
-                    const color = a.color ?? brandPrimary[600];
-                    const passCount = (a.activity_plans ?? []).filter(
-                      (p) => p.is_active
-                    ).length;
-                    return (
-                      <Pressable
-                        key={a.id}
-                        onPress={() => setPickedActivity(a)}
-                        className="mx-5 mb-2.5 flex-row items-center p-3.5 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-80"
-                      >
-                        <View
-                          className="w-10 h-10 rounded-xl items-center justify-center mr-3"
-                          style={{ backgroundColor: `${color}1A` }}
-                        >
-                          <Flame size={18} color={color} />
-                        </View>
-                        <View className="flex-1">
-                          <Text
-                            className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize"
-                            numberOfLines={1}
-                          >
-                            {a.name}
-                          </Text>
-                          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-                            {passCount} {passCount === 1 ? "pase" : "pases"}
-                          </Text>
-                        </View>
-                        <ChevronRight size={16} color={ui.text.muted} />
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              )
-            ) : (
-              // Paso 2: pases activos de la actividad elegida
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {(pickedActivity.activity_plans ?? [])
-                  .filter((p) => p.is_active)
-                  .map((pass) => (
-                    <Pressable
-                      key={pass.id}
-                      disabled={assign.isPending}
-                      onPress={() => assignPass(pickedActivity, pass)}
-                      className="mx-5 mb-2.5 flex-row items-center p-3.5 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-80"
-                    >
-                      <View className="w-10 h-10 rounded-xl items-center justify-center bg-brandPrimary-50 dark:bg-brandPrimary-950 mr-3">
-                        <Receipt size={18} color={brandPrimary[600]} />
-                      </View>
-                      <View className="flex-1">
-                        <Text
-                          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark"
-                          numberOfLines={1}
-                        >
-                          {pass.label}
-                        </Text>
-                        <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-                          {freqText(pass.frequency_per_week)} · {priceText(pass.price)}
-                        </Text>
-                      </View>
-                      <ChevronRight size={16} color={ui.text.muted} />
-                    </Pressable>
-                  ))}
-              </ScrollView>
-            )}
-          </Pressable>
-        </Pressable>
-      </Modal>
     </Screen>
   );
 }
