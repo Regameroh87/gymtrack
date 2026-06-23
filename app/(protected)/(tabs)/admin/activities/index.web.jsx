@@ -260,12 +260,21 @@ function ActivityCard({ activity, brandPrimary, onPress }) {
 
         {activity.description ? (
           <Text
-            className="text-[11px] font-manrope text-ui-text-muted leading-4 mb-3"
+            className="text-[11px] font-manrope text-ui-text-muted leading-4 mb-2"
             numberOfLines={2}
           >
             {activity.description}
           </Text>
         ) : null}
+
+        {activity.coach && (
+          <Text
+            className="text-[11px] font-manrope-semi text-ui-text-muted mb-3"
+            numberOfLines={1}
+          >
+            Coach: {[activity.coach.name, activity.coach.last_name].filter(Boolean).join(" ")}
+          </Text>
+        )}
 
         <View className="flex-row items-center justify-between">
           {(() => {

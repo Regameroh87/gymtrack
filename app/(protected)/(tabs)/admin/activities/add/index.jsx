@@ -20,6 +20,7 @@ export default function AddActivityScreen() {
       name: "",
       description: "",
       color: DEFAULT_ACTIVITY_COLOR,
+      coach_id: null,
       is_active: true,
     },
     onSubmit: async ({ value }) => {

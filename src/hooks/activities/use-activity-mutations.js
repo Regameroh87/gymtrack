@@ -18,6 +18,7 @@ const normalize = (value) => ({
   name: (value.name || "").trim(),
   description: (value.description || "").trim() || null,
   color: value.color || null,
+  coach_id: value.coach_id || null,
   is_active: value.is_active ?? true,
 });
 

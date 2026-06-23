@@ -6,15 +6,23 @@ import * as Haptics from "expo-haptics";
 // Components
 import StyledTextInput from "./StyledTextInput";
 
+// Hooks
+import { useGymStaff } from "../../hooks/users/use-gym-staff";
+
 // Constantes / Icons / Theme
 import { ACTIVITY_COLORS } from "../../constants/activity-options";
 import { Flame, ListDetails, CheckCircle } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
 
+const fullName = (p) =>
+  [p?.name, p?.last_name].filter(Boolean).join(" ") || "Sin nombre";
+
 // Form de alta/edición de actividad. Recibe un form de @tanstack/react-form con
-// los campos { name, description, price, color, is_active }. Sin imágenes ni
+// los campos { name, description, color, is_active, coach_id }. Sin imágenes ni
 // sync local: el submit lo resuelve el caller con las mutaciones online.
 export default function FormActivity({ form, submitLabel = "GUARDAR ACTIVIDAD" }) {
+  const { data: staff = [] } = useGymStaff();
+
   return (
     <View className="gap-5">
       {/* Nombre */}
@@ -105,6 +113,53 @@ export default function FormActivity({ form, submitLabel = "GUARDAR ACTIVIDAD" }
                 );
               })}
             </View>
+          </View>
+        )}
+      </form.Field>
+
+      {/* Coach (opcional) */}
+      <form.Field name="coach_id">
+        {(field) => (
+          <View className="gap-2">
+            <Text className="text-xs font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
+              Coach (opcional)
+            </Text>
+            {staff.length === 0 ? (
+              <Text className="text-[12px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+                No hay coaches en este gimnasio todavía.
+              </Text>
+            ) : (
+              <View className="flex-row flex-wrap gap-2">
+                {staff.map((s) => {
+                  const selected = field.state.value === s.id;
+                  return (
+                    <Pressable
+                      key={s.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        // Tocar el seleccionado lo des-asigna (opcional).
+                        field.handleChange(selected ? null : s.id);
+                      }}
+                      className={`px-3 py-1.5 rounded-full border ${
+                        selected
+                          ? "bg-brandPrimary-600 border-brandPrimary-600"
+                          : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-input-border"
+                      }`}
+                    >
+                      <Text
+                        className={`text-[12px] font-manrope-semi ${
+                          selected
+                            ? "text-white"
+                            : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                        }`}
+                      >
+                        {fullName(s)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </View>
         )}
       </form.Field>

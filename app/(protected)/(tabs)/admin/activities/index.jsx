@@ -74,6 +74,11 @@ export default function ActivitiesList() {
         <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
           {planSummary(item.activity_plans)}
         </Text>
+        {item.coach && (
+          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+            Coach: {[item.coach.name, item.coach.last_name].filter(Boolean).join(" ")}
+          </Text>
+        )}
       </View>
 
       {/* Action */}

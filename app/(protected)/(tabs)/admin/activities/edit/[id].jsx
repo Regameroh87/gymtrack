@@ -53,6 +53,7 @@ function EditActivityForm({ item }) {
       name: item.name ?? "",
       description: item.description ?? "",
       color: item.color ?? null,
+      coach_id: item.coach_id ?? null,
       is_active: item.is_active ?? true,
     },
     onSubmit: async ({ value }) => {

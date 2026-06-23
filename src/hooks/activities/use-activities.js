@@ -21,7 +21,9 @@ export const useActivities = () => {
       // en cliente.
       const { data, error } = await supabase
         .from("activities")
-        .select("*, activity_plans(*)")
+        .select(
+          "*, activity_plans(*), coach:profiles!activities_coach_id_fkey(id, name, last_name)"
+        )
         .eq("gym_id", gymId)
         .order("created_at", { ascending: false });
       if (error) throw error;
