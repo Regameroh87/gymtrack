@@ -38,6 +38,8 @@ export const MODULE_ROLES = {
   sessions: STAFF_ROLES,
   plans: STAFF_ROLES,
   attendance: STAFF_ROLES,
+  // Define la oferta comercial y los precios ⇒ admin/owner, no coach.
+  activities: ADMIN_ROLES,
   billing: ADMIN_ROLES,
   reports: ADMIN_ROLES,
   settings: ADMIN_ROLES,

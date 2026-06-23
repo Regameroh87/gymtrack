@@ -25,6 +25,7 @@ import {
   Receipt,
   Settings,
   ChartBar,
+  Flame,
 } from "../../../../assets/icons";
 
 const buildModules = ({ brandSecondary, gradient }) => [
@@ -75,6 +76,15 @@ const buildModules = ({ brandSecondary, gradient }) => [
   },
   {
     n: "06",
+    icon: Flame,
+    kicker: "OFERTA",
+    title: "Actividades",
+    subtitle: "Disciplinas y cuotas",
+    accent: ["#2dd4bf", "#14b8a6"],
+    path: "activities",
+  },
+  {
+    n: "07",
     icon: Receipt,
     kicker: "FINANZAS",
     title: "Contabilidad",
@@ -83,7 +93,7 @@ const buildModules = ({ brandSecondary, gradient }) => [
     path: "billing",
   },
   {
-    n: "07",
+    n: "08",
     icon: ChartBar,
     kicker: "ANÁLISIS",
     title: "Reportes",
@@ -92,7 +102,7 @@ const buildModules = ({ brandSecondary, gradient }) => [
     path: "reports",
   },
   {
-    n: "08",
+    n: "09",
     icon: Settings,
     kicker: "SISTEMA",
     title: "Ajustes",

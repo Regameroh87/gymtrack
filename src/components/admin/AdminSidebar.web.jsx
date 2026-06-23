@@ -20,6 +20,7 @@ import {
   Logout,
   QrCode,
   ArrowLeft,
+  Flame,
   X,
 } from "../../../assets/icons";
 
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
     color: "#7c3aed",
   },
   { icon: ClipboardList, label: "Planes", path: "plans", color: "#0284c7" },
+  { icon: Flame, label: "Actividades", path: "activities", color: "#14b8a6" },
   { icon: Receipt, label: "Contabilidad", path: "billing", color: "#d97706" },
   { icon: QrCode, label: "Asistencias", path: "attendance", color: "#10b981" },
   { icon: ChartBar, label: "Reportes", path: "reports", comingSoon: true },
