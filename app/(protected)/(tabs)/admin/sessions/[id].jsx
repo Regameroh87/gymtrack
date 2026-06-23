@@ -6,6 +6,7 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import { useRef, useState } from "react";
 
@@ -89,6 +90,14 @@ export default function SessionDetail() {
       plansUsing > 0
         ? `Esta sesión está usada en ${plansUsing} ${plansUsing === 1 ? "plan" : "planes"}. Si la eliminás, esos planes perderán los ejercicios programados de los días que la usaban. ¿Continuar?`
         : `¿Seguro que querés eliminar "${data?.name}"? Esta acción no se puede deshacer.`;
+
+    // RN Web no soporta Alert.alert con botones: usar el confirm del browser.
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) {
+        confirmAndDelete();
+      }
+      return;
+    }
 
     Alert.alert(title, message, [
       { text: "Cancelar", style: "cancel" },
