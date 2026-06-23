@@ -1,4 +1,4 @@
-﻿import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -157,6 +157,9 @@ export default function AdminDashboardWeb() {
   const { brandPrimary, brandSecondary, gymName } = useGymTheme();
   const STATS = buildStats(brandPrimary);
   const QUICK_ACTIONS = buildQuickActions(brandPrimary, brandSecondary);
+  const { width } = useWindowDimensions();
+
+  const isMobile = width < 768;
 
   // Solo los módulos permitidos para el rol (coach no ve Contabilidad).
   const modules = buildModules(brandPrimary, brandSecondary).filter((mod) =>
@@ -175,11 +178,11 @@ export default function AdminDashboardWeb() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerStyle={{ padding: 36, paddingBottom: 56 }}
+      contentContainerStyle={{ padding: isMobile ? 16 : 36, paddingBottom: 56 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Top bar */}
-      <View className="flex-row items-end justify-between mb-7">
+      <View className={`flex-row justify-between mb-7 ${isMobile ? "flex-col items-stretch gap-3" : "items-end"}`}>
         <View>
           <Text className="text-xs font-manrope text-ui-text-muted capitalize mb-0.5">
             {dateStr}
@@ -189,7 +192,7 @@ export default function AdminDashboardWeb() {
           </Text>
         </View>
 
-        <View className="flex-row items-center gap-1.5 bg-white rounded-xl px-3.5 py-2 border border-ui-input-border">
+        <View className="self-start flex-row items-center gap-1.5 bg-white rounded-xl px-3.5 py-2 border border-ui-input-border">
           <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
           <Text className="text-xs font-manrope-semi text-ui-text-main">
             Admin activo
@@ -202,13 +205,13 @@ export default function AdminDashboardWeb() {
         colors={[brandPrimary[800], brandPrimary[600], brandPrimary[400]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{ borderRadius: 22, padding: 30, marginBottom: 24, overflow: "hidden" }}
+        style={{ borderRadius: 22, padding: isMobile ? 20 : 30, marginBottom: 24, overflow: "hidden" }}
       >
         <View className="absolute -right-10 -top-10 w-[180px] h-[180px] rounded-full bg-white/5" />
         <View className="absolute right-[100px] -bottom-[50px] w-[140px] h-[140px] rounded-full bg-white/5" />
         <View className="absolute right-2.5 top-2.5 w-20 h-20 rounded-full bg-white/[0.05]" />
 
-        <View className="flex-row items-center justify-between">
+        <View className={`flex-row items-center justify-between ${isMobile ? "flex-col gap-5 items-stretch" : ""}`}>
           <View className="flex-1">
             <View className="flex-row items-center gap-2 mb-2">
               <View className="w-1.5 h-1.5 rounded-full bg-brandSecondary-400" />
@@ -240,9 +243,9 @@ export default function AdminDashboardWeb() {
             </View>
           </View>
 
-          <View className="ml-8 bg-white/10 rounded-[20px] p-6 items-center justify-center border border-white/10">
+          <View className={`bg-white/10 rounded-[20px] items-center justify-center border border-white/10 ${isMobile ? "self-start mt-4 p-4 flex-row gap-3" : "ml-8 p-6"}`}>
             <Barbell size={36} color="rgba(255,255,255,0.9)" />
-            <Text className="text-[9px] font-manrope-semi text-white/55 mt-2 tracking-widest uppercase">
+            <Text className={`font-manrope-semi text-white/55 tracking-widest uppercase ${isMobile ? "text-[11px]" : "text-[9px] mt-2"}`}>
               {gymName ?? "GymTrack"}
             </Text>
           </View>
@@ -250,7 +253,7 @@ export default function AdminDashboardWeb() {
       </LinearGradient>
 
       {/* Stats Row */}
-      <View className="flex-row gap-3.5 mb-7">
+      <View className={isMobile ? "flex-col gap-3.5 mb-7" : "flex-row gap-3.5 mb-7"}>
         {STATS.map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -277,7 +280,7 @@ export default function AdminDashboardWeb() {
       </View>
 
       {/* Bottom Section */}
-      <View className="flex-row gap-5 items-start">
+      <View className={isMobile ? "flex-col gap-5 items-stretch" : "flex-row gap-5 items-start"}>
         <View className="flex-[3]">
           <Text className="mb-3 text-[10px] font-manrope-semi tracking-[1.5px] uppercase text-ui-text-muted">
             Módulos del sistema

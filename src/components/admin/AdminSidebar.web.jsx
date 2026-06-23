@@ -20,6 +20,7 @@ import {
   Logout,
   QrCode,
   ArrowLeft,
+  X,
 } from "../../../assets/icons";
 
 // Nota: el campo `color` no se usa en el render (los íconos usan colores fijos
@@ -56,7 +57,7 @@ function isActive(currentPath, itemPath) {
   return sub === itemPath;
 }
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isMobile, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
@@ -72,11 +73,13 @@ export default function AdminSidebar() {
   const nav = (path) => {
     const target = path ? `/admin/${path}` : "/admin";
     router.push(target);
+    if (onClose) onClose();
   };
 
   const handleLogout = async () => {
     if (typeof window !== "undefined" && window.confirm("¿Cerrar sesión?")) {
       await supabase.auth.signOut();
+      if (onClose) onClose();
       router.replace("/(auth)/login");
     }
   };
@@ -84,6 +87,7 @@ export default function AdminSidebar() {
   // Super admin: vuelve a su home base de plataforma sin desloguear.
   const handleBackToPlatform = () => {
     exitGym();
+    if (onClose) onClose();
     router.replace("/platform");
   };
 
@@ -97,35 +101,47 @@ export default function AdminSidebar() {
         colors={[brandPrimary[800], "#0C0B14"]}
         style={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: 24 }}
       >
-        <View className="flex-row items-center gap-2.5">
-          {logoUrl ? (
-            <Image
-              source={{ uri: logoUrl }}
-              style={{ width: 38, height: 38, borderRadius: 9 }}
-              resizeMode="cover"
-            />
-          ) : (
-            <LinearGradient
-              colors={[brandPrimary[700], brandPrimary[600]]}
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 11,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Barbell size={18} color="#fff" />
-            </LinearGradient>
-          )}
-          <View>
-            <Text className="text-white text-base font-jakarta-bold tracking-tight">
-              {gymName ?? "GymTrack"}
-            </Text>
-            <Text className="text-white/40 text-[10px] font-manrope tracking-wide">
-              Panel de Control
-            </Text>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2.5">
+            {logoUrl ? (
+              <Image
+                source={{ uri: logoUrl }}
+                style={{ width: 38, height: 38, borderRadius: 9 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <LinearGradient
+                colors={[brandPrimary[700], brandPrimary[600]]}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 11,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Barbell size={18} color="#fff" />
+              </LinearGradient>
+            )}
+            <View>
+              <Text className="text-white text-base font-jakarta-bold tracking-tight">
+                {gymName ?? "GymTrack"}
+              </Text>
+              <Text className="text-white/40 text-[10px] font-manrope tracking-wide">
+                Panel de Control
+              </Text>
+            </View>
           </View>
+
+          {isMobile && (
+            <Pressable
+              onPress={onClose}
+              className="w-8 h-8 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10"
+              style={{ cursor: "pointer" }}
+            >
+              <X size={16} color="rgba(255,255,255,0.7)" />
+            </Pressable>
+          )}
         </View>
       </LinearGradient>
 

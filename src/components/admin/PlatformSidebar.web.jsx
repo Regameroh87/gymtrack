@@ -19,6 +19,7 @@ import {
   Home,
   Logout,
   Barbell,
+  X,
 } from "../../../assets/icons";
 
 // Sidebar del SUPER ADMIN (modo plataforma). A diferencia del panel de un gym,
@@ -42,7 +43,7 @@ function isActive(currentPath, itemPath) {
   return sub === itemPath;
 }
 
-export default function PlatformSidebar() {
+export default function PlatformSidebar({ isMobile, onClose }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
@@ -50,11 +51,13 @@ export default function PlatformSidebar() {
   const nav = (path) => {
     const target = path ? `/platform/${path}` : "/platform";
     router.push(target);
+    if (onClose) onClose();
   };
 
   const handleLogout = async () => {
     if (typeof window !== "undefined" && window.confirm("¿Cerrar sesión?")) {
       await supabase.auth.signOut();
+      if (onClose) onClose();
       router.replace("/(auth)/login");
     }
   };
@@ -69,27 +72,39 @@ export default function PlatformSidebar() {
         colors={[brandPrimary[800], "#0C0B14"]}
         style={{ paddingHorizontal: 20, paddingTop: 28, paddingBottom: 24 }}
       >
-        <View className="flex-row items-center gap-2.5">
-          <LinearGradient
-            colors={[brandPrimary[700], brandPrimary[600]]}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 11,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <ShieldHalf size={18} color="#fff" />
-          </LinearGradient>
-          <View>
-            <Text className="text-white text-base font-jakarta-bold tracking-tight">
-              GymTrack
-            </Text>
-            <Text className="text-white/40 text-[10px] font-manrope tracking-wide">
-              Plataforma
-            </Text>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-2.5">
+            <LinearGradient
+              colors={[brandPrimary[700], brandPrimary[600]]}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 11,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ShieldHalf size={18} color="#fff" />
+            </LinearGradient>
+            <View>
+              <Text className="text-white text-base font-jakarta-bold tracking-tight">
+                GymTrack
+              </Text>
+              <Text className="text-white/40 text-[10px] font-manrope tracking-wide">
+                Plataforma
+              </Text>
+            </View>
           </View>
+
+          {isMobile && (
+            <Pressable
+              onPress={onClose}
+              className="w-8 h-8 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10"
+              style={{ cursor: "pointer" }}
+            >
+              <X size={16} color="rgba(255,255,255,0.7)" />
+            </Pressable>
+          )}
         </View>
       </LinearGradient>
 

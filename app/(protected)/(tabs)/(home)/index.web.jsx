@@ -1,5 +1,5 @@
-﻿// React Native
-import { Pressable, ScrollView, Text, View } from "react-native";
+// React Native
+import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useMemo } from "react";
 
 // Librerías
@@ -155,6 +155,9 @@ function MemberHomeWeb() {
   const router = useRouter();
   const { user } = useAuth();
   const { data: logs = [], isLoading: logsLoading } = useSessionLogs();
+  const { width } = useWindowDimensions();
+
+  const isMobile = width < 768;
 
   const now = useMemo(() => new Date(), []);
   const dateLine = formatDateLine(now);
@@ -217,7 +220,7 @@ function MemberHomeWeb() {
         contentContainerStyle={{
           alignItems: "center",
           paddingVertical: 36,
-          paddingHorizontal: 24,
+          paddingHorizontal: isMobile ? 16 : 24,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -271,9 +274,10 @@ function MemberHomeWeb() {
 
             <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: isMobile ? "flex-start" : "center",
                 justifyContent: "space-between",
+                gap: isMobile ? 20 : 0,
               }}
             >
               <View style={{ flex: 1 }}>
@@ -363,7 +367,7 @@ function MemberHomeWeb() {
               {/* Icono decorativo */}
               <View
                 style={{
-                  marginLeft: 32,
+                  marginLeft: isMobile ? 0 : 32,
                   width: 88,
                   height: 88,
                   borderRadius: 22,
@@ -372,6 +376,7 @@ function MemberHomeWeb() {
                   borderColor: "rgba(255,255,255,0.12)",
                   alignItems: "center",
                   justifyContent: "center",
+                  alignSelf: isMobile ? "flex-start" : "center",
                 }}
               >
                 <Barbell size={38} color="rgba(255,255,255,0.85)" />
@@ -392,7 +397,7 @@ function MemberHomeWeb() {
           </LinearGradient>
 
           {/* ── FILA DE STATS ────────────────────────────────────────── */}
-          <View style={{ flexDirection: "row", gap: 14, marginBottom: 22 }}>
+          <View style={{ flexDirection: isMobile ? "column" : "row", gap: 14, marginBottom: 22 }}>
             {STATS.map((stat, i) => {
               const Icon = stat.Icon;
               return (
@@ -474,10 +479,10 @@ function MemberHomeWeb() {
 
           {/* ── LAYOUT 2 COLUMNAS ────────────────────────────────────── */}
           <View
-            style={{ flexDirection: "row", gap: 20, alignItems: "flex-start" }}
+            style={{ flexDirection: isMobile ? "column" : "row", gap: 20, alignItems: "flex-start" }}
           >
             {/* Hero — Últimas sesiones */}
-            <View style={{ flex: 1.6 }}>
+            <View style={{ flex: isMobile ? undefined : 1.6, width: isMobile ? "100%" : undefined, marginBottom: isMobile ? 12 : 0 }}>
               <View
                 style={{
                   flexDirection: "row",
@@ -937,7 +942,7 @@ function MemberHomeWeb() {
             </View>
 
             {/* Acceso rápido */}
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: isMobile ? undefined : 1, width: isMobile ? "100%" : undefined }}>
               <Text
                 style={{
                   fontSize: 10,

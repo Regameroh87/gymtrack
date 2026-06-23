@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
@@ -57,6 +58,9 @@ export default function UsersListWeb() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
+  const { width } = useWindowDimensions();
+
+  const isMobile = width < 768;
 
   // Multi-gym: lista por memberships del gym activo (rol por gym incluido).
   const { data: users, isLoading } = useGymMembers();
@@ -104,11 +108,11 @@ export default function UsersListWeb() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerStyle={{ padding: 36, paddingBottom: 56 }}
+      contentContainerStyle={{ padding: isMobile ? 16 : 36, paddingBottom: 56 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View className="flex-row items-end justify-between mb-6">
+      <View className={`flex-row justify-between mb-6 ${isMobile ? "flex-col items-stretch gap-4" : "items-end"}`}>
         <View>
           <View className="flex-row items-center gap-1.5 mb-1.5">
             <Text className="text-[11px] font-manrope-semi text-ui-text-muted tracking-[1.4px] uppercase">
@@ -129,7 +133,7 @@ export default function UsersListWeb() {
 
         <Pressable
           onPress={() => router.push("/admin/users/register")}
-          className="flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30"
+          className="flex-row items-center justify-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30 self-start md:self-auto"
           style={{ cursor: "pointer" }}
         >
           <UserPlus size={15} color="#fff" />
@@ -140,7 +144,7 @@ export default function UsersListWeb() {
       </View>
 
       {/* Stat cards */}
-      <View className="flex-row gap-3.5 mb-6">
+      <View className={isMobile ? "flex-col gap-3.5 mb-6" : "flex-row gap-3.5 mb-6"}>
         <StatCard
           icon={Users}
           label="Total"
@@ -165,7 +169,7 @@ export default function UsersListWeb() {
       </View>
 
       {/* Toolbar */}
-      <View className="flex-row items-center gap-3 mb-4">
+      <View className={isMobile ? "flex-col items-stretch gap-3 mb-4" : "flex-row items-center gap-3 mb-4"}>
         {/* Search */}
         <View className="flex-1 flex-row items-center gap-2.5 bg-white rounded-xl px-3.5 py-2.5 border border-ui-input-border">
           <Search size={15} color={ui.text.muted} />
@@ -183,7 +187,7 @@ export default function UsersListWeb() {
         </View>
 
         {/* Filters */}
-        <View className="flex-row bg-white rounded-xl p-1 border border-ui-input-border">
+        <View className="flex-row bg-white rounded-xl p-1 border border-ui-input-border justify-between">
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
@@ -193,7 +197,7 @@ export default function UsersListWeb() {
                   setFilter(f.key);
                   setPage(0);
                 }}
-                className={`px-3.5 py-1.5 rounded-[9px] ${
+                className={`flex-1 md:flex-initial px-3.5 py-1.5 rounded-[9px] items-center justify-center ${
                   active ? "bg-brandPrimary-600" : "hover:bg-brandPrimary-50/60"
                 }`}
                 style={{ cursor: "pointer" }}
@@ -218,9 +222,9 @@ export default function UsersListWeb() {
         {/* Head */}
         <View className="flex-row px-5 py-3.5 bg-ui-background-light border-b border-ui-input-border">
           <HeaderCell label="Usuario" flex={3} />
-          <HeaderCell label="Email" flex={3} />
+          <HeaderCell label="Email" flex={3} className="hidden md:flex" />
           <HeaderCell label="Rol" flex={1.2} />
-          <HeaderCell label="Fecha alta" flex={1.4} />
+          <HeaderCell label="Fecha alta" flex={1.4} className="hidden md:flex" />
           <HeaderCell label="" flex={0.5} align="right" />
         </View>
 
@@ -310,11 +314,11 @@ function StatCard({ icon: Icon, label, value, iconColor, bubble }) {
   );
 }
 
-function HeaderCell({ label, flex, align }) {
+function HeaderCell({ label, flex, align, className }) {
   return (
     <View
       style={{ flex }}
-      className={align === "right" ? "items-end" : "items-start"}
+      className={`${align === "right" ? "items-end" : "items-start"} ${className || ""}`}
     >
       <Text className="text-[10px] font-manrope-bold text-ui-text-muted tracking-[1.2px] uppercase">
         {label}
@@ -365,7 +369,7 @@ function UserRow({ user, isLast, onPress }) {
       </View>
 
       {/* Email */}
-      <View className="flex-row items-center gap-1.5" style={{ flex: 3 }}>
+      <View className="hidden md:flex flex-row items-center gap-1.5" style={{ flex: 3 }}>
         <Mail size={12} color={ui.text.muted} />
         <Text
           className="text-xs font-manrope text-ui-text-muted"
@@ -403,7 +407,7 @@ function UserRow({ user, isLast, onPress }) {
       </View>
 
       {/* Fecha */}
-      <View style={{ flex: 1.4 }}>
+      <View className="hidden md:flex" style={{ flex: 1.4 }}>
         <Text className="text-xs font-manrope text-ui-text-muted">
           {formatDate(user.created_at)}
         </Text>

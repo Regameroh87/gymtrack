@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -48,6 +49,14 @@ export default function ExercisesListWeb() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [page, setPage] = useState(0);
+  const { width } = useWindowDimensions();
+
+  const isMobile = width < 768;
+  const cardWidth = isMobile
+    ? "100%"
+    : width < 1024
+      ? "calc(50% - 7px)"
+      : "calc(33.333% - 9.34px)";
 
   // Multi-gym: la RLS devuelve todos los gyms del usuario; el filtro por
   // gym activo es del cliente.
@@ -111,11 +120,11 @@ export default function ExercisesListWeb() {
   return (
     <ScrollView
       className="flex-1"
-      contentContainerStyle={{ padding: 36, paddingBottom: 56 }}
+      contentContainerStyle={{ padding: isMobile ? 16 : 36, paddingBottom: 56 }}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View className="flex-row items-end justify-between mb-6">
+      <View className={`flex-row justify-between mb-6 ${isMobile ? "flex-col items-stretch gap-4" : "items-end"}`}>
         <View>
           <View className="flex-row items-center gap-1.5 mb-1.5">
             <Text className="text-[11px] font-manrope-semi text-ui-text-muted tracking-[1.4px] uppercase">
@@ -136,7 +145,7 @@ export default function ExercisesListWeb() {
 
         <Pressable
           onPress={() => router.push("/admin/exercises/builder")}
-          className="flex-row items-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30"
+          className="flex-row items-center justify-center gap-2 px-4 py-2.5 rounded-[11px] bg-brandPrimary-600 hover:bg-brandPrimary-700 shadow-md shadow-brandPrimary-600/30 self-start md:self-auto"
           style={{ cursor: "pointer" }}
         >
           <Plus size={15} color="#fff" />
@@ -147,7 +156,7 @@ export default function ExercisesListWeb() {
       </View>
 
       {/* Stat cards */}
-      <View className="flex-row gap-3.5 mb-6">
+      <View className={isMobile ? "flex-col gap-3.5 mb-6" : "flex-row gap-3.5 mb-6"}>
         <StatCard
           icon={Barbell}
           label="Total"
@@ -172,7 +181,7 @@ export default function ExercisesListWeb() {
       </View>
 
       {/* Toolbar */}
-      <View className="flex-row items-center gap-3 mb-5">
+      <View className={isMobile ? "flex-col items-stretch gap-3 mb-5" : "flex-row items-center gap-3 mb-5"}>
         {/* Search */}
         <View className="flex-1 flex-row items-center gap-2.5 bg-white rounded-xl px-3.5 py-2.5 border border-ui-input-border">
           <Search size={15} color={ui.text.muted} />
@@ -190,7 +199,7 @@ export default function ExercisesListWeb() {
         </View>
 
         {/* Category filter */}
-        <View className="flex-row bg-white rounded-xl p-1 border border-ui-input-border">
+        <View className="flex-row flex-wrap gap-1 bg-white rounded-xl p-1 border border-ui-input-border justify-start">
           <FilterChip
             label="Todas"
             active={category === "all"}
@@ -243,6 +252,7 @@ export default function ExercisesListWeb() {
             <ExerciseCard
               key={ex.id}
               exercise={ex}
+              width={cardWidth}
               onPress={() => router.push(`/admin/exercises/${ex.id}`)}
             />
           ))}
@@ -324,7 +334,7 @@ function FilterChip({ label, active, onPress }) {
   );
 }
 
-function ExerciseCard({ exercise, onPress }) {
+function ExerciseCard({ exercise, onPress, width }) {
   const { brandSecondary } = useGymTheme();
   const imageUrl =
     getCloudinaryUrl(exercise.image_uri) ||
@@ -336,7 +346,7 @@ function ExerciseCard({ exercise, onPress }) {
       className="bg-white rounded-[16px] border border-ui-input-border overflow-hidden hover:border-brandPrimary-600/30 active:scale-[0.99]"
       style={{
         cursor: "pointer",
-        width: "calc(33.333% - 9.34px)",
+        width: width || "calc(33.333% - 9.34px)",
       }}
     >
       {/* Image */}
