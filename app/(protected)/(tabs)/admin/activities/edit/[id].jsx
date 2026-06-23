@@ -77,36 +77,36 @@ function EditActivityForm({ item }) {
     },
   });
 
+  const doDelete = async () => {
+    try {
+      await remove.mutateAsync(item.id);
+      Toast.show({
+        type: "success",
+        text1: "Actividad eliminada",
+        position: "bottom",
+      });
+      router.back();
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "No se pudo eliminar",
+        text2: error.message ?? "Intentá de nuevo.",
+        position: "bottom",
+      });
+    }
+  };
+
   const confirmDelete = () => {
-    Alert.alert(
-      "Eliminar actividad",
-      `¿Seguro que querés eliminar "${item.name}"?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await remove.mutateAsync(item.id);
-              Toast.show({
-                type: "success",
-                text1: "Actividad eliminada",
-                position: "bottom",
-              });
-              router.back();
-            } catch (error) {
-              Toast.show({
-                type: "error",
-                text1: "No se pudo eliminar",
-                text2: error.message ?? "Intentá de nuevo.",
-                position: "bottom",
-              });
-            }
-          },
-        },
-      ]
-    );
+    const message = `¿Seguro que querés eliminar "${item.name}"? Se quitarán también sus pases y las inscripciones de socios a esta actividad.`;
+    // RN Web no soporta Alert.alert con botones: usar el confirm del browser.
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined" && window.confirm(message)) doDelete();
+      return;
+    }
+    Alert.alert("Eliminar actividad", message, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Eliminar", style: "destructive", onPress: doDelete },
+    ]);
   };
 
   return (
