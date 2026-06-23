@@ -19,8 +19,17 @@ import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useActivities } from "../../../../../src/hooks/activities/use-activities";
 
-const formatPrice = (price) =>
-  price == null ? "Sin precio" : `$${Number(price).toLocaleString("es-AR")}/mes`;
+// Resumen de los pases de una actividad para la tarjeta: "N pases · desde $X/mes".
+const planSummary = (plans = []) => {
+  if (!plans.length) return "Sin pases";
+  const prices = plans
+    .filter((p) => p.is_active && p.price != null)
+    .map((p) => Number(p.price));
+  const count = `${plans.length} ${plans.length === 1 ? "pase" : "pases"}`;
+  if (!prices.length) return count;
+  const min = Math.min(...prices);
+  return `${count} · desde $${min.toLocaleString("es-AR")}/mes`;
+};
 
 export default function ActivitiesList() {
   const router = useRouter();
@@ -63,7 +72,7 @@ export default function ActivitiesList() {
           )}
         </View>
         <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-          {formatPrice(item.price)}
+          {planSummary(item.activity_plans)}
         </Text>
       </View>
 
