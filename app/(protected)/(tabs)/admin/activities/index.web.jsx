@@ -17,8 +17,13 @@ import { Flame, Search, ChevronRight, Plus, Receipt, CheckCircle } from "../../.
 
 const PAGE_SIZE = 18;
 
-const formatPrice = (price) =>
-  price == null ? "Sin precio" : `$${Number(price).toLocaleString("es-AR")}`;
+// Precio mínimo entre los pases activos con precio (para "desde $X").
+const minActivePrice = (plans = []) => {
+  const prices = plans
+    .filter((p) => p.is_active && p.price != null)
+    .map((p) => Number(p.price));
+  return prices.length ? Math.min(...prices) : null;
+};
 
 export default function ActivitiesListWeb() {
   const router = useRouter();
@@ -29,10 +34,14 @@ export default function ActivitiesListWeb() {
   const { data: activities, isLoading } = useActivities();
 
   const stats = useMemo(() => {
-    if (!activities) return { total: 0, active: 0, revenue: 0 };
+    if (!activities) return { total: 0, active: 0, activePlans: 0 };
     const active = activities.filter((a) => a.is_active);
-    const revenue = active.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-    return { total: activities.length, active: active.length, revenue };
+    const activePlans = activities.reduce(
+      (sum, a) =>
+        sum + (a.activity_plans ?? []).filter((p) => p.is_active).length,
+      0
+    );
+    return { total: activities.length, active: active.length, activePlans };
   }, [activities]);
 
   const filtered = useMemo(() => {
@@ -105,8 +114,8 @@ export default function ActivitiesListWeb() {
         />
         <StatCard
           icon={Receipt}
-          label="Recaudación potencial"
-          value={`$${stats.revenue.toLocaleString("es-AR")}`}
+          label="Pases activos"
+          value={stats.activePlans}
           iconColor={brandPrimary[600]}
           bubble="bg-brandPrimary-50"
         />
@@ -259,15 +268,33 @@ function ActivityCard({ activity, brandPrimary, onPress }) {
         ) : null}
 
         <View className="flex-row items-center justify-between">
-          <Text className="text-[15px] font-jakarta-bold text-ui-text-main">
-            {formatPrice(activity.price)}
-            {activity.price != null && (
-              <Text className="text-[11px] font-manrope text-ui-text-muted">
-                {" "}
-                /mes
-              </Text>
-            )}
-          </Text>
+          {(() => {
+            const plans = activity.activity_plans ?? [];
+            const min = minActivePrice(plans);
+            if (!plans.length) {
+              return (
+                <Text className="text-[12px] font-manrope-semi text-ui-text-muted">
+                  Sin pases
+                </Text>
+              );
+            }
+            return (
+              <View>
+                <Text className="text-[15px] font-jakarta-bold text-ui-text-main">
+                  {min != null ? `desde $${min.toLocaleString("es-AR")}` : "—"}
+                  {min != null && (
+                    <Text className="text-[11px] font-manrope text-ui-text-muted">
+                      {" "}
+                      /mes
+                    </Text>
+                  )}
+                </Text>
+                <Text className="text-[10px] font-manrope text-ui-text-muted mt-0.5">
+                  {plans.length} {plans.length === 1 ? "pase" : "pases"}
+                </Text>
+              </View>
+            );
+          })()}
 
           <View
             className={`px-2 py-0.5 rounded-md ${
