@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 import { supabase } from "../../../../../../src/database/supabase";
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 import FormActivity from "../../../../../../src/components/forms/FormActivity";
+import ActivityPlansManager from "../../../../../../src/components/admin/ActivityPlansManager";
 import { useActivityMutations } from "../../../../../../src/hooks/activities/use-activity-mutations";
 import { Trash } from "../../../../../../assets/icons";
 
@@ -51,7 +52,6 @@ function EditActivityForm({ item }) {
     defaultValues: {
       name: item.name ?? "",
       description: item.description ?? "",
-      price: item.price ?? "",
       color: item.color ?? null,
       is_active: item.is_active ?? true,
     },
@@ -130,9 +130,13 @@ function EditActivityForm({ item }) {
       <View className="px-5 pt-4">
         <FormActivity form={form} submitLabel="GUARDAR CAMBIOS" />
 
+        {/* Pases (frecuencia + precio) */}
+        <View className="h-px bg-ui-input-border my-6" />
+        <ActivityPlansManager activityId={item.id} />
+
         <Pressable
           onPress={confirmDelete}
-          className="flex-row justify-center items-center gap-2 rounded-2xl py-4 mt-3 bg-red-500/10 border border-red-500/20 active:scale-95"
+          className="flex-row justify-center items-center gap-2 rounded-2xl py-4 mt-8 bg-red-500/10 border border-red-500/20 active:scale-95"
         >
           <Trash size={15} color="#ef4444" />
           <Text className="text-red-500 text-sm font-jakarta-bold tracking-wider">

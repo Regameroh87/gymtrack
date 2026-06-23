@@ -1,4 +1,5 @@
 import { View, Text, Platform } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useForm } from "@tanstack/react-form";
@@ -10,6 +11,7 @@ import { useActivityMutations } from "../../../../../../src/hooks/activities/use
 import { DEFAULT_ACTIVITY_COLOR } from "../../../../../../src/constants/activity-options";
 
 export default function AddActivityScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { create } = useActivityMutations();
 
@@ -17,7 +19,6 @@ export default function AddActivityScreen() {
     defaultValues: {
       name: "",
       description: "",
-      price: "",
       color: DEFAULT_ACTIVITY_COLOR,
       is_active: true,
     },
@@ -27,11 +28,12 @@ export default function AddActivityScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Toast.show({
           type: "success",
-          text1: "¡Listo!",
-          text2: `${created.name} se agregó exitosamente.`,
+          text1: "Actividad creada",
+          text2: `Agregá los pases (frecuencia y precio) de ${created.name}.`,
           position: "bottom",
         });
-        form.reset();
+        // Continúa en la edición para cargar los pases enseguida.
+        router.replace(`/admin/activities/edit/${created.id}`);
       } catch (error) {
         Toast.show({
           type: "error",

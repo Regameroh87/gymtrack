@@ -12,13 +12,12 @@ import { useActiveGym } from "../../contexts/active-gym-context";
 
 const DUPLICATE_NAME_MSG = "Ya existe una actividad con ese nombre en este gimnasio.";
 
-// Normaliza el payload del form: trimea el nombre, vacíos → null, precio a número.
+// Normaliza el payload del form: trimea el nombre, vacíos → null. El precio ya no
+// vive en la actividad sino en cada pase (activity_plans).
 const normalize = (value) => ({
   name: (value.name || "").trim(),
   description: (value.description || "").trim() || null,
   color: value.color || null,
-  price:
-    value.price === "" || value.price == null ? null : Number(value.price),
   is_active: value.is_active ?? true,
 });
 

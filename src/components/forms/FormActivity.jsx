@@ -8,7 +8,7 @@ import StyledTextInput from "./StyledTextInput";
 
 // Constantes / Icons / Theme
 import { ACTIVITY_COLORS } from "../../constants/activity-options";
-import { Flame, Receipt, ListDetails, CheckCircle } from "../../../assets/icons";
+import { Flame, ListDetails, CheckCircle } from "../../../assets/icons";
 import { ui } from "../../theme/colors";
 
 // Form de alta/edición de actividad. Recibe un form de @tanstack/react-form con
@@ -71,40 +71,6 @@ export default function FormActivity({ form, submitLabel = "GUARDAR ACTIVIDAD" }
               numberOfLines={3}
               style={{ minHeight: 88, textAlignVertical: "top" }}
             />
-          </View>
-        )}
-      </form.Field>
-
-      {/* Precio mensual */}
-      <form.Field
-        name="price"
-        validators={{
-          onChange: ({ value }) => {
-            if (value === "" || value == null) return undefined;
-            const n = Number(value);
-            if (Number.isNaN(n) || n < 0) return "Precio inválido";
-            return undefined;
-          },
-        }}
-      >
-        {(field) => (
-          <View className="gap-1.5">
-            <Text className="text-xs font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
-              Precio mensual
-            </Text>
-            <StyledTextInput
-              value={field.state.value == null ? "" : String(field.state.value)}
-              onChangeText={field.handleChange}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-              icon={<Receipt color={ui.text.mutedDark} />}
-              error={field.state.meta.errors?.length > 0}
-            />
-            {field.state.meta.errors?.length > 0 && (
-              <Text className="text-red-500 dark:text-red-400 text-xs font-manrope-medium px-1">
-                {field.state.meta.errors[0]}
-              </Text>
-            )}
           </View>
         )}
       </form.Field>

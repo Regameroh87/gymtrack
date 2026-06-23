@@ -26,3 +26,14 @@ export const ACTIVITY_SUGGESTIONS = [
   "Spinning",
   "Natación",
 ];
+
+// Frecuencias para los pases de una actividad. `value` es frequency_per_week
+// (null = libre/ilimitado); `label` es el texto sugerido para el pase.
+export const FREQUENCY_OPTIONS = [
+  { value: 1, label: "1 vez/semana" },
+  { value: 2, label: "2 veces/semana" },
+  { value: 3, label: "3 veces/semana" },
+  { value: 4, label: "4 veces/semana" },
+  { value: 5, label: "5 veces/semana" },
+  { value: null, label: "Libre / Ilimitado" },
+];

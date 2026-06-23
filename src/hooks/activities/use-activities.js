@@ -16,11 +16,37 @@ export const useActivities = () => {
     queryKey: ["activities", gymId],
     enabled: !!gymId,
     queryFn: async () => {
+      // Embebe los pases (activity_plans) de cada actividad. PostgREST no ordena
+      // el recurso embebido de forma fiable, así que los ordenamos por sort_order
+      // en cliente.
       const { data, error } = await supabase
         .from("activities")
-        .select("*")
+        .select("*, activity_plans(*)")
         .eq("gym_id", gymId)
         .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((a) => ({
+        ...a,
+        activity_plans: [...(a.activity_plans ?? [])].sort(
+          (x, y) => (x.sort_order ?? 0) - (y.sort_order ?? 0)
+        ),
+      }));
+    },
+  });
+};
+
+// Pases de UNA actividad (para el editor de pases). Query propia y aislada para
+// que el CRUD de pases refresque sin depender del embed del listado.
+export const useActivityPlans = (activityId) => {
+  return useQuery({
+    queryKey: ["activity_plans", activityId],
+    enabled: !!activityId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("activity_plans")
+        .select("*")
+        .eq("activity_id", activityId)
+        .order("sort_order", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
