@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 // DB / hooks
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 import { useActiveGym } from "../../contexts/active-gym-context";
 import { useAuth } from "../../auth/lib/getSession";
 

@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 // DB / contexto
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 import { useActiveGym } from "../../contexts/active-gym-context";
 
 // CRUD de actividades, online y directo a Supabase (sin sync local: las gestiona

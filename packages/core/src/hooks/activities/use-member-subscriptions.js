@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 // DB / contexto
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Inscripciones a actividades de UN socio en el gym activo. El staff accede a las

@@ -4,7 +4,7 @@
 // session_exercise.id que ya referencian planes de catálogo. Ver [[project_default_catalog]].
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 
 export const CATALOG_SESSIONS_KEY = ["catalog_admin", "sessions"];
 

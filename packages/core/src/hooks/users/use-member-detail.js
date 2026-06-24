@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 // DB
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Detalle de un alumno para la ficha de staff. A diferencia de
