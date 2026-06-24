@@ -29,10 +29,10 @@ export function middleware(req: NextRequest) {
   const slug = getSubdomain(host);
   if (!slug) return NextResponse.next();
 
-  // Subdominio de gym → reescribe a la ruta interna /_sites/[slug] manteniendo
-  // el resto del path. La URL del navegador no cambia.
+  // Subdominio de gym → reescribe a la ruta interna /s/[slug] manteniendo el
+  // resto del path. La URL del navegador no cambia.
   const url = req.nextUrl.clone();
-  url.pathname = `/_sites/${slug}${url.pathname === "/" ? "" : url.pathname}`;
+  url.pathname = `/s/${slug}${url.pathname === "/" ? "" : url.pathname}`;
   return NextResponse.rewrite(url);
 }
 
