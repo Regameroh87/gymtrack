@@ -42,7 +42,7 @@ import { SESSION_OBJECTIVES } from "../../../../../src/constants/sessionOptions"
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
 // Utilidades
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../../../src/utils/box-shadow";
 
 // Tema / assets

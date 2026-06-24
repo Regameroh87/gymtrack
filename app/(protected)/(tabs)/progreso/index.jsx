@@ -20,7 +20,7 @@ import LineChart from "../../../../src/components/charts/line-chart";
 import Heatmap from "../../../../src/components/charts/heatmap";
 
 // Utilidades
-import { formatRelativeDay } from "../../../../src/utils/format-date";
+import { formatRelativeDay } from "@gymtrack/core/format-date";
 
 // Tema / assets
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";

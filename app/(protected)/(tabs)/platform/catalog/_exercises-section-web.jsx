@@ -41,7 +41,7 @@ import {
   EXERCISE_CATEGORIES,
   MUSCLE_GROUPS,
 } from "../../../../../src/constants/exerciseOptions";
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 

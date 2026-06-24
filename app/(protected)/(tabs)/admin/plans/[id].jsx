@@ -49,7 +49,7 @@ import {
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
 // Utils
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
 import { ui } from "../../../../../src/theme/colors";

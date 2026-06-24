@@ -32,7 +32,7 @@ import {
 import { SESSION_LEVELS } from "../../../../../src/constants/sessionOptions";
 
 // Utils
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Hooks
 import {

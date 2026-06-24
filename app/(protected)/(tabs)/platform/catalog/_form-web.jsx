@@ -3,7 +3,7 @@
 import { View, Text, Pressable, ActivityIndicator, Modal } from "react-native";
 import { Image } from "expo-image";
 
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { Plus, Trash, X, CheckCircle } from "../../../../../assets/icons";
 

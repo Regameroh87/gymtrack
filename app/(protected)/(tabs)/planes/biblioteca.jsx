@@ -32,7 +32,7 @@ import { useCustomSessions } from "../../../../src/hooks/sessions/use-custom-ses
 import { useCustomExercises } from "../../../../src/hooks/exercises/use-custom-exercises";
 
 // Utilidades
-import { getCloudinaryUrl } from "../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../../src/utils/box-shadow";
 
 // Componentes

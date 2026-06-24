@@ -36,12 +36,12 @@ import {
 } from "../../../../../src/constants/roles";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import {
   formatShortDate,
   formatRelativeDay,
   formatDuration,
-} from "../../../../../src/utils/format-date";
+} from "@gymtrack/core/format-date";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {

@@ -15,7 +15,7 @@ import { useActiveGym } from "../../../../src/contexts/active-gym-context.jsx";
 import { useSessionLogs } from "../../../../src/hooks/sessions/use-session-logs.js";
 
 // Utilidades
-import { formatDuration } from "../../../../src/utils/format-date.js";
+import { formatDuration } from "@gymtrack/core/format-date";
 import { makeShadow } from "../../../../src/utils/box-shadow.js";
 
 // Componentes

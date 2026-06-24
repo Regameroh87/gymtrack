@@ -39,7 +39,7 @@ import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exerc
 import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-log.js";
 import { useSessionDraft } from "../../../src/hooks/sessions/use-session-draft.js";
 
-import { getCloudinaryUrl } from "../../../src/utils/cloudinary.js";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../src/utils/box-shadow.js";
 
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet.jsx";

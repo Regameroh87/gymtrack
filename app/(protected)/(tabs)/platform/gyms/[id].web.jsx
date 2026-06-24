@@ -21,7 +21,7 @@ import { useDeleteGym } from "../../../../../src/hooks/gyms/use-delete-gym";
 import { useToggleGymActive } from "../../../../../src/hooks/gyms/use-toggle-gym-active";
 
 // Utils / tema
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 

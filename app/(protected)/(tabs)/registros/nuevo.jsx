@@ -24,7 +24,7 @@ import { useSessionExercises } from "../../../../src/hooks/sessions/use-session-
 import { useCreateManualLog } from "../../../../src/hooks/sessions/use-manual-session-log";
 
 // Utilidades
-import { WEEKDAYS_ES, formatRelativeDay } from "../../../../src/utils/format-date";
+import { WEEKDAYS_ES, formatRelativeDay } from "@gymtrack/core/format-date";
 
 // Constantes
 import { SESSION_LEVELS } from "../../../../src/constants/sessionOptions";

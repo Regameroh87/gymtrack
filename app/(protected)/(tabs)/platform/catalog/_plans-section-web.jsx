@@ -56,7 +56,7 @@ import {
   PLAN_LEVELS,
 } from "../../../../../src/constants/planOptions";
 import { PLAN_TARGET_GENDERS } from "../../../../../src/constants/gender-options";
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 

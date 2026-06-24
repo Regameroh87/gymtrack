@@ -23,7 +23,7 @@ import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-s
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
 import { useActiveSessionDraft } from "../../../src/hooks/sessions/use-active-session-draft";
 
-import { formatShortDate } from "../../../src/utils/format-date";
+import { formatShortDate } from "@gymtrack/core/format-date";
 import { makeShadow } from "../../../src/utils/box-shadow";
 import PlanExerciseRow from "../../../src/components/cards/plan-exercise-row";
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet";

@@ -25,7 +25,7 @@ import {
   MONTHS_ES,
   formatDuration,
   formatMonthLabel,
-} from "../../../../src/utils/format-date";
+} from "@gymtrack/core/format-date";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";

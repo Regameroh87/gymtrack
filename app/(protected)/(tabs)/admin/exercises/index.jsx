@@ -51,8 +51,8 @@ import { Barbell, ChevronRight } from "../../../../../assets/icons";
 // Tema y utilidades
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
-import { searchByQuery } from "../../../../../src/utils/searchByQuery";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { searchByQuery } from "@gymtrack/core/search-by-query";
 
 export default function ExercisesList() {
   const router = useRouter();

@@ -16,7 +16,7 @@ import Toast from "react-native-toast-message";
 
 import { useActiveGym } from "../../src/contexts/active-gym-context";
 import { supabase } from "../../src/database/supabase";
-import { getCloudinaryUrl } from "../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../src/constants/roles";
 import { generateRamp } from "../../src/theme/generate-ramp";

@@ -5,7 +5,7 @@
 import { View, Text, Pressable, Modal, ScrollView } from "react-native";
 import { Image } from "expo-image";
 
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {

@@ -17,7 +17,7 @@ import { supabase } from "../../../../../src/database/supabase";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 import {
   ShieldHalf,

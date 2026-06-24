@@ -18,7 +18,7 @@ import {
 } from "../../../../src/theme/colors.js";
 
 // ── Utils ──
-import { getCloudinaryUrl } from "../../../../src/utils/cloudinary.js";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../../src/utils/box-shadow.js";
 
 // ── Assets ──

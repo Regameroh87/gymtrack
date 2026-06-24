@@ -13,7 +13,7 @@ import { useForm } from "@tanstack/react-form";
 import { z } from "zod";
 
 import { supabase } from "../../../../../src/database/supabase";
-import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
+import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";

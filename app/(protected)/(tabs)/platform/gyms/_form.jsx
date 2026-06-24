@@ -5,7 +5,7 @@ import { View, Text, TextInput, Pressable } from "react-native";
 import { Image } from "expo-image";
 
 // BD / utils
-import { CLOUD_NAME } from "../../../../../src/utils/cloudinary";
+import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
 
 // Tema
 import { ui, brandPrimary } from "../../../../../src/theme/colors";

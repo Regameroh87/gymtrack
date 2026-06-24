@@ -27,7 +27,7 @@ import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Barbell, Trash, Pencil } from "../../../../../assets/icons";
 import { ui } from "../../../../../src/theme/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { getCloudinaryUrl } from "../../../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { eq, ne } from "drizzle-orm";
 
 export default function EquipmentsList() {

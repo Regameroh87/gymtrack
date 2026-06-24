@@ -23,7 +23,7 @@ import { useDeleteSessionLog } from "../../../../src/hooks/sessions/use-manual-s
 import {
   formatDuration,
   formatShortDate,
-} from "../../../../src/utils/format-date";
+} from "@gymtrack/core/format-date";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";

@@ -21,7 +21,7 @@ import { useAuth } from "../../../src/auth/lib/getSession";
 import { useActiveGym } from "../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
-import { getCloudinaryUrl } from "../../../src/utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../../src/constants/roles";
 import { PROFILE_GENDERS } from "../../../src/constants/gender-options";

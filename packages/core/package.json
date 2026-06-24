@@ -5,7 +5,11 @@
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./payment-status": "./src/payment-status.js"
+    "./payment-status": "./src/payment-status.js",
+    "./cloudinary": "./src/cloudinary.js",
+    "./format-date": "./src/format-date.js",
+    "./search-by-query": "./src/search-by-query.js",
+    "./video-helpers": "./src/video-helpers.js"
   },
   "sideEffects": false
 }
