@@ -15,7 +15,7 @@ import { useFocusEffect, useRouter, Stack } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { HeaderBackButton } from "@react-navigation/elements";
 
-import { ui } from "../../../src/theme/colors.js";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import { Barbell, Play } from "../../../assets/icons.jsx";
 

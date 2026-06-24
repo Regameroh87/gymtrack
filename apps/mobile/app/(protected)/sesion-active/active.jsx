@@ -23,7 +23,7 @@ import {
   brandSecondary,
   ui,
   gradient,
-} from "../../../src/theme/colors.js";
+} from "@gymtrack/core/colors";
 import { HeaderBackButton } from "@react-navigation/elements";
 
 import {

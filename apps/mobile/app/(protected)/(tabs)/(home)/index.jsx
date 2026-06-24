@@ -15,7 +15,7 @@ import {
   brandPrimary,
   brandSecondary,
   ui,
-} from "../../../../src/theme/colors.js";
+} from "@gymtrack/core/colors";
 
 // ── Utils ──
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";

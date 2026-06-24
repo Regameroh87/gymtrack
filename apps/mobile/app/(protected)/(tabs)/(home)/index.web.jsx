@@ -26,7 +26,7 @@ import {
   brandPrimary,
   brandSecondary,
   ui,
-} from "../../../../src/theme/colors.js";
+} from "@gymtrack/core/colors";
 import {
   Barbell,
   ChevronRight,

@@ -3,7 +3,7 @@ import { useAuth } from "../../src/auth/lib/getSession";
 import { useActiveGym } from "../../src/contexts/active-gym-context";
 import { View, Text, Platform, Pressable } from "react-native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { ui } from "../../src/theme/colors.js";
+import { ui } from "@gymtrack/core/colors";
 import { useTheme } from "../../src/theme/theme";
 import { supabase } from "../../src/database/supabase";
 
