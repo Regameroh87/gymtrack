@@ -16,7 +16,7 @@ import {
 import { generateRamp, rampToChannels, SHADES } from "@gymtrack/core/generate-ramp";
 
 // Datos del gym (branding)
-import { useGym } from "../hooks/gyms/use-gym";
+import { useGym } from "@gymtrack/core/hooks/gyms/use-gym";
 import { useActiveGym } from "./active-gym-context";
 
 // ─── Theme multitenant en runtime ───
@@ -68,7 +68,7 @@ export function GymThemeProvider({ children }) {
   const isDark = colorScheme === "dark";
 
   const { gymId } = useActiveGym();
-  const { data: gym } = useGym();
+  const { data: gym } = useGym(gymId);
   const [theme, setTheme] = useState(DEFAULT_THEME);
 
   // 1) Hidratación temprana: theme del gym ACTIVO persistido (multi-gym),

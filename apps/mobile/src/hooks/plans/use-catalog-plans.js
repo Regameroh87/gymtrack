@@ -5,13 +5,15 @@ import { and, desc, eq, isNull, ne } from "drizzle-orm";
 // Base de datos
 import { database } from "../../database";
 import { training_plans } from "../../database/schemas";
-import { useGym } from "../gyms/use-gym";
+import { useGym } from "@gymtrack/core/hooks/gyms/use-gym";
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Planes de CATÁLOGO (is_catalog=true, read-only). Mismo shape que useTrainingPlans;
 // gateados por el flag default_catalog del gym. Editar = forkear a custom (flujo
 // existente, use-custom-training-plan-form). Ver [[project_default_catalog]].
 export const useCatalogPlans = () => {
-  const { data: gym } = useGym();
+  const { gymId } = useActiveGym();
+  const { data: gym } = useGym(gymId);
   const enabled = !!gym?.default_catalog;
 
   return useQuery({

@@ -27,3 +27,23 @@ export function createSupabaseClient({ url, key, storage, auth = {} }) {
     },
   });
 }
+
+// Singleton del cliente, configurado por el host al boot (mismo patrón que el
+// storage adapter). Los hooks de datos agnósticos de core lo consumen vía
+// getSupabaseClient() en lugar de importar el cliente del host —así core no
+// depende de la ruta del wrapper móvil ni de las env del host—. Móvil registra
+// el cliente construido con AsyncStorage; web registrará el suyo de cookies.
+let _client = null;
+
+export function setSupabaseClient(client) {
+  _client = client;
+}
+
+export function getSupabaseClient() {
+  if (!_client) {
+    throw new Error(
+      "[core/supabase] No hay cliente configurado. Llamá setSupabaseClient(...) en el arranque del host (móvil o web)."
+    );
+  }
+  return _client;
+}

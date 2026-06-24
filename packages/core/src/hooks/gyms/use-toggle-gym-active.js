@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 // DB
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 
 // Suspende (is_active=false) o reactiva (true) un gimnasio entero. Es un soft
 // flag reversible: no borra nada. La cascada de acceso la aplican las RLS
@@ -14,7 +14,7 @@ export const useToggleGymActive = (gymId) => {
 
   return useMutation({
     mutationFn: async (isActive) => {
-      const { error } = await supabase
+      const { error } = await getSupabaseClient()
         .from("gyms")
         .update({ is_active: isActive })
         .eq("id", gymId);

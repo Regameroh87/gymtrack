@@ -5,13 +5,15 @@ import { and, count, desc, eq, ne } from "drizzle-orm";
 // Base de datos
 import { database } from "../../database";
 import { sessions, session_exercises } from "../../database/schemas";
-import { useGym } from "../gyms/use-gym";
+import { useGym } from "@gymtrack/core/hooks/gyms/use-gym";
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Sesiones de CATÁLOGO (is_catalog=true, read-only). Mismo shape que useSessions para
 // que el picker las renderice igual; gateadas por el flag default_catalog del gym.
 // Editar = forkear a custom (flujo existente). Ver [[project_default_catalog]].
 export const useCatalogSessions = () => {
-  const { data: gym } = useGym();
+  const { gymId } = useActiveGym();
+  const { data: gym } = useGym(gymId);
   const enabled = !!gym?.default_catalog;
 
   return useQuery({

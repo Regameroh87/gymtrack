@@ -16,9 +16,9 @@ import { z } from "zod";
 
 // BD / hooks
 import { supabase } from "../../../../../src/database/supabase";
-import { useUpdateGym } from "../../../../../src/hooks/gyms/use-update-gym";
+import { useUpdateGym } from "@gymtrack/core/hooks/gyms/use-update-gym";
 import { useDeleteGym } from "../../../../../src/hooks/gyms/use-delete-gym";
-import { useToggleGymActive } from "../../../../../src/hooks/gyms/use-toggle-gym-active";
+import { useToggleGymActive } from "@gymtrack/core/hooks/gyms/use-toggle-gym-active";
 
 // Utils / tema
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";

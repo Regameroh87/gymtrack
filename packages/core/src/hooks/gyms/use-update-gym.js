@@ -2,7 +2,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 // DB
-import { supabase } from "../../database/supabase";
+import { getSupabaseClient } from "../../supabase.js";
 
 // Actualiza los datos de un gimnasio (nombre, slug, contacto y tema). Solo el
 // super_admin puede editar; RLS lo habilita por la policy gyms_update.
@@ -11,7 +11,7 @@ export const useUpdateGym = (gymId) => {
 
   return useMutation({
     mutationFn: async (fields) => {
-      const { error } = await supabase
+      const { error } = await getSupabaseClient()
         .from("gyms")
         .update(fields)
         .eq("id", gymId);

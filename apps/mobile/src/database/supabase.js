@@ -1,6 +1,9 @@
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createSupabaseClient } from "@gymtrack/core/supabase";
+import {
+  createSupabaseClient,
+  setSupabaseClient,
+} from "@gymtrack/core/supabase";
 
 // Cliente Supabase del móvil: la construcción vive en @gymtrack/core (factory
 // agnóstica); acá sólo inyectamos lo específico de Expo/RN (AsyncStorage como
@@ -10,3 +13,8 @@ export const supabase = createSupabaseClient({
   key: process.env.EXPO_PUBLIC_SUPABASE_KEY,
   storage: AsyncStorage,
 });
+
+// Registra el cliente en core para que los hooks de datos agnósticos lo
+// consuman vía getSupabaseClient(). Este módulo se importa temprano (AuthProvider
+// lo trae al boot), así que queda configurado antes de cualquier query.
+setSupabaseClient(supabase);
