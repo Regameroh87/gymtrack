@@ -40,3 +40,6 @@ yarn-error.*
 # generated native folders (CNG / expo prebuild)
 /apps/mobile/ios
 /apps/mobile/android
+# legacy root-level native folders (Expo solía vivir en la raíz) — nunca trackear
+/ios
+/android
