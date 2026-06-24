@@ -11,7 +11,7 @@ import { useCustomTrainingPlanForm } from "../../../../../src/hooks/plans/use-cu
 // Contexto
 import { PlanFormProvider } from "../../../../../src/contexts/PlanFormContext";
 
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useTheme } from "../../../../../src/theme/theme";
 
 export default function PlanBuilderLayout() {

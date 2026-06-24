@@ -9,7 +9,7 @@ import {
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
 import { Pressable, Text, View } from "react-native";
 import { useColorScheme } from "nativewind";
-import { ui } from "../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import GymLogo from "../../../src/components/GymLogo";
 

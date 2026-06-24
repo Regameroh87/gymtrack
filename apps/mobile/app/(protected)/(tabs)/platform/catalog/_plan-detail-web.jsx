@@ -14,7 +14,7 @@ import { Image } from "expo-image";
 
 import { useCatalogPlanDetail } from "../../../../../src/hooks/catalog/use-catalog-plans-admin";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   PLAN_OBJECTIVES,

@@ -14,7 +14,7 @@ import { z } from "zod";
 
 import { supabase } from "../../../../../src/database/supabase";
 import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";

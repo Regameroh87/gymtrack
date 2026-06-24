@@ -12,7 +12,8 @@
     "./video-helpers": "./src/video-helpers.js",
     "./generate-ramp": "./src/generate-ramp.js",
     "./query-client": "./src/query-client.js",
-    "./supabase": "./src/supabase.js"
+    "./supabase": "./src/supabase.js",
+    "./colors": "./src/colors.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",

@@ -44,7 +44,7 @@ import { forkSession } from "../../utils/fork-session";
 import { supabase } from "../../database/supabase";
 
 // Tema e iconos
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Plus } from "../../../assets/icons";
 

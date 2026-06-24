@@ -3,7 +3,7 @@ import { Pressable, Text, Alert, View, Animated } from "react-native";
 import PreviewVideo from "../videos/PreviewVideo";
 import { useColorScheme } from "nativewind";
 import { useMediaPicker } from "../../hooks/ui/use-media-picker";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import {
   saveMediaLocally,

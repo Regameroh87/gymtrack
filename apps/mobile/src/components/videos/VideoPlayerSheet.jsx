@@ -10,7 +10,7 @@ import YoutubePlayer from "react-native-youtube-iframe";
 import { useColorScheme } from "nativewind";
 
 // Tema / assets
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Youtube, Play } from "../../../assets/icons";
 

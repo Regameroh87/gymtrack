@@ -4,7 +4,7 @@ import { View, Text, Pressable, ActivityIndicator, Modal } from "react-native";
 import { Image } from "expo-image";
 
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { Plus, Trash, X, CheckCircle } from "../../../../../assets/icons";
 
 // Select nativo del navegador, estilado para encajar con los Input del panel.

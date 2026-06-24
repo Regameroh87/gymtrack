@@ -7,7 +7,7 @@ import { useColorScheme } from "nativewind";
 
 // Tema y assets
 import { Barbell, ChevronRight, Trash } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 const OBJECTIVE_ACCENT = {
   hipertrofia: "#6366f1",

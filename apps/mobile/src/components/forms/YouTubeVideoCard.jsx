@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { forwardRef } from "react";
 import { Play, Link } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import PreviewVideo from "../videos/PreviewVideo";
 import HeaderCard from "../cards/HeaderCard";

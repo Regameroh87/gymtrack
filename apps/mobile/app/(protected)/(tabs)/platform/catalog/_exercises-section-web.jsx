@@ -42,7 +42,7 @@ import {
   MUSCLE_GROUPS,
 } from "../../../../../src/constants/exerciseOptions";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 // Iconos

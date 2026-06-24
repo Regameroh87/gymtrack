@@ -14,7 +14,7 @@ import {
   UserPlus,
 } from "../../../../assets/icons";
 
-import { ui } from "../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { canAccessModule } from "../../../../src/constants/roles";

@@ -20,7 +20,7 @@ import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../src/constants/roles";
 import { generateRamp } from "@gymtrack/core/generate-ramp";
-import { brandPrimary as defaultPrimary } from "../../src/theme/colors";
+import { brandPrimary as defaultPrimary } from "@gymtrack/core/colors";
 
 // Multi-gym: el login autentica a la persona; acá elige en qué gimnasio entra.
 // Cada tarjeta usa el branding del propio gym (no el theme activo) para que la

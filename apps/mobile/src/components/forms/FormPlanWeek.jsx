@@ -35,7 +35,7 @@ import { fetchSessionExercises } from "../../hooks/sessions/use-session-exercise
 import FormsHeader from "../FormsHeader";
 
 // Tema y assets
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { ChevronRight, Plus, X, Calendar } from "../../../assets/icons";
 

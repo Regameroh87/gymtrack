@@ -1,5 +1,5 @@
 import { View, TextInput } from "react-native";
-import { ui } from "../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 export default function StyledInputCard({
   icon,

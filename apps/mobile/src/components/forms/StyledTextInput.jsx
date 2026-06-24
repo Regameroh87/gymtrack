@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { View, TextInput } from "react-native";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 const StyledTextInput = forwardRef(function StyledTextInput(
   { icon, error, ...props },

@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { Pressable, View } from "react-native";
 import { Pencil } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 export default function PreviewImage({

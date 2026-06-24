@@ -42,7 +42,7 @@ import { makeShadow } from "../../../../src/utils/box-shadow";
 import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
-import { ui } from "../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
 import {
   Barbell,

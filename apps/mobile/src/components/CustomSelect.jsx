@@ -7,7 +7,7 @@ import {
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
-import { ui } from "../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../contexts/gym-theme-context";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { Barbell } from "../../assets/icons";

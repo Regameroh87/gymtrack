@@ -14,7 +14,7 @@ import { Image } from "expo-image";
 import { supabase } from "../../../../../src/database/supabase";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 import {

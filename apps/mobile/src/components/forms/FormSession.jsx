@@ -35,7 +35,7 @@ import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
 
 // Tema y assets
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { Plus, Pencil } from "../../../assets/icons";
 
 // ── Section header ────────────────────────────────────────────────────────────

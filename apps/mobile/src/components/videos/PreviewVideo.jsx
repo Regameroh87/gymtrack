@@ -2,7 +2,7 @@ import { View } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
-import { gradient } from "../../theme/colors";
+import { gradient } from "@gymtrack/core/colors";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 

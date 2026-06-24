@@ -14,7 +14,7 @@ import { Image } from "expo-image";
 
 import { useCatalogSessionExercises } from "../../../../../src/hooks/catalog/use-catalog-sessions-admin";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { SESSION_LEVELS } from "../../../../../src/constants/sessionOptions";
 import { Barbell, Pencil, Trash, X } from "../../../../../assets/icons";

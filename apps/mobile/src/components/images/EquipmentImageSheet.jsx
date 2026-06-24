@@ -6,7 +6,7 @@ import { BottomSheetModal, BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 const SNAP_POINTS = ["55%"];
 const HEADER_HEIGHT = 56;

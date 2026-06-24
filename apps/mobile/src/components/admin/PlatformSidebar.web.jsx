@@ -10,7 +10,7 @@ import { supabase } from "../../database/supabase.js";
 import { useAuth } from "../../auth/lib/getSession";
 
 // Tema / assets
-import { brandPrimary } from "../../theme/colors";
+import { brandPrimary } from "@gymtrack/core/colors";
 import {
   ShieldHalf,
   Users,

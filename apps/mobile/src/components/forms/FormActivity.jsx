@@ -12,7 +12,7 @@ import { useGymStaff } from "../../hooks/users/use-gym-staff";
 // Constantes / Icons / Theme
 import { ACTIVITY_COLORS } from "../../constants/activity-options";
 import { Flame, ListDetails, CheckCircle } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 const fullName = (p) =>
   [p?.name, p?.last_name].filter(Boolean).join(" ") || "Sin nombre";

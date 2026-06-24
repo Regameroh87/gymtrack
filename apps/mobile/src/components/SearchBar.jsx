@@ -1,7 +1,7 @@
 import React from "react";
 import { View, TextInput, Pressable } from "react-native";
 import { Search, X } from "../../assets/icons";
-import { ui } from "../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 /**
  * Barra de búsqueda editorial.

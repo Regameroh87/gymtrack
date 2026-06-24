@@ -12,7 +12,7 @@ import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 
 import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   isStaffRole,

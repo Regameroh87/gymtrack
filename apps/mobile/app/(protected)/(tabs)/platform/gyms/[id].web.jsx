@@ -22,7 +22,7 @@ import { useToggleGymActive } from "../../../../../src/hooks/gyms/use-toggle-gym
 
 // Utils / tema
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 // Helpers de formulario compartidos

@@ -9,7 +9,7 @@ import {
   Modal,
 } from "react-native";
 
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useGymSubscriptions } from "../../../../../src/hooks/activities/use-gym-subscriptions";
 import { useActivitySubscriptionMutations } from "../../../../../src/hooks/activities/use-activity-subscription-mutations";

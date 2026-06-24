@@ -11,7 +11,7 @@ import * as Haptics from "expo-haptics";
 import HeaderCard from "../cards/HeaderCard";
 import PreviewImage from "../images/PreviewImage";
 import StyledInputCard from "../cards/StyledInputCard";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { deleteMediaLocally } from "../../utils/saveMediaLocally";
 
 const ImagePickerCard = forwardRef(function ImagePickerCard(

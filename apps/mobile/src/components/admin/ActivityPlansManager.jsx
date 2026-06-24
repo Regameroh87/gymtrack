@@ -14,7 +14,7 @@ import { useActivityPlans } from "../../hooks/activities/use-activities";
 import { useActivityPlanMutations } from "../../hooks/activities/use-activity-plan-mutations";
 import { FREQUENCY_OPTIONS } from "../../constants/activity-options";
 import { Plus, Pencil, Trash, X } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 const EMPTY = { id: null, label: "", frequency_per_week: null, price: "", is_active: true };
 

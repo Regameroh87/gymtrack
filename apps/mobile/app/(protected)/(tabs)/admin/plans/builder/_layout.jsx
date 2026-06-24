@@ -9,7 +9,7 @@ import { useTrainingPlanForm } from "../../../../../../src/hooks/plans/use-train
 import { PlanFormProvider } from "../../../../../../src/contexts/PlanFormContext";
 
 // Tema y assets
-import { ui } from "../../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 export default function PlanBuilderLayout() {
   const { id } = useLocalSearchParams();

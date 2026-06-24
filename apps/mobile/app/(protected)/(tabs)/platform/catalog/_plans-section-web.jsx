@@ -57,7 +57,7 @@ import {
 } from "../../../../../src/constants/planOptions";
 import { PLAN_TARGET_GENDERS } from "../../../../../src/constants/gender-options";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 // Iconos

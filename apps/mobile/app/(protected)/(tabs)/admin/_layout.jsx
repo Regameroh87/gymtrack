@@ -1,6 +1,6 @@
 ﻿import { Stack, Redirect } from "expo-router";
 import { useColorScheme } from "nativewind";
-import { ui } from "../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
 import { Platform } from "react-native";
 

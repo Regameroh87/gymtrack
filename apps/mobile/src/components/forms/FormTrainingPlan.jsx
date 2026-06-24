@@ -36,7 +36,7 @@ import StyledTextInput from "./StyledTextInput";
 import SubmitButton from "./SubmitButton";
 
 // Tema y assets
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { ChevronRight } from "../../../assets/icons";
 
 // ─── Tarjeta de semana ──────────────────────────────────────────────────────

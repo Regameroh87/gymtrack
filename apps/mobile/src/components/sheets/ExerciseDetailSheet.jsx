@@ -21,7 +21,7 @@ import {
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import PreviewVideo from "../videos/PreviewVideo";
 import { Barbell, Pencil, Trash } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 
 const SNAP_POINTS = ["92%"];

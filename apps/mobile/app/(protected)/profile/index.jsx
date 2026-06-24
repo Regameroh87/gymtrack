@@ -25,7 +25,7 @@ import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../../src/constants/roles";
 import { PROFILE_GENDERS } from "../../../src/constants/gender-options";
-import { ui } from "../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../src/contexts/gym-theme-context";
 import {
   Mail,

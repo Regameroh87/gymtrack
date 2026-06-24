@@ -32,7 +32,7 @@ import Screen from "../../../../src/components/Screen";
 
 // Tema / assets
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
-import { ui } from "../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import {
   Barbell,
   Calendar,

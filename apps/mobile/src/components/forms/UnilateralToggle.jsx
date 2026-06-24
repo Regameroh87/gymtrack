@@ -1,6 +1,6 @@
 import { View, Text, Switch } from "react-native";
 import { SwitchHorizontal } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { useColorScheme } from "nativewind";
 

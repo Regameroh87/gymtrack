@@ -32,7 +32,7 @@ import UnilateralToggle from "./UnilateralToggle";
 import SubmitButton from "./SubmitButton";
 
 // Icons & theme
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { Trash } from "../../../assets/icons";
 import { Image } from "expo-image";
 

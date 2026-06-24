@@ -15,7 +15,7 @@ import { database } from "../../../../../../src/database";
 import { custom_exercises } from "../../../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../../../src/database/sync";
 import FormExercise from "../../../../../../src/components/forms/FormExercise";
-import { ui } from "../../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
 export default function UserExerciseBuilder() {

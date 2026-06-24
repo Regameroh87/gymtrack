@@ -52,7 +52,7 @@ import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options"
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { Barbell, Pencil, Trash, Upload } from "../../../../../assets/icons";
 

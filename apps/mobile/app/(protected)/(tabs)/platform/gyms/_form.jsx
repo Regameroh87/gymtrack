@@ -8,7 +8,7 @@ import { Image } from "expo-image";
 import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
 
 // Tema
-import { ui, brandPrimary } from "../../../../../src/theme/colors";
+import { ui, brandPrimary } from "@gymtrack/core/colors";
 
 // Iconos
 import { Polaroid, CameraPlus } from "../../../../../assets/icons";

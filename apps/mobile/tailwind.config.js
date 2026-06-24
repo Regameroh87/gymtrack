@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const colors = require("./src/theme/colors.js");
+const colors = require("@gymtrack/core/colors");
 
 // brandPrimary / brandSecondary se vuelven dinámicas por gym vía CSS variables.
 // Cada tono apunta a una var con canales "R G B" (definida por defecto en

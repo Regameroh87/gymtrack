@@ -36,7 +36,7 @@ import SessionDetailDrawer from "./_session-detail-web";
 // Constantes / utils / tema
 import { SESSION_LEVELS } from "../../../../../src/constants/sessionOptions";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 
 // Iconos

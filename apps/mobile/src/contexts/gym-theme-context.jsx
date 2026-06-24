@@ -12,7 +12,7 @@ import {
   brandSecondary as defaultSecondary,
   gradient as defaultGradient,
   buildGradients,
-} from "../theme/colors";
+} from "@gymtrack/core/colors";
 import { generateRamp, rampToChannels, SHADES } from "@gymtrack/core/generate-ramp";
 
 // Datos del gym (branding)

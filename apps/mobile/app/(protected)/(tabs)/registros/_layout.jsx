@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 import { useColorScheme } from "nativewind";
 
 // Tema
-import { ui } from "../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 export default function RegistrosLayout() {
   const { colorScheme } = useColorScheme();

@@ -25,7 +25,7 @@ import Screen from "../../../../../src/components/Screen";
 import SearchBar from "../../../../../src/components/SearchBar";
 import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Barbell, Trash, Pencil } from "../../../../../assets/icons";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { eq, ne } from "drizzle-orm";

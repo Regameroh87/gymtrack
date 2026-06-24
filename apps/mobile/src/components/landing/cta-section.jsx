@@ -5,7 +5,7 @@ import { View, Text, Pressable, Linking } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 // Theme
-import { brandPrimary } from "../../theme/colors";
+import { brandPrimary } from "@gymtrack/core/colors";
 
 // Assets
 import { ArrowRight, Mail, Phone } from "../../../assets/icons";

@@ -42,7 +42,7 @@ import {
   formatRelativeDay,
   formatDuration,
 } from "@gymtrack/core/format-date";
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
   Mail,

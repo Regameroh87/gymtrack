@@ -10,7 +10,7 @@ import { useColorScheme } from "nativewind";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 import { Barbell, Trash, ChevronRight } from "../../../assets/icons";
 

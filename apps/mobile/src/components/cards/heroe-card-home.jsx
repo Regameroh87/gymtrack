@@ -13,7 +13,7 @@ import { useTheme } from "../../theme/theme";
 import { useGymTheme } from "../../contexts/gym-theme-context";
 
 // ── Design Tokens ──
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 // ── Assets ──
 import { ChevronRight, Barbell, ClipboardList } from "../../../assets/icons";

@@ -49,7 +49,7 @@ import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Barbell, ChevronRight } from "../../../../../assets/icons";
 
 // Tema y utilidades
-import { ui } from "../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { searchByQuery } from "@gymtrack/core/search-by-query";

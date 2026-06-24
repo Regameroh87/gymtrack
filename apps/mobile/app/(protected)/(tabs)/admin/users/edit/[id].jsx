@@ -21,7 +21,7 @@ import FormField from "../../../../../../src/components/forms/FormField";
 import StyledTextInput from "../../../../../../src/components/forms/StyledTextInput";
 import SubmitButton from "../../../../../../src/components/forms/SubmitButton";
 import { Phone, IdBadge, MapPin } from "../../../../../../assets/icons";
-import { ui } from "../../../../../../src/theme/colors";
+import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
 // Normaliza igual que crear-socio (name/last_name/address en minúsculas).

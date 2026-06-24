@@ -15,7 +15,7 @@ import StyledTextInput from "./StyledTextInput";
 
 // Icons & Theme
 import { CameraPlus, CloudUpload, Plus, Barbell } from "../../../assets/icons";
-import { ui } from "../../theme/colors";
+import { ui } from "@gymtrack/core/colors";
 
 export default function FormEquipment({
   form,
