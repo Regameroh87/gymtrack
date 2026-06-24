@@ -1,12 +1,12 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
+import { storage } from "../../storage.js";
 
 export default function useAsyncStorage({ form, storageKey, enabled = true }) {
   useEffect(() => {
     if (!enabled) return;
     const loadDraft = async () => {
       try {
-        const saved = await AsyncStorage.getItem(storageKey);
+        const saved = await storage.getItem(storageKey);
         if (saved) {
           const data = JSON.parse(saved);
           Object.keys(data).forEach((key) => {
@@ -26,7 +26,7 @@ export default function useAsyncStorage({ form, storageKey, enabled = true }) {
     const unsubscribe = form.store.subscribe(() => {
       try {
         const values = form.state.values;
-        AsyncStorage.setItem(storageKey, JSON.stringify(values));
+        storage.setItem(storageKey, JSON.stringify(values));
       } catch (error) {
         console.error("Error al guardar el borrador:", error);
       }
