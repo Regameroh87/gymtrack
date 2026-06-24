@@ -1,0 +1,11 @@
+{
+  "name": "@gymtrack/core",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./payment-status": "./src/payment-status.js"
+  },
+  "sideEffects": false
+}

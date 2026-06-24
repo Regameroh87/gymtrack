@@ -20,7 +20,7 @@ import { useGymSubscriptions } from "../../../../../src/hooks/activities/use-gym
 import { useActivitySubscriptionMutations } from "../../../../../src/hooks/activities/use-activity-subscription-mutations";
 import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
 import { useActivities } from "../../../../../src/hooks/activities/use-activities";
-import { paymentBadge, isOverdue } from "../../../../../src/utils/payment-status";
+import { paymentBadge, isOverdue } from "@gymtrack/core";
 import {
   Receipt,
   Plus,

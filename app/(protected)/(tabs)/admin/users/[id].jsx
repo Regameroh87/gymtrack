@@ -22,7 +22,7 @@ import {
   useAssignPlanToMember,
 } from "../../../../../src/hooks/users/use-assign-plan-to-member";
 import { useMemberSubscriptions } from "../../../../../src/hooks/activities/use-member-subscriptions";
-import { paymentBadge } from "../../../../../src/utils/payment-status";
+import { paymentBadge } from "@gymtrack/core";
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 import {
   useToggleMemberActive,
