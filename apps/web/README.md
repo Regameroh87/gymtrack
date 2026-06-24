@@ -31,14 +31,15 @@ gyms activos), así que **no se afloja el RLS** de la tabla `gyms`.
    - `gymtrack.ar` y `www.gymtrack.ar`
    - `*.gymtrack.ar` (wildcard; requiere registro DNS `*` y verificación del apex
      en Vercel — el TLS wildcard es automático).
-5. El `vercel.json` de la raíz del repo es de la **web Expo** (otro proyecto Vercel,
-   que pasará a `app.gymtrack.ar`). No mezclar.
+5. La **web Expo** (`app.gymtrack.ar`) se despliega en un proyecto Vercel **aparte**,
+   apuntando a `apps/mobile`. Su config de deploy todavía no está versionada en el
+   repo (no hay `vercel.json`); pendiente de definir. No mezclar ambos proyectos.
 
 ## Routing por subdominio
 
-`middleware.ts` resuelve `{slug}.gymtrack.ar` → ruta interna `/_sites/{slug}`
-(la URL del navegador no cambia). `www`, `app` y el apex quedan reservados para la
-landing de marca / la app.
+`middleware.ts` resuelve `{slug}.gymtrack.ar` → ruta interna `/s/{slug}`
+(carpeta `app/s/[slug]`; la URL del navegador no cambia). `www`, `app` y el apex
+quedan reservados para la landing de marca / la app.
 
 ## Frescura (gyms nuevos)
 
