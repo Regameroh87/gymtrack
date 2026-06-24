@@ -11,7 +11,8 @@ import { useRouter } from "expo-router";
 
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { useActivities } from "../../../../../src/hooks/activities/use-activities";
+import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 import { Flame, Search, ChevronRight, Plus, Receipt, CheckCircle } from "../../../../../assets/icons";
 
@@ -28,10 +29,11 @@ const minActivePrice = (plans = []) => {
 export default function ActivitiesListWeb() {
   const router = useRouter();
   const { brandPrimary } = useGymTheme();
+  const { gymId } = useActiveGym();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
 
-  const { data: activities, isLoading } = useActivities();
+  const { data: activities, isLoading } = useActivities(gymId);
 
   const stats = useMemo(() => {
     if (!activities) return { total: 0, active: 0, activePlans: 0 };

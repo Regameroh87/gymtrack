@@ -10,8 +10,9 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 import StyledTextInput from "../forms/StyledTextInput";
-import { useActivityPlans } from "../../hooks/activities/use-activities";
-import { useActivityPlanMutations } from "../../hooks/activities/use-activity-plan-mutations";
+import { useActivityPlans } from "@gymtrack/core/hooks/activities/use-activities";
+import { useActivityPlanMutations } from "@gymtrack/core/hooks/activities/use-activity-plan-mutations";
+import { useActiveGym } from "../../contexts/active-gym-context";
 import { FREQUENCY_OPTIONS } from "../../constants/activity-options";
 import { Plus, Pencil, Trash, X } from "../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
@@ -37,8 +38,9 @@ const confirmDelete = (label, onConfirm) => {
 };
 
 export default function ActivityPlansManager({ activityId }) {
+  const { gymId } = useActiveGym();
   const { data: plans, isLoading } = useActivityPlans(activityId);
-  const { create, update, remove } = useActivityPlanMutations(activityId);
+  const { create, update, remove } = useActivityPlanMutations(activityId, gymId);
 
   // null = sin editor abierto; objeto = editando (id null ⇒ nuevo).
   const [draft, setDraft] = useState(null);

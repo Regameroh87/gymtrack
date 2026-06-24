@@ -9,9 +9,10 @@ import Toast from "react-native-toast-message";
 
 import { supabase } from "../../../../../../src/database/supabase";
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
+import { useActiveGym } from "../../../../../../src/contexts/active-gym-context";
 import FormActivity from "../../../../../../src/components/forms/FormActivity";
 import ActivityPlansManager from "../../../../../../src/components/admin/ActivityPlansManager";
-import { useActivityMutations } from "../../../../../../src/hooks/activities/use-activity-mutations";
+import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
 import { Trash } from "../../../../../../assets/icons";
 
 export default function EditActivityScreen() {
@@ -46,7 +47,8 @@ export default function EditActivityScreen() {
 function EditActivityForm({ item }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { update, remove } = useActivityMutations();
+  const { gymId } = useActiveGym();
+  const { update, remove } = useActivityMutations(gymId);
 
   const form = useForm({
     defaultValues: {

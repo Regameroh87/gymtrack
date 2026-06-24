@@ -7,7 +7,8 @@ import * as Haptics from "expo-haptics";
 import StyledTextInput from "./StyledTextInput";
 
 // Hooks
-import { useGymStaff } from "../../hooks/users/use-gym-staff";
+import { useGymStaff } from "@gymtrack/core/hooks/users/use-gym-staff";
+import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Constantes / Icons / Theme
 import { ACTIVITY_COLORS } from "../../constants/activity-options";
@@ -21,7 +22,8 @@ const fullName = (p) =>
 // los campos { name, description, color, is_active, coach_id }. Sin imágenes ni
 // sync local: el submit lo resuelve el caller con las mutaciones online.
 export default function FormActivity({ form, submitLabel = "GUARDAR ACTIVIDAD" }) {
-  const { data: staff = [] } = useGymStaff();
+  const { gymId } = useActiveGym();
+  const { data: staff = [] } = useGymStaff(gymId);
 
   return (
     <View className="gap-5">

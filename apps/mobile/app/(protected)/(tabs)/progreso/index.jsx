@@ -7,7 +7,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 // Hooks
-import { useAttendanceStreak } from "../../../../src/hooks/progress/use-attendance-streak";
+import { useAttendanceStreak } from "@gymtrack/core/hooks/progress/use-attendance-streak";
+import { useActiveGym } from "../../../../src/contexts/active-gym-context";
+import { useAuth } from "../../../../src/auth/lib/getSession";
 import { useTrainingProgress } from "../../../../src/hooks/progress/use-training-progress";
 import { usePersonalRecords } from "../../../../src/hooks/progress/use-personal-records";
 import { usePlanAdherence } from "../../../../src/hooks/progress/use-plan-adherence";
@@ -36,9 +38,11 @@ const formatVolume = (kg) => {
 export default function ProgresoTab() {
   const insets = useSafeAreaInsets();
   const { brandPrimary, brandSecondary } = useGymTheme();
+  const { gymId } = useActiveGym();
+  const { userId } = useAuth();
   const BRAND_MINT = brandSecondary[400];
 
-  const attendance = useAttendanceStreak();
+  const attendance = useAttendanceStreak(gymId, userId);
   const training = useTrainingProgress();
   const records = usePersonalRecords();
   const adherence = usePlanAdherence();

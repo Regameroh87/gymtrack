@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 
-import { useCatalogPlanDetail } from "../../../../../src/hooks/catalog/use-catalog-plans-admin";
+import { useCatalogPlanDetail } from "@gymtrack/core/hooks/catalog/use-catalog-plans-admin";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";

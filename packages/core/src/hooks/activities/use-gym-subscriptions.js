@@ -1,17 +1,14 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
 
-// DB / contexto
+// DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Todas las inscripciones ACTIVAS del gym activo, para el panel de Contabilidad.
 // La actividad (con su coach) y el pase se embeben; el socio no se puede embeber
 // directo (memberships/profiles apuntan a auth.users), así que se resuelve en dos
 // pasos como en use-gym-members. El staff accede por la rama is_staff_of de la RLS.
-export const useGymSubscriptions = () => {
-  const { gymId } = useActiveGym();
-
+export const useGymSubscriptions = (gymId) => {
   return useQuery({
     queryKey: ["gym_subscriptions", gymId],
     enabled: !!gymId,

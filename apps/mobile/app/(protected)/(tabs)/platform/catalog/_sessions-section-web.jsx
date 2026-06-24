@@ -19,7 +19,7 @@ import {
   useSaveCatalogSession,
   useDeleteCatalogSession,
   fetchCatalogSessionExercises,
-} from "../../../../../src/hooks/catalog/use-catalog-sessions-admin";
+} from "@gymtrack/core/hooks/catalog/use-catalog-sessions-admin";
 import { useCatalogExercisesAdmin } from "../../../../../src/hooks/catalog/use-catalog-admin";
 
 // Form helpers

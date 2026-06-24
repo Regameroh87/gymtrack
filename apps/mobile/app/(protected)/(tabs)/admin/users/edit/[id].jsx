@@ -12,7 +12,8 @@ import { useLocalSearchParams, useRouter, Redirect } from "expo-router";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
-import { useMemberDetail } from "../../../../../../src/hooks/users/use-member-detail";
+import { useMemberDetail } from "@gymtrack/core/hooks/users/use-member-detail";
+import { useActiveGym } from "../../../../../../src/contexts/active-gym-context";
 import { useUpdateMember } from "../../../../../../src/hooks/users/use-update-member";
 import { useUserRole } from "../../../../../../src/hooks/shared/use-user-role";
 import { canManageMemberData } from "../../../../../../src/constants/roles";
@@ -33,8 +34,9 @@ export default function EditMember() {
   const insets = useSafeAreaInsets();
   const { role, loading: roleLoading } = useUserRole();
   const { brandPrimary } = useGymTheme();
+  const { gymId } = useActiveGym();
   const canManage = canManageMemberData(role); // editar datos = admin+
-  const { data, isLoading } = useMemberDetail(id);
+  const { data, isLoading } = useMemberDetail(id, gymId);
   const updateMutation = useUpdateMember(id);
 
   const [form, setForm] = useState({

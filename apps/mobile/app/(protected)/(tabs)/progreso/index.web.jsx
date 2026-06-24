@@ -2,7 +2,9 @@
 import { ScrollView, Text, View } from "react-native";
 
 // Hooks (web-safe: la asistencia se lee de Supabase, no de SQLite)
-import { useAttendanceStreak } from "../../../../src/hooks/progress/use-attendance-streak.js";
+import { useAttendanceStreak } from "@gymtrack/core/hooks/progress/use-attendance-streak";
+import { useActiveGym } from "../../../../src/contexts/active-gym-context";
+import { useAuth } from "../../../../src/auth/lib/getSession";
 
 // Componentes
 import MemberNavbar from "../../../../src/components/web/MemberNavbar.jsx";
@@ -17,8 +19,10 @@ import { ChartBar, Flame } from "../../../../assets/icons.jsx";
 // de asistencia, que sí se resuelve contra Supabase.
 export default function ProgresoWeb() {
   const { brandPrimary, brandSecondary } = useGymTheme();
+  const { gymId } = useActiveGym();
+  const { userId } = useAuth();
   const MINT = brandSecondary[400];
-  const { data, isLoading } = useAttendanceStreak();
+  const { data, isLoading } = useAttendanceStreak(gymId, userId);
   const streak = data?.weekStreak ?? 0;
   const hasData = (data?.totalCheckins ?? 0) > 0;
 

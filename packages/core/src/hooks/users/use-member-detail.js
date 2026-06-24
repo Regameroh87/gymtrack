@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 
 // DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Detalle de un alumno para la ficha de staff. A diferencia de
 // use-plan-assignments (que lee la DB local del propio usuario logueado), esto
@@ -11,9 +10,7 @@ import { useActiveGym } from "../../contexts/active-gym-context";
 // sus alumnos gracias a la rama is_staff_of de las policies RLS. Multi-gym:
 // asignaciones y logs se acotan al gym activo (el alumno puede entrenar en
 // otros gyms y esos datos no le incumben a este staff).
-export const useMemberDetail = (memberId) => {
-  const { gymId } = useActiveGym();
-
+export const useMemberDetail = (memberId, gymId) => {
   return useQuery({
     queryKey: ["member_detail", memberId, gymId],
     enabled: !!memberId && !!gymId,

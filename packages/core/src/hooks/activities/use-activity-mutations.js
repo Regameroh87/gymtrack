@@ -1,9 +1,8 @@
 // React / libs
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-// DB / contexto
+// DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
 
 // CRUD de actividades, online y directo a Supabase (sin sync local: las gestiona
 // el admin conectado). Cada mutación invalida ["activities", gymId] para refrescar
@@ -22,9 +21,8 @@ const normalize = (value) => ({
   is_active: value.is_active ?? true,
 });
 
-export const useActivityMutations = () => {
+export const useActivityMutations = (gymId) => {
   const queryClient = useQueryClient();
-  const { gymId } = useActiveGym();
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["activities", gymId] });

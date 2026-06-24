@@ -16,12 +16,12 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 import Screen from "../../../../../src/components/Screen";
-import { useMemberDetail } from "../../../../../src/hooks/users/use-member-detail";
+import { useMemberDetail } from "@gymtrack/core/hooks/users/use-member-detail";
 import {
   useAssignablePlans,
   useAssignPlanToMember,
 } from "../../../../../src/hooks/users/use-assign-plan-to-member";
-import { useMemberSubscriptions } from "../../../../../src/hooks/activities/use-member-subscriptions";
+import { useMemberSubscriptions } from "@gymtrack/core/hooks/activities/use-member-subscriptions";
 import { paymentBadge } from "@gymtrack/core";
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 import {
@@ -77,7 +77,7 @@ export default function MemberDetail() {
   const { brandPrimary } = useGymTheme();
   const canManage = canManageMemberData(role); // editar / dar de baja (admin+)
   const canDelete = canDeleteMember(role);     // eliminar permanente (owner+)
-  const { data, isLoading, isError } = useMemberDetail(id);
+  const { data, isLoading, isError } = useMemberDetail(id, gymId);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const { data: plans, isLoading: plansLoading } = useAssignablePlans();
@@ -87,7 +87,7 @@ export default function MemberDetail() {
 
   // Actividades del socio: solo lectura. La gestión (alta/baja/pagos) vive
   // centralizada en la sección Contabilidad.
-  const { data: subs, isLoading: subsLoading } = useMemberSubscriptions(id);
+  const { data: subs, isLoading: subsLoading } = useMemberSubscriptions(id, gymId);
 
   const onDeleteMember = () => {
     if (!data?.profile?.user_id) return;

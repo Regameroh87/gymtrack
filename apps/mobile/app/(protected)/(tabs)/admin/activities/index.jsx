@@ -17,7 +17,8 @@ import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Flame, Pencil } from "../../../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { useActivities } from "../../../../../src/hooks/activities/use-activities";
+import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 // Resumen de los pases de una actividad para la tarjeta: "N pases · desde $X/mes".
 const planSummary = (plans = []) => {
@@ -35,9 +36,10 @@ export default function ActivitiesList() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { brandPrimary } = useGymTheme();
+  const { gymId } = useActiveGym();
   const [search, setSearch] = useState("");
 
-  const { data: activities, isLoading } = useActivities();
+  const { data: activities, isLoading } = useActivities(gymId);
 
   const filtered =
     activities?.filter((a) =>

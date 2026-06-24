@@ -1,18 +1,15 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
 
-// DB / contexto
+// DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Staff del gym activo (owner/admin/coach) para asignarlo como coach de una
 // actividad. A diferencia de useGymMembers, NO excluye al usuario logueado (un
 // dueño puede dictar y asignarse a sí mismo). Devuelve el profile id (lo que
 // referencia activities.coach_id) + nombre y rol. Dos pasos porque memberships y
 // profiles apuntan ambos a auth.users (PostgREST no puede joinear directo).
-export const useGymStaff = () => {
-  const { gymId } = useActiveGym();
-
+export const useGymStaff = (gymId) => {
   return useQuery({
     queryKey: ["gym_staff", gymId],
     enabled: !!gymId,

@@ -7,13 +7,15 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 import FormActivity from "../../../../../../src/components/forms/FormActivity";
-import { useActivityMutations } from "../../../../../../src/hooks/activities/use-activity-mutations";
+import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
+import { useActiveGym } from "../../../../../../src/contexts/active-gym-context";
 import { DEFAULT_ACTIVITY_COLOR } from "../../../../../../src/constants/activity-options";
 
 export default function AddActivityScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { create } = useActivityMutations();
+  const { gymId } = useActiveGym();
+  const { create } = useActivityMutations(gymId);
 
   const form = useForm({
     defaultValues: {

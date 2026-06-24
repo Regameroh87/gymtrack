@@ -1,23 +1,17 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
 
-// DB / hooks
+// DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
-import { useAuth } from "../../auth/lib/getSession";
 
 // Usuarios del gym ACTIVO con su rol POR GYM (memberships.role). Reemplaza al
 // viejo listado directo de profiles: con multi-gym la pertenencia y el rol
 // viven en memberships, y la RLS de profiles devuelve gente de TODOS los gyms
 // del caller. PostgREST no puede joinear memberships→profiles (las FKs de
 // ambas apuntan a auth.users), así que se resuelve en dos pasos.
-export const useGymMembers = ({ onlyRole = null } = {}) => {
-  const { gymId } = useActiveGym();
-  const { user } = useAuth();
-  // uid del usuario logueado (profiles.user_id = auth.uid()). Se excluye del
-  // listado: cada persona se gestiona desde su propia pantalla de perfil.
-  const currentUserId = user?.user_id ?? null;
-
+// currentUserId (profiles.user_id = auth.uid()) se excluye del listado: cada
+// persona se gestiona desde su propia pantalla de perfil. Lo pasa el caller.
+export const useGymMembers = (gymId, currentUserId, { onlyRole = null } = {}) => {
   return useQuery({
     queryKey: ["admin_users", gymId, onlyRole, currentUserId],
     enabled: !!gymId,

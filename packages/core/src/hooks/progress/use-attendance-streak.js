@@ -4,10 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 // Base de datos
 import { supabase } from "../../supabase.js";
 
-// Hooks / contexto
-import { useAuth } from "../../auth/lib/getSession";
-import { useActiveGym } from "../../contexts/active-gym-context";
-
 // Utilidades
 import { startOfDay, startOfWeek, weekKey } from "@gymtrack/core/format-date";
 
@@ -90,10 +86,7 @@ export const fetchAttendanceProgress = async (gymId) => {
   };
 };
 
-export const useAttendanceStreak = () => {
-  const { userId } = useAuth();
-  const { gymId } = useActiveGym();
-
+export const useAttendanceStreak = (gymId, userId) => {
   return useQuery({
     queryKey: ["progress", "attendance", gymId, userId],
     enabled: !!userId && !!gymId,

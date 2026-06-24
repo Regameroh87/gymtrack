@@ -11,10 +11,12 @@ import {
 
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { useGymSubscriptions } from "../../../../../src/hooks/activities/use-gym-subscriptions";
+import { useGymSubscriptions } from "@gymtrack/core/hooks/activities/use-gym-subscriptions";
 import { useActivitySubscriptionMutations } from "../../../../../src/hooks/activities/use-activity-subscription-mutations";
-import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
-import { useActivities } from "../../../../../src/hooks/activities/use-activities";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
+import { useAuth } from "../../../../../src/auth/lib/getSession";
+import { useGymMembers } from "@gymtrack/core/hooks/users/use-gym-members";
+import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
 import { paymentBadge, isOverdue } from "@gymtrack/core";
 
 import {
@@ -55,11 +57,12 @@ const FILTERS = [
 
 export default function BillingWeb() {
   const { brandPrimary } = useGymTheme();
+  const { gymId } = useActiveGym();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [altaOpen, setAltaOpen] = useState(false);
 
-  const { data: subs, isLoading } = useGymSubscriptions();
+  const { data: subs, isLoading } = useGymSubscriptions(gymId);
   const { registerPayment, cancel } = useActivitySubscriptionMutations();
 
   const stats = useMemo(() => {
@@ -349,10 +352,14 @@ function SubRow({ sub, last, brandPrimary, onRegisterPayment, onCancel, busy }) 
 
 // Modal de alta: socio → actividad → pase.
 function AltaMembresiaModal({ visible, onClose, brandPrimary }) {
-  const { data: members, isLoading: membersLoading } = useGymMembers({
-    onlyRole: "member",
-  });
-  const { data: activities, isLoading: activitiesLoading } = useActivities();
+  const { gymId } = useActiveGym();
+  const { user } = useAuth();
+  const { data: members, isLoading: membersLoading } = useGymMembers(
+    gymId,
+    user?.user_id ?? null,
+    { onlyRole: "member" }
+  );
+  const { data: activities, isLoading: activitiesLoading } = useActivities(gymId);
   const { assign } = useActivitySubscriptionMutations();
 
   const [memberSearch, setMemberSearch] = useState("");

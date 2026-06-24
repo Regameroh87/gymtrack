@@ -1,9 +1,8 @@
 // React / libs
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-// DB / contexto
+// DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
 
 // CRUD de pases (activity_plans) de una actividad, online y directo a Supabase.
 // La unicidad (activity_id, lower(label)) la valida la DB → 23505 a mensaje claro.
@@ -23,9 +22,8 @@ const normalize = (value) => ({
   is_active: value.is_active ?? true,
 });
 
-export const useActivityPlanMutations = (activityId) => {
+export const useActivityPlanMutations = (activityId, gymId) => {
   const queryClient = useQueryClient();
-  const { gymId } = useActiveGym();
 
   // Refresca tanto los pases de esta actividad como el listado (las tarjetas
   // muestran cantidad de pases y precio mínimo embebidos en ["activities"]).

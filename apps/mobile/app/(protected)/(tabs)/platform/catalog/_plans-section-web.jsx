@@ -23,11 +23,11 @@ import {
   useRestoreCatalogPlan,
   useDeleteCatalogPlan,
   fetchCatalogPlanDetail,
-} from "../../../../../src/hooks/catalog/use-catalog-plans-admin";
+} from "@gymtrack/core/hooks/catalog/use-catalog-plans-admin";
 import {
   useCatalogSessionsAdmin,
   fetchCatalogSessionExercises,
-} from "../../../../../src/hooks/catalog/use-catalog-sessions-admin";
+} from "@gymtrack/core/hooks/catalog/use-catalog-sessions-admin";
 
 // Form helpers
 import { Field, Input, uploadImageWeb } from "../gyms/_form";

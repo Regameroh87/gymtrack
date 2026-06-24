@@ -11,7 +11,9 @@ import {
 import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 
-import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
+import { useGymMembers } from "@gymtrack/core/hooks/users/use-gym-members";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
+import { useAuth } from "../../../../../src/auth/lib/getSession";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import {
@@ -55,6 +57,8 @@ export default function UsersListWeb() {
   const router = useRouter();
   const { isSuperAdmin } = useUserRole();
   const { brandPrimary } = useGymTheme();
+  const { gymId } = useActiveGym();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
@@ -63,7 +67,7 @@ export default function UsersListWeb() {
   const isMobile = width < 768;
 
   // Multi-gym: lista por memberships del gym activo (rol por gym incluido).
-  const { data: users, isLoading } = useGymMembers();
+  const { data: users, isLoading } = useGymMembers(gymId, user?.user_id ?? null);
 
   // El super_admin solo es visible para otro super_admin (defensa en UI; la RLS
   // de profiles ya lo oculta a roles inferiores a nivel API).

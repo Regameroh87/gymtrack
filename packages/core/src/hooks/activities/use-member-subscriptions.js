@@ -1,16 +1,13 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
 
-// DB / contexto
+// DB
 import { supabase } from "../../supabase.js";
-import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Inscripciones a actividades de UN socio en el gym activo. El staff accede a las
 // de sus socios por la rama is_staff_of de la RLS. Trae la actividad (nombre,
 // color) y el pase (label, frecuencia) embebidos. Devuelve activas + historial.
-export const useMemberSubscriptions = (memberId) => {
-  const { gymId } = useActiveGym();
-
+export const useMemberSubscriptions = (memberId, gymId) => {
   return useQuery({
     queryKey: ["member_subscriptions", memberId, gymId],
     enabled: !!memberId && !!gymId,

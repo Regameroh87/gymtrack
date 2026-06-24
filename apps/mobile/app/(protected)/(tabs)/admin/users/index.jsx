@@ -11,7 +11,9 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { useGymMembers } from "../../../../../src/hooks/users/use-gym-members";
+import { useGymMembers } from "@gymtrack/core/hooks/users/use-gym-members";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
+import { useAuth } from "../../../../../src/auth/lib/getSession";
 import Screen from "../../../../../src/components/Screen";
 import SearchBar from "../../../../../src/components/SearchBar";
 import FilterChips from "../../../../../src/components/FilterChips";
@@ -33,11 +35,13 @@ export default function UsersList() {
   const router = useRouter();
   const { isSuperAdmin } = useUserRole();
   const { brandPrimary } = useGymTheme();
+  const { gymId } = useActiveGym();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Todos");
 
   // Multi-gym: lista por memberships del gym activo (rol por gym incluido).
-  const { data: users, isLoading } = useGymMembers();
+  const { data: users, isLoading } = useGymMembers(gymId, user?.user_id ?? null);
 
   const filtered = users?.filter((u) => {
     // El super_admin solo es visible para otro super_admin (defensa en UI;
