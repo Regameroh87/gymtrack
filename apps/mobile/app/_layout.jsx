@@ -22,7 +22,7 @@ import {
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "../src/lib/queryClient";
+import { queryClient } from "@gymtrack/core/query-client";
 import { AuthProvider } from "../src/auth/lib/getSession";
 import { useInitDatabase } from "../src/database";
 import {

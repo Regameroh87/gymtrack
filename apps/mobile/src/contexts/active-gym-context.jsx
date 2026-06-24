@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 // Auth y datos
 import { useAuth } from "../auth/lib/getSession";
 import { supabase } from "../database/supabase";
-import { queryClient } from "../lib/queryClient";
+import { queryClient } from "@gymtrack/core/query-client";
 
 // El motor de sync escribe en SQLite local, que solo existe en native (la web
 // consulta Supabase directo). Carga diferida para no inicializar expo-sqlite

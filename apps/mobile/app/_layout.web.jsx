@@ -34,7 +34,7 @@ import {
 } from "@expo-google-fonts/manrope";
 
 // Lib
-import { queryClient } from "../src/lib/queryClient";
+import { queryClient } from "@gymtrack/core/query-client";
 import { AuthProvider } from "../src/auth/lib/getSession";
 import { GymThemeProvider } from "../src/contexts/gym-theme-context";
 import { ActiveGymProvider } from "../src/contexts/active-gym-context";

@@ -19,7 +19,7 @@ import { supabase } from "../../src/database/supabase";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../src/constants/roles";
-import { generateRamp } from "../../src/theme/generate-ramp";
+import { generateRamp } from "@gymtrack/core/generate-ramp";
 import { brandPrimary as defaultPrimary } from "../../src/theme/colors";
 
 // Multi-gym: el login autentica a la persona; acá elige en qué gimnasio entra.

@@ -13,7 +13,7 @@ import {
   gradient as defaultGradient,
   buildGradients,
 } from "../theme/colors";
-import { generateRamp, rampToChannels, SHADES } from "../theme/generate-ramp";
+import { generateRamp, rampToChannels, SHADES } from "@gymtrack/core/generate-ramp";
 
 // Datos del gym (branding)
 import { useGym } from "../hooks/gyms/use-gym";

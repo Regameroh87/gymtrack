@@ -29,7 +29,7 @@ import { supabase } from "../database/supabase";
 import { eq, ne, or, and, inArray, isNotNull } from "drizzle-orm";
 import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
-import { queryClient } from "../lib/queryClient";
+import { queryClient } from "@gymtrack/core/query-client";
 
 const LAST_SYNC_KEY = "last_sync_at";
 const DB_EPOCH_KEY = "db_initialized_at";
