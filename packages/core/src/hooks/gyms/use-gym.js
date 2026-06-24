@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 // Datos
-import { getSupabaseClient } from "../../supabase.js";
+import { supabase } from "../../supabase.js";
 
 // Lee un gym por id (incluye branding: logo + theme). El gymId lo pasa el caller
 // (en móvil sale del contexto de gym activo / memberships; en web del routing o
@@ -14,7 +14,7 @@ export const useGym = (gymId) =>
     enabled: !!gymId,
     staleTime: 1000 * 60 * 30, // el branding cambia rara vez
     queryFn: async () => {
-      const { data, error } = await getSupabaseClient()
+      const { data, error } = await supabase
         .from("gyms")
         .select(
           "id, name, logo_url, logo_url_dark, theme_primary, theme_accent, header_logo_size, header_logo_position, header_content, default_catalog"

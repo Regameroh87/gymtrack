@@ -5,7 +5,7 @@
 // [[project_default_catalog]].
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getSupabaseClient } from "../../supabase.js";
+import { supabase } from "../../supabase.js";
 
 export const CATALOG_PLANS_KEY = ["catalog_admin", "plans"];
 export const ARCHIVED_PLANS_KEY = ["catalog_admin", "plans_archived"];

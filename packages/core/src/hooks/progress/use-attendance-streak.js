@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 // Base de datos
-import { getSupabaseClient } from "../../supabase.js";
+import { supabase } from "../../supabase.js";
 
 // Hooks / contexto
 import { useAuth } from "../../auth/lib/getSession";

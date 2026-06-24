@@ -47,3 +47,20 @@ export function getSupabaseClient() {
   }
   return _client;
 }
+
+// Proxy lazy del cliente: resuelve el cliente registrado en cada acceso, así los
+// hooks de datos de core escriben `supabase.from(...)` / `supabase.rpc(...)` de
+// forma idiomática sin importar el wrapper del host ni preocuparse por el orden
+// de inicialización (el cliente se resuelve recién al ejecutarse la query/mutación,
+// cuando ya fue registrado en el boot). Los métodos se bindean al cliente para no
+// perder el `this` interno de supabase-js.
+export const supabase = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      const client = getSupabaseClient();
+      const value = client[prop];
+      return typeof value === "function" ? value.bind(client) : value;
+    },
+  }
+);
