@@ -9,7 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@gymtrack/core": "file:../../packages/core",
     "@supabase/supabase-js": "^2.97.0",
+    "gymtrack-monorepo": "file:../..",
     "lucide-react": "^0.469.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
