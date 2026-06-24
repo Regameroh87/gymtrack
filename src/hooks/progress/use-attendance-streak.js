@@ -9,7 +9,7 @@ import { useAuth } from "../../auth/lib/getSession";
 import { useActiveGym } from "../../contexts/active-gym-context";
 
 // Utilidades
-import { startOfDay, startOfWeek, weekKey } from "../../utils/format-date";
+import { startOfDay, startOfWeek, weekKey } from "@gymtrack/core/format-date";
 
 // Ventana del heatmap / cálculo de racha (semanas hacia atrás, incluida la actual).
 const WEEKS = 12;

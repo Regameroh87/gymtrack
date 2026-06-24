@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
 import { gradient } from "../../theme/colors";
 import YoutubePlayer from "react-native-youtube-iframe";
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 export default function PreviewVideo({ videoUrl, children }) {
   const { colorScheme } = useColorScheme();

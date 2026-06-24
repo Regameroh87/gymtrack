@@ -41,7 +41,7 @@ import { ChevronRight, Plus, X, Calendar } from "../../../assets/icons";
 
 // Media
 import { Image } from "expo-image";
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // ─── Tarjeta de día ──────────────────────────────────────────────────────────
 

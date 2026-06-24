@@ -7,7 +7,7 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 
 // Utils
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
 import { ui } from "../../theme/colors";

@@ -18,7 +18,7 @@ import {
   exercise_equipment as exerciseEquipmentTable,
   equipment as equipmentTable,
 } from "../../database/schemas";
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import PreviewVideo from "../videos/PreviewVideo";
 import { Barbell, Pencil, Trash } from "../../../assets/icons";
 import { ui } from "../../theme/colors";

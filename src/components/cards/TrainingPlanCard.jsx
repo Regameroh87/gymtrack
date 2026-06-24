@@ -7,7 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
 // Utilidades
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Constantes
 import { PLAN_GENDER_BADGES } from "../../constants/gender-options";

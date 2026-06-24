@@ -17,7 +17,7 @@ import {
 } from "../../database/schemas";
 
 // Utils
-import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
+import { getCloudinaryUrl, CLOUD_NAME } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
 import { useGymTheme } from "../../contexts/gym-theme-context";

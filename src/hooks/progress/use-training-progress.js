@@ -14,7 +14,7 @@ import {
 import { useAuth } from "../../auth/lib/getSession";
 
 // Utilidades
-import { lastNWeeks, weekKey } from "../../utils/format-date";
+import { lastNWeeks, weekKey } from "@gymtrack/core/format-date";
 
 const WEEKS = 12;
 

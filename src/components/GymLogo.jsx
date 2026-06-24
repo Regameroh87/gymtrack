@@ -8,7 +8,7 @@ import { Image } from "expo-image";
 import { useGymTheme } from "../contexts/gym-theme-context";
 
 // ── Utils ──
-import { getCloudinaryUrl } from "../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 /**
  * Logo del gym activo, con fallback a iniciales sobre fondo branded.

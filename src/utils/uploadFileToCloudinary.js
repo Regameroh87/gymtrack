@@ -1,4 +1,4 @@
-import { CLOUD_NAME } from "./cloudinary";
+import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
 
 export const uploadFileToCloudinary = async ({
   fileUri,

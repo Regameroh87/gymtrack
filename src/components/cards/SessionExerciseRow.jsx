@@ -6,7 +6,7 @@ import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 
 // Utils
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
 import { useGymTheme } from "../../contexts/gym-theme-context";

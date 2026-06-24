@@ -9,7 +9,7 @@ import {
 import { Image } from "expo-image";
 import { ui } from "../theme/colors";
 import { useGymTheme } from "../contexts/gym-theme-context";
-import { getCloudinaryUrl } from "../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { Barbell } from "../../assets/icons";
 import { useColorScheme } from "nativewind";
 

@@ -14,7 +14,7 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import { LinearGradient } from "expo-linear-gradient";
 import { ui } from "../../theme/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
-import { getCloudinaryUrl, CLOUD_NAME } from "../../utils/cloudinary";
+import { getCloudinaryUrl, CLOUD_NAME } from "@gymtrack/core/cloudinary";
 import { Barbell, ChevronRight, GripVertical, Trash } from "../../../assets/icons";
 
 const DEFAULT_SET = {

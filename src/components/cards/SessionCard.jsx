@@ -10,7 +10,7 @@ import * as Haptics from "expo-haptics";
 import { SESSION_LEVELS } from "../../constants/sessionOptions";
 
 // Base de datos / utils
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 
 // Tema / assets
 import { Barbell, ChartBar, ChevronRight } from "../../../assets/icons";

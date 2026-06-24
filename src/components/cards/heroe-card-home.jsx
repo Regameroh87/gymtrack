@@ -23,7 +23,7 @@ import { useActivePlanSummary } from "../../hooks/plans/use-active-plan-summary"
 import { useActiveSessionDraft } from "../../hooks/sessions/use-active-session-draft";
 
 // ── Utils ──
-import { getCloudinaryUrl } from "../../utils/cloudinary";
+import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../utils/box-shadow";
 
 export default function HeroeCardHome({ image }) {
