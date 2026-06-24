@@ -20,7 +20,7 @@ import { ChevronRight, Barbell, ClipboardList } from "../../../assets/icons";
 
 // ── Hooks ──
 import { useActivePlanSummary } from "../../hooks/plans/use-active-plan-summary";
-import { useActiveSessionDraft } from "../../hooks/sessions/use-active-session-draft";
+import { useActiveSessionDraft } from "@gymtrack/core/hooks/sessions/use-active-session-draft";
 
 // ── Utils ──
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";

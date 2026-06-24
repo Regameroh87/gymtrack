@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { storage } from "../../storage.js";
 import { sessionDraftPrefix } from "./use-session-draft";
 
-// Escanea AsyncStorage en busca de cualquier sesión a medias (draft) y
+// Escanea el storage en busca de cualquier sesión a medias (draft) y
 // devuelve la más reciente. Desacoplado de la pantalla activa para poder
 // detectar "sesión en curso" desde cualquier ruta (home, banner global, etc).
 // Devuelve null si no hay ningún draft guardado.
 export const fetchActiveSessionDraft = async () => {
-  const keys = await AsyncStorage.getAllKeys();
+  const keys = await storage.getAllKeys();
   const draftKeys = keys.filter((k) => k.startsWith(sessionDraftPrefix));
   if (draftKeys.length === 0) return null;
 
-  const entries = await AsyncStorage.multiGet(draftKeys);
+  const entries = await storage.multiGet(draftKeys);
   let latest = null;
   for (const [key, raw] of entries) {
     if (!raw) continue;

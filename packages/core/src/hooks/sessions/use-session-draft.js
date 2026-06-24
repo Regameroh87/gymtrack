@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storage } from "../../storage.js";
 
 export const sessionDraftPrefix = "gymtrack:session_draft:";
 export const sessionDraftKey = (dayId) => `${sessionDraftPrefix}${dayId}`;
@@ -24,7 +24,7 @@ export function useSessionDraft(dayId) {
       setIsRestored(true);
       return;
     }
-    AsyncStorage.getItem(draftKey(dayId)).then((raw) => {
+    storage.getItem(draftKey(dayId)).then((raw) => {
       if (raw) {
         try {
           const saved = JSON.parse(raw);
@@ -45,7 +45,7 @@ export function useSessionDraft(dayId) {
   useEffect(() => {
     if (stoppedRef.current) return;
     if (!dayId || !isRestored || !startedAt) return;
-    AsyncStorage.setItem(
+    storage.setItem(
       draftKey(dayId),
       JSON.stringify({
         startedAt,
@@ -60,7 +60,7 @@ export function useSessionDraft(dayId) {
     // Síncrono: queda activo antes de que el refetch del resumen dispare el
     // re-render con el día siguiente, evitando el draft fantasma.
     stoppedRef.current = true;
-    if (dayId) return AsyncStorage.removeItem(draftKey(dayId));
+    if (dayId) return storage.removeItem(draftKey(dayId));
     return Promise.resolve();
   }, [dayId]);
 

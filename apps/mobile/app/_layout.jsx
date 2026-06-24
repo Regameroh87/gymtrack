@@ -1,5 +1,6 @@
 import "../global.css";
 import "../src/theme/nativewind";
+import "../src/storage-init";
 import { useKeepAwake } from "expo-keep-awake";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";

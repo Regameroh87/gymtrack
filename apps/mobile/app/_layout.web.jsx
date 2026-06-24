@@ -1,6 +1,7 @@
 // Estilos globales
 import "../global.css";
 import "../src/theme/nativewind";
+import "../src/storage-init";
 
 // React Native
 import { View, Text } from "react-native";

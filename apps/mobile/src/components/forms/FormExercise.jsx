@@ -6,7 +6,7 @@ import * as Haptics from "expo-haptics";
 import { useQuery } from "@tanstack/react-query";
 import { database } from "../../database";
 import { exercises_base, equipment } from "../../database/schemas";
-import useAsyncStorage from "../../hooks/shared/use-async-storage";
+import useAsyncStorage from "@gymtrack/core/hooks/shared/use-async-storage";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { eq, and, ne } from "drizzle-orm";
 import { useEquipmentForm } from "../../hooks/exercises/use-equipment-form";

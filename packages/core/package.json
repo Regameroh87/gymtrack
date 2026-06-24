@@ -13,7 +13,9 @@
     "./generate-ramp": "./src/generate-ramp.js",
     "./query-client": "./src/query-client.js",
     "./supabase": "./src/supabase.js",
-    "./colors": "./src/colors.js"
+    "./colors": "./src/colors.js",
+    "./storage": "./src/storage.js",
+    "./hooks/*": "./src/hooks/*.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",

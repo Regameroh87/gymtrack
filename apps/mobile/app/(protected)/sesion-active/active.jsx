@@ -37,7 +37,7 @@ import {
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary.js";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises.js";
 import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-log.js";
-import { useSessionDraft } from "../../../src/hooks/sessions/use-session-draft.js";
+import { useSessionDraft } from "@gymtrack/core/hooks/sessions/use-session-draft";
 
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../../src/utils/box-shadow.js";

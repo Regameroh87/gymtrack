@@ -21,7 +21,7 @@ import { Barbell, Play } from "../../../assets/icons.jsx";
 
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises";
-import { useActiveSessionDraft } from "../../../src/hooks/sessions/use-active-session-draft";
+import { useActiveSessionDraft } from "@gymtrack/core/hooks/sessions/use-active-session-draft";
 
 import { formatShortDate } from "@gymtrack/core/format-date";
 import { makeShadow } from "../../../src/utils/box-shadow";
