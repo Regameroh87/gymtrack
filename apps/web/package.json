@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@gymtrack/core": "file:../../packages/core",
-    "@gymtrack/web": "file:",
+    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.97.0",
     "lucide-react": "^0.469.0",
     "next": "^15.1.6",
