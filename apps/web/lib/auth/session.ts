@@ -226,8 +226,9 @@ export function getPostLoginPath(ctx: SessionContext): string {
   if (!ctx.authUser) return "/login";
   if (ctx.isSuperAdmin) return "/platform";
   if (ctx.needsSelection) return "/select-gym";
-  // Staff con gym resuelto → panel del gym. Sin gym usable o rol no-staff
-  // (socios usan la app mobile) → selector, que muestra el aviso correspondiente.
+  // Staff con gym resuelto → panel del gym. Socio con gym resuelto → su home web.
+  // Sin gym usable → selector, que muestra el aviso correspondiente.
   if (ctx.activeGymId && isStaffRole(ctx.role)) return "/admin";
+  if (ctx.activeGymId) return "/home";
   return "/select-gym";
 }

@@ -77,6 +77,13 @@ declare module "@gymtrack/core/colors" {
   export const gradient: Record<string, unknown>;
 }
 
+declare module "@gymtrack/core/format-date" {
+  export function formatDuration(seconds: number | null | undefined): string;
+  export function startOfDay(d: Date): Date;
+  export function startOfWeek(d: Date): Date;
+  export function weekKey(d: Date): string;
+}
+
 declare module "@gymtrack/core/generate-ramp" {
   import type { Ramp } from "@gymtrack/core/colors";
   export function generateRamp(seed: string): Ramp;

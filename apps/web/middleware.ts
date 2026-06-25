@@ -8,7 +8,17 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "gymtrack.ar";
 const RESERVED = new Set(["www", "app", "api", ""]);
 
 // Rutas del panel autenticado (sirven en el host `app.`). Sin sesión → /login.
-const PROTECTED_PREFIXES = ["/admin", "/platform", "/select-gym", "/dashboard"];
+const PROTECTED_PREFIXES = [
+  "/admin",
+  "/platform",
+  "/select-gym",
+  "/dashboard",
+  // Área de socio (web)
+  "/home",
+  "/planes",
+  "/progreso",
+  "/sesion-active",
+];
 // Rutas de autenticación. Con sesión → resolver post-login.
 const AUTH_PREFIXES = ["/login", "/verify"];
 
