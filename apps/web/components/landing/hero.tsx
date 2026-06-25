@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Flame, ArrowRight } from "lucide-react";
 import { HERO } from "@/lib/content";
-import { MAILTO_HREF, APP_URL } from "@/lib/site";
+import { MAILTO_HREF } from "@/lib/site";
 
 export default function Hero() {
   return (
@@ -35,7 +35,7 @@ export default function Hero() {
                 <ArrowRight size={18} aria-hidden="true" />
               </a>
               <a
-                href={`${APP_URL}/login`}
+                href="/login"
                 className="rounded-2xl border border-white/20 bg-white/5 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-white/10"
               >
                 {HERO.secondaryCta}

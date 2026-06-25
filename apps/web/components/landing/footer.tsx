@@ -1,6 +1,6 @@
 import { Dumbbell } from "lucide-react";
 import { NAV_LINKS } from "@/lib/content";
-import { BRAND, MAILTO_HREF, APP_URL } from "@/lib/site";
+import { BRAND, MAILTO_HREF } from "@/lib/site";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -49,7 +49,7 @@ export default function Footer() {
               Solicitar demo
             </a>
             <a
-              href={`${APP_URL}/login`}
+              href="/login"
               className="font-manrope text-sm text-brandPrimary-200 transition hover:text-white"
             >
               Iniciar sesión

@@ -1,6 +1,6 @@
 import { Dumbbell, ArrowRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/content";
-import { BRAND, MAILTO_HREF, APP_URL } from "@/lib/site";
+import { BRAND, MAILTO_HREF } from "@/lib/site";
 
 export default function Navbar() {
   return (
@@ -29,7 +29,7 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 md:gap-3">
           <a
-            href={`${APP_URL}/login`}
+            href="/login"
             className="rounded-xl px-3 py-2 font-manrope text-sm font-bold text-white transition hover:bg-white/10 md:px-4 md:py-2.5"
           >
             Iniciar sesión
