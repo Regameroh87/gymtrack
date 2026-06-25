@@ -158,15 +158,10 @@ function resolveActiveGymId(opts: {
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const supabase = await createServerSupabase();
 
-  // El middleware ya corrió auth.getUser() (valida + refresca el token contra
-  // Supabase Auth, con red) en ESTE mismo request. Acá leemos la sesión ya
-  // validada con getSession() (lee la cookie, SIN red) para no duplicar el
-  // round-trip a Auth en cada navegación. Es seguro porque la cookie fue
-  // validada por el middleware un instante antes (patrón SSR de Supabase).
+  // auth.getUser() valida la sesión contra Supabase Auth (es la versión segura).
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const authUser = session?.user ?? null;
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
 
   if (!authUser) {
     return {
