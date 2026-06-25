@@ -1,8 +1,4 @@
 {
   "root": true,
-  "extends": ["next", "next/core-web-vitals", "@typescript-eslint", "prettier"],
-  "rules": {
-    "react/no-unescaped-entities": "off",
-    "@typescript-eslint/no-unused-vars": "error"
-  }
+  "extends": ["next/core-web-vitals"]
 }
