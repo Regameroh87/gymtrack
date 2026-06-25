@@ -77,6 +77,24 @@ export async function uploadImageWeb(file: File): Promise<string> {
   return json.public_id as string;
 }
 
+// Sube un video a Cloudinary (mismo preset/tag que el push del sync mobile) y
+// devuelve su public_id. En web no hay sync, así que se sube en el guardado del form.
+export async function uploadVideoWeb(file: File): Promise<string> {
+  const data = new FormData();
+  data.append("file", file);
+  data.append("upload_preset", "gymtrack_videos");
+  data.append("tags", "pending_approval");
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
+    { method: "POST", body: data }
+  );
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.error?.message || "Error al subir video");
+  }
+  return json.public_id as string;
+}
+
 // Etiqueta legible del dueño de un gym.
 export function ownerLabel(owner: GymOwner | OwnerCandidate | null): string {
   if (!owner) return "Sin dueño asignado";

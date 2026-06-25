@@ -25,7 +25,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { BRAND } from "@/lib/site";
 
 // Ítems del nav. `comingSoon` deja los módulos aún no migrados como placeholders
-// deshabilitados (solo resta catálogo).
+// deshabilitados (todos los módulos de plataforma ya están migrados).
 type NavItem = {
   icon: typeof ShieldHalf;
   label: string;
@@ -36,7 +36,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/platform" },
   { icon: ShieldHalf, label: "Gimnasios", href: "/platform/gyms" },
-  { icon: Dumbbell, label: "Catálogo", href: "/platform/catalog", comingSoon: true },
+  { icon: Dumbbell, label: "Catálogo", href: "/platform/catalog" },
   { icon: Receipt, label: "Facturación", href: "/platform/billing" },
   { icon: Users, label: "Usuarios globales", href: "/platform/users" },
   { icon: Settings, label: "Ajustes", href: "/platform/settings" },
