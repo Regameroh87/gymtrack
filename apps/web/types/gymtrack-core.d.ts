@@ -16,3 +16,33 @@ declare module "@gymtrack/core/supabase" {
   export function getSupabaseClient(): SupabaseClient;
   export const supabase: SupabaseClient;
 }
+
+declare module "@gymtrack/core/colors" {
+  export type Ramp = Record<number, string>;
+  export const brandPrimary: Ramp;
+  export const brandSecondary: Ramp;
+  export const ui: {
+    background: Record<string, string>;
+    surface: Record<string, string>;
+    surfaceSecondary: Record<string, string>;
+    text: Record<string, string>;
+    input: Record<string, string>;
+    toggle: Record<string, string>;
+    placeholder: Record<string, string>;
+    overlay: Record<string, string>;
+    status: Record<string, string>;
+    decor: Record<string, unknown>;
+    icon: Record<string, string>;
+    border: Record<string, string>;
+    arrow: Record<string, string>;
+    [k: string]: unknown;
+  };
+  export const gradient: Record<string, unknown>;
+}
+
+declare module "@gymtrack/core/generate-ramp" {
+  import type { Ramp } from "@gymtrack/core/colors";
+  export function generateRamp(seed: string): Ramp;
+  export function rampToChannels(ramp: Ramp): Record<number, string>;
+  export const SHADES: number[];
+}
