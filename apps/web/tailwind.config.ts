@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { ui } from "@gymtrack/core/colors";
 
 // Tokens del design system "Kinetic Precision" — espejados de
 // apps/mobile src/theme/colors.js (Power Indigo + Pulse Mint). La landing de
@@ -39,6 +40,9 @@ const config: Config = {
           900: "#064e3b",
           950: "#022c22",
         },
+        // Tokens neutros/de UI del design system (ui-text-main, ui-input-border,
+        // ui-background-light, ui-surface-light, …) — espejo de los .web.jsx de Expo.
+        ui,
       },
       fontFamily: {
         jakarta: ["var(--font-jakarta)", "system-ui", "sans-serif"],
