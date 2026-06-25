@@ -1,5 +1,6 @@
 import { Dumbbell } from "lucide-react";
 import { NAV_LINKS } from "@/lib/content";
+import Link from "next/link";
 import { BRAND, MAILTO_HREF } from "@/lib/site";
 
 export default function Footer() {
@@ -48,12 +49,12 @@ export default function Footer() {
             >
               Solicitar demo
             </a>
-            <a
+            <Link
               href="/login"
               className="font-manrope text-sm text-brandPrimary-200 transition hover:text-white"
             >
               Iniciar sesión
-            </a>
+            </Link>
           </div>
         </div>
 

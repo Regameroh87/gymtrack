@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Flame, ArrowRight } from "lucide-react";
 import { HERO } from "@/lib/content";
+import Link from "next/link";
 import { MAILTO_HREF } from "@/lib/site";
 
 export default function Hero() {
@@ -34,12 +35,12 @@ export default function Hero() {
                 <span className="mr-2">{HERO.primaryCta}</span>
                 <ArrowRight size={18} aria-hidden="true" />
               </a>
-              <a
+              <Link
                 href="/login"
                 className="rounded-2xl border border-white/20 bg-white/5 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-white/10"
               >
                 {HERO.secondaryCta}
-              </a>
+              </Link>
             </div>
           </div>
 

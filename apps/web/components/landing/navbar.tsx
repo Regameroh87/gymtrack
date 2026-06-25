@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Dumbbell, ArrowRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/content";
 import { BRAND, MAILTO_HREF } from "@/lib/site";
@@ -28,12 +29,12 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">
-          <a
+          <Link
             href="/login"
             className="rounded-xl px-3 py-2 font-manrope text-sm font-bold text-white transition hover:bg-white/10 md:px-4 md:py-2.5"
           >
             Iniciar sesión
-          </a>
+          </Link>
           <a
             href={MAILTO_HREF}
             className="flex items-center rounded-xl border border-white/20 bg-brandPrimary-700 px-3 py-2 font-manrope text-sm font-bold text-white transition hover:bg-brandPrimary-600 md:px-4 md:py-2.5"
