@@ -5,6 +5,7 @@
 // (filtrados por rol) + acciones rápidas + próximamente. Navegación con Link.
 
 // Next
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 // Iconos
@@ -100,12 +101,15 @@ export default function AdminDashboardPage() {
     canAccessModule(role, mod.path)
   );
 
-  const dateStr = new Date().toLocaleDateString("es-ES", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const [dateStr, setDateStr] = useState("");
+  useEffect(() => {
+    setDateStr(new Date().toLocaleDateString("es-ES", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }));
+  }, []);
 
   return (
     <div className="p-4 pb-14 md:p-9">

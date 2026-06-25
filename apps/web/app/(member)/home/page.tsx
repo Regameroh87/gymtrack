@@ -7,7 +7,7 @@
 // Expo web.
 
 // React / Next
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 // Contextos, hooks y helpers
@@ -61,10 +61,12 @@ export default function HomePage() {
   const logs: never[] = [];
   const logsLoading = false;
 
-  const now = useMemo(() => new Date(), []);
-  const dateLine = formatDateLine(now);
-  const dayName = DAYS_ES[now.getDay()];
-  const greeting = greetingFor(now);
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => { setNow(new Date()); }, []);
+
+  const dateLine = now ? formatDateLine(now) : "";
+  const dayName = now ? DAYS_ES[now.getDay()] : "";
+  const greeting = now ? greetingFor(now) : "¡Bienvenido";
   const firstName = ((user?.name as string) ?? "").split(" ")[0] || "Atleta";
 
   const sessionsThisMonth = 0;
