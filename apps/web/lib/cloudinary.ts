@@ -3,7 +3,7 @@
 // CLOUD_NAME si no traen prefijo de carpeta tipo "images/"). Si ya viene una URL
 // completa, se devuelve tal cual.
 
-const CLOUD_NAME =
+export const CLOUD_NAME =
   process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "ddupuyeko";
 
 export function cloudinaryUrl(
