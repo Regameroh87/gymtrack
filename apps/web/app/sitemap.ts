@@ -6,7 +6,7 @@ export const revalidate = 3600;
 
 // Landing de marca + una entrada por subdominio de cada gym activo.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const gyms = await listPublicGyms();
+  const gyms = await listPublicGyms().catch(() => []);
 
   return [
     {
