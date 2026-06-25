@@ -1,31 +1,45 @@
 "use client";
 
-// Form de verificación del código OTP. Réplica de apps/mobile/src/auth/lib/verifyCode.js:
-// verifyOtp({ email, token, type:"email" }) → al validar, la sesión queda en cookies
+// Form de verificación del código OTP. Clon del split de apps/mobile verify.web.jsx:
+// 6 cajas de un dígito (auto-focus, backspace, paste), sobre el panel oscuro de AuthSplit.
+// Lógica: verifyOtp({ email, token, type:"email" }) → al validar, la sesión queda en cookies
 // y se redirige al destino post-login (resolver /dashboard, o `next` si venía de un guard).
 
 // React
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+
+// Librerías
+import { MailCheck } from "lucide-react";
 
 // Supabase
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
+// Componentes
+import { AuthSplit, AuthCompactBrand } from "@/components/auth/auth-split";
+
+const EMPTY_CODE = ["", "", "", "", "", ""];
+
 export function VerifyForm({ email, next }: { email: string; next?: string }) {
   const router = useRouter();
-  const [code, setCode] = useState("");
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [code, setCode] = useState<string[]>(EMPTY_CODE);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  const canSubmit = code.every((d) => d !== "");
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit || pending) return;
+
     setError(null);
     setPending(true);
     try {
       const supabase = getBrowserSupabase();
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
-        token: code.trim(),
+        token: code.join("").trim(),
         type: "email",
       });
       if (verifyError) throw verifyError;
@@ -34,57 +48,159 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
       router.replace(next || "/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Código inválido.");
+      setError(getVerifyError(err));
       setPending(false);
     }
   };
 
+  const handleResend = async () => {
+    setError(null);
+    setCode(EMPTY_CODE);
+    inputRefs.current[0]?.focus();
+    try {
+      const supabase = getBrowserSupabase();
+      await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { shouldCreateUser: false },
+      });
+    } catch {
+      // Reenvío best-effort; el usuario puede reintentar.
+    }
+  };
+
+  const setDigit = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    setCode((prev) => {
+      const newCode = [...prev];
+      newCode[index] = digit;
+      return newCode;
+    });
+    if (digit && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && code[index] === "" && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    e.preventDefault();
+    const newCode = [...EMPTY_CODE];
+    for (let i = 0; i < 6; i++) newCode[i] = pasted[i] || "";
+    setCode(newCode);
+    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+  };
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-jakarta text-xl font-bold text-brandPrimary-950">
-          Verificá tu email
+    <AuthSplit
+      heading={"Casi\nListos."}
+      subtitle="Revisá tu bandeja de entrada. Te enviamos un código de 6 dígitos para confirmar tu identidad."
+    >
+      <AuthCompactBrand />
+
+      <div className="mb-8 flex flex-col items-center">
+        <div className="mb-5 rounded-full border border-[#4a44e4]/30 bg-[#4a44e4]/20 p-4">
+          <MailCheck color="#c2c1ff" size={36} />
+        </div>
+        <h1 className="text-center font-jakarta text-3xl font-extrabold tracking-tight text-white">
+          Revisá tu correo
         </h1>
-        <p className="text-sm text-gray-500">
-          Ingresá el código que enviamos a <span className="font-medium">{email}</span>.
+        <p className="mt-2 text-center font-manrope text-base text-[#c2c1ff]">
+          Ingresá el código de 6 dígitos que enviamos a{" "}
+          <span className="font-manrope font-bold text-white">{email}</span>
         </p>
       </div>
 
-      <form onSubmit={handleVerify} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="code" className="text-sm font-medium text-gray-700">
-            Código
-          </label>
-          <input
-            id="code"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="123456"
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-center text-lg tracking-widest outline-none focus:border-brandPrimary-700 focus:ring-2 focus:ring-brandPrimary-700/20"
-          />
+      <form onSubmit={handleVerify}>
+        <div className="mb-2 flex w-full flex-row justify-center gap-3">
+          {code.map((digit, index) => (
+            <input
+              key={index}
+              ref={(el) => {
+                inputRefs.current[index] = el;
+              }}
+              inputMode="numeric"
+              autoComplete={index === 0 ? "one-time-code" : "off"}
+              maxLength={1}
+              value={digit}
+              onChange={(e) => setDigit(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              onPaste={handlePaste}
+              className="h-14 w-12 rounded-xl border border-[#4a44e4]/40 bg-[#0c006a]/40 text-center font-manrope text-2xl font-bold text-white outline-none focus:border-[#c2c1ff]"
+            />
+          ))}
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div className="mb-2 min-h-[50px] w-full justify-center pt-2">
+          {error ? (
+            <div>
+              <p className="mt-2 text-center font-manrope text-sm font-bold text-[#ffdad6]">
+                {error}
+              </p>
+              <button
+                type="button"
+                onClick={handleResend}
+                className="w-full rounded-xl p-2"
+              >
+                <span className="text-center font-manrope text-sm font-bold text-[#c2c1ff] underline">
+                  Reenviar código
+                </span>
+              </button>
+            </div>
+          ) : (
+            <p className="text-center font-manrope text-sm text-[#c2c1ff]">
+              Revisá tu correo no deseado por si acaso
+            </p>
+          )}
+        </div>
 
         <button
           type="submit"
-          disabled={pending}
-          className="mt-2 rounded-lg bg-brandPrimary-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brandPrimary-600 disabled:opacity-60"
+          disabled={pending || !canSubmit}
+          className={`flex w-full flex-row items-center justify-center rounded-2xl p-4 transition ${
+            pending || !canSubmit
+              ? "cursor-not-allowed border border-[#4a44e4]/30 bg-[#4a44e4]/60"
+              : "border border-[#d6d4ff]/30 bg-[#4a44e4] hover:scale-[1.01] hover:bg-[#3a34d4]"
+          }`}
         >
-          {pending ? "Verificando…" : "Entrar"}
+          <span
+            className={`text-center font-manrope text-lg font-bold ${
+              pending || !canSubmit ? "text-white/60" : "text-white"
+            }`}
+          >
+            {pending ? "Verificando..." : "Verificar código"}
+          </span>
         </button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => router.push("/login")}
-        className="text-xs text-gray-400 underline-offset-2 hover:underline"
-      >
-        Volver a ingresar el email
-      </button>
-    </div>
+      <p className="mt-8 text-center font-manrope text-xs text-[#c2c1ff]/70">
+        ¿No recibiste el código?{" "}
+        <button
+          type="button"
+          onClick={handleResend}
+          className="font-manrope text-[#c2c1ff] underline"
+        >
+          Reenviar
+        </button>
+      </p>
+    </AuthSplit>
   );
+}
+
+// Errores de verifyOtp mapeados como en Expo verify.web.jsx.
+function getVerifyError(err: unknown): string {
+  const e = err as { status?: number; message?: string };
+  if (e?.status === 400) {
+    const msg = (e.message ?? "").toLowerCase();
+    if (msg.includes("expired")) return "El código ha expirado, pedí uno nuevo";
+    if (msg.includes("invalid"))
+      return "Código incorrecto, verificalo e intentá de nuevo";
+  }
+  return "Ha ocurrido un error, intentalo de nuevo";
 }
