@@ -4,8 +4,10 @@
 
 // Librerías
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { type User } from "@supabase/supabase-js";
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 // Config
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase-config";
@@ -20,7 +22,7 @@ export async function updateSession(
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: CookieToSet[]) {
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );

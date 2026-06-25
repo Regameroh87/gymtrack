@@ -5,7 +5,9 @@
 
 // Librerías
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 // Config
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase-config";
@@ -19,7 +21,7 @@ export async function createServerSupabase() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: CookieToSet[]) {
         // En Server Components puros, escribir cookies lanza; se ignora porque el
         // refresco de sesión ya lo hace el middleware. En server actions / route
         // handlers sí persiste.
