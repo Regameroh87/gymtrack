@@ -76,7 +76,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto pt-2">
+        <nav className="flex-1 overflow-y-auto pt-2 scrollbar-hide">
           <p className="mb-1.5 mt-1 px-[18px] font-manrope text-[9px] font-semibold uppercase tracking-[1.5px] text-white/25">
             Plataforma
           </p>
