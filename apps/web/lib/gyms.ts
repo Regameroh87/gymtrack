@@ -88,10 +88,14 @@ export function ownerLabel(owner: GymOwner | OwnerCandidate | null): string {
 export function formatGymDate(iso: string | null): string {
   if (!iso) return "—";
   try {
+    // timeZone fija: el formato debe ser determinístico para que el HTML del
+    // server (Node en UTC) y el del cliente (TZ local del browser) coincidan y
+    // no haya hydration mismatch en client components SSR-eados (gyms-list).
     return new Date(iso).toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "short",
       year: "numeric",
+      timeZone: "America/Argentina/Buenos_Aires",
     });
   } catch {
     return "—";
