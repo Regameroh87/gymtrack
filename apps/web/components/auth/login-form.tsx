@@ -1,29 +1,58 @@
 "use client";
 
-// Form de login por OTP de email. Réplica de apps/mobile/src/auth/lib/sendCode.js:
-// pre-check email_exists (RPC SECURITY DEFINER) → signInWithOtp(shouldCreateUser:false)
-// → pantalla /verify. En desarrollo agrega un atajo de login por contraseña.
+// Pantalla de login por OTP de email. Clon 1:1 de apps/mobile/app/(auth)/login.web.jsx.
+// Lógica: pre-check email_exists (RPC SECURITY DEFINER) → signInWithOtp(shouldCreateUser:false)
+// → pantalla /verify (réplica de src/auth/lib/sendCode.js).
 
 // React
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+// Librerías
+import { Mail, ArrowRight } from "lucide-react";
+
 // Supabase
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
-const IS_DEV = process.env.NODE_ENV !== "production";
+// Componentes
+import { AuthSplit, AuthCompactBrand } from "@/components/auth/auth-split";
+import { DevLoginPanel } from "@/components/auth/dev-login-panel";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type SupabaseError = { status?: number; message?: string };
+
+function getErrorMessage(err: SupabaseError | null): string {
+  if (!err) return "";
+  if (err.status === 422)
+    return "Este email no está autorizado para ingresar. Contactese con administración.";
+  if (err.status === 429)
+    return "Demasiados intentos. Por favor, reintentá más tarde.";
+  return "Ha ocurrido un error, intente nuevamente.";
+}
 
 export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [devMode, setDevMode] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [blurred, setBlurred] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [errorSupabase, setErrorSupabase] = useState("");
 
-  const handleOtp = async (e: React.FormEvent) => {
+  const fieldError = !email
+    ? "El email es obligatorio"
+    : !EMAIL_REGEX.test(email)
+      ? "Ingresá un email válido"
+      : "";
+  const canSubmit = EMAIL_REGEX.test(email);
+  const showFieldError = fieldError && (blurred || submitAttempted);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setSubmitAttempted(true);
+    if (!canSubmit || pending) return;
+
+    setErrorSupabase("");
     setPending(true);
     try {
       const supabase = getBrowserSupabase();
@@ -43,104 +72,103 @@ export function LoginForm({ next }: { next?: string }) {
 
       const params = new URLSearchParams({ email: email.trim() });
       if (next) params.set("next", next);
-      router.push(`/verify?${params.toString()}`);
+      router.replace(`/verify?${params.toString()}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo enviar el código.");
-      setPending(false);
-    }
-  };
-
-  const handlePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setPending(true);
-    try {
-      const supabase = getBrowserSupabase();
-      const { error: pwError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (pwError) throw pwError;
-      router.replace(next || "/dashboard");
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión.");
+      setErrorSupabase(getErrorMessage(err as SupabaseError));
       setPending(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-jakarta text-xl font-bold text-brandPrimary-950">
+    <AuthSplit
+      heading={"Entrena con\nPropósito."}
+      subtitle="Una plataforma diseñada para que entrenadores y atletas trabajen en sintonía, sesión tras sesión."
+    >
+      <AuthCompactBrand />
+
+      <div className="mb-8">
+        <h1 className="font-jakarta text-3xl font-extrabold tracking-tight text-white">
           Iniciar sesión
         </h1>
-        <p className="text-sm text-gray-500">
-          {devMode
-            ? "Ingresá con tu email y contraseña."
-            : "Te enviamos un código a tu email para entrar."}
+        <p className="mt-2 font-manrope text-base text-[#c2c1ff]">
+          Ingresa tu email para recibir un enlace de acceso mágico.
         </p>
       </div>
 
-      <form
-        onSubmit={devMode ? handlePassword : handleOtp}
-        className="flex flex-col gap-4"
-      >
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-gray-700">
-            Email
+      <form onSubmit={handleSubmit}>
+        <div className="w-full">
+          <label
+            htmlFor="email"
+            className="mb-2 block px-1 font-manrope text-sm font-bold text-[#e2dfff]"
+          >
+            Correo electrónico
           </label>
-          <input
-            id="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="tu@email.com"
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-brandPrimary-700 focus:ring-2 focus:ring-brandPrimary-700/20"
-          />
-        </div>
-
-        {devMode && (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Contraseña
-            </label>
+          <div className="flex flex-row items-center rounded-2xl border border-[#4a44e4]/40 bg-[#0c006a]/40 px-4 py-1 transition hover:border-[#4a44e4] focus-within:border-[#4a44e4]">
+            {email === "" && <Mail color="#c2c1ff" size={20} />}
             <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-brandPrimary-700 focus:ring-2 focus:ring-brandPrimary-700/20"
+              id="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              placeholder="hola@ejemplo.com"
+              value={email}
+              onChange={(ev) => {
+                setErrorSupabase("");
+                setEmail(ev.target.value);
+              }}
+              onBlur={() => setBlurred(true)}
+              className="ml-3 h-14 flex-1 bg-transparent font-manrope text-base text-white outline-none placeholder:text-[#c2c1ff]/50"
             />
           </div>
-        )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="mt-1 min-h-10 px-1">
+            {showFieldError && (
+              <p className="mt-1 font-manrope text-sm font-bold text-[#ffdad6]">
+                {fieldError}
+              </p>
+            )}
+            {errorSupabase && (
+              <p className="mt-1 font-manrope text-sm font-bold text-[#ffdad6]">
+                {errorSupabase}
+              </p>
+            )}
+          </div>
+        </div>
 
         <button
           type="submit"
-          disabled={pending}
-          className="mt-2 rounded-lg bg-brandPrimary-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brandPrimary-600 disabled:opacity-60"
+          disabled={pending || !canSubmit}
+          className={`mt-2 flex w-full flex-row items-center justify-center rounded-2xl p-4 transition ${
+            pending || !canSubmit
+              ? "cursor-not-allowed border border-[#4a44e4]/30 bg-[#4a44e4]/60"
+              : "border border-[#d6d4ff]/30 bg-[#4a44e4] hover:scale-[1.01] hover:bg-[#3a34d4]"
+          }`}
         >
-          {pending ? "Enviando…" : devMode ? "Entrar" : "Enviar código"}
+          <span
+            className={`mr-2 font-manrope text-lg font-bold ${
+              pending || !canSubmit ? "text-white/60" : "text-white"
+            }`}
+          >
+            {pending ? "Procesando..." : "Continuar"}
+          </span>
+          {!pending && (
+            <ArrowRight
+              color={!canSubmit ? "rgba(255,255,255,0.6)" : "white"}
+              size={20}
+            />
+          )}
         </button>
       </form>
 
-      {IS_DEV && (
-        <button
-          type="button"
-          onClick={() => {
-            setDevMode((v) => !v);
-            setError(null);
-          }}
-          className="text-xs text-gray-400 underline-offset-2 hover:underline"
-        >
-          {devMode ? "Usar código por email" : "Entrar con contraseña (dev)"}
-        </button>
-      )}
-    </div>
+      <p className="mt-8 text-center font-manrope text-xs text-[#c2c1ff]/70">
+        Al continuar aceptas nuestros términos de uso y política de privacidad.
+      </p>
+
+      <div className="flex items-center justify-center">
+        <DevLoginPanel next={next} />
+      </div>
+    </AuthSplit>
   );
 }
