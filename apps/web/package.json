@@ -12,11 +12,13 @@
     "@gymtrack/core": "file:../../packages/core",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.97.0",
+    "@tanstack/react-form": "^1.33.0",
     "@tanstack/react-query": "^5.101.1",
     "lucide-react": "^0.469.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

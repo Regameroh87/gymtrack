@@ -31,11 +31,10 @@ declare module "@gymtrack/core/colors" {
     placeholder: Record<string, string>;
     overlay: Record<string, string>;
     status: Record<string, string>;
-    decor: Record<string, unknown>;
+    decor: Record<string, Record<string, string>>;
     icon: Record<string, string>;
     border: Record<string, string>;
     arrow: Record<string, string>;
-    [k: string]: unknown;
   };
   export const gradient: Record<string, unknown>;
 }
@@ -45,4 +44,25 @@ declare module "@gymtrack/core/generate-ramp" {
   export function generateRamp(seed: string): Ramp;
   export function rampToChannels(ramp: Ramp): Record<number, string>;
   export const SHADES: number[];
+}
+
+declare module "@gymtrack/core/hooks/users/use-gym-members" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface GymMember {
+    id: string;
+    user_id: string;
+    name: string | null;
+    last_name: string | null;
+    email: string | null;
+    role: string | null;
+    is_active: boolean | null;
+    image_profile: string | null;
+    created_at: string | null;
+    [k: string]: unknown;
+  }
+  export function useGymMembers(
+    gymId: string | null,
+    currentUserId: string | null,
+    opts?: { onlyRole?: string | null }
+  ): UseQueryResult<GymMember[]>;
 }

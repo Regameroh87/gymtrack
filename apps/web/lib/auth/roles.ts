@@ -14,6 +14,19 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
+// Rol por defecto al registrar a alguien (portado de constants/roles.js).
+export const DEFAULT_ROLE: Role = ROLES.MEMBER;
+
+// Roles que cada rol puede asignar (estrictamente por debajo del suyo). El backend
+// (edge function crear-socio) revalida esto. Portado de constants/roles.js.
+export const ASSIGNABLE_ROLES: Record<string, Role[]> = {
+  [ROLES.SUPER_ADMIN]: [ROLES.OWNER, ROLES.ADMIN, ROLES.COACH, ROLES.MEMBER],
+  [ROLES.OWNER]: [ROLES.ADMIN, ROLES.COACH, ROLES.MEMBER],
+  [ROLES.ADMIN]: [ROLES.COACH, ROLES.MEMBER],
+  [ROLES.COACH]: [ROLES.MEMBER],
+  [ROLES.MEMBER]: [],
+};
+
 // Roles con acceso al panel de gestión (/admin). Todo lo que no es alumno.
 export const STAFF_ROLES: Role[] = [
   ROLES.SUPER_ADMIN,
