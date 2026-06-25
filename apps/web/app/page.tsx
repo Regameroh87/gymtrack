@@ -10,7 +10,7 @@ import { SITE_URL, BRAND, CONTACT } from "@/lib/site";
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
-    title: `${BRAND.name} · ${BRAND.tagline}`,
+    title: `${BRAND.name}`,
     description: BRAND.description,
     url: SITE_URL,
   },

@@ -156,7 +156,17 @@ function resolveActiveGymId(opts: {
 // Memoizado por request (React cache): el layout y la page lo comparten sin
 // duplicar las consultas a Supabase.
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
-  const { authUser, profile, isSuperAdmin } = await getServerSession();
+  const supabase = await createServerSupabase();
+
+  // El middleware ya corrió auth.getUser() (valida + refresca el token contra
+  // Supabase Auth, con red) en ESTE mismo request. Acá leemos la sesión ya
+  // validada con getSession() (lee la cookie, SIN red) para no duplicar el
+  // round-trip a Auth en cada navegación. Es seguro porque la cookie fue
+  // validada por el middleware un instante antes (patrón SSR de Supabase).
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const authUser = session?.user ?? null;
 
   if (!authUser) {
     return {
@@ -173,7 +183,21 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
     };
   }
 
-  const memberships = await getUsableMemberships(authUser.id);
+  // Perfil y memberships en paralelo: ambos solo dependen del userId, no hay
+  // razón para encadenarlos (antes era una cascada secuencial).
+  const [profile, memberships] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", authUser.id)
+      .maybeSingle()
+      .then((r) => (r.data as Profile) ?? null),
+    getUsableMemberships(authUser.id),
+  ]);
+
+  const isSuperAdmin = !!profile?.is_super_admin;
+  // allGyms depende de isSuperAdmin (que sale del perfil), por eso va después.
+  // Solo afecta al super_admin (pocos usuarios); el resto se ahorra la consulta.
   const allGyms = isSuperAdmin ? await getAllGyms() : [];
 
   const cookieStore = await cookies();

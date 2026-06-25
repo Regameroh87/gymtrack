@@ -1,8 +1,7 @@
 // Configuración central del sitio público. Lee de env con defaults seguros para
 // build/local. El dominio raíz se usa para resolver subdominios de gym.
 
-export const ROOT_DOMAIN =
-  process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "gymtrack.ar";
+export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "gymtrack.ar";
 
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://gymtrack.ar"
@@ -14,7 +13,6 @@ export const APP_URL = (
 
 export const BRAND = {
   name: "GymTrack",
-  tagline: "Plataforma de gestión para gimnasios y entrenadores",
   description:
     "Gestioná tu gimnasio y tus entrenamientos en un solo lugar: planes personalizados, sesiones y seguimiento de socios, funcionando incluso sin internet y con la identidad visual de tu marca.",
 };
