@@ -13,6 +13,7 @@ import {
   ActiveGymProvider,
   type ActiveGymSeed,
 } from "@/components/auth/active-gym-provider";
+import { QueryProvider } from "@/components/query-provider";
 
 export default async function PanelLayout({
   children,
@@ -38,7 +39,9 @@ export default async function PanelLayout({
         initialProfile={ctx.profile}
         initialAuthUserId={ctx.authUser.id}
       >
-        <ActiveGymProvider seed={gymSeed}>{children}</ActiveGymProvider>
+        <ActiveGymProvider seed={gymSeed}>
+          <QueryProvider>{children}</QueryProvider>
+        </ActiveGymProvider>
       </AuthProvider>
     </CoreClientInit>
   );
