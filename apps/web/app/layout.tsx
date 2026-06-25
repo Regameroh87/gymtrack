@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Manrope } from "next/font/google";
 import "./globals.css";
 import { SITE_URL, BRAND } from "@/lib/site";
-import icon from "@/assets/icon.png";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -26,9 +25,9 @@ export const metadata: Metadata = {
   },
   description: BRAND.description,
   icons: {
-    icon: icon.src,
-    shortcut: icon.src,
-    apple: icon.src,
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
   },
   openGraph: {
     type: "website",
