@@ -19,10 +19,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: {
-    default: `${BRAND.name} · ${BRAND.tagline}`,
-    template: `%s · ${BRAND.name}`,
-  },
+  title: BRAND.name,
   description: BRAND.description,
   icons: {
     icon: "/icon.png",
