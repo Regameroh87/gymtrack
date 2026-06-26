@@ -3,9 +3,14 @@
 
 import { redirect } from "next/navigation";
 
-import { getSessionContext, getPostLoginPath } from "@/lib/auth/session";
+import { getSessionContext, getPostLoginDestination } from "@/lib/auth/session";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
   const ctx = await getSessionContext();
-  redirect(getPostLoginPath(ctx));
+  const { next } = await searchParams;
+  redirect(getPostLoginDestination(ctx, next));
 }

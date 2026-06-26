@@ -251,3 +251,33 @@ export function getPostLoginPath(ctx: SessionContext): string {
   if (ctx.activeGymId) return "/home";
   return "/select-gym";
 }
+
+// Prefijos de cada "área" del panel. El destino por defecto del rol determina a
+// qué área pertenece el usuario; un `next` solo se respeta si cae en esa misma
+// área (si no, un deep-link de socio arrastraría a un staff a /home y viceversa).
+const AREA_PREFIXES: Record<string, string[]> = {
+  // El super_admin opera sobre plataforma y puede entrar a cualquier gym (/admin).
+  "/platform": ["/platform", "/admin"],
+  "/admin": ["/admin"],
+  "/home": ["/home", "/planes", "/progreso", "/sesion-active"],
+};
+
+function isWithinArea(next: string, base: string): boolean {
+  const prefixes = AREA_PREFIXES[base];
+  if (!prefixes) return false;
+  return prefixes.some((p) => next === p || next.startsWith(`${p}/`));
+}
+
+// Destino post-login respetando el `next` de retorno SOLO si pertenece al área
+// del rol. Centraliza la decisión en el servidor (donde se conoce el rol) para
+// que login/verify nunca dejen a un staff atrapado en una ruta de socio.
+export function getPostLoginDestination(
+  ctx: SessionContext,
+  next?: string | null
+): string {
+  const base = getPostLoginPath(ctx);
+  // Solo rutas internas absolutas; nada de URLs externas ni protocol-relative.
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return base;
+  if (next === base) return base;
+  return isWithinArea(next, base) ? next : base;
+}

@@ -25,7 +25,8 @@ export function DevLoginPanel({ next }: { next?: string }) {
     setPendingEmail(email);
     try {
       await devSignIn(email);
-      router.replace(next || "/dashboard");
+      // Pasa siempre por el resolver de rol; `next` se respeta solo si es del área del rol.
+      router.replace(next ? `/dashboard?next=${encodeURIComponent(next)}` : "/dashboard");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de login");

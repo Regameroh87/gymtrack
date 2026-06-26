@@ -44,8 +44,10 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
       });
       if (verifyError) throw verifyError;
 
-      // La sesión ya está en cookies: el resolver decide a dónde ir según el rol.
-      router.replace(next || "/dashboard");
+      // La sesión ya está en cookies: SIEMPRE pasamos por el resolver (/dashboard),
+      // que decide según el rol y respeta `next` solo si pertenece al área del rol
+      // (un staff nunca queda atrapado en una ruta de socio como /home).
+      router.replace(next ? `/dashboard?next=${encodeURIComponent(next)}` : "/dashboard");
       router.refresh();
     } catch (err) {
       setError(getVerifyError(err));
