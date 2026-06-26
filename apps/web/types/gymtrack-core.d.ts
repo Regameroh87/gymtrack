@@ -120,6 +120,8 @@ declare module "@gymtrack/core/hooks/activities/use-activities" {
   import type { UseQueryResult } from "@tanstack/react-query";
   export interface ActivityPlan {
     id: string;
+    label: string | null;
+    frequency_per_week: number | null;
     is_active: boolean | null;
     price: number | string | null;
     sort_order: number | null;
@@ -213,6 +215,69 @@ declare module "@gymtrack/core/hooks/activities/use-member-subscriptions" {
     active: MemberSubscription[];
     past: MemberSubscription[];
   }>;
+}
+
+declare module "@gymtrack/core/hooks/users/use-gym-staff" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface StaffMember {
+    id: string;
+    name: string | null;
+    last_name: string | null;
+    role: string | null;
+    image_profile: string | null;
+    [k: string]: unknown;
+  }
+  export function useGymStaff(
+    gymId: string | null
+  ): UseQueryResult<StaffMember[]>;
+}
+
+declare module "@gymtrack/core/hooks/activities/use-activity-mutations" {
+  import type { UseMutationResult } from "@tanstack/react-query";
+  export interface ActivityInput {
+    name: string;
+    description?: string | null;
+    color?: string | null;
+    coach_id?: string | null;
+    is_active?: boolean;
+  }
+  export interface ActivityRow {
+    id: string;
+    name: string;
+    [k: string]: unknown;
+  }
+  export function useActivityMutations(gymId: string | null): {
+    create: UseMutationResult<ActivityRow, Error, ActivityInput>;
+    update: UseMutationResult<ActivityRow, Error, ActivityInput & { id: string }>;
+    remove: UseMutationResult<string, Error, string>;
+  };
+}
+
+declare module "@gymtrack/core/hooks/activities/use-activity-plan-mutations" {
+  import type { UseMutationResult } from "@tanstack/react-query";
+  export interface ActivityPlanInput {
+    label: string;
+    frequency_per_week?: number | null;
+    price?: number | string | null;
+    is_active?: boolean;
+    sort_order?: number;
+  }
+  export interface ActivityPlanRow {
+    id: string;
+    [k: string]: unknown;
+  }
+  export function useActivityPlanMutations(
+    activityId: string | null,
+    gymId: string | null
+  ): {
+    create: UseMutationResult<ActivityPlanRow, Error, ActivityPlanInput>;
+    update: UseMutationResult<
+      ActivityPlanRow,
+      Error,
+      ActivityPlanInput & { id: string }
+    >;
+    remove: UseMutationResult<string, Error, string>;
+  };
 }
 
 declare module "@gymtrack/core/hooks/users/use-gym-members" {
