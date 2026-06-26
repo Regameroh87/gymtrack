@@ -17,6 +17,7 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { useGymStaff } from "@gymtrack/core/hooks/users/use-gym-staff";
 import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
 import {
@@ -70,11 +71,14 @@ export function AdminActivityForm({
     initial?.coach_id ?? null
   );
   const [isActive, setIsActive] = useState(initial?.is_active !== false);
+  // En alta los pases se cargan en memoria y se persisten al crear la actividad.
+  const [localPasses, setLocalPasses] = useState<LocalPass[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const pending = create.isPending || update.isPending;
+  const [isSavingPasses, setIsSavingPasses] = useState(false);
+  const pending = create.isPending || update.isPending || isSavingPasses;
 
   const handleSubmit = async () => {
     setError(null);
