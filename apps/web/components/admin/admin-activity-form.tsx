@@ -243,6 +243,14 @@ export function AdminActivityForm({
           />
         </div>
 
+        {/* Pases en el alta: se cargan en memoria y se guardan al crear. */}
+        {!editingId && (
+          <>
+            <div className="my-6 h-px bg-ui-input-border" />
+            <LocalPassesEditor passes={localPasses} onChange={setLocalPasses} />
+          </>
+        )}
+
         <FormActions
           onCancel={() => router.push("/admin/activities")}
           onSubmit={handleSubmit}
