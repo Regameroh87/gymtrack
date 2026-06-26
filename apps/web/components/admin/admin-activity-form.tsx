@@ -52,6 +52,27 @@ export type ActivityInitial = {
 const fullName = (p: { name: string | null; last_name: string | null }) =>
   [p?.name, p?.last_name].filter(Boolean).join(" ") || "Sin nombre";
 
+// Pase cargado en memoria durante el alta (antes de existir el activity_id).
+type LocalPass = {
+  tempId: string;
+  label: string;
+  frequency_per_week: number | null;
+  price: string;
+  is_active: boolean;
+};
+
+const normalizePass = (p: {
+  label: string;
+  frequency_per_week: number | null;
+  price: string;
+  is_active: boolean;
+}) => ({
+  label: p.label.trim(),
+  frequency_per_week: p.frequency_per_week == null ? null : Number(p.frequency_per_week),
+  price: p.price === "" || p.price == null ? null : Number(p.price),
+  is_active: p.is_active ?? true,
+});
+
 export function AdminActivityForm({
   gymId,
   initial,
@@ -314,6 +335,233 @@ const formatPrice = (price: number | string | null) =>
 
 const freqLabel = (f: number | null) =>
   f == null ? "Libre" : `${f} ${f === 1 ? "vez" : "veces"}/semana`;
+
+// ── Editor de pases en memoria (alta) ──
+type LocalDraft = {
+  index: number | null; // null = nuevo; número = editando ese pase
+  label: string;
+  frequency_per_week: number | null;
+  price: string;
+  is_active: boolean;
+};
+
+const EMPTY_LOCAL: LocalDraft = {
+  index: null,
+  label: "",
+  frequency_per_week: null,
+  price: "",
+  is_active: true,
+};
+
+function LocalPassesEditor({
+  passes,
+  onChange,
+}: {
+  passes: LocalPass[];
+  onChange: (next: LocalPass[]) => void;
+}) {
+  const [draft, setDraft] = useState<LocalDraft | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const openNew = () => {
+    setError(null);
+    setDraft({ ...EMPTY_LOCAL });
+  };
+  const openEdit = (i: number) => {
+    setError(null);
+    const p = passes[i];
+    setDraft({
+      index: i,
+      label: p.label,
+      frequency_per_week: p.frequency_per_week,
+      price: p.price,
+      is_active: p.is_active,
+    });
+  };
+  const close = () => setDraft(null);
+
+  const pickFrequency = (opt: { value: number | null; label: string }) =>
+    setDraft((d) =>
+      d
+        ? {
+            ...d,
+            frequency_per_week: opt.value,
+            label: d.label.trim() ? d.label : opt.label,
+          }
+        : d
+    );
+
+  const save = () => {
+    if (!draft) return;
+    if (draft.label.trim().length < 2) {
+      setError("Falta el nombre del pase.");
+      return;
+    }
+    const entry: LocalPass = {
+      tempId: draft.index != null ? passes[draft.index].tempId : crypto.randomUUID(),
+      label: draft.label,
+      frequency_per_week: draft.frequency_per_week,
+      price: draft.price,
+      is_active: draft.is_active,
+    };
+    if (draft.index != null) {
+      onChange(passes.map((p, i) => (i === draft.index ? entry : p)));
+    } else {
+      onChange([...passes, entry]);
+    }
+    close();
+  };
+
+  const remove = (i: number) => onChange(passes.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
+          Pases
+        </span>
+        {!draft && (
+          <button
+            type="button"
+            onClick={openNew}
+            className="flex items-center gap-1.5 rounded-lg bg-brandPrimary-50 px-3 py-1.5 transition hover:bg-brandPrimary-100"
+          >
+            <Plus size={13} className="text-brandPrimary-600" />
+            <span className="font-manrope text-[12px] font-bold text-brandPrimary-600">
+              Agregar pase
+            </span>
+          </button>
+        )}
+      </div>
+
+      <ErrorBanner message={error} />
+
+      {draft && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-ui-input-border bg-ui-background-light p-4">
+          <div className="flex items-center justify-between">
+            <span className="font-jakarta text-[14px] font-bold text-ui-text-main">
+              {draft.index != null ? "Editar pase" : "Nuevo pase"}
+            </span>
+            <button type="button" onClick={close}>
+              <X size={16} className="text-ui-text-muted" />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
+              Frecuencia
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {FREQUENCY_OPTIONS.map((opt) => {
+                const selected = draft.frequency_per_week === opt.value;
+                return (
+                  <button
+                    type="button"
+                    key={String(opt.value)}
+                    onClick={() => pickFrequency(opt)}
+                    className={`rounded-full border px-3 py-1.5 font-manrope text-[12px] font-semibold transition ${
+                      selected
+                        ? "border-brandPrimary-600 bg-brandPrimary-600 text-white"
+                        : "border-ui-input-border bg-white text-ui-text-muted hover:bg-white"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <Field label="NOMBRE DEL PASE">
+            <Input
+              placeholder="Ej: 3 veces/semana"
+              value={draft.label}
+              onChange={(e) =>
+                setDraft((d) => (d ? { ...d, label: e.target.value } : d))
+              }
+            />
+          </Field>
+
+          <Field label="PRECIO MENSUAL">
+            <Input
+              placeholder="0.00"
+              inputMode="decimal"
+              value={draft.price}
+              onChange={(e) =>
+                setDraft((d) => (d ? { ...d, price: e.target.value } : d))
+              }
+            />
+          </Field>
+
+          <Toggle
+            label="Pase activo"
+            value={draft.is_active}
+            onChange={(v) => setDraft((d) => (d ? { ...d, is_active: v } : d))}
+          />
+
+          <button
+            type="button"
+            onClick={save}
+            className="mt-1 flex items-center justify-center gap-2 rounded-[11px] bg-brandPrimary-600 py-2.5 font-manrope text-[13px] font-bold text-white transition hover:bg-brandPrimary-700"
+          >
+            {draft.index != null ? "Guardar pase" : "Agregar pase"}
+          </button>
+        </div>
+      )}
+
+      {passes.length === 0
+        ? !draft && (
+            <div className="rounded-2xl border border-dashed border-ui-input-border bg-ui-background-light/50 px-6 py-6 text-center">
+              <span className="font-manrope text-[12px] text-ui-text-muted">
+                Agregá los pases (frecuencia y precio) que vas a vender de esta
+                actividad. Podés sumar más después.
+              </span>
+            </div>
+          )
+        : (
+            <div className="flex flex-col gap-2">
+              {passes.map((plan, i) => (
+                <div
+                  key={plan.tempId}
+                  className="flex items-center gap-3 rounded-2xl border border-ui-input-border bg-white p-3.5"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-jakarta text-[14px] font-bold text-ui-text-main">
+                        {plan.label}
+                      </span>
+                      {!plan.is_active && (
+                        <span className="rounded bg-ui-background-light px-1.5 py-0.5 font-manrope text-[9px] font-bold uppercase tracking-wider text-ui-text-muted">
+                          Inactivo
+                        </span>
+                      )}
+                    </div>
+                    <span className="mt-0.5 font-manrope text-[12px] text-ui-text-muted">
+                      {freqLabel(plan.frequency_per_week)} ·{" "}
+                      {formatPrice(plan.price === "" ? null : plan.price)}/mes
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(i)}
+                    className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brandPrimary-50 transition hover:bg-brandPrimary-100"
+                  >
+                    <Pencil size={14} className="text-brandPrimary-600" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove(i)}
+                    className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-red-50 transition hover:bg-red-100"
+                  >
+                    <Trash2 size={14} color="#dc2626" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+    </div>
+  );
+}
 
 function ActivityPlansManager({
   activityId,
