@@ -21,8 +21,11 @@ const ROTATE_MS = 30_000;
 const GRACE_MS = 5_000;
 
 function randomToken() {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
-  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  if (typeof crypto !== "undefined" && crypto.randomUUID)
+    return crypto.randomUUID();
+  return (
+    Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+  );
 }
 
 export default function AttendanceKioskPage() {
@@ -31,7 +34,11 @@ export default function AttendanceKioskPage() {
   // Tick que dispara refetch cada ROTATE_MS.
   const [tick, setTick] = useState(0);
 
-  const { data: tokenInfo, isLoading, error: queryError } = useQuery({
+  const {
+    data: tokenInfo,
+    isLoading,
+    error: queryError,
+  } = useQuery({
     queryKey: ["qr_token", gymId, tick],
     enabled: !!gymId,
     retry: false,
@@ -76,10 +83,16 @@ export default function AttendanceKioskPage() {
   }, [tokenInfo, gymId]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center" style={{ backgroundColor: "#0C0B14" }}>
+    <div
+      className="relative flex flex-col min-h-screen items-center justify-center"
+      style={{ backgroundColor: "#0C0B14" }}
+    >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-[480px]"
-        style={{ background: "linear-gradient(to bottom, rgba(74,68,228,0.25), rgba(12,11,20,0))" }}
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(74,68,228,0.25), rgba(12,11,20,0))",
+        }}
       />
 
       {/* Volver */}
@@ -88,12 +101,21 @@ export default function AttendanceKioskPage() {
         className="absolute left-6 top-6 flex items-center gap-2 rounded-[11px] border border-white/10 bg-white/5 px-3.5 py-2 hover:bg-white/10"
       >
         <ArrowLeft size={14} color="rgba(255,255,255,0.7)" />
-        <span className="font-manrope text-xs font-semibold text-white/70">Volver</span>
+        <span className="font-manrope text-xs font-semibold text-white/70">
+          Volver
+        </span>
       </Link>
 
       {/* Brand */}
       <div className="absolute right-6 top-6 flex items-center gap-2">
-        <span style={{ width: 28, height: 3, borderRadius: 2, backgroundColor: "#2dd4bf" }} />
+        <span
+          style={{
+            width: 28,
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: "#2dd4bf",
+          }}
+        />
         <span className="font-manrope text-[10px] font-bold uppercase tracking-[2.2px] text-[#2dd4bf]">
           GymTrack · Kiosko
         </span>
@@ -121,7 +143,10 @@ export default function AttendanceKioskPage() {
         style={{ boxShadow: "0 12px 32px rgba(74,68,228,0.5)" }}
       >
         {queryError ? (
-          <div className="flex flex-col items-center justify-center px-6" style={{ width: 420, height: 420 }}>
+          <div
+            className="flex flex-col items-center justify-center px-6"
+            style={{ width: 420, height: 420 }}
+          >
             <p className="mb-2 text-center font-jakarta text-base font-bold text-red-600">
               No se pudo generar el QR
             </p>
@@ -129,11 +154,15 @@ export default function AttendanceKioskPage() {
               {(queryError as Error).message}
             </p>
             <p className="mt-3 text-center font-manrope text-[11px] text-ui-text-muted">
-              Verificá que las migraciones estén aplicadas y que tu usuario tenga un `gym_id` asignado.
+              Verificá que las migraciones estén aplicadas y que tu usuario
+              tenga un `gym_id` asignado.
             </p>
           </div>
         ) : !gymId ? (
-          <div className="flex flex-col items-center justify-center px-6" style={{ width: 420, height: 420 }}>
+          <div
+            className="flex flex-col items-center justify-center px-6"
+            style={{ width: 420, height: 420 }}
+          >
             <p className="mb-2 text-center font-jakarta text-base font-bold text-red-600">
               Falta gym_id
             </p>
@@ -142,11 +171,20 @@ export default function AttendanceKioskPage() {
             </p>
           </div>
         ) : isLoading || !payload ? (
-          <div className="flex items-center justify-center" style={{ width: 420, height: 420 }}>
+          <div
+            className="flex items-center justify-center"
+            style={{ width: 420, height: 420 }}
+          >
             <Loader2 size={48} color="#4a44e4" className="animate-spin" />
           </div>
         ) : (
-          <QRCodeSVG value={payload} size={420} fgColor="#0C0B14" bgColor="#ffffff" level="M" />
+          <QRCodeSVG
+            value={payload}
+            size={420}
+            fgColor="#0C0B14"
+            bgColor="#ffffff"
+            level="M"
+          />
         )}
       </div>
 
@@ -154,7 +192,10 @@ export default function AttendanceKioskPage() {
       <div className="mt-8 flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-3">
         <Clock size={14} color="#2dd4bf" />
         <span className="font-manrope text-sm font-semibold text-white/80">
-          Se actualiza en <span className="font-jakarta font-bold text-[#2dd4bf]">{secondsLeft}s</span>
+          Se actualiza en{" "}
+          <span className="font-jakarta font-bold text-[#2dd4bf]">
+            {secondsLeft}s
+          </span>
         </span>
         <span className="mx-1 h-3 w-px bg-white/15" />
         <QrCode size={14} color="rgba(255,255,255,0.55)" />
