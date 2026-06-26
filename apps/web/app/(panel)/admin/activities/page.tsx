@@ -29,6 +29,8 @@ import {
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 const PAGE_SIZE = 18;
 
@@ -74,36 +76,16 @@ export default function ActivitiesListPage() {
 
   return (
     <div className="p-4 pb-14 md:p-9">
-      {/* Header */}
-      <div className="mb-6 flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-end md:gap-0">
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-ui-text-muted">
-              Oferta
-            </span>
-            <span className="text-[11px] text-ui-text-muted">·</span>
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-teal-500">
-              Actividades
-            </span>
-          </div>
-          <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-ui-text-main">
-            Actividades del gimnasio
-          </h1>
-          <p className="mt-1 font-manrope text-xs text-ui-text-muted">
-            Disciplinas y cuotas mensuales que ofrecés a tus socios
-          </p>
-        </div>
-
-        <Link
-          href="/admin/activities/add"
-          className="flex items-center justify-center gap-2 self-start rounded-[11px] bg-brandPrimary-600 px-4 py-2.5 shadow-md shadow-brandPrimary-600/30 transition hover:bg-brandPrimary-700 md:self-auto"
-        >
-          <Plus size={15} color="#fff" />
-          <span className="font-manrope text-[13px] font-bold text-white">
-            Agregar actividad
-          </span>
-        </Link>
-      </div>
+      <PageHeader
+        section="Actividades"
+        title="Actividades del gimnasio"
+        description="Disciplinas y cuotas mensuales que ofrecés a tus socios"
+        cta={
+          <Link href="/admin/activities/add">
+            <Button icon={<Plus size={15} color="#fff" />}>Agregar actividad</Button>
+          </Link>
+        }
+      />
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
@@ -114,7 +96,7 @@ export default function ActivitiesListPage() {
 
       {/* Toolbar */}
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5">
+        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
           <Search size={15} color={ui.text.muted} />
           <input
             value={search}
@@ -130,14 +112,14 @@ export default function ActivitiesListPage() {
 
       {/* Body */}
       {isLoading ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <Loader2 size={20} color={brandPrimary[600]} className="animate-spin" />
           <p className="mt-3 font-manrope text-xs text-ui-text-muted">
             Cargando actividades...
           </p>
         </div>
       ) : pageRows.length === 0 ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-teal-500/10">
             <Flame size={20} color="#14b8a6" />
           </div>
@@ -194,7 +176,7 @@ function StatCard({
   bubble: string;
 }) {
   return (
-    <div className="flex flex-1 items-center gap-3.5 rounded-2xl border border-ui-input-border bg-white p-4">
+    <div className="flex flex-1 items-center gap-3.5 rounded-card border border-ui-input-border bg-white p-4 shadow-card-brand">
       <div className={`flex h-[42px] w-[42px] items-center justify-center rounded-xl ${bubble}`}>
         <Icon size={18} color={iconColor} />
       </div>
@@ -222,7 +204,7 @@ function ActivityCard({
   return (
     <Link
       href={`/admin/activities/edit/${activity.id}`}
-      className="overflow-hidden rounded-[16px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30 active:scale-[0.99]"
+      className="overflow-hidden rounded-card-sm border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30 active:scale-[0.99]"
     >
       <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
 

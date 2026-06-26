@@ -17,7 +17,6 @@ import {
   Mail,
   ShieldHalf,
   Loader2,
-  type LucideIcon,
 } from "lucide-react";
 
 // Hook de datos (core), contextos y helpers
@@ -31,6 +30,10 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useUserRole } from "@/components/auth/use-user-role";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { isStaffRole, isSuperAdminRole, ROLE_LABELS } from "@/lib/auth/roles";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/ui/stat-card";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/ui/page-header";
 
 const FILTERS = [
   { key: "all", label: "Todos" },
@@ -62,10 +65,8 @@ export default function UsersListPage() {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
 
-  // Multi-gym: lista por memberships del gym activo (rol por gym incluido).
   const { data: users, isLoading } = useGymMembers(gymId, authUserId);
 
-  // El super_admin solo es visible para otro super_admin (la RLS ya lo oculta a roles inferiores).
   const visibleUsers = useMemo(() => {
     if (!users) return [];
     return isSuperAdmin ? users : users.filter((u) => !isSuperAdminRole(u.role));
@@ -100,47 +101,29 @@ export default function UsersListPage() {
 
   return (
     <div className="p-4 pb-14 md:p-9">
-      {/* Header */}
-      <div className="mb-6 flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-end md:gap-0">
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-ui-text-muted">
-              Gestión
-            </span>
-            <span className="text-[11px] text-ui-text-muted">·</span>
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-brandPrimary-600">
-              Usuarios
-            </span>
-          </div>
-          <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-ui-text-main">
-            Usuarios del sistema
-          </h1>
-          <p className="mt-1 font-manrope text-xs text-ui-text-muted">
-            Socios y staff con acceso a la plataforma
-          </p>
-        </div>
-
-        <Link
-          href="/admin/users/register"
-          className="flex items-center justify-center gap-2 self-start rounded-[11px] bg-brandPrimary-600 px-4 py-2.5 shadow-md shadow-brandPrimary-600/30 transition hover:bg-brandPrimary-700 md:self-auto"
-        >
-          <UserPlus size={15} color="#fff" />
-          <span className="font-manrope text-[13px] font-bold text-white">
-            Registrar socio
-          </span>
-        </Link>
-      </div>
+      <PageHeader
+        section="Usuarios"
+        title="Usuarios del sistema"
+        description="Socios y staff con acceso a la plataforma"
+        cta={
+          <Link href="/admin/users/register">
+            <Button icon={<UserPlus size={15} color="#fff" />}>
+              Registrar socio
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
-        <StatCard icon={Users} label="Total" value={stats.total} iconColor={brandPrimary[600]} bubble="bg-brandPrimary-50" />
-        <StatCard icon={ShieldHalf} label="Staff" value={stats.staff} iconColor="#7c3aed" bubble="bg-violet-50" />
-        <StatCard icon={Users} label="Alumnos" value={stats.members} iconColor="#0284c7" bubble="bg-sky-50" />
+        <StatCard icon={Users} label="Total" value={stats.total} iconColor={brandPrimary[600]} bubble="bg-brandPrimary-50" dot="bg-brandPrimary-600" />
+        <StatCard icon={ShieldHalf} label="Staff" value={stats.staff} iconColor="#7c3aed" bubble="bg-violet-50" dot="bg-violet-600" />
+        <StatCard icon={Users} label="Alumnos" value={stats.members} iconColor="#0284c7" bubble="bg-sky-50" dot="bg-sky-600" />
       </div>
 
       {/* Toolbar */}
       <div className="mb-4 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5">
+        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
           <Search size={15} color={ui.text.muted} />
           <input
             value={search}
@@ -153,7 +136,7 @@ export default function UsersListPage() {
           />
         </div>
 
-        <div className="flex justify-between rounded-xl border border-ui-input-border bg-white p-1">
+        <div className="flex justify-between rounded-xl border border-ui-input-border bg-white p-1 shadow-card-brand">
           {FILTERS.map((f) => {
             const active = filter === f.key;
             return (
@@ -164,8 +147,8 @@ export default function UsersListPage() {
                   setFilter(f.key);
                   setPage(0);
                 }}
-                className={`flex flex-1 items-center justify-center rounded-[9px] px-3.5 py-1.5 md:flex-initial ${
-                  active ? "bg-brandPrimary-600" : "hover:bg-brandPrimary-50/60"
+                className={`flex flex-1 items-center justify-center rounded-[9px] px-3.5 py-1.5 transition md:flex-initial ${
+                  active ? "btn-gradient shadow-btn-brand" : "hover:bg-brandPrimary-50/60"
                 }`}
               >
                 <span className={`text-xs ${active ? "font-manrope font-bold text-white" : "font-manrope font-semibold text-ui-text-muted"}`}>
@@ -178,7 +161,7 @@ export default function UsersListPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[18px] border border-ui-input-border bg-white">
+      <div className="overflow-hidden rounded-card border border-ui-input-border bg-white shadow-card-brand">
         {/* Head */}
         <div className="flex border-b border-ui-input-border bg-ui-background-light px-5 py-3.5">
           <HeaderCell label="Usuario" flex={3} />
@@ -198,7 +181,7 @@ export default function UsersListPage() {
           </div>
         ) : pageRows.length === 0 ? (
           <div className="flex flex-col items-center py-16">
-            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-brandPrimary-50">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-icon bg-brandPrimary-50">
               <Users size={20} color={brandPrimary[600]} />
             </div>
             <p className="mb-1 font-manrope text-sm font-bold text-ui-text-main">
@@ -239,34 +222,6 @@ export default function UsersListPage() {
 
 // ── Subcomponents ──
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  iconColor,
-  bubble,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: number;
-  iconColor: string;
-  bubble: string;
-}) {
-  return (
-    <div className="flex flex-1 items-center gap-3.5 rounded-2xl border border-ui-input-border bg-white p-4">
-      <div className={`flex h-[42px] w-[42px] items-center justify-center rounded-xl ${bubble}`}>
-        <Icon size={18} color={iconColor} />
-      </div>
-      <div>
-        <p className="font-jakarta text-[22px] font-bold tracking-tight text-ui-text-main">
-          {value}
-        </p>
-        <p className="font-manrope text-[11px] text-ui-text-muted">{label}</p>
-      </div>
-    </div>
-  );
-}
-
 function HeaderCell({
   label,
   flex,
@@ -299,7 +254,7 @@ function UserRow({ user, isLast }: { user: GymMember; isLast: boolean }) {
   return (
     <Link
       href={`/admin/users/${user.id}`}
-      className={`flex items-center px-5 py-3 hover:bg-brandPrimary-50/40 ${isLast ? "" : "border-b border-ui-input-border"}`}
+      className={`flex items-center px-5 py-3 transition hover:bg-brandPrimary-50/40 ${isLast ? "" : "border-b border-ui-input-border"}`}
       style={{ opacity: user.is_active === false ? 0.55 : 1 }}
     >
       {/* Usuario */}
@@ -329,12 +284,7 @@ function UserRow({ user, isLast }: { user: GymMember; isLast: boolean }) {
 
       {/* Rol */}
       <div style={{ flex: 1.2 }}>
-        <div className={`flex w-fit items-center gap-1 rounded-md px-2 py-0.5 ${staff ? "bg-violet-50" : "bg-brandPrimary-50"}`}>
-          <span className={`h-1 w-1 rounded-full ${staff ? "bg-violet-600" : "bg-brandPrimary-600"}`} />
-          <span className={`font-manrope text-[10px] font-bold uppercase tracking-wider ${staff ? "text-violet-600" : "text-brandPrimary-600"}`}>
-            {roleLabel}
-          </span>
-        </div>
+        <Badge color={staff ? "violet" : "primary"} label={roleLabel} />
         {user.is_active === false && (
           <span className="mt-1 block font-manrope text-[9px] font-bold uppercase tracking-wider text-red-500">
             Baja
@@ -371,8 +321,8 @@ function PageBtn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-[9px] border border-ui-input-border px-3.5 py-2 ${
-        disabled ? "bg-ui-background-light opacity-50" : "bg-white hover:bg-brandPrimary-50/60"
+      className={`rounded-[9px] border border-ui-input-border px-3.5 py-2 transition ${
+        disabled ? "bg-ui-background-light opacity-50" : "bg-white shadow-card-brand hover:bg-brandPrimary-50/60"
       }`}
     >
       <span className={`font-manrope text-xs font-semibold ${disabled ? "text-ui-text-muted" : "text-ui-text-main"}`}>

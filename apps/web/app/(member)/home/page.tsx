@@ -3,8 +3,7 @@
 // Home del socio (web). Clon de apps/mobile (home)/index.web.jsx: banner de
 // bienvenida, stats del mes, últimas sesiones e accesos rápidos. El MemberNavbar lo
 // pone el layout. Los registros de entrenamiento viven en la app móvil (la base
-// local SQLite no corre en web), así que acá la lista arranca vacía — igual que en
-// Expo web.
+// local SQLite no corre en web), así que acá la lista arranca vacía.
 
 // React / Next
 import { useEffect, useState } from "react";
@@ -12,9 +11,8 @@ import Link from "next/link";
 
 // Contextos, hooks y helpers
 import { useAuth } from "@/components/auth/auth-provider";
-import { useIsMobile } from "@/lib/hooks/use-is-mobile";
 import { formatDuration } from "@gymtrack/core/format-date";
-import { brandPrimary, brandSecondary, ui } from "@gymtrack/core/colors";
+import { brandSecondary } from "@gymtrack/core/colors";
 
 // Iconos
 import {
@@ -27,16 +25,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-// ─── Tokens ──
-const P600 = brandPrimary[600];
-const P700 = brandPrimary[700];
 const MINT = brandSecondary[400];
 const MINT_DARK = brandSecondary[700];
-const BG = ui.background.light;
-const SURFACE = ui.surface.light;
-const TEXT_MAIN = ui.text.main;
-const TEXT_MUTED = ui.text.muted;
-const BORDER = "rgba(196,190,230,0.25)";
 
 const MONTHS_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const DAYS_ES = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
@@ -54,10 +44,7 @@ function greetingFor(d: Date) {
 
 export default function HomePage() {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
 
-  // En web el detalle de entrenamientos vive en la app móvil (SQLite local no corre
-  // en navegador). La lista arranca vacía, igual que el Expo web.
   const logs: never[] = [];
   const logsLoading = false;
 
@@ -74,198 +61,180 @@ export default function HomePage() {
   const lastSessionLabel: string | null = null;
   const recentLogs = logs;
 
-  const STATS: { label: string; value: string; Icon: LucideIcon; dot: string; bubble: string }[] = [
-    { label: "Sesiones este mes", value: logsLoading ? "—" : String(sessionsThisMonth), Icon: ClipboardList, dot: P600, bubble: "rgba(48,35,205,0.08)" },
-    { label: "Tiempo total este mes", value: logsLoading ? "—" : formatDuration(timeThisMonth), Icon: Clock, dot: "#7c3aed", bubble: "rgba(124,58,237,0.08)" },
-    { label: "Última sesión", value: logsLoading ? "—" : (lastSessionLabel ?? "—"), Icon: ScrollText, dot: MINT_DARK, bubble: "rgba(0,80,71,0.08)" },
+  const STATS: { label: string; value: string; Icon: LucideIcon; dot: string; bubble: string; dotColor: string }[] = [
+    { label: "Sesiones este mes", value: logsLoading ? "—" : String(sessionsThisMonth), Icon: ClipboardList, dot: "bg-brandPrimary-600", bubble: "bg-brandPrimary-50", dotColor: "bg-brandPrimary-600" },
+    { label: "Tiempo total este mes", value: logsLoading ? "—" : formatDuration(timeThisMonth), Icon: Clock, dot: "bg-violet-600", bubble: "bg-violet-50", dotColor: "bg-violet-600" },
+    { label: "Última sesión", value: logsLoading ? "—" : (lastSessionLabel ?? "—"), Icon: ScrollText, dot: "bg-brandSecondary-700", bubble: "bg-brandSecondary-50", dotColor: "bg-brandSecondary-700" },
   ];
 
   return (
-    <div style={{ backgroundColor: BG }}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingTop: 36,
-          paddingBottom: 36,
-          paddingLeft: isMobile ? 16 : 24,
-          paddingRight: isMobile ? 16 : 24,
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 1080 }}>
-          {/* ── BANNER DE BIENVENIDA ── */}
-          <div
-            style={{
-              position: "relative",
-              borderRadius: 22,
-              padding: 32,
-              marginBottom: 22,
-              overflow: "hidden",
-              background: "linear-gradient(135deg, #2518b8, #4a44e4, #6366f1)",
-            }}
-          >
-            <div style={{ position: "absolute", right: -30, top: -30, width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(255,255,255,0.05)" }} />
-            <div style={{ position: "absolute", right: 120, bottom: -50, width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(255,255,255,0.04)" }} />
-            <div style={{ position: "absolute", right: 12, top: 12, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,255,255,0.04)" }} />
+    <div className="bg-ui-background-light">
+      <div className="mx-auto flex max-w-[1080px] flex-col px-4 py-9 md:px-6">
+        {/* ── BANNER DE BIENVENIDA ── */}
+        <div className="relative mb-6 overflow-hidden rounded-card-lg bg-gradient-to-br from-[#2518b8] via-brandPrimary-700 to-brandPrimary-500 p-8">
+          <div className="absolute -right-8 -top-8 h-[200px] w-[200px] rounded-full bg-white/5" />
+          <div className="absolute bottom-[-50px] right-[120px] h-[150px] w-[150px] rounded-full bg-white/[0.04]" />
+          <div className="absolute right-3 top-3 h-20 w-20 rounded-full bg-white/[0.04]" />
 
-            <div style={{ position: "relative", display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", justifyContent: "space-between", gap: isMobile ? 20 : 0 }}>
-              <div style={{ flex: 1 }}>
-                {/* Ticks */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
-                  <div style={{ width: 28, height: 3, borderRadius: 2, backgroundColor: MINT }} />
-                  <div style={{ width: 10, height: 3, borderRadius: 2, backgroundColor: "rgba(42,232,204,0.4)" }} />
-                </div>
-
-                {/* Kicker */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: MINT, boxShadow: `0 0 5px ${MINT}` }} />
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", letterSpacing: 1.8, textTransform: "uppercase" }} className="font-manrope font-semibold">
-                    {greeting}
-                  </span>
-                </div>
-
-                <p style={{ fontSize: 36, color: "#fff", letterSpacing: -1.2, lineHeight: "42px", marginBottom: 6 }} className="font-jakarta font-bold">
-                  {firstName}.
-                </p>
-
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }} className="font-manrope">
-                  {dateLine} · {dayName.charAt(0).toUpperCase() + dayName.slice(1)}
-                </p>
+          <div className="relative flex flex-col items-start justify-between gap-5 md:flex-row md:items-center md:gap-0">
+            <div className="flex-1">
+              {/* Ticks decorativos */}
+              <div className="mb-3.5 flex items-center gap-1.5">
+                <div className="h-[3px] w-7 rounded-sm bg-brandSecondary-400" />
+                <div className="h-[3px] w-2.5 rounded-sm bg-brandSecondary-400/40" />
               </div>
 
-              {/* Icono decorativo */}
-              <div style={{ marginLeft: isMobile ? 0 : 32, width: 88, height: 88, borderRadius: 22, backgroundColor: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", alignSelf: isMobile ? "flex-start" : "center" }}>
-                <Dumbbell size={38} color="rgba(255,255,255,0.85)" />
-                <span style={{ fontSize: 8, color: "rgba(255,255,255,0.45)", letterSpacing: 1.5, textTransform: "uppercase", marginTop: 6 }} className="font-manrope font-semibold">
-                  Atleta
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── FILA DE STATS ── */}
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 14, marginBottom: 22 }}>
-            {STATS.map((stat, i) => {
-              const Icon = stat.Icon;
-              return (
-                <div key={i} style={{ flex: 1, backgroundColor: SURFACE, borderRadius: 18, padding: 20, border: `1px solid ${BORDER}` }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: stat.bubble, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Icon size={16} color={stat.dot} />
-                    </div>
-                    <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: stat.dot, opacity: 0.35 }} />
-                  </div>
-                  <p style={{ fontSize: 28, color: TEXT_MAIN, letterSpacing: -0.8 }} className="font-jakarta font-bold">
-                    {stat.value}
-                  </p>
-                  <p style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 3 }} className="font-manrope">
-                    {stat.label}
-                  </p>
-                  <div style={{ height: 2, borderRadius: 1, marginTop: 14, width: "35%", backgroundColor: stat.dot, opacity: 0.25 }} />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ── LAYOUT 2 COLUMNAS ── */}
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 20, alignItems: "flex-start" }}>
-            {/* Hero — Últimas sesiones */}
-            <div style={{ flex: isMobile ? undefined : 1.6, width: isMobile ? "100%" : undefined, marginBottom: isMobile ? 12 : 0 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <span style={{ fontSize: 10, color: TEXT_MUTED, letterSpacing: 1.5, textTransform: "uppercase" }} className="font-manrope font-semibold">
-                  Últimas sesiones
+              {/* Kicker */}
+              <div className="mb-1.5 flex items-center gap-2">
+                <div
+                  className="h-[5px] w-[5px] rounded-sm bg-brandSecondary-400"
+                  style={{ boxShadow: `0 0 5px ${MINT}` }}
+                />
+                <span className="font-manrope text-[10px] font-semibold uppercase tracking-[1.8px] text-white/55">
+                  {greeting}
                 </span>
               </div>
 
-              <div style={{ position: "relative", borderRadius: 22, overflow: "hidden", backgroundColor: SURFACE, border: `1px solid ${BORDER}`, boxShadow: `0 8px 24px rgba(74,68,228,0.08)` }}>
-                {/* Ticks firma editorial */}
-                <div style={{ position: "absolute", top: 18, left: 22, width: 28, height: 3, backgroundColor: MINT, borderRadius: 2 }} />
-                <div style={{ position: "absolute", top: 18, left: 54, width: 10, height: 3, backgroundColor: "rgba(42,232,204,0.35)", borderRadius: 2 }} />
+              <p className="mb-1.5 font-jakarta text-[36px] font-bold leading-[42px] tracking-tight text-white">
+                {firstName}.
+              </p>
 
-                {/* Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingLeft: 22, paddingRight: 22, paddingTop: 32, paddingBottom: 18 }}>
-                  <span style={{ fontSize: 10, color: MINT_DARK, letterSpacing: 2.4, textTransform: "uppercase" }} className="font-manrope font-bold">
-                    Entrenamientos recientes
-                  </span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: MINT, boxShadow: `0 0 6px ${MINT}` }} />
-                    <span style={{ fontSize: 10, color: TEXT_MUTED, letterSpacing: 2, textTransform: "uppercase" }} className="font-jakarta font-bold">
-                      Historial
-                    </span>
-                  </div>
-                </div>
-
-                {/* Body: en web siempre vacío (logs viven en la app móvil) */}
-                {logsLoading ? (
-                  <div style={{ paddingLeft: 22, paddingRight: 22, paddingTop: 60, paddingBottom: 60, display: "flex", justifyContent: "center" }}>
-                    <span style={{ fontSize: 12, color: TEXT_MUTED }} className="font-manrope">
-                      Cargando registros...
-                    </span>
-                  </div>
-                ) : recentLogs.length === 0 ? (
-                  <div style={{ paddingLeft: 22, paddingRight: 22, paddingTop: 8, paddingBottom: 32, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: "rgba(15,13,32,0.25)" }} />
-                      <span style={{ fontSize: 9, color: TEXT_MUTED, letterSpacing: 1.6, textTransform: "uppercase" }} className="font-manrope font-bold">
-                        Sin registros aún
-                      </span>
-                    </div>
-                    <p style={{ fontSize: 28, lineHeight: "33px", letterSpacing: -1, color: TEXT_MAIN, whiteSpace: "pre-line" }} className="font-jakarta font-bold">
-                      {"Todavía no\nregistraste entrenamientos."}
-                    </p>
-                    <p style={{ fontSize: 13, lineHeight: "20px", color: TEXT_MUTED, maxWidth: 380 }} className="font-manrope">
-                      Cuando termines una sesión en el móvil, vas a ver acá tu progreso reciente.
-                    </p>
-                  </div>
-                ) : null}
-              </div>
+              <p className="font-manrope text-[13px] text-white/50">
+                {dateLine} · {dayName.charAt(0).toUpperCase() + dayName.slice(1)}
+              </p>
             </div>
 
-            {/* Acceso rápido */}
-            <div style={{ flex: isMobile ? undefined : 1, width: isMobile ? "100%" : undefined }}>
-              <span style={{ fontSize: 10, color: TEXT_MUTED, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 12, display: "block" }} className="font-manrope font-semibold">
-                Acceso Rápido
+            {/* Icono decorativo */}
+            <div className="flex h-[88px] w-[88px] flex-col items-center justify-center self-start rounded-card-sm border border-white/12 bg-white/10 md:self-auto">
+              <Dumbbell size={38} color="rgba(255,255,255,0.85)" />
+              <span className="mt-1.5 font-manrope text-[8px] font-semibold uppercase tracking-[1.5px] text-white/45">
+                Atleta
               </span>
+            </div>
+          </div>
+        </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <QuickCard
-                  kicker="Catálogo"
-                  title="Explorar rutinas"
-                  description="Planes y sesiones publicados por el gym."
-                  icon={<ClipboardList size={18} color="#fff" />}
-                  iconBubble="rgba(48,35,205,0.09)"
-                  iconBorder="rgba(48,35,205,0.28)"
-                  variant="primary"
-                  href="/planes"
-                />
-                <QuickCard
-                  kicker="Personalizado"
-                  title="Crear mi rutina"
-                  description="Armá tu propia rutina eligiendo ejercicios."
-                  icon={<Plus size={18} color={MINT_DARK} />}
-                  iconBubble="rgba(0,80,71,0.09)"
-                  iconBorder="rgba(0,80,71,0.28)"
-                  variant="ghost"
-                  href="/planes/builder"
-                />
+        {/* ── FILA DE STATS ── */}
+        <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
+          {STATS.map((stat) => {
+            const Icon = stat.Icon;
+            return (
+              <div
+                key={stat.label}
+                className="flex-1 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand"
+              >
+                <div className="mb-3.5 flex items-center justify-between">
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-icon ${stat.bubble}`}>
+                    <Icon size={16} color="currentColor" className={stat.dot.replace("bg-", "text-")} />
+                  </span>
+                  <span className={`h-1.5 w-1.5 rounded-full opacity-35 ${stat.dotColor}`} />
+                </div>
+                <p className="font-jakarta text-[28px] font-bold tracking-tight text-ui-text-main">
+                  {stat.value}
+                </p>
+                <p className="mt-1 font-manrope text-[11px] text-ui-text-muted">
+                  {stat.label}
+                </p>
+                <div className={`mt-3.5 h-0.5 w-[35%] rounded-sm opacity-25 ${stat.dotColor}`} />
               </div>
+            );
+          })}
+        </div>
 
-              {/* Tip card */}
-              <div style={{ marginTop: 14, backgroundColor: "rgba(48,35,205,0.05)", borderRadius: 16, padding: 16, border: "1px solid rgba(48,35,205,0.12)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: MINT }} />
-                  <span style={{ fontSize: 9, color: MINT_DARK, letterSpacing: 1.6, textTransform: "uppercase" }} className="font-manrope font-bold">
-                    Tip del día
+        {/* ── LAYOUT 2 COLUMNAS ── */}
+        <div className="flex flex-col items-start gap-5 md:flex-row">
+          {/* Hero — Últimas sesiones */}
+          <div className="w-full md:flex-[1.6]">
+            <span className="mb-3 block font-manrope text-[10px] font-semibold uppercase tracking-[1.5px] text-ui-text-muted">
+              Últimas sesiones
+            </span>
+
+            <div className="relative overflow-hidden rounded-card border border-ui-input-border bg-white shadow-card-brand">
+              {/* Ticks firma editorial */}
+              <div className="absolute left-[22px] top-[18px] h-[3px] w-7 rounded-sm bg-brandSecondary-400" />
+              <div className="absolute left-[54px] top-[18px] h-[3px] w-2.5 rounded-sm bg-brandSecondary-400/35" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-[22px] pb-[18px] pt-8">
+                <span className="font-manrope text-[10px] font-bold uppercase tracking-[2.4px]" style={{ color: MINT_DARK }}>
+                  Entrenamientos recientes
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="h-1.5 w-1.5 rounded-full bg-brandSecondary-400"
+                    style={{ boxShadow: `0 0 6px ${MINT}` }}
+                  />
+                  <span className="font-jakarta text-[10px] font-bold uppercase tracking-[2px] text-ui-text-muted">
+                    Historial
                   </span>
                 </div>
-                <p style={{ fontSize: 13, color: TEXT_MAIN, letterSpacing: -0.2, marginBottom: 4 }} className="font-jakarta font-bold">
-                  Consistencia ante todo.
-                </p>
-                <p style={{ fontSize: 12, color: TEXT_MUTED, lineHeight: "18px" }} className="font-manrope">
-                  El entrenamiento más efectivo es el que hacés seguido, no el que hacés perfecto.
-                </p>
               </div>
+
+              {/* Body */}
+              {logsLoading ? (
+                <div className="flex justify-center px-[22px] py-15">
+                  <span className="font-manrope text-xs text-ui-text-muted">
+                    Cargando registros...
+                  </span>
+                </div>
+              ) : recentLogs.length === 0 ? (
+                <div className="flex flex-col items-start gap-3.5 px-[22px] pb-8">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1 w-1 rounded-sm bg-ui-text-main/25" />
+                    <span className="font-manrope text-[9px] font-bold uppercase tracking-[1.6px] text-ui-text-muted">
+                      Sin registros aún
+                    </span>
+                  </div>
+                  <p className="font-jakarta text-[28px] font-bold leading-[33px] tracking-tight text-ui-text-main">
+                    Todavía no<br />registraste entrenamientos.
+                  </p>
+                  <p className="font-manrope text-[13px] leading-5 text-ui-text-muted" style={{ maxWidth: 380 }}>
+                    Cuando termines una sesión en el móvil, vas a ver acá tu progreso reciente.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Acceso rápido */}
+          <div className="w-full md:flex-1">
+            <span className="mb-3 block font-manrope text-[10px] font-semibold uppercase tracking-[1.5px] text-ui-text-muted">
+              Acceso Rápido
+            </span>
+
+            <div className="flex flex-col gap-2.5">
+              <QuickCard
+                kicker="Catálogo"
+                title="Explorar rutinas"
+                description="Planes y sesiones publicados por el gym."
+                iconNode={<ClipboardList size={18} color="#fff" />}
+                variant="primary"
+                href="/planes"
+              />
+              <QuickCard
+                kicker="Personalizado"
+                title="Crear mi rutina"
+                description="Armá tu propia rutina eligiendo ejercicios."
+                iconNode={<Plus size={18} color={MINT_DARK} />}
+                variant="ghost"
+                href="/planes/builder"
+              />
+            </div>
+
+            {/* Tip card */}
+            <div className="mt-3.5 rounded-2xl border border-brandPrimary-600/12 bg-brandPrimary-600/5 p-4">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <div className="h-[5px] w-[5px] rounded-sm bg-brandSecondary-400" />
+                <span className="font-manrope text-[9px] font-bold uppercase tracking-[1.6px]" style={{ color: MINT_DARK }}>
+                  Tip del día
+                </span>
+              </div>
+              <p className="mb-1 font-jakarta text-[13px] font-bold tracking-tight text-ui-text-main">
+                Consistencia ante todo.
+              </p>
+              <p className="font-manrope text-[12px] leading-[18px] text-ui-text-muted">
+                El entrenamiento más efectivo es el que hacés seguido, no el que hacés perfecto.
+              </p>
             </div>
           </div>
         </div>
@@ -279,18 +248,14 @@ function QuickCard({
   kicker,
   title,
   description,
-  icon,
-  iconBubble,
-  iconBorder,
+  iconNode,
   variant,
   href,
 }: {
   kicker: string;
   title: string;
   description: string;
-  icon: React.ReactNode;
-  iconBubble: string;
-  iconBorder: string;
+  iconNode: React.ReactNode;
   variant: "primary" | "ghost";
   href: string;
 }) {
@@ -298,46 +263,49 @@ function QuickCard({
   return (
     <Link
       href={href}
-      style={{
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: isPrimary ? "rgba(48,35,205,0.07)" : SURFACE,
-        border: `1px solid ${isPrimary ? "rgba(48,35,205,0.22)" : BORDER}`,
-        padding: 14,
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-      }}
-      className="transition hover:opacity-95"
+      className={[
+        "flex items-center gap-3 rounded-2xl border p-3.5 transition hover:opacity-95",
+        isPrimary
+          ? "border-brandPrimary-600/22 bg-brandPrimary-600/7 shadow-card-brand"
+          : "border-ui-input-border bg-white shadow-card-brand",
+      ].join(" ")}
     >
       <div
-        style={{
-          width: 42,
-          height: 42,
-          borderRadius: 13,
-          backgroundColor: isPrimary ? P600 : iconBubble,
-          border: `1px solid ${isPrimary ? "rgba(255,255,255,0.3)" : iconBorder}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: isPrimary ? `0 3px 10px ${P600}66` : "none",
-        }}
+        className={[
+          "flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-icon border",
+          isPrimary
+            ? "btn-gradient border-white/30 shadow-btn-brand"
+            : "border-brandSecondary-700/28 bg-brandSecondary-700/9",
+        ].join(" ")}
       >
-        {icon}
+        {iconNode}
       </div>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 9, color: isPrimary ? MINT_DARK : "rgba(15,13,32,0.38)", letterSpacing: 1.6, textTransform: "uppercase", marginBottom: 2 }} className="font-manrope font-bold">
+      <div className="min-w-0 flex-1">
+        <p
+          className={[
+            "mb-0.5 font-manrope text-[9px] font-bold uppercase tracking-[1.6px]",
+            isPrimary ? "text-brandSecondary-700" : "text-ui-text-main/38",
+          ].join(" ")}
+        >
           {kicker}
         </p>
-        <p style={{ fontSize: 14, color: TEXT_MAIN, letterSpacing: -0.2 }} className="font-jakarta font-bold">
+        <p className="font-jakarta text-[14px] font-bold tracking-tight text-ui-text-main">
           {title}
         </p>
-        <p style={{ fontSize: 11, color: TEXT_MUTED, lineHeight: "16px", marginTop: 1 }} className="truncate font-manrope">
+        <p className="mt-0.5 truncate font-manrope text-[11px] leading-4 text-ui-text-muted">
           {description}
         </p>
       </div>
-      <div style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: isPrimary ? "#fff" : "rgba(15,13,32,0.04)", border: isPrimary ? "none" : "1px solid rgba(15,13,32,0.09)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <ChevronRight size={13} color={isPrimary ? P600 : "rgba(15,13,32,0.45)"} />
+      <div
+        className={[
+          "flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border",
+          isPrimary ? "border-transparent bg-white" : "border-ui-text-main/9 bg-ui-text-main/4",
+        ].join(" ")}
+      >
+        <ChevronRight
+          size={13}
+          className={isPrimary ? "text-brandPrimary-600" : "text-ui-text-main/45"}
+        />
       </div>
     </Link>
   );

@@ -74,7 +74,7 @@ export function Field({
 // ── Input de texto ──
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5">
+    <div className="flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
       <input
         {...props}
         className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
@@ -90,7 +90,7 @@ export function Textarea(
   return (
     <textarea
       {...props}
-      className="min-h-24 rounded-xl border border-ui-input-border bg-white p-3.5 font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
+      className="min-h-24 rounded-xl border border-ui-input-border bg-[#eae8f4] p-3.5 font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
     />
   );
 }
@@ -108,7 +108,7 @@ export function WebSelect({
   placeholder?: string;
 }) {
   return (
-    <div className="rounded-xl border border-ui-input-border bg-white px-1">
+    <div className="rounded-xl border border-ui-input-border bg-[#eae8f4] px-1">
       <select
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
@@ -202,8 +202,8 @@ export function FormActions({
         type="button"
         onClick={onSubmit}
         disabled={isPending}
-        className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white ${
-          isPending ? "bg-brandPrimary-400" : "bg-brandPrimary-600 hover:bg-brandPrimary-700"
+        className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white transition active:scale-[0.97] disabled:opacity-60 ${
+          isPending ? "bg-brandPrimary-400" : "btn-gradient shadow-btn-brand hover:shadow-btn-hover"
         }`}
       >
         {isPending ? (
@@ -234,7 +234,7 @@ export function ModalShell({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full overflow-y-auto rounded-[20px] border border-ui-input-border bg-white p-7"
+        className="max-h-[90vh] w-full overflow-y-auto rounded-[20px] border border-ui-input-border bg-white p-7 shadow-card-brand"
         style={{ maxWidth }}
         onClick={(e) => e.stopPropagation()}
       >

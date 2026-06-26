@@ -14,10 +14,27 @@ body {
 @layer utilities {
   /* Oculta la barra de scroll manteniendo el scroll funcional */
   .scrollbar-hide {
-    -ms-overflow-style: none; /* IE y Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari y Opera */
+    display: none;
+  }
+
+  /* Gradiente de botón primario — espeja mobile button gradient */
+  .btn-gradient {
+    background: linear-gradient(135deg, #6360f0, #4a44e4, #3023cd);
+  }
+  .btn-gradient:hover {
+    background: linear-gradient(135deg, #5450e0, #3a35d4, #2518b8);
+  }
+
+  /* Elevación tipo card con lift en hover */
+  .transition-lift {
+    transition: box-shadow 150ms ease, transform 150ms ease;
+  }
+  .transition-lift:hover {
+    box-shadow: 0 12px 28px rgba(74, 68, 228, 0.18);
+    transform: translateY(-1px);
   }
 }

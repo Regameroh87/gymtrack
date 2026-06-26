@@ -30,6 +30,8 @@ import { cloudinaryUrl } from "@/lib/cloudinary";
 import { useDeleteAdminExercise } from "@/lib/hooks/use-admin-exercises";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
 import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 const PAGE_SIZE = 18;
 
@@ -136,36 +138,16 @@ export default function ExercisesListPage() {
 
   return (
     <div className="p-4 pb-14 md:p-9">
-      {/* Header */}
-      <div className="mb-6 flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-end md:gap-0">
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-ui-text-muted">
-              Catálogo
-            </span>
-            <span className="text-[11px] text-ui-text-muted">·</span>
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-brandSecondary-500">
-              Ejercicios
-            </span>
-          </div>
-          <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-ui-text-main">
-            Catálogo de ejercicios
-          </h1>
-          <p className="mt-1 font-manrope text-xs text-ui-text-muted">
-            Biblioteca maestra de movimientos disponibles para las sesiones
-          </p>
-        </div>
-
-        <Link
-          href="/admin/exercises/builder"
-          className="flex items-center justify-center gap-2 self-start rounded-[11px] bg-brandPrimary-600 px-4 py-2.5 shadow-md shadow-brandPrimary-600/30 transition hover:bg-brandPrimary-700 md:self-auto"
-        >
-          <Plus size={15} color="#fff" />
-          <span className="font-manrope text-[13px] font-bold text-white">
-            Crear ejercicio
-          </span>
-        </Link>
-      </div>
+      <PageHeader
+        section="Ejercicios"
+        title="Catálogo de ejercicios"
+        description="Biblioteca maestra de movimientos disponibles para las sesiones"
+        cta={
+          <Link href="/admin/exercises/builder">
+            <Button icon={<Plus size={15} color="#fff" />}>Crear ejercicio</Button>
+          </Link>
+        }
+      />
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
@@ -177,7 +159,7 @@ export default function ExercisesListPage() {
       {/* Toolbar */}
       <div className="mb-5 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
         {/* Search */}
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5">
+        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
           <Search size={15} color={ui.text.muted} />
           <input
             value={search}
@@ -191,7 +173,7 @@ export default function ExercisesListPage() {
         </div>
 
         {/* Category filter */}
-        <div className="flex flex-wrap justify-start gap-1 rounded-xl border border-ui-input-border bg-white p-1">
+        <div className="flex flex-wrap justify-start gap-1 rounded-xl border border-ui-input-border bg-white p-1 shadow-card-brand">
           <FilterChip label="Todas" active={category === "all"} onClick={() => { setCategory("all"); setPage(0); }} />
           {categories.slice(0, 5).map((cat) => (
             <FilterChip
@@ -206,14 +188,14 @@ export default function ExercisesListPage() {
 
       {/* Body */}
       {isLoading ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <Loader2 size={20} color={brandPrimary[600]} className="animate-spin" />
           <p className="mt-3 font-manrope text-xs text-ui-text-muted">
             Cargando ejercicios...
           </p>
         </div>
       ) : pageRows.length === 0 ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-brandSecondary-500/10">
             <Dumbbell size={20} color={brandSecondary[500]} />
           </div>
@@ -290,7 +272,7 @@ function StatCard({
   bubble: string;
 }) {
   return (
-    <div className="flex flex-1 items-center gap-3.5 rounded-2xl border border-ui-input-border bg-white p-4">
+    <div className="flex flex-1 items-center gap-3.5 rounded-card border border-ui-input-border bg-white p-4 shadow-card-brand">
       <div className={`flex h-[42px] w-[42px] items-center justify-center rounded-xl ${bubble}`}>
         <Icon size={18} color={iconColor} />
       </div>
@@ -317,8 +299,8 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-[9px] px-3.5 py-1.5 ${
-        active ? "bg-brandPrimary-600" : "hover:bg-brandPrimary-50/60"
+      className={`rounded-[9px] px-3.5 py-1.5 transition ${
+        active ? "btn-gradient shadow-btn-brand" : "hover:bg-brandPrimary-50/60"
       }`}
     >
       <span
@@ -344,7 +326,7 @@ function ExerciseCard({
   const imageUrl = cloudinaryUrl(exercise.image_uri);
 
   return (
-    <div className="relative overflow-hidden rounded-[16px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30">
+    <div className="relative overflow-hidden rounded-card-sm border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30">
       <Link
         href={`/admin/exercises/${exercise.id}`}
         aria-label={exercise.name ?? "Ejercicio"}

@@ -27,6 +27,7 @@ import { ui } from "@gymtrack/core/colors";
 import { useUserRole } from "@/components/auth/use-user-role";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { canAccessModule } from "@/lib/auth/roles";
+import { StatCard } from "@/components/ui/stat-card";
 
 type Stat = {
   label: string;
@@ -96,7 +97,6 @@ export default function AdminDashboardPage() {
 
   const STATS = buildStats(brandPrimary);
   const QUICK_ACTIONS = buildQuickActions(brandPrimary, brandSecondary);
-  // Solo los módulos permitidos para el rol (coach no ve Contabilidad).
   const modules = buildModules(brandPrimary, brandSecondary).filter((mod) =>
     canAccessModule(role, mod.path)
   );
@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
           </h1>
         </div>
 
-        <div className="flex items-center gap-1.5 self-start rounded-xl border border-ui-input-border bg-white px-3.5 py-2">
+        <div className="flex items-center gap-1.5 self-start rounded-xl border border-ui-input-border bg-white px-3.5 py-2 shadow-card-brand">
           <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
           <span className="font-manrope text-xs font-semibold text-ui-text-main">
             Admin activo
@@ -133,7 +133,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Welcome banner */}
-      <div className="relative mb-6 overflow-hidden rounded-[22px] bg-gradient-to-br from-brandPrimary-800 via-brandPrimary-600 to-brandPrimary-400 p-5 md:p-[30px]">
+      <div className="relative mb-6 overflow-hidden rounded-card-lg bg-gradient-to-br from-brandPrimary-800 via-brandPrimary-600 to-brandPrimary-400 p-5 md:p-[30px]">
         <div className="absolute -right-10 -top-10 h-[180px] w-[180px] rounded-full bg-white/5" />
         <div className="absolute -bottom-[50px] right-[100px] h-[140px] w-[140px] rounded-full bg-white/5" />
         <div className="absolute right-2.5 top-2.5 h-20 w-20 rounded-full bg-white/[0.05]" />
@@ -182,29 +182,17 @@ export default function AdminDashboardPage() {
 
       {/* Stats row */}
       <div className="mb-7 flex flex-col gap-3.5 md:flex-row">
-        {STATS.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={stat.label}
-              className="flex-1 rounded-[18px] border border-ui-input-border bg-white p-5"
-            >
-              <div className="mb-3.5 flex items-center justify-between">
-                <span className={`flex h-[38px] w-[38px] items-center justify-center rounded-[11px] ${stat.bubble}`}>
-                  <Icon size={17} color={stat.iconColor} />
-                </span>
-                <span className={`h-1.5 w-1.5 rounded-full opacity-40 ${stat.dot}`} />
-              </div>
-              <p className="font-jakarta text-[30px] font-bold tracking-tight text-ui-text-main">
-                {stat.value}
-              </p>
-              <p className="mt-1 font-manrope text-xs text-ui-text-muted">
-                {stat.label}
-              </p>
-              <span className={`mt-4 block h-0.5 w-[35%] rounded-sm opacity-30 ${stat.dot}`} />
-            </div>
-          );
-        })}
+        {STATS.map((stat) => (
+          <StatCard
+            key={stat.label}
+            icon={stat.icon}
+            label={stat.label}
+            value={stat.value}
+            iconColor={stat.iconColor}
+            bubble={stat.bubble}
+            dot={stat.dot}
+          />
+        ))}
       </div>
 
       {/* Bottom section */}
@@ -221,10 +209,10 @@ export default function AdminDashboardPage() {
                 <Link
                   key={mod.label}
                   href={`/admin/${mod.path}`}
-                  className="flex items-center gap-3.5 rounded-[15px] border border-ui-input-border bg-white p-4 transition hover:bg-brandPrimary-50/40 active:scale-[0.99]"
+                  className="flex items-center gap-3.5 rounded-card-sm border border-ui-input-border bg-white p-4 shadow-card-brand transition-lift hover:bg-brandPrimary-50/40 active:scale-[0.99]"
                 >
                   <span className={`h-[38px] w-[3px] rounded-sm ${mod.bar}`} />
-                  <span className={`flex h-[38px] w-[38px] items-center justify-center rounded-[11px] ${mod.bubble}`}>
+                  <span className={`flex h-[38px] w-[38px] items-center justify-center rounded-icon ${mod.bubble}`}>
                     <Icon size={17} color={mod.color} />
                   </span>
                   <span className="flex-1">
@@ -254,9 +242,9 @@ export default function AdminDashboardPage() {
                 <Link
                   key={action.label}
                   href={`/admin/${action.path}`}
-                  className="flex items-center gap-3 rounded-[13px] border border-ui-input-border bg-white p-3.5 transition hover:bg-brandPrimary-50/40"
+                  className="flex items-center gap-3 rounded-card-sm border border-ui-input-border bg-white p-3.5 shadow-card-brand transition-lift hover:bg-brandPrimary-50/40 active:scale-[0.99]"
                 >
-                  <span className={`flex h-8 w-8 items-center justify-center rounded-[9px] ${action.bubble}`}>
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-icon-sm ${action.bubble}`}>
                     <Icon size={14} color={action.color} />
                   </span>
                   <span className="flex-1">
@@ -282,9 +270,9 @@ export default function AdminDashboardPage() {
               return (
                 <div
                   key={item.label}
-                  className="flex items-center gap-3 rounded-[13px] border border-ui-input-border bg-ui-background-light p-3.5 opacity-55"
+                  className="flex items-center gap-3 rounded-card-sm border border-ui-input-border bg-ui-background-light p-3.5 opacity-55"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-ui-text-muted/10">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-icon-sm bg-ui-text-muted/10">
                     <Lock size={13} color={ui.text.muted} />
                   </span>
                   <span className="flex-1">

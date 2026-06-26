@@ -37,6 +37,8 @@ import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subsc
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 const money = (n: number | string | null | undefined) =>
   `$${Number(n || 0).toLocaleString("es-AR")}`;
@@ -104,37 +106,19 @@ export default function BillingPage() {
 
   return (
     <div className="p-4 pb-14 md:p-9">
-      {/* Header */}
-      <div className="mb-6 flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-end md:gap-0">
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-ui-text-muted">
-              Administración
-            </span>
-            <span className="text-[11px] text-ui-text-muted">·</span>
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-amber-600">
-              Contabilidad
-            </span>
-          </div>
-          <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-ui-text-main">
-            Membresías y cobranza
-          </h1>
-          <p className="mt-1 font-manrope text-xs text-ui-text-muted">
-            Inscripciones activas, cuotas y estado de pago de tus socios
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setAltaOpen(true)}
-          className="flex items-center justify-center gap-2 self-start rounded-[11px] bg-brandPrimary-600 px-4 py-2.5 shadow-md shadow-brandPrimary-600/30 transition hover:bg-brandPrimary-700 md:self-auto"
-        >
-          <Plus size={15} color="#fff" />
-          <span className="font-manrope text-[13px] font-bold text-white">
+      <PageHeader
+        section="Contabilidad"
+        title="Membresías y cobranza"
+        description="Inscripciones activas, cuotas y estado de pago de tus socios"
+        cta={
+          <Button
+            icon={<Plus size={15} color="#fff" />}
+            onClick={() => setAltaOpen(true)}
+          >
             Agregar membresía
-          </span>
-        </button>
-      </div>
+          </Button>
+        }
+      />
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
@@ -145,7 +129,7 @@ export default function BillingPage() {
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5">
+        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
           <Search size={15} color={ui.text.muted} />
           <input
             value={search}
@@ -162,7 +146,7 @@ export default function BillingPage() {
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={`rounded-xl border px-3.5 py-2.5 ${active ? "border-brandPrimary-600 bg-brandPrimary-600" : "border-ui-input-border bg-white hover:bg-brandPrimary-50/60"}`}
+                className={`rounded-xl border px-3.5 py-2.5 transition ${active ? "btn-gradient border-transparent shadow-btn-brand" : "border-ui-input-border bg-white shadow-card-brand hover:bg-brandPrimary-50/60"}`}
               >
                 <span className={`font-manrope text-xs font-semibold ${active ? "text-white" : "text-ui-text-muted"}`}>
                   {f.label}
@@ -175,14 +159,14 @@ export default function BillingPage() {
 
       {/* Body */}
       {isLoading ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <Loader2 size={20} color={brandPrimary[600]} className="animate-spin" />
           <p className="mt-3 font-manrope text-xs text-ui-text-muted">
             Cargando membresías...
           </p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-amber-50">
             <Receipt size={20} color="#d97706" />
           </div>
@@ -194,7 +178,7 @@ export default function BillingPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[18px] border border-ui-input-border bg-white">
+        <div className="overflow-hidden rounded-card border border-ui-input-border bg-white shadow-card-brand">
           {filtered.map((sub, i) => (
             <SubRow
               key={sub.id}
@@ -233,7 +217,7 @@ function StatCard({
   bubble: string;
 }) {
   return (
-    <div className="flex flex-1 items-center gap-3.5 rounded-2xl border border-ui-input-border bg-white p-4">
+    <div className="flex flex-1 items-center gap-3.5 rounded-card border border-ui-input-border bg-white p-4 shadow-card-brand">
       <div className={`flex h-[42px] w-[42px] items-center justify-center rounded-xl ${bubble}`}>
         <Icon size={18} color={iconColor} />
       </div>

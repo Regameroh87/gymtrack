@@ -32,6 +32,8 @@ import { PLAN_GENDER_BADGES } from "@/lib/gender-options";
 import { useDeleteAdminPlan } from "@/lib/hooks/use-admin-plans";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
 import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
+import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 const PAGE_SIZE = 12;
 
@@ -162,36 +164,16 @@ export default function PlansListPage() {
 
   return (
     <div className="p-4 pb-14 md:p-9">
-      {/* Header */}
-      <div className="mb-6 flex flex-col items-stretch justify-between gap-4 md:flex-row md:items-end md:gap-0">
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-ui-text-muted">
-              Programación
-            </span>
-            <span className="text-[11px] text-ui-text-muted">·</span>
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-sky-600">
-              Planes
-            </span>
-          </div>
-          <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-ui-text-main">
-            Planes de entrenamiento
-          </h1>
-          <p className="mt-1 font-manrope text-xs text-ui-text-muted">
-            Plantillas semanales que combinan sesiones a lo largo del tiempo
-          </p>
-        </div>
-
-        <Link
-          href="/admin/plans/builder"
-          className="flex items-center justify-center gap-2 self-start rounded-[11px] bg-brandPrimary-600 px-4 py-2.5 shadow-md shadow-brandPrimary-600/30 transition hover:bg-brandPrimary-700 md:self-auto"
-        >
-          <Plus size={15} color="#fff" />
-          <span className="font-manrope text-[13px] font-bold text-white">
-            Crear plan
-          </span>
-        </Link>
-      </div>
+      <PageHeader
+        section="Planes"
+        title="Planes de entrenamiento"
+        description="Plantillas semanales que combinan sesiones a lo largo del tiempo"
+        cta={
+          <Link href="/admin/plans/builder">
+            <Button icon={<Plus size={15} color="#fff" />}>Crear plan</Button>
+          </Link>
+        }
+      />
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
@@ -202,7 +184,7 @@ export default function PlansListPage() {
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
-        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5">
+        <div className="flex flex-1 items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
           <Search size={15} color={ui.text.muted} />
           <input
             value={search}
@@ -216,7 +198,7 @@ export default function PlansListPage() {
         </div>
 
         {levels.length > 0 && (
-          <div className="flex flex-wrap gap-1 rounded-xl border border-ui-input-border bg-white p-1">
+          <div className="flex flex-wrap gap-1 rounded-xl border border-ui-input-border bg-white p-1 shadow-card-brand">
             <FilterChip label="Todos" active={level === "all"} onClick={() => { setLevel("all"); setPage(0); }} />
             {levels.map((lvl) => (
               <FilterChip
@@ -232,14 +214,14 @@ export default function PlansListPage() {
 
       {/* Body */}
       {isLoading ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <Loader2 size={20} color={brandPrimary[600]} className="animate-spin" />
           <p className="mt-3 font-manrope text-xs text-ui-text-muted">
             Cargando planes...
           </p>
         </div>
       ) : pageRows.length === 0 ? (
-        <div className="flex flex-col items-center rounded-[18px] border border-ui-input-border bg-white py-24">
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
           <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-sky-50">
             <ClipboardList size={20} color="#0284c7" />
           </div>
@@ -317,7 +299,7 @@ function StatCard({
   bubble: string;
 }) {
   return (
-    <div className="flex flex-1 items-center gap-3.5 rounded-2xl border border-ui-input-border bg-white p-4">
+    <div className="flex flex-1 items-center gap-3.5 rounded-card border border-ui-input-border bg-white p-4 shadow-card-brand">
       <div className={`flex h-[42px] w-[42px] items-center justify-center rounded-xl ${bubble}`}>
         <Icon size={18} color={iconColor} />
       </div>
@@ -344,7 +326,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-[9px] px-3.5 py-1.5 ${active ? "bg-brandPrimary-600" : "hover:bg-brandPrimary-50/60"}`}
+      className={`rounded-[9px] px-3.5 py-1.5 transition ${active ? "btn-gradient shadow-btn-brand" : "hover:bg-brandPrimary-50/60"}`}
     >
       <span className={`whitespace-nowrap text-xs ${active ? "font-manrope font-bold text-white" : "font-manrope font-semibold text-ui-text-muted"}`}>
         {label}
@@ -370,7 +352,7 @@ function PlanCard({
 
   return (
     <div
-      className="relative flex overflow-hidden rounded-[18px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30"
+      className="relative flex overflow-hidden rounded-card border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30"
       style={{ minHeight: 180 }}
     >
       <Link

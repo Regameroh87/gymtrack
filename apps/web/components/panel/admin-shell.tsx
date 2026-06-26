@@ -258,7 +258,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const gymName = gym?.name ?? "GymTrack";
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-ui-background-light">
       {/* Sidebar desktop */}
       <div className="hidden md:flex">
         <Sidebar />
