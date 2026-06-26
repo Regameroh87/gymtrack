@@ -5,7 +5,7 @@
 
 // Librerías
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { type User } from "@supabase/supabase-js";
 
 // Supabase y roles
@@ -158,10 +158,21 @@ function resolveActiveGymId(opts: {
 export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const supabase = await createServerSupabase();
 
-  // auth.getUser() valida la sesión contra Supabase Auth (es la versión segura).
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  // Si el middleware ya validó la sesión (x-auth-uid sellado en el request),
+  // leemos la sesión de la cookie localmente en lugar de hacer otro round-trip
+  // a Supabase Auth. Si el header no está, caemos en getUser() como fallback.
+  const headerStore = await headers();
+  const authUid = headerStore.get("x-auth-uid");
+
+  let authUser: User | null = null;
+  if (authUid) {
+    const { data: { session } } = await supabase.auth.getSession();
+    // Doble-check: el uid de la cookie debe coincidir con el que selló el middleware.
+    if (session?.user.id === authUid) authUser = session.user;
+  } else {
+    const { data: { user } } = await supabase.auth.getUser();
+    authUser = user;
+  }
 
   if (!authUser) {
     return {

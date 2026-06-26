@@ -15,7 +15,14 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase-config";
 export async function updateSession(
   request: NextRequest
 ): Promise<{ response: NextResponse; user: User | null }> {
-  let response = NextResponse.next({ request });
+  // Partimos de los headers originales y borramos cualquier valor que el cliente
+  // haya podido inyectar — el header solo lo escribe el middleware tras validar.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete("x-auth-uid");
+
+  // Acumulamos las cookies a aplicar en lugar de recrear la response en setAll,
+  // para poder construir UNA sola response final con headers + cookies juntos.
+  const cookiesToApply: CookieToSet[] = [];
 
   const supabase = createServerClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
     cookies: {
@@ -26,18 +33,24 @@ export async function updateSession(
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value)
         );
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
+        cookiesToApply.push(...cookiesToSet);
       },
     },
   });
 
-  // getUser() refresca el token si hace falta y dispara setAll() arriba.
+  // getUser() valida el JWT contra Supabase Auth y refresca el token si hace falta.
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Sellamos el UID validado en el request para que los Server Components puedan
+  // leerlo con headers() y saltarse su propio getUser() (sin round-trip extra).
+  if (user) requestHeaders.set("x-auth-uid", user.id);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  cookiesToApply.forEach(({ name, value, options }) =>
+    response.cookies.set(name, value, options)
+  );
 
   return { response, user };
 }
