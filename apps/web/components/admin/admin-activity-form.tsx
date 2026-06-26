@@ -104,11 +104,26 @@ export function AdminActivityForm({
         router.refresh();
       } else {
         const created = await create.mutateAsync(values);
-        // Continúa en edición para cargar los pases enseguida.
-        router.replace(`/admin/activities/edit/${created.id}`);
+        // Persistir los pases cargados en el mismo flujo de alta.
+        if (localPasses.length) {
+          setIsSavingPasses(true);
+          const supabase = getBrowserSupabase();
+          const rows = localPasses.map((p, i) => ({
+            activity_id: created.id,
+            sort_order: i,
+            ...normalizePass(p),
+          }));
+          const { error: passErr } = await supabase
+            .from("activity_plans")
+            .insert(rows);
+          if (passErr) throw passErr;
+        }
+        router.push("/admin/activities");
+        router.refresh();
       }
     } catch (err) {
       setError((err as Error)?.message || "No se pudo guardar la actividad.");
+      setIsSavingPasses(false);
     }
   };
 
