@@ -1,7 +1,6 @@
-// Pantalla de verificación del código OTP. Sin email en el query (acceso directo),
-// vuelve al login.
-
-import { redirect } from "next/navigation";
+// Pantalla de verificación del código OTP. El email no viaja por la URL: lo lee
+// el form desde sessionStorage (lo dejó el login). Sin email guardado, el propio
+// form redirige a /login.
 
 import { VerifyForm } from "@/components/auth/verify-form";
 
@@ -10,12 +9,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function VerifyPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ email?: string; next?: string }>;
-}) {
-  const { email, next } = await searchParams;
-  if (!email) redirect("/login");
-  return <VerifyForm email={email} next={next} />;
+export default function VerifyPage() {
+  return <VerifyForm />;
 }

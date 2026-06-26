@@ -70,9 +70,12 @@ export function LoginForm({ next }: { next?: string }) {
       });
       if (otpError) throw otpError;
 
-      const params = new URLSearchParams({ email: email.trim() });
-      if (next) params.set("next", next);
-      router.replace(`/verify?${params.toString()}`);
+      // El email no va por la URL: lo dejamos en sessionStorage para que /verify
+      // lo lea sin exponerlo en la barra ni en el history.
+      sessionStorage.setItem("gt:verifyEmail", email.trim());
+      if (next) sessionStorage.setItem("gt:verifyNext", next);
+      else sessionStorage.removeItem("gt:verifyNext");
+      router.replace("/verify");
     } catch (err) {
       setErrorSupabase(getErrorMessage(err as SupabaseError));
       setPending(false);

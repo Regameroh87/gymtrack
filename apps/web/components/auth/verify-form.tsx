@@ -6,7 +6,7 @@
 // y se redirige al destino post-login (resolver /dashboard, o `next` si venía de un guard).
 
 // React
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Librerías
@@ -20,18 +20,33 @@ import { AuthSplit, AuthCompactBrand } from "@/components/auth/auth-split";
 
 const EMPTY_CODE = ["", "", "", "", "", ""];
 
-export function VerifyForm({ email, next }: { email: string; next?: string }) {
+export function VerifyForm() {
   const router = useRouter();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [code, setCode] = useState<string[]>(EMPTY_CODE);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  // El email y el destino post-login los dejó el login en sessionStorage. Sin
+  // email guardado (acceso directo a /verify), volvemos al login.
+  const [email, setEmail] = useState<string | null>(null);
+  const nextRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("gt:verifyEmail");
+    if (!stored) {
+      router.replace("/login");
+      return;
+    }
+    nextRef.current = sessionStorage.getItem("gt:verifyNext") || undefined;
+    setEmail(stored);
+  }, [router]);
+
   const canSubmit = code.every((d) => d !== "");
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit || pending) return;
+    if (!canSubmit || pending || !email) return;
 
     setError(null);
     setPending(true);
