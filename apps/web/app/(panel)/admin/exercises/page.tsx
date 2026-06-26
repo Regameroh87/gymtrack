@@ -27,6 +27,9 @@ import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { cloudinaryUrl } from "@/lib/cloudinary";
+import { useDeleteAdminExercise } from "@/lib/hooks/use-admin-exercises";
+import { CardActionsMenu } from "@/components/admin/card-actions-menu";
+import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
 
 const PAGE_SIZE = 18;
 
@@ -59,6 +62,26 @@ export default function ExercisesListPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [page, setPage] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<Exercise | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteExercise = useDeleteAdminExercise();
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteError(null);
+    try {
+      await deleteExercise.mutateAsync(pendingDelete.id);
+      setPendingDelete(null);
+    } catch (err) {
+      // 23503 = foreign_key_violation: el ejercicio está en uso en sesiones.
+      const e = err as { code?: string; message?: string };
+      setDeleteError(
+        e?.code === "23503"
+          ? "No se puede eliminar: el ejercicio está en uso en una o más sesiones. Quitalo de esas sesiones primero."
+          : e?.message || "No se pudo eliminar el ejercicio."
+      );
+    }
+  };
 
   // Multi-gym: la RLS devuelve los gyms del usuario; el filtro por gym activo es del cliente.
   const { data: exercises, isLoading } = useQuery({
@@ -206,7 +229,12 @@ export default function ExercisesListPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 lg:grid-cols-3">
           {pageRows.map((ex) => (
-            <ExerciseCard key={ex.id} exercise={ex} brandSecondary={brandSecondary} />
+            <ExerciseCard
+              key={ex.id}
+              exercise={ex}
+              brandSecondary={brandSecondary}
+              onDelete={() => setPendingDelete(ex)}
+            />
           ))}
         </div>
       )}
@@ -229,6 +257,19 @@ export default function ExercisesListPage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        visible={!!pendingDelete}
+        title="Eliminar ejercicio"
+        message={`Vas a eliminar “${pendingDelete?.name ?? ""}”. Esta acción no se puede deshacer.`}
+        error={deleteError}
+        isPending={deleteExercise.isPending}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
@@ -294,17 +335,28 @@ function FilterChip({
 function ExerciseCard({
   exercise,
   brandSecondary,
+  onDelete,
 }: {
   exercise: Exercise;
   brandSecondary: Record<number, string>;
+  onDelete: () => void;
 }) {
   const imageUrl = cloudinaryUrl(exercise.image_uri);
 
   return (
-    <Link
-      href={`/admin/exercises/${exercise.id}`}
-      className="overflow-hidden rounded-[16px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30 active:scale-[0.99]"
-    >
+    <div className="relative overflow-hidden rounded-[16px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30">
+      <Link
+        href={`/admin/exercises/${exercise.id}`}
+        aria-label={exercise.name ?? "Ejercicio"}
+        className="absolute inset-0 z-0"
+      />
+      <div className="absolute right-2.5 top-2.5">
+        <CardActionsMenu
+          editHref={`/admin/exercises/${exercise.id}`}
+          onDelete={onDelete}
+        />
+      </div>
+
       {/* Image */}
       <div className="w-full overflow-hidden bg-ui-background-light" style={{ aspectRatio: "16 / 10" }}>
         {imageUrl ? (
@@ -355,7 +407,7 @@ function ExerciseCard({
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

@@ -183,3 +183,36 @@ export function useSaveAdminExercise(gymId: string | null) {
     },
   });
 }
+
+// Borrado de un ejercicio del gym. Quita primero los links exercise_equipment y
+// luego la fila de exercises_base. La media (image_uri/video_uri) la destruye el
+// webhook sync-cloudinary en el DELETE. Si el ejercicio está referenciado por
+// session_exercises (FK ON DELETE NO ACTION), Postgres lanza 23503 y lo
+// traducimos a un mensaje amistoso.
+export function useDeleteAdminExercise() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const supabase = getBrowserSupabase();
+
+      const { error: linkErr } = await supabase
+        .from("exercise_equipment")
+        .delete()
+        .eq("exercise_id", id);
+      if (linkErr) throw linkErr;
+
+      const { error } = await supabase
+        .from("exercises_base")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ["admin_exercises_web"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_exercise", id] });
+    },
+  });
+}

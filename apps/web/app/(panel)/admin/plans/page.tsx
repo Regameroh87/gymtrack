@@ -13,7 +13,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ClipboardList,
   Search,
-  ChevronRight,
   Plus,
   SlidersHorizontal,
   Users,
@@ -30,6 +29,9 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { cloudinaryUrl } from "@/lib/cloudinary";
 import { PLAN_GENDER_BADGES } from "@/lib/gender-options";
+import { useDeleteAdminPlan } from "@/lib/hooks/use-admin-plans";
+import { CardActionsMenu } from "@/components/admin/card-actions-menu";
+import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
 
 const PAGE_SIZE = 12;
 
@@ -71,6 +73,20 @@ export default function PlansListPage() {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("all");
   const [page, setPage] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<Plan | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deletePlan = useDeleteAdminPlan();
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteError(null);
+    try {
+      await deletePlan.mutateAsync(pendingDelete.id);
+      setPendingDelete(null);
+    } catch (err) {
+      setDeleteError((err as Error)?.message || "No se pudo eliminar el plan.");
+    }
+  };
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ["admin_plans_web", gymId],
@@ -239,7 +255,13 @@ export default function PlansListPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2">
           {pageRows.map((p) => (
-            <PlanCard key={p.id} plan={p} activeAssignments={activeCountByPlan[p.id] || 0} brandPrimary={brandPrimary} />
+            <PlanCard
+              key={p.id}
+              plan={p}
+              activeAssignments={activeCountByPlan[p.id] || 0}
+              brandPrimary={brandPrimary}
+              onDelete={() => setPendingDelete(p)}
+            />
           ))}
         </div>
       )}
@@ -262,6 +284,19 @@ export default function PlansListPage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        visible={!!pendingDelete}
+        title="Eliminar plan"
+        message={`Vas a eliminar “${pendingDelete?.name ?? ""}”. Se eliminarán sus semanas y se cancelarán sus asignaciones. Esta acción no se puede deshacer.`}
+        error={deleteError}
+        isPending={deletePlan.isPending}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
@@ -322,21 +357,34 @@ function PlanCard({
   plan,
   activeAssignments,
   brandPrimary,
+  onDelete,
 }: {
   plan: Plan;
   activeAssignments: number;
   brandPrimary: Record<number, string>;
+  onDelete: () => void;
 }) {
   const imageUrl = cloudinaryUrl(plan.cover_image_uri);
   const lvl = plan.level ? LEVEL_META[plan.level] : undefined;
   const genderBadge = plan.target_gender ? PLAN_GENDER_BADGES[plan.target_gender] : undefined;
 
   return (
-    <Link
-      href={`/admin/plans/${plan.id}`}
-      className="flex overflow-hidden rounded-[18px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30 active:scale-[0.99]"
+    <div
+      className="relative flex overflow-hidden rounded-[18px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30"
       style={{ minHeight: 180 }}
     >
+      <Link
+        href={`/admin/plans/${plan.id}`}
+        aria-label={plan.name ?? "Plan"}
+        className="absolute inset-0 z-0"
+      />
+      <div className="absolute right-2.5 top-2.5">
+        <CardActionsMenu
+          editHref={`/admin/plans/${plan.id}`}
+          onDelete={onDelete}
+        />
+      </div>
+
       {/* Cover */}
       <div className="overflow-hidden bg-ui-background-light" style={{ width: 160 }}>
         {imageUrl ? (
@@ -351,11 +399,10 @@ function PlanCard({
 
       {/* Body */}
       <div className="flex flex-1 flex-col p-4">
-        <div className="mb-1 flex items-start justify-between gap-2">
+        <div className="mb-1 flex items-start justify-between gap-2 pr-9">
           <span className="flex-1 truncate font-jakarta text-[15px] font-bold tracking-tight text-ui-text-main">
             {plan.name}
           </span>
-          <ChevronRight size={14} color={ui.text.muted} />
         </div>
 
         {plan.objective ? (
@@ -410,7 +457,7 @@ function PlanCard({
           </span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 

@@ -24,6 +24,7 @@ import {
   Toggle,
   WebSelect,
   ErrorBanner,
+  DeleteConfirmModal,
 } from "@/components/platform/catalog/catalog-ui";
 import { EXERCISE_CATEGORIES, MUSCLE_GROUPS } from "@/lib/catalog-options";
 import { uploadImageWeb, uploadVideoWeb } from "@/lib/gyms";
@@ -31,6 +32,7 @@ import { cloudinaryUrl, cloudinaryVideoUrl } from "@/lib/cloudinary";
 import {
   useGymEquipment,
   useSaveAdminExercise,
+  useDeleteAdminExercise,
   type AdminExercise,
   type AdminExerciseEquipment,
   type AdminExerciseValues,
@@ -73,6 +75,7 @@ export function AdminExerciseForm({
 }) {
   const router = useRouter();
   const saveExercise = useSaveAdminExercise(gymId);
+  const deleteExercise = useDeleteAdminExercise();
   const { data: gymEquipment = [] } = useGymEquipment(gymId);
 
   const [values, setValues] = useState<AdminExerciseValues>(() =>
@@ -84,6 +87,8 @@ export function AdminExerciseForm({
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
 
@@ -167,6 +172,24 @@ export function AdminExerciseForm({
     } catch (err) {
       setError((err as Error)?.message || "No se pudo guardar el ejercicio.");
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!initial) return;
+    setDeleteError(null);
+    try {
+      await deleteExercise.mutateAsync(initial.id);
+      router.push("/admin/exercises");
+      router.refresh();
+    } catch (err) {
+      // 23503 = foreign_key_violation: el ejercicio está referenciado por sesiones.
+      const e = err as { code?: string; message?: string };
+      setDeleteError(
+        e?.code === "23503"
+          ? "No se puede eliminar: el ejercicio está en uso en una o más sesiones. Quitalo de esas sesiones primero."
+          : e?.message || "No se pudo eliminar el ejercicio."
+      );
     }
   };
 
@@ -411,7 +434,31 @@ export function AdminExerciseForm({
             {pending ? "Guardando..." : initial ? "Guardar cambios" : "Crear ejercicio"}
           </button>
         </div>
+
+        {initial && (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[11px] border border-red-200 bg-white py-2.5 font-manrope text-[13px] font-bold text-red-600 transition hover:bg-red-50"
+          >
+            <Trash2 size={14} color="#dc2626" />
+            Eliminar ejercicio
+          </button>
+        )}
       </div>
+
+      <DeleteConfirmModal
+        visible={confirmDelete}
+        title="Eliminar ejercicio"
+        message={`Vas a eliminar “${values.name}”. Esta acción no se puede deshacer.`}
+        error={deleteError}
+        isPending={deleteExercise.isPending}
+        onCancel={() => {
+          setConfirmDelete(false);
+          setDeleteError(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

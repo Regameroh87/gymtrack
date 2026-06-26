@@ -26,6 +26,9 @@ import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { cloudinaryUrl } from "@/lib/cloudinary";
+import { useDeleteAdminSession } from "@/lib/hooks/use-admin-sessions";
+import { CardActionsMenu } from "@/components/admin/card-actions-menu";
+import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
 
 const PAGE_SIZE = 18;
 
@@ -63,6 +66,22 @@ export default function SessionsListPage() {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("all");
   const [page, setPage] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<Session | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteSession = useDeleteAdminSession();
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteError(null);
+    try {
+      await deleteSession.mutateAsync(pendingDelete.id);
+      setPendingDelete(null);
+    } catch (err) {
+      setDeleteError(
+        (err as Error)?.message || "No se pudo eliminar la sesión."
+      );
+    }
+  };
 
   const { data: sessions, isLoading } = useQuery({
     queryKey: ["admin_sessions_web", gymId],
@@ -208,7 +227,7 @@ export default function SessionsListPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 lg:grid-cols-3">
           {pageRows.map((s) => (
-            <SessionCard key={s.id} session={s} />
+            <SessionCard key={s.id} session={s} onDelete={() => setPendingDelete(s)} />
           ))}
         </div>
       )}
@@ -231,6 +250,19 @@ export default function SessionsListPage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        visible={!!pendingDelete}
+        title="Eliminar sesión"
+        message={`Vas a eliminar “${pendingDelete?.name ?? ""}”. Los días de planes que la usaban quedarán sin sesión. Esta acción no se puede deshacer.`}
+        error={deleteError}
+        isPending={deleteSession.isPending}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
@@ -287,15 +319,24 @@ function FilterChip({
   );
 }
 
-function SessionCard({ session }: { session: Session }) {
+function SessionCard({ session, onDelete }: { session: Session; onDelete: () => void }) {
   const imageUrl = cloudinaryUrl(session.cover_image_uri);
   const lvl = session.level ? LEVEL_META[session.level] : undefined;
 
   return (
-    <Link
-      href={`/admin/sessions/${session.id}`}
-      className="overflow-hidden rounded-[16px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30 active:scale-[0.99]"
-    >
+    <div className="relative overflow-hidden rounded-[16px] border border-ui-input-border bg-white transition hover:border-brandPrimary-600/30">
+      <Link
+        href={`/admin/sessions/${session.id}`}
+        aria-label={session.name ?? "Sesión"}
+        className="absolute inset-0 z-0"
+      />
+      <div className="absolute right-2.5 top-2.5">
+        <CardActionsMenu
+          editHref={`/admin/sessions/${session.id}`}
+          onDelete={onDelete}
+        />
+      </div>
+
       <div className="relative w-full overflow-hidden bg-ui-background-light" style={{ aspectRatio: "16 / 10" }}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -339,7 +380,7 @@ function SessionCard({ session }: { session: Session }) {
           </span>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
