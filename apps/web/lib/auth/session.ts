@@ -268,6 +268,20 @@ function isWithinArea(next: string, base: string): boolean {
   return prefixes.some((p) => next === p || next.startsWith(`${p}/`));
 }
 
+// Normaliza un `next` a un pathname interno seguro o null si no es válido.
+// Usa la API URL para resolver `./..` (que un "/admin/../home" no burle la
+// validación de área) y descartar cualquier host inyectado ("//evil.com",
+// "/\\evil.com") — nos quedamos SOLO con el pathname de nuestro propio origen.
+function safeNextPath(next: string | null | undefined): string | null {
+  if (!next || !next.startsWith("/")) return null;
+  try {
+    const path = new URL(next, "http://internal").pathname;
+    return path.startsWith("/") ? path : null;
+  } catch {
+    return null;
+  }
+}
+
 // Destino post-login respetando el `next` de retorno SOLO si pertenece al área
 // del rol. Centraliza la decisión en el servidor (donde se conoce el rol) para
 // que login/verify nunca dejen a un staff atrapado en una ruta de socio.
@@ -276,8 +290,7 @@ export function getPostLoginDestination(
   next?: string | null
 ): string {
   const base = getPostLoginPath(ctx);
-  // Solo rutas internas absolutas; nada de URLs externas ni protocol-relative.
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return base;
-  if (next === base) return base;
-  return isWithinArea(next, base) ? next : base;
+  const path = safeNextPath(next);
+  if (!path || path === base) return base;
+  return isWithinArea(path, base) ? path : base;
 }
