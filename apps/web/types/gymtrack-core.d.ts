@@ -141,6 +141,80 @@ declare module "@gymtrack/core/hooks/activities/use-activities" {
   ): UseQueryResult<ActivityPlan[]>;
 }
 
+declare module "@gymtrack/core/hooks/users/use-member-detail" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface MemberProfile {
+    id: string;
+    user_id: string;
+    name: string | null;
+    last_name: string | null;
+    email: string | null;
+    phone: string | null;
+    document_number: string | null;
+    address: string | null;
+    gender: string | null;
+    image_profile: string | null;
+    role: string | null;
+    membership_status: string | null;
+    is_active: boolean | null;
+    created_at: string | null;
+    [k: string]: unknown;
+  }
+  export interface MemberAssignment {
+    id: string;
+    status: string | null;
+    is_custom: boolean;
+    plan: {
+      id: string;
+      name: string | null;
+      objective: string | null;
+      level: string | null;
+      weekly_days: number | null;
+      duration_weeks: number | null;
+      cover_image_uri: string | null;
+    } | null;
+    [k: string]: unknown;
+  }
+  export interface MemberHistoryLog {
+    id: string;
+    session_id: string | null;
+    session_name: string | null;
+    completed_at: string | null;
+    [k: string]: unknown;
+  }
+  export interface MemberDetail {
+    profile: MemberProfile;
+    activePlan: MemberAssignment | null;
+    pastPlans: MemberAssignment[];
+    history: MemberHistoryLog[];
+  }
+  export function useMemberDetail(
+    memberId: string | null,
+    gymId: string | null
+  ): UseQueryResult<MemberDetail>;
+}
+
+declare module "@gymtrack/core/hooks/activities/use-member-subscriptions" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface MemberSubscription {
+    id: string;
+    status: string | null;
+    activities: { name: string | null; color: string | null } | null;
+    activity_plans: {
+      label: string | null;
+      frequency_per_week: number | null;
+    } | null;
+    [k: string]: unknown;
+  }
+  export function useMemberSubscriptions(
+    memberId: string | null,
+    gymId: string | null
+  ): UseQueryResult<{
+    active: MemberSubscription[];
+    past: MemberSubscription[];
+  }>;
+}
+
 declare module "@gymtrack/core/hooks/users/use-gym-members" {
   import type { UseQueryResult } from "@tanstack/react-query";
   export interface GymMember {
