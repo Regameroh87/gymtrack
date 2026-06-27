@@ -68,18 +68,7 @@ export function AuthSplit({
       {/* Mobile: transparente sobre la imagen. Desktop: superficie oscura sólida */}
       <div className="relative flex flex-1 items-center justify-center px-6 py-12 lg:bg-[#1c1c24]">
         <div className="w-full max-w-[440px]">
-          {/* Card frosted glass — solo en mobile */}
-          <div className="rounded-[24px] p-6 lg:p-0 lg:bg-transparent"
-            style={{
-              background: "rgba(12, 0, 60, 0.55)",
-              backdropFilter: "blur(18px)",
-              WebkitBackdropFilter: "blur(18px)",
-            }}
-            // En desktop no aplicamos el card — lo anula lg:p-0 + lg:bg-transparent
-          >
-            {/* Workaround: el style inline aplica siempre; usamos un wrapper condicional en lg */}
-            {children}
-          </div>
+          <div className="auth-card-mobile">{children}</div>
         </div>
       </div>
     </div>

@@ -55,7 +55,7 @@ export function GymsList({ gyms }: { gyms: GymWithOwner[] }) {
   return (
     <>
       {/* Stat cards */}
-      <div className="mb-6 flex gap-3.5">
+      <div className="mb-6 grid grid-cols-3 gap-3 md:flex md:gap-3.5">
         <StatCard icon={ShieldHalf} label="Total" value={stats.total} />
         <StatCard icon={Users} label="Con logo" value={stats.withLogo} />
         <StatCard icon={MapPin} label="Con tema propio" value={stats.withTheme} />

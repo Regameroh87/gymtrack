@@ -267,7 +267,7 @@ export function EditGymForm({
   };
 
   return (
-    <div className="p-9 pb-14">
+    <div className="p-4 pb-10 md:p-9 md:pb-14">
       {/* Notification */}
       {notification && (
         <div
@@ -332,7 +332,7 @@ export function EditGymForm({
       )}
 
       {/* Card */}
-      <div className="mx-auto w-full max-w-[680px] rounded-[20px] border border-gray-200 bg-white p-8">
+      <div className="mx-auto w-full max-w-[680px] rounded-[20px] border border-gray-200 bg-white p-5 md:p-8">
         <input
           type="file"
           accept="image/*"
@@ -355,7 +355,7 @@ export function EditGymForm({
           subtitle="Identidad y contacto del establecimiento"
         />
         <div className="flex flex-col gap-y-5">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
             <div className="flex-1">
               <Field label="Nombre" error={errors.name}>
                 <Input
@@ -396,7 +396,7 @@ export function EditGymForm({
             />
           </Field>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
             <div className="flex-1">
               <Field label="Teléfono (opcional)">
                 <Input
@@ -469,7 +469,7 @@ export function EditGymForm({
             onPickDark={() => fileInputDarkRef.current?.click()}
           />
 
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
             <div className="flex-1">
               <ColorField
                 label="Color primario"
@@ -538,7 +538,7 @@ export function EditGymForm({
 
       {/* ── Suspensión (reversible) ── */}
       <div className="mx-auto mt-6 w-full max-w-[680px] rounded-[20px] border border-amber-200 bg-amber-50/60 p-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1">
             <p className="font-jakarta text-[14px] font-bold tracking-tight text-amber-700">
               {isActive ? "Suspender gimnasio" : "Reactivar gimnasio"}
@@ -576,7 +576,7 @@ export function EditGymForm({
 
       {/* ── Danger zone ── */}
       <div className="mx-auto mt-6 w-full max-w-[680px] rounded-[20px] border border-red-200 bg-red-50/60 p-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1">
             <p className="font-jakarta text-[14px] font-bold tracking-tight text-red-700">
               Eliminar gimnasio

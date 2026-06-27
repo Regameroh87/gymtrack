@@ -71,9 +71,9 @@ export default async function PlatformPage() {
 
   return (
     <PlatformShell>
-      <div className="p-9 pb-14">
+      <div className="p-4 pb-10 md:p-9 md:pb-14">
         {/* Top bar */}
-        <div className="mb-7 flex items-end justify-between">
+        <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="mb-0.5 font-manrope text-xs capitalize text-gray-400">
               {dateStr}
@@ -116,7 +116,7 @@ export default async function PlatformPage() {
               </p>
             </div>
 
-            <div className="ml-8 flex flex-col items-center justify-center rounded-[20px] border border-white/10 bg-white/10 p-6">
+            <div className="ml-8 hidden flex-col items-center justify-center rounded-[20px] border border-white/10 bg-white/10 p-6 md:flex">
               <ShieldHalf size={36} color="rgba(255,255,255,0.9)" />
               <span className="mt-2 font-manrope text-[9px] font-semibold uppercase tracking-widest text-white/55">
                 GymTrack
@@ -126,7 +126,7 @@ export default async function PlatformPage() {
         </div>
 
         {/* Stats row */}
-        <div className="mb-7 flex gap-3.5">
+        <div className="mb-7 grid grid-cols-2 gap-3.5 md:flex">
           {STATS.map((stat) => (
             <div
               key={stat.label}

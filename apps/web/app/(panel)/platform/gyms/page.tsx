@@ -50,9 +50,9 @@ export default async function GymsPage() {
 
   return (
     <PlatformShell>
-      <div className="p-9 pb-14">
+      <div className="p-4 pb-10 md:p-9 md:pb-14">
         {/* Header */}
-        <div className="mb-6 flex items-end justify-between">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="mb-1.5 flex items-center gap-1.5">
               <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-gray-400">

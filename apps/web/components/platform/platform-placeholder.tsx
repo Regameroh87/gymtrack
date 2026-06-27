@@ -34,9 +34,9 @@ export function PlatformPlaceholder({
   features = [],
 }: PlatformPlaceholderProps) {
   return (
-    <div className="p-9 pb-14">
+    <div className="p-4 pb-10 md:p-9 md:pb-14">
       {/* Header */}
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <div className="mb-1.5 flex items-center gap-1.5">
             <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-gray-400">
@@ -62,7 +62,7 @@ export function PlatformPlaceholder({
       </div>
 
       {/* Hero */}
-      <div className="relative mb-6 overflow-hidden rounded-[22px] bg-gradient-to-br from-brandPrimary-800 via-brandPrimary-600 to-brandPrimary-400 p-9">
+      <div className="relative mb-6 overflow-hidden rounded-[22px] bg-gradient-to-br from-brandPrimary-800 via-brandPrimary-600 to-brandPrimary-400 p-5 md:p-9">
         <div className="absolute -right-16 -top-16 h-[220px] w-[220px] rounded-full bg-white/[0.04]" />
         <div className="absolute -bottom-[60px] right-[120px] h-[160px] w-[160px] rounded-full bg-white/[0.04]" />
 
@@ -82,7 +82,7 @@ export function PlatformPlaceholder({
             </p>
           </div>
 
-          <div className="ml-8 flex flex-col items-center justify-center rounded-[22px] border border-white/10 bg-white/10 p-7">
+          <div className="ml-8 hidden flex-col items-center justify-center rounded-[22px] border border-white/10 bg-white/10 p-7 md:flex">
             <Icon size={40} color="rgba(255,255,255,0.9)" />
             <span className="mt-2 font-manrope text-[9px] font-semibold uppercase tracking-widest text-white/55">
               {badge}

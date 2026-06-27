@@ -221,7 +221,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
   };
 
   return (
-    <div className="p-9 pb-14">
+    <div className="p-4 pb-10 md:p-9 md:pb-14">
       {/* Notification */}
       {notification && (
         <div
@@ -275,7 +275,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
       </div>
 
       {/* Card */}
-      <div className="mx-auto w-full max-w-[680px] rounded-[20px] border border-gray-200 bg-white p-8">
+      <div className="mx-auto w-full max-w-[680px] rounded-[20px] border border-gray-200 bg-white p-5 md:p-8">
         <input
           type="file"
           accept="image/*"
@@ -298,7 +298,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
           subtitle="Identidad y contacto del establecimiento"
         />
         <div className="flex flex-col gap-y-5">
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
             <div className="flex-1">
               <Field label="Nombre" error={errors.name}>
                 <Input
@@ -339,7 +339,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
             />
           </Field>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
             <div className="flex-1">
               <Field label="Teléfono (opcional)">
                 <Input
@@ -462,7 +462,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
             </Field>
           ) : (
             <div className="flex flex-col gap-y-5">
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
                 <div className="flex-1">
                   <Field label="Nombre">
                     <Input
@@ -483,7 +483,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
                 <div className="flex-1">
                   <Field label="Email" error={errors.owner_email}>
                     <Input
@@ -537,7 +537,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
             onPickDark={() => fileInputDarkRef.current?.click()}
           />
 
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
             <div className="flex-1">
               <ColorField
                 label="Color primario"
