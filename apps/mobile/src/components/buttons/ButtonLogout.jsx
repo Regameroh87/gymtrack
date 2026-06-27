@@ -12,8 +12,10 @@ import { Logout } from "../../../assets/icons.jsx";
 
 export default function ButtonLogout({ size = 24, className = "" }) {
   const doLogout = async () => {
-    await supabase.auth.signOut();
-    // El guard de ProtectedLayout redirige a login al detectar isLoggedIn = false
+    // scope:'local' limpia la sesión local de inmediato sin esperar respuesta de
+    // red (la variante global hace POST a /auth/v1/logout antes de limpiar, lo que
+    // introduce 500ms–2s de latencia antes de que ProtectedLayout pueda redirigir).
+    await supabase.auth.signOut({ scope: "local" });
   };
 
   const handlePress = () => {
