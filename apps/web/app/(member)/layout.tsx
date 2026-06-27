@@ -42,7 +42,7 @@ export default async function MemberLayout({
       >
         <ActiveGymProvider seed={gymSeed}>
           <QueryProvider>
-            <div className="min-h-screen bg-ui-background-light">
+            <div className="min-h-screen bg-ui-background-light pb-[58px] md:pb-0">
               <MemberNavbar />
               {children}
             </div>
