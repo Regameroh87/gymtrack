@@ -5,9 +5,7 @@
 // Librerías
 import { Dumbbell } from "lucide-react";
 
-// Imagen de fondo del panel izquierdo (misma que usa Expo).
-const BG_IMAGE_URI =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDoyQqhQRW3b2Vbr6hJyuoRkX5vGZxxyBkrnNT_8WqhkfME9l9LkLhUA_C3_k6XtyLFePmcWfsBWScKNkQmyFoSMiuWg66Dt48saP_-i2wjNYcKhOaQbBimLgaEdmin3fHsBW_-jYlb8LWwiu0WzBxde3FVh2kpvj-60rFmKDkx_4ZV6E9X1Dccci4F6HNjQKYp2TGbf-EHgPMdHlEmF7F1sujc9BfVeJY119gwEa-sQ7imnUfz3ziFPUO-LIL9C-WMtmaeGFAr9gfD";
+const BG_IMAGE_URI = "/bg-auth.webp";
 
 export function AuthSplit({
   heading,
