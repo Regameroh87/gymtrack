@@ -65,10 +65,13 @@ export function AuthProvider({
 
   const signOut = useCallback(async () => {
     const supabase = getBrowserSupabase();
-    await supabase.auth.signOut(); // limpia cookies + notifica otras pestañas
-    await setActiveGym(null); // olvida el gym activo
+    // scope:'local' elimina las cookies de auth de inmediato sin hacer POST a
+    // /auth/v1/logout (la variante global espera respuesta de red antes de limpiar,
+    // introduciendo 500ms–2s de latencia visible antes de la navegación).
+    await supabase.auth.signOut({ scope: "local" });
+    // La cookie del gym no bloquea la navegación; se borra en background.
+    setActiveGym(null);
     router.replace("/login");
-    router.refresh();
   }, [router]);
 
   const value = useMemo<AuthContextValue>(

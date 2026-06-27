@@ -15,7 +15,7 @@ export function AuthSplit({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-row">
+    <div className="relative flex min-h-screen w-full flex-row overflow-x-hidden">
       {/* ── Fondo completo (visible en mobile, oculto en lg donde el panel izq lo tapa) ── */}
       <div className="absolute inset-0 lg:hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
