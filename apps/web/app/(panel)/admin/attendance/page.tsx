@@ -5,7 +5,7 @@
 // paginada, y modal de check-in manual.
 
 // React / Next
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 // Librerías
@@ -85,6 +85,23 @@ export default function AttendanceListPage() {
   const [range, setRange] = useState("today");
   const [page, setPage] = useState(0);
   const [showManual, setShowManual] = useState(false);
+
+  useEffect(() => {
+    if (!gymId) return;
+    const supabase = getBrowserSupabase();
+    const channel = supabase
+      .channel(`attendance_realtime_${gymId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "attendances", filter: `gym_id=eq.${gymId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["admin_attendance"] });
+          qc.invalidateQueries({ queryKey: ["admin_attendance_stats"] });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [gymId, qc]);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin_attendance", gymId, range],
