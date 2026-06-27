@@ -88,10 +88,10 @@ export const AuthProvider = ({ children }) => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (accessTokenRef.current === (newSession?.access_token ?? null)) return;
-      applySession(newSession);
-      setLoading(false);
+      await applySession(newSession);
+      if (isMounted) setLoading(false);
     });
 
     return () => {
