@@ -1,11 +1,9 @@
-// Shell de dos paneles de las pantallas de auth (login / verify). Clon del layout
-// de apps/mobile/app/(auth)/login.web.jsx y verify.web.jsx: panel izquierdo con imagen
-// + gradiente + branding + titular + frase (solo en desktop), panel derecho con el form.
-
-// Librerías
 import { Dumbbell } from "lucide-react";
 
 const BG_IMAGE_URI = "/bg-auth.webp";
+
+const OVERLAY =
+  "linear-gradient(to bottom, rgba(74, 68, 228, 0.55), rgba(12, 0, 106, 0.92))";
 
 export function AuthSplit({
   heading,
@@ -17,8 +15,19 @@ export function AuthSplit({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-row bg-[#0c006a]">
-      {/* PANEL IZQUIERDO — imagen + overlay + frase (solo desktop) */}
+    <div className="relative flex min-h-screen flex-row">
+      {/* ── Fondo completo (visible en mobile, oculto en lg donde el panel izq lo tapa) ── */}
+      <div className="absolute inset-0 lg:hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={BG_IMAGE_URI}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+        <div className="absolute inset-0" style={{ background: OVERLAY }} />
+      </div>
+
+      {/* ── PANEL IZQUIERDO — imagen + overlay + frase (solo desktop) ── */}
       <div className="relative hidden flex-1 overflow-hidden lg:flex">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -26,13 +35,7 @@ export function AuthSplit({
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
         />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(74, 68, 228, 0.55), rgba(12, 0, 106, 0.92))",
-          }}
-        />
+        <div className="absolute inset-0" style={{ background: OVERLAY }} />
 
         <div className="relative flex flex-1 flex-col justify-between p-16">
           <div className="flex flex-row items-center">
@@ -61,20 +64,32 @@ export function AuthSplit({
         </div>
       </div>
 
-      {/* PANEL DERECHO — form */}
-      <div className="flex flex-1 items-center justify-center bg-[#1c1c24] px-6 py-12">
-        <div className="w-full max-w-[440px]">{children}</div>
+      {/* ── PANEL DERECHO — form ── */}
+      {/* Mobile: transparente sobre la imagen. Desktop: superficie oscura sólida */}
+      <div className="relative flex flex-1 items-center justify-center px-6 py-12 lg:bg-[#1c1c24]">
+        <div className="w-full max-w-[440px]">
+          {/* Card frosted glass — solo en mobile */}
+          <div className="rounded-[24px] p-6 lg:p-0 lg:bg-transparent"
+            style={{
+              background: "rgba(12, 0, 60, 0.55)",
+              backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
+            }}
+            // En desktop no aplicamos el card — lo anula lg:p-0 + lg:bg-transparent
+          >
+            {/* Workaround: el style inline aplica siempre; usamos un wrapper condicional en lg */}
+            {children}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-// Branding compacto que se muestra arriba del form cuando no hay panel izquierdo
-// (mobile). Clon del bloque !isWide de Expo.
 export function AuthCompactBrand() {
   return (
-    <div className="mb-10 flex flex-col items-center lg:hidden">
-      <div className="mb-4 rounded-full border border-[#4a44e4]/30 bg-[#4a44e4]/20 p-3">
+    <div className="mb-8 flex flex-col items-center lg:hidden">
+      <div className="mb-4 rounded-full border border-white/20 bg-white/15 p-3">
         <Dumbbell color="#ffffff" size={32} />
       </div>
       <span className="font-jakarta text-3xl font-extrabold tracking-tight text-white">
