@@ -1,4 +1,5 @@
-import { View, TextInput, Text, Pressable, Image } from "react-native";
+import { View, TextInput, Text, Pressable } from "react-native";
+import { Image } from "expo-image";
 
 import * as Haptics from "expo-haptics";
 import { useForm } from "@tanstack/react-form";
@@ -101,16 +102,9 @@ export default function Verify() {
     <Screen safe className="flex-1 items-center justify-center">
       {/* FONDO COMPARTIDO CON LOGIN */}
       <Image
-        source={{
-          uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDoyQqhQRW3b2Vbr6hJyuoRkX5vGZxxyBkrnNT_8WqhkfME9l9LkLhUA_C3_k6XtyLFePmcWfsBWScKNkQmyFoSMiuWg66Dt48saP_-i2wjNYcKhOaQbBimLgaEdmin3fHsBW_-jYlb8LWwiu0WzBxde3FVh2kpvj-60rFmKDkx_4ZV6E9X1Dccci4F6HNjQKYp2TGbf-EHgPMdHlEmF7F1sujc9BfVeJY119gwEa-sQ7imnUfz3ziFPUO-LIL9C-WMtmaeGFAr9gfD",
-        }}
-        style={{
-          display: "flex",
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          resizeMode: "cover",
-        }}
+        source="https://lh3.googleusercontent.com/aida-public/AB6AXuDoyQqhQRW3b2Vbr6hJyuoRkX5vGZxxyBkrnNT_8WqhkfME9l9LkLhUA_C3_k6XtyLFePmcWfsBWScKNkQmyFoSMiuWg66Dt48saP_-i2wjNYcKhOaQbBimLgaEdmin3fHsBW_-jYlb8LWwiu0WzBxde3FVh2kpvj-60rFmKDkx_4ZV6E9X1Dccci4F6HNjQKYp2TGbf-EHgPMdHlEmF7F1sujc9BfVeJY119gwEa-sQ7imnUfz3ziFPUO-LIL9C-WMtmaeGFAr9gfD"
+        contentFit="cover"
+        style={{ position: "absolute", width: "100%", height: "100%" }}
       />
 
       {/* OVERLAY STITCH PULSE KINETIC (Indigo) */}
