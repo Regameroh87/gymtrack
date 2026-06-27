@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 
 // Supabase, contextos y helpers
+import { toast } from "sonner";
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
@@ -88,6 +89,7 @@ export default function AttendanceListPage() {
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin_attendance", gymId, range],
     enabled: !!gymId,
+    refetchInterval: 30_000,
     queryFn: async () => {
       const supabase = getBrowserSupabase();
       let q = supabase
@@ -105,20 +107,36 @@ export default function AttendanceListPage() {
     },
   });
 
+  const { data: statsRows } = useQuery({
+    queryKey: ["admin_attendance_stats", gymId],
+    enabled: !!gymId,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const supabase = getBrowserSupabase();
+      const { data, error } = await supabase
+        .from("attendances")
+        .select("checked_in_at")
+        .eq("gym_id", gymId)
+        .gte("checked_in_at", daysAgo(30).toISOString());
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const stats = useMemo(() => {
-    if (!rows) return { today: 0, week: 0, month: 0 };
+    if (!statsRows) return { today: 0, week: 0, month: 0 };
     const today = startOfDay(new Date()).getTime();
     const w = daysAgo(7).getTime();
     const m = daysAgo(30).getTime();
     let t = 0, ww = 0, mm = 0;
-    for (const r of rows) {
+    for (const r of statsRows) {
       const ts = new Date(r.checked_in_at).getTime();
       if (ts >= today) t++;
       if (ts >= w) ww++;
       if (ts >= m) mm++;
     }
     return { today: t, week: ww, month: mm };
-  }, [rows]);
+  }, [statsRows]);
 
   const filtered = useMemo(() => {
     if (!rows) return [];
@@ -293,6 +311,7 @@ export default function AttendanceListPage() {
           onClose={() => setShowManual(false)}
           onDone={() => {
             qc.invalidateQueries({ queryKey: ["admin_attendance"] });
+            qc.invalidateQueries({ queryKey: ["admin_attendance_stats"] });
             setShowManual(false);
           }}
         />
@@ -351,7 +370,14 @@ function ManualCheckInModal({
       });
       if (error) throw error;
     },
-    onSuccess: onDone,
+    onSuccess: () => {
+      toast.success("Check-in registrado");
+      onDone();
+    },
+    onError: (err) => {
+      console.error("Error al registrar asistencia:", err);
+      toast.error("No se pudo registrar el check-in. Verificá tu conexión o permisos.");
+    },
   });
 
   const filtered = useMemo(() => {

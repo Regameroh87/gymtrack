@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Manrope } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { SITE_URL, BRAND } from "@/lib/site";
 
@@ -41,7 +42,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${jakarta.variable} ${manrope.variable}`}>
-      <body className="font-manrope antialiased">{children}</body>
+      <body className="font-manrope antialiased">
+        {children}
+        <Toaster position="bottom-right" richColors />
+      </body>
     </html>
   );
 }
