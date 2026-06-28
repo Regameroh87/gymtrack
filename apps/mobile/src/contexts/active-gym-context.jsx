@@ -34,6 +34,25 @@ export const ACTIVE_GYM_KEY = "active-gym:id";
 
 const ActiveGymContext = createContext(null);
 
+// Combina el signal de React Query (cancel por unmount/refetch) con un timeout
+// propio. Si cualquiera de los dos dispara, aborta el request HTTP de Supabase.
+function withTimeout(parentSignal, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const onParentAbort = () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
+  parentSignal?.addEventListener("abort", onParentAbort, { once: true });
+  return {
+    signal: controller.signal,
+    clear: () => {
+      clearTimeout(timer);
+      parentSignal?.removeEventListener("abort", onParentAbort);
+    },
+  };
+}
+
 export function ActiveGymProvider({ children }) {
   const { user, isLoggedIn, loading: authLoading } = useAuth();
   const authUserId = user?.user_id ?? null;
@@ -54,24 +73,31 @@ export function ActiveGymProvider({ children }) {
     queryKey: ["memberships", authUserId],
     enabled: !!authUserId,
     staleTime: 1000 * 60 * 5,
+    retry: 1,
     // Red de seguridad para detectar una suspensión del gym aunque la app quede
     // abierta en foreground sin backgroundear ni perder red. Es una query mínima
     // (memberships del usuario); no corre en background.
     refetchInterval: 1000 * 60 * 2,
     refetchIntervalInBackground: false,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("memberships")
-        .select(
-          "id, gym_id, role, status, gyms ( id, name, logo_url, theme_primary, theme_accent, is_active )"
-        )
-        .eq("user_id", authUserId)
-        .eq("status", "active");
-      if (error) {
-        console.error("ActiveGym: error al leer memberships:", error.message);
-        throw error;
+    queryFn: async ({ signal }) => {
+      const { signal: abortSignal, clear } = withTimeout(signal, 8_000);
+      try {
+        const { data, error } = await supabase
+          .from("memberships")
+          .select(
+            "id, gym_id, role, status, gyms ( id, name, logo_url, theme_primary, theme_accent, is_active )"
+          )
+          .eq("user_id", authUserId)
+          .eq("status", "active")
+          .abortSignal(abortSignal);
+        if (error) {
+          console.error("ActiveGym: error al leer memberships:", error.message);
+          throw error;
+        }
+        return data ?? [];
+      } finally {
+        clear();
       }
-      return data ?? [];
     },
   });
 
@@ -92,19 +118,26 @@ export function ActiveGymProvider({ children }) {
     queryKey: ["all-gyms", authUserId],
     enabled: !!authUserId && isSuperAdmin,
     staleTime: 1000 * 60 * 30,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("gyms")
-        .select("id, name, logo_url, theme_primary, theme_accent, is_active")
-        .order("name");
-      if (error) {
-        console.error(
-          "ActiveGym: error al leer todos los gyms:",
-          error.message
-        );
-        throw error;
+    retry: 1,
+    queryFn: async ({ signal }) => {
+      const { signal: abortSignal, clear } = withTimeout(signal, 8_000);
+      try {
+        const { data, error } = await supabase
+          .from("gyms")
+          .select("id, name, logo_url, theme_primary, theme_accent, is_active")
+          .order("name")
+          .abortSignal(abortSignal);
+        if (error) {
+          console.error(
+            "ActiveGym: error al leer todos los gyms:",
+            error.message
+          );
+          throw error;
+        }
+        return data ?? [];
+      } finally {
+        clear();
       }
-      return data ?? [];
     },
   });
 
