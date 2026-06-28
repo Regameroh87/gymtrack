@@ -27,7 +27,6 @@ import { queryClient } from "@gymtrack/core/query-client";
 import { AuthProvider } from "../src/auth/lib/getSession";
 import { useInitDatabase } from "../src/database";
 import {
-  syncWithSupabase,
   startSyncListener,
   checkNetInfoAndSync,
 } from "../src/database/sync";
@@ -67,13 +66,14 @@ export default function RootLayout() {
     Manrope_700Bold,
   });
 
-  const isSync = useRef(false); // Para evitar que se sincronice más de una vez
+  const isListenerStarted = useRef(false);
   const { success, error } = useInitDatabase();
-  // Sincronización con Supabase una vez que la DB local está lista
+  // El listener de reconexión arranca una sola vez en cuanto la DB está lista.
+  // El sync inicial lo dispara ActiveGymProvider cuando gym + auth están disponibles,
+  // garantizando que la query esté gym-scopeada desde el primer intento.
   useEffect(() => {
-    if (success && !isSync.current) {
-      isSync.current = true;
-      syncWithSupabase();
+    if (success && !isListenerStarted.current) {
+      isListenerStarted.current = true;
       startSyncListener();
     }
   }, [success]);

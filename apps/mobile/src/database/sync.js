@@ -261,6 +261,18 @@ const COMPOSITE_UNIQUE_COLUMNS = {
 // borrado cuando otro dispositivo conserva una copia sin sincronizar.
 const SOFT_DELETE_TABLES = new Set(["session_logs", "session_set_logs"]);
 
+// Envuelve un query builder de Supabase con un AbortController que lo cancela
+// si no responde en `timeoutMs` ms. Devuelve el Promise a awaitar y una función
+// clear() para limpiar el timer si el query resuelve antes del timeout.
+function makeAbortableQuery(queryBuilder, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return {
+    promise: queryBuilder.abortSignal(controller.signal),
+    clear: () => clearTimeout(timer),
+  };
+}
+
 async function pullTableChanges(
   tableName,
   schemaTable,
@@ -287,7 +299,17 @@ async function pullTableChanges(
   if (userId) query = query.eq("user_id", userId);
   if (lastSync) query = query.gte("updated_at", lastSync);
 
-  const { data, error } = await query;
+  const { promise: pullPromise, clear: clearPullTimer } = makeAbortableQuery(query, 30_000);
+  let data, error;
+  try {
+    ({ data, error } = await pullPromise);
+  } catch (abortErr) {
+    clearPullTimer();
+    console.warn(`⚠️ [PULL] "${tableName}": timeout (30s), tabla salteada`);
+    return { success: false, changed: false, newLastSync: null };
+  } finally {
+    clearPullTimer();
+  }
 
   if (error) {
     console.error(`❌ [PULL] Error descargando "${tableName}":`, error.message);
@@ -392,7 +414,17 @@ async function pullTableChanges(
   if (catalogMode) idsQuery = idsQuery.eq("is_catalog", true);
   else if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
   if (userId) idsQuery = idsQuery.eq("user_id", userId);
-  const { data: remoteIds, error: idsError } = await idsQuery;
+  const { promise: idsPromise, clear: clearIdsTimer } = makeAbortableQuery(idsQuery, 30_000);
+  let remoteIds, idsError;
+  try {
+    ({ data: remoteIds, error: idsError } = await idsPromise);
+  } catch (abortErr) {
+    clearIdsTimer();
+    console.warn(`⚠️ [PULL] "${tableName}": timeout en reconciliación (30s), se saltea`);
+    return { success: true, changed, newLastSync };
+  } finally {
+    clearIdsTimer();
+  }
 
   if (!idsError && remoteIds) {
     const remoteIdSet = new Set(remoteIds.map((r) => r.id));
@@ -2483,11 +2515,23 @@ export async function syncWithSupabase(
 ) {
   if (isSyncing) {
     console.log(
-      `⏳ [SYNC] Ya hay una sincronización en progreso, ignorando...`
+      `⏳ [SYNC] Ya hay una sincronización en progreso, ignorando..`
     );
     return { success: false, skipped: true };
   }
   isSyncing = true;
+  // Garantiza que isSyncing se libere aunque un await de Supabase nunca resuelva
+  // (red hostil, captive portal, latencia extrema). Sin este timer el lock puede
+  // quedar true para siempre bloqueando todos los syncs futuros.
+  const GLOBAL_TIMEOUT_MS = 120_000;
+  const safetyTimer = setTimeout(() => {
+    if (isSyncing) {
+      console.warn(
+        `⚠️ [SYNC] Timeout global (${GLOBAL_TIMEOUT_MS / 1000}s): liberando lock`
+      );
+      isSyncing = false;
+    }
+  }, GLOBAL_TIMEOUT_MS);
   try {
     const syncTime = new Date().toISOString();
     console.log(
@@ -2735,6 +2779,7 @@ export async function syncWithSupabase(
     console.error(`❌ [SYNC] Error fatal:`, error.message);
     return { success: false, error };
   } finally {
+    clearTimeout(safetyTimer);
     isSyncing = false;
   }
 }

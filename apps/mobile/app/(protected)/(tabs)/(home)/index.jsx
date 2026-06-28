@@ -185,7 +185,7 @@ export default function Home() {
               icon={<Plus size={18} color={iconMint} />}
               onPress={async () => {
                 await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/planes/builder");
+                router.push("/planes/builder/custom-plan");
               }}
               variant="ghost"
             />

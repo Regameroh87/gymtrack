@@ -40,7 +40,7 @@ export default function PlanBuilderLayout() {
             headerShown: Platform.OS === "ios",
             headerLeft: () => (
               <Pressable
-                onPress={() => router.replace("/planes")}
+                onPress={() => router.back()}
                 hitSlop={8}
                 className="-ml-5 active:opacity-70"
               >
