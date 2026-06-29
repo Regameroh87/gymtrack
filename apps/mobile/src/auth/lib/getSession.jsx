@@ -94,8 +94,8 @@ export const AuthProvider = ({ children }) => {
             // JSON inválido → sin sesión
           }
         } else if (__DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN) {
-          devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch(
-            (err) => console.error("Dev auto-login:", err.message)
+          devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch((err) =>
+            console.error("Dev auto-login:", err.message)
           );
         }
         if (isMounted) setLoading(false);
