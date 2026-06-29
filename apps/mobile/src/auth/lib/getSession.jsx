@@ -65,18 +65,34 @@ export const AuthProvider = ({ children }) => {
 
     const initializeAuth = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session) {
-          await applySession(session);
-        } else if (__DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN) {
-          // Auto-login de desarrollo: la sesión resultante llega por el
-          // onAuthStateChange de abajo, no hace falta aplicarla acá.
-          await devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch(
-            (err) => console.error("Dev auto-login:", err.message)
-          );
-        }
+        // getSession() puede colgar si la red no está lista al arranque (cold
+        // start tras reposo del dispositivo): el JWT expirado dispara un refresh
+        // token → round-trip de red que nunca resuelve. El race libera loading
+        // en ≤12 s; onAuthStateChange maneja la reconexión tardía.
+        await Promise.race([
+          (async () => {
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+            if (session) {
+              await applySession(session);
+            } else if (__DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN) {
+              // Auto-login de desarrollo: la sesión resultante llega por el
+              // onAuthStateChange de abajo, no hace falta aplicarla acá.
+              await devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch(
+                (err) => console.error("Dev auto-login:", err.message)
+              );
+            }
+          })(),
+          new Promise((resolve) =>
+            setTimeout(() => {
+              console.warn(
+                "AuthProvider: initializeAuth timeout — releasing loading"
+              );
+              resolve();
+            }, 12_000)
+          ),
+        ]);
       } catch (error) {
         console.error("useAuth: Error al obtener la sesión inicial:", error);
       } finally {
