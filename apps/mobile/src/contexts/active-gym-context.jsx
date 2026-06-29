@@ -100,10 +100,14 @@ export function ActiveGymProvider({ children }) {
             .abortSignal(abortSignal)
             .then(({ data, error }) => {
               if (error) {
-                console.error(
-                  "ActiveGym: error al leer memberships:",
-                  error.message
-                );
+                // Abort por refetch/unmount/invalidate: cancelación esperada,
+                // no un fallo real. React Query lo trata como cancelación.
+                if (!abortSignal.aborted) {
+                  console.error(
+                    "ActiveGym: error al leer memberships:",
+                    error.message
+                  );
+                }
                 throw error;
               }
               return data ?? [];
@@ -143,10 +147,14 @@ export function ActiveGymProvider({ children }) {
             .abortSignal(abortSignal)
             .then(({ data, error }) => {
               if (error) {
-                console.error(
-                  "ActiveGym: error al leer todos los gyms:",
-                  error.message
-                );
+                // Abort por refetch/unmount/invalidate: cancelación esperada,
+                // no un fallo real. React Query lo trata como cancelación.
+                if (!abortSignal.aborted) {
+                  console.error(
+                    "ActiveGym: error al leer todos los gyms:",
+                    error.message
+                  );
+                }
                 throw error;
               }
               return data ?? [];
