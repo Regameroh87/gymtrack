@@ -1,1 +1,0 @@
-ALTER TABLE `training_plans` ADD `archived_at` text;

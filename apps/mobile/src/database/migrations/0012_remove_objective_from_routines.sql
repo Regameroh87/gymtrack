@@ -1,1 +1,0 @@
-ALTER TABLE `routines` DROP COLUMN `objective`;
