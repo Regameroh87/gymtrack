@@ -7,8 +7,16 @@ import {
   useMemo,
   useCallback,
 } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../database/supabase.js";
 import { devSignIn } from "./dev-login.js";
+
+// Replica la lógica de SupabaseClient.ts:
+// `sb-${baseUrl.hostname.split('.')[0]}-auth-token`
+const _ref = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? "")
+  .replace(/^https?:\/\//, "")
+  .split(".")[0];
+const SUPABASE_STORAGE_KEY = `sb-${_ref}-auth-token`;
 
 // Una sola suscripción onAuthStateChange para toda la app.
 // Expone refreshProfile() para recargar el perfil tras un self-update sin
@@ -63,45 +71,42 @@ export const AuthProvider = ({ children }) => {
       if (isMounted) setUser(profile);
     };
 
-    const initializeAuth = async () => {
-      try {
-        // getSession() puede colgar si la red no está lista al arranque (cold
-        // start tras reposo del dispositivo): el JWT expirado dispara un refresh
-        // token → round-trip de red que nunca resuelve. El race libera loading
-        // en ≤12 s; onAuthStateChange maneja la reconexión tardía.
-        await Promise.race([
-          (async () => {
-            const {
-              data: { session },
-            } = await supabase.auth.getSession();
-            if (session) {
-              await applySession(session);
-            } else if (__DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN) {
-              // Auto-login de desarrollo: la sesión resultante llega por el
-              // onAuthStateChange de abajo, no hace falta aplicarla acá.
-              await devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch(
-                (err) => console.error("Dev auto-login:", err.message)
-              );
+    // Lectura directa de AsyncStorage (~20ms, sin red): libera loading antes de
+    // que Supabase valide o refresque el token. El cliente Supabase bloquea en
+    // _callRefreshToken (hasta 30s de backoff) cuando el JWT expiró; leyendo
+    // directamente la sesión almacenada evitamos ese cuello de botella.
+    AsyncStorage.getItem(SUPABASE_STORAGE_KEY)
+      .then((raw) => {
+        if (!isMounted) return;
+        if (raw) {
+          try {
+            const stored = JSON.parse(raw);
+            if (stored?.access_token && stored?.user?.id) {
+              accessTokenRef.current = stored.access_token;
+              authUserIdRef.current = stored.user.id;
+              setSession(stored);
+              // Profile en background — no bloquea el render inicial
+              fetchProfile(stored.user.id).then((profile) => {
+                if (isMounted) setUser(profile);
+              });
             }
-          })(),
-          new Promise((resolve) =>
-            setTimeout(() => {
-              console.warn(
-                "AuthProvider: initializeAuth timeout — releasing loading"
-              );
-              resolve();
-            }, 12_000)
-          ),
-        ]);
-      } catch (error) {
-        console.error("useAuth: Error al obtener la sesión inicial:", error);
-      } finally {
+          } catch {
+            // JSON inválido → sin sesión
+          }
+        } else if (__DEV__ && process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN) {
+          devSignIn(process.env.EXPO_PUBLIC_DEV_AUTO_LOGIN).catch(
+            (err) => console.error("Dev auto-login:", err.message)
+          );
+        }
         if (isMounted) setLoading(false);
-      }
-    };
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false);
+      });
 
-    initializeAuth();
-
+    // Supabase valida y refresca el JWT en background. Cuando termina llega
+    // TOKEN_REFRESHED (token actualizado) o SIGNED_OUT (refresh falló →
+    // redirect login). El guard evita re-aplicar si el token no cambió.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
