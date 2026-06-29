@@ -173,6 +173,10 @@ export default function RutinasTab() {
 function MisPlanesContent({ router, insets, onBrowseCatalog }) {
   const { brandPrimary, brandSecondary } = useGymTheme();
   const BRAND_MINT = brandSecondary[400];
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const ink = isDark ? "255,255,255" : "15,13,32";
+  const overlay = (a) => `rgba(${ink},${a})`;
   const { data: assignments, isLoading } = usePlanAssignments();
   const { data: summary } = useActivePlanSummary();
   const { mutate: dropPlan, isPending: isDropping } = useDropPlan();
@@ -433,20 +437,20 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                 <View
                   className="rounded-2xl p-4 flex-row items-center gap-4"
                   style={{
-                    backgroundColor: "#0F0D20",
+                    backgroundColor: isDark ? "#0F0D20" : ui.surfaceSecondary.light,
                     borderWidth: 1,
-                    borderColor: "rgba(255,255,255,0.07)",
+                    borderColor: overlay(0.07),
                   }}
                 >
                   <View
                     className="w-10 h-10 rounded-xl items-center justify-center"
-                    style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
+                    style={{ backgroundColor: overlay(0.05) }}
                   >
-                    <Calendar size={18} color="rgba(255,255,255,0.4)" />
+                    <Calendar size={18} color={overlay(0.4)} />
                   </View>
                   <View className="flex-1">
                     <Text
-                      className="font-jakarta-semi text-[14px] text-white"
+                      className="font-jakarta-semi text-[14px] text-ui-text-main dark:text-ui-text-mainDark"
                       numberOfLines={1}
                     >
                       {item.plan_name ??
@@ -455,7 +459,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                     </Text>
                     <Text
                       className="font-manrope text-[12px] mt-0.5"
-                      style={{ color: "rgba(255,255,255,0.4)" }}
+                      style={{ color: isDark ? "rgba(255,255,255,0.4)" : ui.text.muted }}
                     >
                       {item.start_date}
                       {item.end_date ? ` → ${item.end_date}` : ""}
@@ -477,7 +481,7 @@ function MisPlanesContent({ router, insets, onBrowseCatalog }) {
                       </View>
                     )}
                   </View>
-                  <ChevronRight size={14} color="rgba(255,255,255,0.25)" />
+                  <ChevronRight size={14} color={overlay(0.25)} />
                 </View>
               </Pressable>
             ))}
