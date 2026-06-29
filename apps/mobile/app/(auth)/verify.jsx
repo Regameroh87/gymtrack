@@ -21,7 +21,7 @@ export default function Verify() {
     onSuccess: (result) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       //console.log("Success result:", result);
-      router.replace("/(protected)/");
+      router.replace("/(protected)/(tabs)/(home)/index");
     },
     onError: (error) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
