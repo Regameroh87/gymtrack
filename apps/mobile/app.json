@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "jsEngine": "hermes",
-      "bundleIdentifier": "com.anonymous.gymtrack"
+      "bundleIdentifier": "ar.gymtrack.app"
     },
     "android": {
       "jsEngine": "hermes",
@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/app-adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.gymtrack"
+      "package": "ar.gymtrack.app"
     },
     "plugins": [
       "expo-font",
