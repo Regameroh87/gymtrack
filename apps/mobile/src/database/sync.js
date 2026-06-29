@@ -414,6 +414,7 @@ async function pullTableChanges(
   if (catalogMode) idsQuery = idsQuery.eq("is_catalog", true);
   else if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
   if (userId) idsQuery = idsQuery.eq("user_id", userId);
+  if (softDelete) idsQuery = idsQuery.is("deleted_at", null);
   const { promise: idsPromise, clear: clearIdsTimer } = makeAbortableQuery(idsQuery, 30_000);
   let remoteIds, idsError;
   try {
