@@ -378,8 +378,8 @@ export function ActiveGymProvider({ children }) {
       loading:
         authLoading ||
         !storageLoaded ||
-        (!!authUserId && membershipsQuery.isLoading) ||
-        (isSuperAdmin && allGymsQuery.isLoading),
+        (!!authUserId && !activeGymId && membershipsQuery.isLoading) ||
+        (isSuperAdmin && !activeGymId && allGymsQuery.isLoading),
     }),
     [
       resolvedGymId,
