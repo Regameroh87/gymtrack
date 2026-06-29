@@ -100,9 +100,30 @@ export const AuthProvider = ({ children }) => {
               if (!isExpired) {
                 // Token vigente: dispara la carga del perfil vía el effect.
                 setProfileUid(stored.user.id);
+              } else {
+                // Token vencido: refrescar explícitamente. Si el refresh token
+                // ya no existe (server reset, sesión revocada), la sesión está
+                // muerta: la limpiamos y caemos a login en vez de dejar
+                // isLoggedIn=true con queries que fallan 401 + un AuthApiError
+                // sin atrapar (pantalla roja). refreshSession (no getSession)
+                // devuelve el error de refresh en {error} y lo consume acá.
+                // Corre fuera del auth lock (estamos en el .then del storage),
+                // así que no deadlockea como lo haría dentro de onAuthStateChange.
+                supabase.auth.refreshSession().then(({ data, error }) => {
+                  if (!isMounted) return;
+                  if (error || !data?.session) {
+                    supabase.auth.signOut().catch(() => {});
+                    AsyncStorage.removeItem(SUPABASE_STORAGE_KEY).catch(() => {});
+                    accessTokenRef.current = null;
+                    authUserIdRef.current = null;
+                    setSession(null);
+                    setUser(null);
+                    setProfileUid(null);
+                  }
+                  // Refresh OK → onAuthStateChange (TOKEN_REFRESHED) aplica la
+                  // sesión fresca y dispara la carga del perfil.
+                });
               }
-              // Si venció: onAuthStateChange (TOKEN_REFRESHED) trae el token
-              // fresco y dispara la carga del perfil en ese momento.
             }
           } catch {
             // JSON inválido → sin sesión

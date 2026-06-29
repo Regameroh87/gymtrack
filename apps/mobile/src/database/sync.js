@@ -1555,15 +1555,24 @@ export async function pushPlanWeekDayExerciseSetsChanges() {
  * PUSH: Sube cambios locales de Asignaciones de Planes
  */
 export async function pushPlanAssignmentsChanges() {
-  const localChanges = await database
-    .select()
-    .from(plan_assignments)
-    .where(
-      or(
-        eq(plan_assignments.sync_status, "pending"),
-        eq(plan_assignments.sync_status, "dirty"),
-        eq(plan_assignments.sync_status, "deleted")
+  const localChanges = (
+    await database
+      .select()
+      .from(plan_assignments)
+      .where(
+        or(
+          eq(plan_assignments.sync_status, "pending"),
+          eq(plan_assignments.sync_status, "dirty"),
+          eq(plan_assignments.sync_status, "deleted")
+        )
       )
+  )
+    // Subir primero los cierres/borrados y dejar los "active" al final: así el
+    // server nunca queda transitoriamente con dos activos del mismo usuario,
+    // que dispararían el índice único parcial uniq_active_plan_assignment (409).
+    .sort(
+      (a, b) =>
+        (a.status === "active" ? 1 : 0) - (b.status === "active" ? 1 : 0)
     );
   if (localChanges.length === 0) return;
   console.log(
@@ -1591,6 +1600,19 @@ export async function pushPlanAssignmentsChanges() {
     }
 
     const { sync_status, updated_at, ...payload } = row;
+    // Antes de subir un activo, cerrar en el server cualquier OTRO activo del
+    // mismo usuario. Cubre el caso del activo viejo que ya no está en el local
+    // (purgado al cambiar de gym) y que de otro modo choca con el índice único
+    // parcial uniq_active_plan_assignment → 409. Idempotente y respeta RLS
+    // (rama self / is_staff_of).
+    if (payload.status === "active") {
+      await supabase
+        .from("plan_assignments")
+        .update({ status: "completed", end_date: payload.start_date })
+        .eq("user_id", payload.user_id)
+        .eq("status", "active")
+        .neq("id", payload.id);
+    }
     const { error } = await supabase
       .from("plan_assignments")
       .upsert(payload, { onConflict: "id" });
