@@ -639,7 +639,11 @@ export default function PlanDetail() {
                           height: 5,
                           borderRadius: 3,
                           backgroundColor: BRAND_MINT,
-                          ...makeShadow({ color: BRAND_MINT, opacity: 1, radius: 4 }),
+                          ...makeShadow({
+                            color: BRAND_MINT,
+                            opacity: 1,
+                            radius: 4,
+                          }),
                         }}
                       />
                     )}
@@ -734,7 +738,12 @@ export default function PlanDetail() {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              ...makeShadow({ color: alreadyActive ? "transparent" : BRAND_PRIMARY, opacity: alreadyActive ? 0 : 0.5, radius: 16, offset: { width: 0, height: 6 } }),
+              ...makeShadow({
+                color: alreadyActive ? "transparent" : BRAND_PRIMARY,
+                opacity: alreadyActive ? 0 : 0.5,
+                radius: 16,
+                offset: { width: 0, height: 6 },
+              }),
               opacity: isAssigning ? 0.7 : 1,
             }}
           >
