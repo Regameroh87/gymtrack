@@ -11,11 +11,7 @@ import { useAuth } from "../../../../src/auth/lib/getSession.jsx";
 import { useTheme } from "../../../../src/theme/theme.jsx";
 
 // ── Design Tokens ──
-import {
-  brandPrimary,
-  brandSecondary,
-  ui,
-} from "@gymtrack/core/colors";
+import { brandPrimary, brandSecondary, ui } from "@gymtrack/core/colors";
 
 // ── Utils ──
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
@@ -245,7 +241,12 @@ function QuickAction({
             width: 44,
             height: 44,
             borderRadius: 14,
-            ...makeShadow({ color: isPrimary ? BRAND_PRIMARY : "transparent", opacity: isPrimary ? 0.5 : 0, radius: 10, offset: { width: 0, height: 4 } }),
+            ...makeShadow({
+              color: isPrimary ? BRAND_PRIMARY : "transparent",
+              opacity: isPrimary ? 0.5 : 0,
+              radius: 10,
+              offset: { width: 0, height: 4 },
+            }),
           }}
         >
           {icon}

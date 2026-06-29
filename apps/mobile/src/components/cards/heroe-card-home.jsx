@@ -105,7 +105,12 @@ export default function HeroeCardHome({ image }) {
           <View
             className="rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-ui-text-main/[8%] dark:border-white/[8%]"
             style={{
-              ...makeShadow({ color: BRAND_PRIMARY, opacity: hasNoPlan ? 0.14 : 0.18, radius: 24, offset: { width: 0, height: 10 } }),
+              ...makeShadow({
+                color: BRAND_PRIMARY,
+                opacity: hasNoPlan ? 0.14 : 0.18,
+                radius: 24,
+                offset: { width: 0, height: 10 },
+              }),
               elevation: hasNoPlan ? 8 : 10,
             }}
           >
@@ -163,7 +168,11 @@ export default function HeroeCardHome({ image }) {
                   <View
                     className="bg-brandSecondary-400 w-2 h-2 rounded-full"
                     style={{
-                      ...makeShadow({ color: BRAND_MINT, opacity: 0.9, radius: 5 }),
+                      ...makeShadow({
+                        color: BRAND_MINT,
+                        opacity: 0.9,
+                        radius: 5,
+                      }),
                     }}
                   />
                 )}
@@ -319,7 +328,12 @@ export default function HeroeCardHome({ image }) {
                 <View
                   className="w-8 h-8 items-center justify-center rounded-full bg-brandPrimary-700"
                   style={{
-                    ...makeShadow({ color: BRAND_PRIMARY, opacity: 0.6, radius: 8, offset: { width: 0, height: 2 } }),
+                    ...makeShadow({
+                      color: BRAND_PRIMARY,
+                      opacity: 0.6,
+                      radius: 8,
+                      offset: { width: 0, height: 2 },
+                    }),
                   }}
                 >
                   <ChevronRight size={14} color="white" />
