@@ -43,6 +43,15 @@ export default function Login() {
       return "Este email no está autorizado para ingresar. Contactese con administración.";
     if (err.status === 429)
       return "Demasiados intentos. Por favor, reintentá más tarde.";
+    if (
+      err.status === 522 ||
+      err.status === 524 ||
+      err.status === 503 ||
+      err.status === 504 ||
+      err.message?.includes("Failed to fetch") ||
+      err.message?.includes("Network request failed")
+    )
+      return "Sin conexión al servidor. Verificá tu internet e intentá de nuevo.";
     return "Ha ocurrido un error, intente nuevamente.";
   };
 
