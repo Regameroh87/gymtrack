@@ -25,7 +25,7 @@ export const useAssignablePlans = () => {
           "id, name, objective, level, target_gender, weekly_days, duration_weeks"
         )
         .eq("is_published", true)
-        .eq("gym_id", gymId)
+        .or(`gym_id.eq.${gymId},is_catalog.eq.true`)
         .order("name", { ascending: true });
       if (error) throw error;
       return data ?? [];
