@@ -207,7 +207,7 @@ export default function HeroeCardHome({ image }) {
                       <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-[8px] tracking-[2px]">
                         {summary?.plan?.duration_weeks === 0
                           ? objective
-                          : `${objective} · semana ${currentDay.week_number}`}
+                          : `semana ${currentDay.week_number}`}
                       </Text>
                     </View>
                   )}
