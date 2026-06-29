@@ -2547,10 +2547,17 @@ export async function syncWithSupabase(
     await ensureDbMatchesActiveGym(activeGymId);
 
     // --- DOWNLOAD PHASE ---
+    // getSession() refresca el JWT si venció (autoRefreshToken=true); getUser()
+    // solo lo valida contra el server sin refrescarlo, dejando el token vencido
+    // y causando auth.uid()=NULL en todos los writes posteriores.
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const currentUserId = user?.id ?? null;
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
+    const currentUserId = currentSession?.user?.id ?? null;
+    if (!currentUserId) {
+      console.warn("⚠️ [SYNC] Sin sesión válida — sync abortado");
+      return { success: false, reason: "no-session" };
+    }
 
     // session_logs/plan_assignments referencian profiles.id (PK interna del
     // perfil), NO auth.uid — ver getSession.jsx. Las custom_* sí usan auth.uid.

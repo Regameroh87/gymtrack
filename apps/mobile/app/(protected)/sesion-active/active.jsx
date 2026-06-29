@@ -16,7 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, useNavigation, Stack } from "expo-router";
 
 import {
   brandPrimary,
@@ -73,6 +73,7 @@ function refWeightLabel(exercise) {
 
 export default function SesionActiva() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedIcon = isDark ? ui.text.mutedDark : ui.text.muted;
@@ -303,7 +304,7 @@ export default function SesionActiva() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     await clearDraft();
     setShowExitConfirm(false);
-    router.replace("/(protected)/(tabs)/(home)");
+    navigation.getParent()?.goBack();
   }
 
   return (

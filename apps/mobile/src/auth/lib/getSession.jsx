@@ -82,13 +82,19 @@ export const AuthProvider = ({ children }) => {
           try {
             const stored = JSON.parse(raw);
             if (stored?.access_token && stored?.user?.id) {
+              const isExpired =
+                !stored.expires_at || stored.expires_at * 1000 <= Date.now();
               accessTokenRef.current = stored.access_token;
               authUserIdRef.current = stored.user.id;
               setSession(stored);
-              // Profile en background — no bloquea el render inicial
-              fetchProfile(stored.user.id).then((profile) => {
-                if (isMounted) setUser(profile);
-              });
+              if (!isExpired) {
+                // Profile en background — no bloquea el render inicial
+                fetchProfile(stored.user.id).then((profile) => {
+                  if (isMounted) setUser(profile);
+                });
+              }
+              // Si venció: onAuthStateChange (TOKEN_REFRESHED) trae el token
+              // fresco y applySession() carga el perfil en ese momento.
             }
           } catch {
             // JSON inválido → sin sesión
