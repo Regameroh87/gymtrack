@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Stack, Redirect, usePathname } from "expo-router";
 import { useAuth } from "../../src/auth/lib/getSession";
 import { useActiveGym } from "../../src/contexts/active-gym-context";
@@ -17,7 +18,22 @@ export default function ProtectedLayout() {
   const { isDark } = useTheme();
   const pathname = usePathname();
 
-  if (loading || gymLoading) {
+  // Red de seguridad: el gate de carga no puede quedar pegado indefinidamente.
+  // Si auth/gym no resolvieron en 15s (más que el techo de las queries de
+  // arranque), se deja de mostrar "Cargando sesión..." y se cae al resto de la
+  // lógica (login / selector / tabs) con lo que haya. Cubre cualquier bloqueo
+  // imprevisto para que nunca se presente como un cuelgue de pantalla en blanco.
+  const [loadGateTimedOut, setLoadGateTimedOut] = useState(false);
+  useEffect(() => {
+    if (!loading && !gymLoading) {
+      setLoadGateTimedOut(false);
+      return;
+    }
+    const t = setTimeout(() => setLoadGateTimedOut(true), 15000);
+    return () => clearTimeout(t);
+  }, [loading, gymLoading]);
+
+  if ((loading || gymLoading) && !loadGateTimedOut) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>Cargando sesión...</Text>

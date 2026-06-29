@@ -1,4 +1,5 @@
 import "react-native-url-polyfill/auto";
+import { AppState } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   createSupabaseClient,
@@ -13,6 +14,22 @@ export const supabase = createSupabaseClient({
   key: process.env.EXPO_PUBLIC_SUPABASE_KEY,
   storage: AsyncStorage,
 });
+
+// Auto-refresh del token atado al foreground (patrón oficial de Expo + Supabase
+// para RN). En vez de dejar el timer interno corriendo siempre, lo arrancamos
+// sólo con la app activa y lo paramos en background: el refresh no compite por el
+// processLock de auth mientras la app está inactiva y se dispara de forma
+// predecible al volver al frente.
+AppState.addEventListener("change", (state) => {
+  if (state === "active") {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
+  }
+});
+if (AppState.currentState === "active") {
+  supabase.auth.startAutoRefresh();
+}
 
 // Registra el cliente en core para que los hooks de datos agnósticos lo
 // consuman vía getSupabaseClient(). Este módulo se importa temprano (AuthProvider

@@ -34,23 +34,31 @@ export const ACTIVE_GYM_KEY = "active-gym:id";
 
 const ActiveGymContext = createContext(null);
 
-// Combina el signal de React Query (cancel por unmount/refetch) con un timeout
-// propio. Si cualquiera de los dos dispara, aborta el request HTTP de Supabase.
-function withTimeout(parentSignal, timeoutMs) {
+// Ejecuta una query de Supabase con un timeout REAL. Combina dos mecanismos:
+//   1. AbortController: cancela el request HTTP (por unmount/refetch o timeout).
+//   2. Promise.race contra un timeout que RECHAZA.
+// El (2) es imprescindible: el cliente Supabase espera el processLock de auth
+// ANTES de disparar el fetch, así que un AbortSignal por sí solo no interrumpe
+// esa espera (el fetch nunca llegó a empezar). El race garantiza que la query no
+// quede colgada más de timeoutMs aunque el lock esté tomado por un refresh.
+function queryWithTimeout(buildQuery, parentSignal, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const onParentAbort = () => {
-    clearTimeout(timer);
-    controller.abort();
-  };
+  const onParentAbort = () => controller.abort();
   parentSignal?.addEventListener("abort", onParentAbort, { once: true });
-  return {
-    signal: controller.signal,
-    clear: () => {
-      clearTimeout(timer);
-      parentSignal?.removeEventListener("abort", onParentAbort);
-    },
-  };
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Supabase query timeout"));
+    }, timeoutMs);
+  });
+  return Promise.race([
+    Promise.resolve(buildQuery(controller.signal)),
+    timeout,
+  ]).finally(() => {
+    clearTimeout(timer);
+    parentSignal?.removeEventListener("abort", onParentAbort);
+  });
 }
 
 export function ActiveGymProvider({ children }) {
@@ -79,26 +87,30 @@ export function ActiveGymProvider({ children }) {
     // (memberships del usuario); no corre en background.
     refetchInterval: 1000 * 60 * 2,
     refetchIntervalInBackground: false,
-    queryFn: async ({ signal }) => {
-      const { signal: abortSignal, clear } = withTimeout(signal, 8_000);
-      try {
-        const { data, error } = await supabase
-          .from("memberships")
-          .select(
-            "id, gym_id, role, status, gyms ( id, name, logo_url, theme_primary, theme_accent, is_active )"
-          )
-          .eq("user_id", authUserId)
-          .eq("status", "active")
-          .abortSignal(abortSignal);
-        if (error) {
-          console.error("ActiveGym: error al leer memberships:", error.message);
-          throw error;
-        }
-        return data ?? [];
-      } finally {
-        clear();
-      }
-    },
+    queryFn: ({ signal }) =>
+      queryWithTimeout(
+        (abortSignal) =>
+          supabase
+            .from("memberships")
+            .select(
+              "id, gym_id, role, status, gyms ( id, name, logo_url, theme_primary, theme_accent, is_active )"
+            )
+            .eq("user_id", authUserId)
+            .eq("status", "active")
+            .abortSignal(abortSignal)
+            .then(({ data, error }) => {
+              if (error) {
+                console.error(
+                  "ActiveGym: error al leer memberships:",
+                  error.message
+                );
+                throw error;
+              }
+              return data ?? [];
+            }),
+        signal,
+        8_000
+      ),
   });
 
   const memberships = membershipsQuery.data ?? null;
@@ -119,26 +131,29 @@ export function ActiveGymProvider({ children }) {
     enabled: !!authUserId && isSuperAdmin,
     staleTime: 1000 * 60 * 30,
     retry: 1,
-    queryFn: async ({ signal }) => {
-      const { signal: abortSignal, clear } = withTimeout(signal, 8_000);
-      try {
-        const { data, error } = await supabase
-          .from("gyms")
-          .select("id, name, logo_url, theme_primary, theme_accent, is_active")
-          .order("name")
-          .abortSignal(abortSignal);
-        if (error) {
-          console.error(
-            "ActiveGym: error al leer todos los gyms:",
-            error.message
-          );
-          throw error;
-        }
-        return data ?? [];
-      } finally {
-        clear();
-      }
-    },
+    queryFn: ({ signal }) =>
+      queryWithTimeout(
+        (abortSignal) =>
+          supabase
+            .from("gyms")
+            .select(
+              "id, name, logo_url, theme_primary, theme_accent, is_active"
+            )
+            .order("name")
+            .abortSignal(abortSignal)
+            .then(({ data, error }) => {
+              if (error) {
+                console.error(
+                  "ActiveGym: error al leer todos los gyms:",
+                  error.message
+                );
+                throw error;
+              }
+              return data ?? [];
+            }),
+        signal,
+        8_000
+      ),
   });
 
   const allGyms = allGymsQuery.data ?? null;

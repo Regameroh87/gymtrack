@@ -56,19 +56,29 @@ export const AuthProvider = ({ children }) => {
     setUser(profile);
   }, [fetchProfile]);
 
+  // Id de auth (auth.uid()) del que hay que cargar el perfil. Lo setean tanto la
+  // hidratación desde AsyncStorage como onAuthStateChange; un useEffect aparte
+  // reacciona a su cambio para hacer el fetch del perfil FUERA del auth lock.
+  const [profileUid, setProfileUid] = useState(null);
+
   useEffect(() => {
     let isMounted = true;
 
-    const applySession = async (newSession) => {
+    // Sólo trabajo SÍNCRONO: no debe llamar a Supabase. onAuthStateChange corre
+    // con el processLock de auth tomado; cualquier query (fetchProfile →
+    // supabase.from) volvería a pedir el lock y deadlockearía toda la app
+    // (pantalla blanca en el primer arranque con el JWT vencido). El fetch del
+    // perfil se difiere al useEffect de abajo, que corre tras liberarse el lock.
+    const applySession = (newSession) => {
       accessTokenRef.current = newSession?.access_token ?? null;
       authUserIdRef.current = newSession?.user?.id ?? null;
       setSession(newSession ?? null);
       if (!newSession) {
         setUser(null);
+        setProfileUid(null);
         return;
       }
-      const profile = await fetchProfile(newSession.user.id);
-      if (isMounted) setUser(profile);
+      setProfileUid(newSession.user.id);
     };
 
     // Lectura directa de AsyncStorage (~20ms, sin red): libera loading antes de
@@ -88,13 +98,11 @@ export const AuthProvider = ({ children }) => {
               authUserIdRef.current = stored.user.id;
               setSession(stored);
               if (!isExpired) {
-                // Profile en background — no bloquea el render inicial
-                fetchProfile(stored.user.id).then((profile) => {
-                  if (isMounted) setUser(profile);
-                });
+                // Token vigente: dispara la carga del perfil vía el effect.
+                setProfileUid(stored.user.id);
               }
               // Si venció: onAuthStateChange (TOKEN_REFRESHED) trae el token
-              // fresco y applySession() carga el perfil en ese momento.
+              // fresco y dispara la carga del perfil en ese momento.
             }
           } catch {
             // JSON inválido → sin sesión
@@ -113,11 +121,13 @@ export const AuthProvider = ({ children }) => {
     // Supabase valida y refresca el JWT en background. Cuando termina llega
     // TOKEN_REFRESHED (token actualizado) o SIGNED_OUT (refresh falló →
     // redirect login). El guard evita re-aplicar si el token no cambió.
+    // IMPORTANTE: este callback corre con el auth lock tomado, así que es
+    // síncrono y NO llama a Supabase (ver applySession).
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (accessTokenRef.current === (newSession?.access_token ?? null)) return;
-      await applySession(newSession);
+      applySession(newSession);
       if (isMounted) setLoading(false);
     });
 
@@ -125,7 +135,21 @@ export const AuthProvider = ({ children }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, []);
+
+  // Carga del perfil fuera del auth lock: reacciona a profileUid (lo setean la
+  // hidratación inicial y onAuthStateChange). Al correr en la fase de efectos,
+  // el processLock ya se liberó, así que la query a profiles no deadlockea.
+  useEffect(() => {
+    if (!profileUid) return;
+    let isMounted = true;
+    fetchProfile(profileUid).then((profile) => {
+      if (isMounted) setUser(profile);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [profileUid, fetchProfile]);
 
   const value = useMemo(
     () => ({
