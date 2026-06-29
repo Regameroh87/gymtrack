@@ -62,12 +62,20 @@ export default function HeroeCardHome({ image }) {
   const hasNoPlan = summary === null;
 
   const currentDay = hasNoPlan ? null : summary.currentDay;
-  // Plan completado o sin día configurado — no hay nada que mostrar
-  if (!hasNoPlan && !currentDay) return null;
+  // Plan completado: la asignación fue marcada 'completed' inline; el próximo
+  // fetch ya no la verá. No mostramos la card.
+  if (!hasNoPlan && summary.isCompleted) return null;
+
+  // Sin día para el plan activo (datos aún no sincronizados o plan sin días
+  // configurados). La card se muestra igual para que el usuario pueda actuar.
+  const noDayConfigured = !hasNoPlan && !currentDay;
 
   // Hay una sesión a medias guardada justo para el día que toca
   const hasDraft =
-    !hasNoPlan && !!draft && String(draft.dayId) === String(currentDay.id);
+    !hasNoPlan &&
+    !!currentDay &&
+    !!draft &&
+    String(draft.dayId) === String(currentDay.id);
 
   // Datos del plan activo (solo cuando hasNoPlan es false)
   const session = currentDay?.session ?? null;
@@ -86,17 +94,26 @@ export default function HeroeCardHome({ image }) {
 
   const handlePress = hasNoPlan
     ? () => router.push("/planes")
-    : async () => {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
-        // Entramos por el preview; con sesión a medias empujamos la activa
-        // encima con push (frame de stack normal). Evitamos navigate directo a
-        // active, que dejaría ese destino en el historial y reaparecería como
-        // una active fantasma al salir del preview hacia el home.
-        router.navigate("/(protected)/sesion-active");
-        if (hasDraft) {
-          router.push("/(protected)/sesion-active/active");
+    : noDayConfigured
+      ? async () => {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
+          if (summary.isCustom) {
+            router.push(`/planes/plan-detail/custom/${summary.plan.id}`);
+          } else {
+            router.push(`/planes/plan-detail/${summary.plan.id}`);
+          }
         }
-      };
+      : async () => {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
+          // Entramos por el preview; con sesión a medias empujamos la activa
+          // encima con push (frame de stack normal). Evitamos navigate directo a
+          // active, que dejaría ese destino en el historial y reaparecería como
+          // una active fantasma al salir del preview hacia el home.
+          router.navigate("/(protected)/sesion-active");
+          if (hasDraft) {
+            router.push("/(protected)/sesion-active/active");
+          }
+        };
 
   return (
     <View>
@@ -158,11 +175,11 @@ export default function HeroeCardHome({ image }) {
                 className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400"
                 style={{ fontSize: 10, letterSpacing: 2.4 }}
               >
-                {hasNoPlan ? "Tu entrenamiento" : "Tu sesión de hoy"}
+                {hasNoPlan || noDayConfigured ? "Tu entrenamiento" : "Tu sesión de hoy"}
               </Text>
 
               <View className="flex-row items-center" style={{ gap: 6 }}>
-                {hasNoPlan ? (
+                {hasNoPlan || noDayConfigured ? (
                   <View className="bg-ui-text-main/20 dark:bg-white/20 w-2 h-2 rounded-full" />
                 ) : (
                   <View
@@ -183,7 +200,13 @@ export default function HeroeCardHome({ image }) {
                       : "text-brandSecondary-700 dark:text-brandSecondary-400"
                   }`}
                 >
-                  {hasNoPlan ? "SIN PLAN" : hasDraft ? "EN CURSO" : "PRÓXIMA"}
+                  {hasNoPlan
+                    ? "SIN PLAN"
+                    : noDayConfigured
+                      ? "ASIGNADO"
+                      : hasDraft
+                        ? "EN CURSO"
+                        : "PRÓXIMA"}
                 </Text>
               </View>
             </View>
@@ -201,7 +224,7 @@ export default function HeroeCardHome({ image }) {
               {/* Texto */}
               <View className="flex-1 justify-between gap-4">
                 <View className="gap-2">
-                  {!hasNoPlan && (
+                  {!hasNoPlan && currentDay && (
                     <View className="flex-row items-center gap-2">
                       <View className="bg-brandSecondary-700 dark:bg-brandSecondary-400 w-1 h-1 rounded-sm" />
                       <Text className="font-manrope-bold uppercase text-brandSecondary-700 dark:text-brandSecondary-400 text-[8px] tracking-[2px]">
@@ -226,7 +249,9 @@ export default function HeroeCardHome({ image }) {
                   <Text className="font-manrope text-ui-text-main/55 dark:text-white/50 text-sm mt-2 leading-5">
                     {hasNoPlan
                       ? "Explorá el catálogo de planes y elegí el que mejor se adapte a tus objetivos."
-                      : `${exerciseCount} ${exerciseCount === 1 ? "ejercicio" : "ejercicios"}`}
+                      : noDayConfigured
+                        ? "Plan asignado · Comenzá cuando estés listo."
+                        : `${exerciseCount} ${exerciseCount === 1 ? "ejercicio" : "ejercicios"}`}
                   </Text>
                 </View>
               </View>
@@ -298,7 +323,7 @@ export default function HeroeCardHome({ image }) {
                   </View>
                 </LinearGradient>
 
-                {!hasNoPlan && (
+                {!hasNoPlan && currentDay && (
                   <View className="flex-row items-center gap-1">
                     <View className="bg-ui-text-main/[18%] dark:bg-white/25 w-3 h-[1px]" />
                     <Text className="font-manrope-bold uppercase text-ui-text-main/45 dark:text-white/45 text-[10px] tracking-[2px]">
@@ -320,9 +345,11 @@ export default function HeroeCardHome({ image }) {
                   <Text className="text-xs tracking-[1.5px] font-manrope-bold uppercase text-ui-text-main dark:text-ui-text-mainDark">
                     {hasNoPlan
                       ? "Ver planes"
-                      : hasDraft
-                        ? "Continuar sesión"
-                        : "Iniciar sesión"}
+                      : noDayConfigured
+                        ? "Ver plan"
+                        : hasDraft
+                          ? "Continuar sesión"
+                          : "Iniciar sesión"}
                   </Text>
                 </View>
                 <View
