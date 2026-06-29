@@ -303,7 +303,7 @@ export default function SesionActiva() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     await clearDraft();
     setShowExitConfirm(false);
-    router.navigate("/(protected)");
+    router.replace("/(protected)/(tabs)/(home)");
   }
 
   return (
