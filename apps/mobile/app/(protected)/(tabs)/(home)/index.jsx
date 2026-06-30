@@ -27,6 +27,7 @@ import {
 
 // ── Components ──
 import HeroeCardHome from "../../../../src/components/cards/heroe-card-home.jsx";
+import { Skeleton } from "../../../../src/components/ui/skeleton.jsx";
 
 const BRAND_PRIMARY = brandPrimary[700];
 
@@ -70,7 +71,7 @@ function greetingFor(date) {
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, profileLoading } = useAuth();
   const { isDark } = useTheme();
 
   const now = new Date();
@@ -112,28 +113,41 @@ export default function Home() {
               <Text className="font-manrope-semi text-ui-text-main/55 dark:text-white/50 text-sm tracking-wider mb-1">
                 {greeting},
               </Text>
-              <Text
-                className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark leading-10 text-3xl tracking-tighter"
-                numberOfLines={1}
-              >
-                {firstName}.
-              </Text>
+              {/* El saludo y la fecha no dependen del perfil: se muestran ya. El
+                  nombre sí, así que mientras carga va un skeleton del mismo alto
+                  que la línea (text-3xl/leading-10 ≈ 40px) para no mover nada. */}
+              {profileLoading ? (
+                <View className="h-10 justify-center">
+                  <Skeleton width={180} height={26} radius={8} />
+                </View>
+              ) : (
+                <Text
+                  className="font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark leading-10 text-3xl tracking-tighter"
+                  numberOfLines={1}
+                >
+                  {firstName}.
+                </Text>
+              )}
             </View>
 
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
-                router.navigate("/(protected)/profile");
-              }}
-              className="flex-row items-center gap-2 active:opacity-70 active:scale-110"
-            >
-              <View className="border-brandPrimary-700/50 bg-brandPrimary-700/[6%] dark:bg-brandPrimary-700/[12%] w-11 h-11 rounded-3xl border-2 p-1 ">
-                <Image
-                  source={profileUrl ? { uri: profileUrl } : imageProfile}
-                  style={{ width: "100%", height: "100%", borderRadius: 18 }}
-                />
-              </View>
-            </Pressable>
+            {profileLoading ? (
+              <Skeleton width={44} height={44} radius={18} />
+            ) : (
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.soft);
+                  router.navigate("/(protected)/profile");
+                }}
+                className="flex-row items-center gap-2 active:opacity-70 active:scale-110"
+              >
+                <View className="border-brandPrimary-700/50 bg-brandPrimary-700/[6%] dark:bg-brandPrimary-700/[12%] w-11 h-11 rounded-3xl border-2 p-1 ">
+                  <Image
+                    source={profileUrl ? { uri: profileUrl } : imageProfile}
+                    style={{ width: "100%", height: "100%", borderRadius: 18 }}
+                  />
+                </View>
+              </Pressable>
+            )}
           </View>
         </View>
 

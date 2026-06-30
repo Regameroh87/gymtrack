@@ -27,6 +27,11 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Carga del perfil (query a profiles), separada de `loading` (hidratación de
+  // sesión). La sesión se resuelve en ~20ms desde AsyncStorage, pero el perfil
+  // pega a Supabase y puede tardar: este flag deja que las pantallas muestren un
+  // skeleton en vez del fallback "Atleta" durante esa ventana.
+  const [profileLoading, setProfileLoading] = useState(false);
   const accessTokenRef = useRef(null);
   const authUserIdRef = useRef(null);
 
@@ -162,10 +167,18 @@ export const AuthProvider = ({ children }) => {
   // hidratación inicial y onAuthStateChange). Al correr en la fase de efectos,
   // el processLock ya se liberó, así que la query a profiles no deadlockea.
   useEffect(() => {
-    if (!profileUid) return;
+    if (!profileUid) {
+      setProfileLoading(false);
+      return;
+    }
     let isMounted = true;
+    setProfileLoading(true);
     fetchProfile(profileUid).then((profile) => {
-      if (isMounted) setUser(profile);
+      if (!isMounted) return;
+      setUser(profile);
+      // Apagamos el flag pase lo que pase: un perfil null legítimo (sin fila)
+      // debe caer al fallback "Atleta", no quedar en skeleton para siempre.
+      setProfileLoading(false);
     });
     return () => {
       isMounted = false;
@@ -178,10 +191,11 @@ export const AuthProvider = ({ children }) => {
       user,
       userId: user?.id,
       loading,
+      profileLoading,
       isLoggedIn: !!session,
       refreshProfile,
     }),
-    [session, user, loading, refreshProfile]
+    [session, user, loading, profileLoading, refreshProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

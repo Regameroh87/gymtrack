@@ -26,6 +26,9 @@ import { useActiveSessionDraft } from "@gymtrack/core/hooks/sessions/use-active-
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../utils/box-shadow";
 
+// ── UI ──
+import { Skeleton } from "../ui/skeleton";
+
 export default function HeroeCardHome({ image }) {
   const router = useRouter();
   const { isDark } = useTheme();
@@ -56,8 +59,11 @@ export default function HeroeCardHome({ image }) {
     ? gradient.sessionPlaceholder.dark
     : gradient.sessionPlaceholder.light;
 
-  // isPending cubre "query deshabilitada (sin userId)" y "fetching" en TanStack v5
-  if (isPending) return null;
+  // isPending cubre "query deshabilitada (sin userId)" y "fetching" en TanStack v5.
+  // En vez de no renderizar nada (que colapsaría el espacio y empujaría "Acceso
+  // Rápido" hacia arriba, para saltar abajo al llegar los datos), mostramos un
+  // skeleton con la misma silueta y alto que la card real: layout estable.
+  if (isPending) return <HeroeCardSkeleton />;
 
   const hasNoPlan = summary === null;
 
@@ -369,6 +375,54 @@ export default function HeroeCardHome({ image }) {
             </View>
           </View>
         </Pressable>
+      </View>
+    </View>
+  );
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+// Reproduce el wrapper (px-5 mb-7), el contorno y el alto de la card real para
+// que el swap skeleton → contenido no mueva nada. Los bloques mimetizan kicker,
+// título (2 líneas), descripción, el cuadro de imagen y la CTA strip.
+function HeroeCardSkeleton() {
+  return (
+    <View className="px-5 mb-7">
+      <View className="rounded-3xl overflow-hidden bg-ui-surface-light dark:bg-ui-background-dark border border-ui-text-main/[8%] dark:border-white/[8%]">
+        {/* Header */}
+        <View
+          className="flex-row items-center justify-between"
+          style={{ paddingHorizontal: 20, paddingTop: 32 }}
+        >
+          <Skeleton width={120} height={10} radius={3} />
+          <Skeleton width={70} height={10} radius={3} />
+        </View>
+
+        {/* Body */}
+        <View
+          className="flex-row"
+          style={{
+            paddingHorizontal: 20,
+            paddingTop: 18,
+            paddingBottom: 22,
+            gap: 16,
+          }}
+        >
+          <View className="flex-1 gap-3">
+            <Skeleton width={70} height={8} radius={3} />
+            <Skeleton width="90%" height={22} radius={6} />
+            <Skeleton width="65%" height={22} radius={6} />
+            <Skeleton width="45%" height={13} radius={4} style={{ marginTop: 4 }} />
+          </View>
+          <Skeleton width={128} height={128} radius={18} />
+        </View>
+
+        {/* CTA strip */}
+        <View className="border-t border-ui-text-main/[8%] dark:border-white/[8%]">
+          <View className="flex-row items-center justify-between px-5 py-3">
+            <Skeleton width={120} height={12} radius={4} />
+            <Skeleton width={32} height={32} radius={16} />
+          </View>
+        </View>
       </View>
     </View>
   );
