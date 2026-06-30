@@ -38,6 +38,11 @@ const DB_EPOCH_KEY = "db_initialized_at";
 // el contenido actual de la base para detectar switches (aún tras un crash).
 const ACTIVE_GYM_KEY = "active-gym:id";
 const ACTIVE_GYM_META_KEY = "active_gym_id";
+// Usuario autenticado (auth.uid) dueño del contenido local. La base SQLite se
+// comparte en el device entre cuentas (dev/multi-socio): si el contenido es de
+// otra cuenta hay que purgar antes de pull/push, o el PUSH intentaría subir
+// filas ajenas que la RLS rechaza (user_id ≠ auth_profile_id y no-staff).
+const AUTH_USER_META_KEY = "auth_user_id";
 // Las filas de catálogo (is_catalog=true) tienen gym_id NULL en Supabase, pero la
 // columna gym_id local es NOT NULL (SQLite no permite quitar el constraint con ALTER).
 // Al insertarlas localmente mapeamos gym_id → este sentinel; el catálogo se distingue
@@ -139,7 +144,9 @@ export async function wipeLocalData() {
   await purgeSyncedTables();
   await database
     .delete(sync_meta)
-    .where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
+    .where(
+      inArray(sync_meta.key, [ACTIVE_GYM_META_KEY, AUTH_USER_META_KEY])
+    );
 }
 
 // Guard idempotente: corre al inicio de CADA sync. Si el contenido local
@@ -175,6 +182,43 @@ async function ensureDbMatchesActiveGym(activeGymId) {
     .update(sync_meta)
     .set({ value: activeGymId })
     .where(eq(sync_meta.key, ACTIVE_GYM_META_KEY));
+}
+
+// Guard idempotente: corre al inicio de CADA sync, antes de pull/push. Si el
+// contenido local pertenece a otra cuenta (logout + login de otro usuario sin
+// purga, p. ej. mismo device de prueba o socio compartido), purga todo para que
+// el PUSH no intente subir filas ajenas (RLS las rechaza) y el PULL repueble con
+// los datos del usuario actual.
+async function ensureDbMatchesAuthUser(authUserId) {
+  if (!authUserId) return;
+
+  const [marker] = await database
+    .select()
+    .from(sync_meta)
+    .where(eq(sync_meta.key, AUTH_USER_META_KEY));
+
+  if (marker?.value === authUserId) return;
+
+  if (!marker) {
+    // Base sin marcar (build viejo previo a este guard o base nueva): se adopta
+    // el usuario actual sin purgar. La Capa de PUSH filtra por profile id, así
+    // que ninguna fila ajena preexistente se sube igual.
+    await database
+      .insert(sync_meta)
+      .values({ key: AUTH_USER_META_KEY, value: authUserId });
+    return;
+  }
+
+  console.log(
+    `🔁 [SYNC] Auth user cambió (${marker.value} → ${authUserId}): purga local + full pull`
+  );
+
+  await purgeSyncedTables();
+
+  await database
+    .update(sync_meta)
+    .set({ value: authUserId })
+    .where(eq(sync_meta.key, AUTH_USER_META_KEY));
 }
 
 // Cambio de gym activo. Primero empuja los pendientes del gym actual (la purga
@@ -1554,16 +1598,26 @@ export async function pushPlanWeekDayExerciseSetsChanges() {
 /**
  * PUSH: Sube cambios locales de Asignaciones de Planes
  */
-export async function pushPlanAssignmentsChanges() {
+export async function pushPlanAssignmentsChanges(currentProfileId) {
+  // plan_assignments.user_id = profiles.id. Sin perfil resuelto no podemos
+  // validar dueño: no subimos nada (evita empujar filas de otra cuenta bajo la
+  // sesión actual, que la RLS rechazaría una y otra vez).
+  if (!currentProfileId) {
+    console.log("⏭️  [PUSH] plan_assignments omitido: sin profile id");
+    return;
+  }
   const localChanges = (
     await database
       .select()
       .from(plan_assignments)
       .where(
-        or(
-          eq(plan_assignments.sync_status, "pending"),
-          eq(plan_assignments.sync_status, "dirty"),
-          eq(plan_assignments.sync_status, "deleted")
+        and(
+          eq(plan_assignments.user_id, currentProfileId),
+          or(
+            eq(plan_assignments.sync_status, "pending"),
+            eq(plan_assignments.sync_status, "dirty"),
+            eq(plan_assignments.sync_status, "deleted")
+          )
         )
       )
   )
@@ -1634,15 +1688,24 @@ export async function pushPlanAssignmentsChanges() {
 /**
  * PUSH: Sube cambios locales de Cabeceras de Logs de Sesión
  */
-export async function pushSessionLogsChanges() {
+export async function pushSessionLogsChanges(currentProfileId) {
+  // session_logs.user_id = profiles.id. Igual que plan_assignments: sin perfil
+  // resuelto no subimos para no empujar filas de otra cuenta (RLS las rechaza).
+  if (!currentProfileId) {
+    console.log("⏭️  [PUSH] session_logs omitido: sin profile id");
+    return;
+  }
   const localChanges = await database
     .select()
     .from(session_logs)
     .where(
-      or(
-        eq(session_logs.sync_status, "pending"),
-        eq(session_logs.sync_status, "dirty"),
-        eq(session_logs.sync_status, "deleted")
+      and(
+        eq(session_logs.user_id, currentProfileId),
+        or(
+          eq(session_logs.sync_status, "pending"),
+          eq(session_logs.sync_status, "dirty"),
+          eq(session_logs.sync_status, "deleted")
+        )
       )
     );
   if (localChanges.length === 0) return;
@@ -2581,6 +2644,10 @@ export async function syncWithSupabase(
       return { success: false, reason: "no-session" };
     }
 
+    // Si el contenido local es de otra cuenta (login de otro usuario sin purga),
+    // se purga acá — antes de cualquier push— para no subir filas ajenas.
+    await ensureDbMatchesAuthUser(currentUserId);
+
     // session_logs/plan_assignments referencian profiles.id (PK interna del
     // perfil), NO auth.uid — ver getSession.jsx. Las custom_* sí usan auth.uid.
     let currentProfileId = null;
@@ -2759,7 +2826,7 @@ export async function syncWithSupabase(
       await pushTrainingPlansChanges();
     }
     if (tablesToSync.includes("plan_assignments")) {
-      await pushPlanAssignmentsChanges();
+      await pushPlanAssignmentsChanges(currentProfileId);
     }
     if (tablesToSync.includes("plan_weeks")) {
       await pushPlanWeeksChanges();
@@ -2774,7 +2841,7 @@ export async function syncWithSupabase(
       await pushPlanWeekDayExerciseSetsChanges();
     }
     if (tablesToSync.includes("session_logs")) {
-      await pushSessionLogsChanges();
+      await pushSessionLogsChanges(currentProfileId);
     }
     if (tablesToSync.includes("session_set_logs")) {
       await pushSessionSetLogsChanges();
