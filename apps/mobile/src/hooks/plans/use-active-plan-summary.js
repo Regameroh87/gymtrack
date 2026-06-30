@@ -197,6 +197,8 @@ const fetchCustomPlanSummary = async (userId, assignment) => {
       and(
         eq(session_logs.user_id, userId),
         eq(session_logs.custom_plan_id, customPlanId),
+        // Solo logs de ESTA corrida del plan (ver fetchGymPlanSummary).
+        gte(session_logs.completed_at, assignment.start_date),
         ne(session_logs.sync_status, "deleted")
       )
     )
