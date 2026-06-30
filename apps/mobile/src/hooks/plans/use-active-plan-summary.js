@@ -1,6 +1,6 @@
 // React / libs
 import { useQuery } from "@tanstack/react-query";
-import { and, count, desc, eq, ne } from "drizzle-orm";
+import { and, count, desc, eq, gte, ne } from "drizzle-orm";
 
 // DB
 import { database } from "../../database";
@@ -102,6 +102,10 @@ const fetchGymPlanSummary = async (userId, assignment) => {
       and(
         eq(session_logs.user_id, userId),
         eq(session_logs.plan_id, planId),
+        // Solo logs de ESTA corrida del plan: al re-seguir un plan ya terminado, los
+        // logs de la corrida anterior harían que resolveTarget lo dé por completado
+        // al instante y la reconciliación del read cierre la asignación recién creada.
+        gte(session_logs.completed_at, assignment.start_date),
         ne(session_logs.sync_status, "deleted")
       )
     )
