@@ -1,7 +1,9 @@
 ﻿// React Native
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useColorScheme } from "nativewind";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Hooks
 import { useTrainingPlans } from "../../../../src/hooks/plans/use-training-plans";
@@ -502,8 +505,10 @@ const ORIGIN_TABS = [
 function ExplorarContent({ router, insets }) {
   const { brandPrimary } = useGymTheme();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [origin, setOrigin] = useState("gym");
   const [activeObjective, setActiveObjective] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { data: gymPlans = [], isLoading: gymLoading } = useTrainingPlans({
     publishedOnly: true,
@@ -512,6 +517,25 @@ function ExplorarContent({ router, insets }) {
   const { data: catalogPlans = [], isLoading: catalogLoading } =
     useCatalogPlans();
   const { data: myPlans = [], isLoading: myLoading } = useCustomPlans();
+
+  // El catálogo se lee de SQLite local, poblado por el sync en background. Si
+  // ese pull falló o no terminó (red lenta, recién cambiaste de cuenta y el
+  // guard de sync purgó la base), la pantalla queda "vacía" sin ningún error
+  // visible — el sync solo loguea a consola. Pull-to-refresh da un retry
+  // explícito en vez de depender de reabrir la pestaña con suerte de timing.
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (Platform.OS !== "web") {
+        await require("../../../../src/database/sync").checkNetInfoAndSync();
+      }
+      queryClient.invalidateQueries({ queryKey: ["catalog_plans"] });
+      queryClient.invalidateQueries({ queryKey: ["training_plans"] });
+      queryClient.invalidateQueries({ queryKey: ["custom_plans"] });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Catálogo + planes propios del gym, bajo la pestaña "Catálogo".
   const allGymPlans = useMemo(
@@ -603,6 +627,13 @@ function ExplorarContent({ router, insets }) {
         <Animated.ScrollView
           contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={brandPrimary[500]}
+            />
+          }
         >
           {/* Filtro por objetivo — solo "Catálogo" */}
           {!isMine && availableObjectiveFilters.length > 1 && (
