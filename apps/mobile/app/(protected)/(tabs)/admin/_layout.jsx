@@ -7,11 +7,14 @@ import { Platform } from "react-native";
 export default function AdminLayout() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const { isStaff, loading } = useUserRole();
+  const { isStaff, role, loading } = useUserRole();
 
   // Solo el staff accede al panel. Bloquea el ingreso por URL de un member.
-  if (loading) return null;
-  if (!isStaff) return <Redirect href="/" />;
+  // role aún null (gym no auto-seleccionado todavía) ⇒ seguimos esperando, no
+  // expulsamos: un staff tiene una ventana transitoria con role=null tras el
+  // login y no debe ser tratado como member.
+  if (loading || role == null) return null;
+  if (!isStaff) return <Redirect href="/(protected)/(tabs)/(home)/index" />;
 
   return (
     <Stack
