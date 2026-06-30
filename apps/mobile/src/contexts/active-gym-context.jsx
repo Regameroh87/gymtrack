@@ -31,6 +31,11 @@ const loadSync = () =>
 // El theme, el rol efectivo y el sync local dependen del gym activo.
 
 export const ACTIVE_GYM_KEY = "active-gym:id";
+// Cache persistido de memberships, namespaced por authUserId (nunca se siembra con
+// datos de otra cuenta). Permite que el arranque en frío renderice desde cache sin
+// depender de una llamada de red viva que —con el auth lock tomado por un refresh—
+// podría tardar y gatear la UI. Se revalida en background.
+const MEMBERSHIPS_CACHE_PREFIX = "memberships-cache:";
 
 const ActiveGymContext = createContext(null);
 
@@ -81,7 +86,10 @@ export function ActiveGymProvider({ children }) {
     queryKey: ["memberships", authUserId],
     enabled: !!authUserId,
     staleTime: 1000 * 60 * 5,
-    retry: 1,
+    // Sin reintento en la ruta de arranque: este query gatea la entrada (ver
+    // `loading` abajo); un retry duplicaría la peor latencia antes de soltar el
+    // gate. El cache persistido (abajo) y el deadline del layout cubren los fallos.
+    retry: 0,
     // Red de seguridad para detectar una suspensión del gym aunque la app quede
     // abierta en foreground sin backgroundear ni perder red. Es una query mínima
     // (memberships del usuario); no corre en background.
@@ -119,6 +127,44 @@ export function ActiveGymProvider({ children }) {
 
   const memberships = membershipsQuery.data ?? null;
 
+  // Hidratación offline-first: siembra el cache de React Query con las memberships
+  // persistidas del usuario actual, así el arranque en frío no queda gateado por la
+  // red. Solo siembra arrays NO vacíos: un array vacío activaría confirmedNoGym
+  // (NoGymScreen/logout) desde cache sin confirmación viva del servidor.
+  useEffect(() => {
+    if (!authUserId) return;
+    let mounted = true;
+    AsyncStorage.getItem(`${MEMBERSHIPS_CACHE_PREFIX}${authUserId}`)
+      .then((raw) => {
+        if (!mounted || !raw) return;
+        // No pisar datos ya frescos que la query pudo traer mientras se leía storage.
+        if (queryClient.getQueryData(["memberships", authUserId])) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // updatedAt:0 deja el dato sembrado como stale: se muestra de inmediato
+          // (no gatea la UI) pero se revalida contra el servidor en background.
+          queryClient.setQueryData(["memberships", authUserId], parsed, {
+            updatedAt: 0,
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [authUserId]);
+
+  // Persiste las memberships frescas para el próximo arranque en frío.
+  useEffect(() => {
+    if (!authUserId || !membershipsQuery.isSuccess || !membershipsQuery.data) {
+      return;
+    }
+    AsyncStorage.setItem(
+      `${MEMBERSHIPS_CACHE_PREFIX}${authUserId}`,
+      JSON.stringify(membershipsQuery.data)
+    ).catch(() => {});
+  }, [authUserId, membershipsQuery.isSuccess, membershipsQuery.data]);
+
   // Confirmación POSITIVA del servidor de que la persona no tiene ninguna
   // membership (su gym fue eliminado o la sacaron de todos): la query cargó con
   // éxito y vino vacía. Si está offline / erroró / nunca corrió, es false, para
@@ -134,7 +180,8 @@ export function ActiveGymProvider({ children }) {
     queryKey: ["all-gyms", authUserId],
     enabled: !!authUserId && isSuperAdmin,
     staleTime: 1000 * 60 * 30,
-    retry: 1,
+    // Igual que memberships: gatea la entrada del super_admin, sin reintento.
+    retry: 0,
     queryFn: ({ signal }) =>
       queryWithTimeout(
         (abortSignal) =>

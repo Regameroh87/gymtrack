@@ -8,6 +8,11 @@ import { ui } from "@gymtrack/core/colors";
 import { useTheme } from "../../src/theme/theme";
 import { supabase } from "../../src/database/supabase";
 
+// Techo del gate de carga del área protegida. Por debajo del techo de las queries
+// de arranque (memberships acotada en active-gym-context) para que normalmente
+// resuelvan antes; es solo la red de seguridad contra un cuelgue imprevisto.
+const LOAD_GATE_TIMEOUT_MS = 7000;
+
 export default function ProtectedLayout() {
   const { isLoggedIn, loading, user } = useAuth();
   const {
@@ -19,19 +24,17 @@ export default function ProtectedLayout() {
   const pathname = usePathname();
 
   // Red de seguridad: el gate de carga no puede quedar pegado indefinidamente.
-  // Si auth/gym no resolvieron en 15s (más que el techo de las queries de
-  // arranque), se deja de mostrar "Cargando sesión..." y se cae al resto de la
-  // lógica (login / selector / tabs) con lo que haya. Cubre cualquier bloqueo
-  // imprevisto para que nunca se presente como un cuelgue de pantalla en blanco.
+  // Deadline FIJO desde el montaje: a diferencia de un timer que se reinicia con
+  // cada cambio de loading/gymLoading (que con esos flags oscilando —retries de
+  // memberships, refetchInterval, refresh de token— podría no dispararse nunca),
+  // este garantiza que el gate SIEMPRE libere tras LOAD_GATE_TIMEOUT_MS y se caiga
+  // al resto de la lógica (login / selector / tabs) con lo que haya, en vez de
+  // quedar en "Cargando sesión..." para siempre.
   const [loadGateTimedOut, setLoadGateTimedOut] = useState(false);
   useEffect(() => {
-    if (!loading && !gymLoading) {
-      setLoadGateTimedOut(false);
-      return;
-    }
-    const t = setTimeout(() => setLoadGateTimedOut(true), 15000);
+    const t = setTimeout(() => setLoadGateTimedOut(true), LOAD_GATE_TIMEOUT_MS);
     return () => clearTimeout(t);
-  }, [loading, gymLoading]);
+  }, []);
 
   if ((loading || gymLoading) && !loadGateTimedOut) {
     return (

@@ -56,6 +56,24 @@ const CATALOG_PARENT_TABLES = new Set([
 ]);
 let isSyncing = false;
 
+// Acota una promesa a un techo de tiempo. El cliente Supabase espera el auth
+// processLock ANTES de disparar getSession/queries; si un refresh de token lo tiene
+// tomado (hasta ~30s de backoff), esos awaits pueden no resolver y colgar el sync
+// entero (el GLOBAL_TIMEOUT_MS solo libera el lock de reentrancia, no desbloquea
+// este await). Con esto, el sync aborta limpio y reintenta luego en vez de colgarse.
+function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timeout (${ms}ms)`)),
+      ms
+    );
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() =>
+    clearTimeout(timer)
+  );
+}
+
 // Los watermarks last_sync_at_* viven en AsyncStorage, pero describen el
 // contenido de la base SQLite. Si la base fue recreada (reinstalación parcial,
 // borrado de la DB, migración fallida que terminó en un reset) los watermarks
@@ -219,6 +237,28 @@ async function ensureDbMatchesAuthUser(authUserId) {
     .update(sync_meta)
     .set({ value: authUserId })
     .where(eq(sync_meta.key, AUTH_USER_META_KEY));
+}
+
+// Garantiza que no queden cambios locales sin subir antes de un logout en
+// device compartido (el próximo login de otra cuenta purgaría la base). Lanza
+// error si hay pendientes y no se pueden empujar; el caller debe abortar el
+// logout en ese caso.
+export async function flushPendingBeforeLogout() {
+  if (!(await hasPendingChanges())) return;
+
+  const net = await NetInfo.fetch();
+  if (!net.isConnected) {
+    throw new Error(
+      "Tenés cambios sin sincronizar y no hay conexión. Conectate a internet antes de cerrar sesión."
+    );
+  }
+
+  const { success } = await syncWithSupabase();
+  if (!success || (await hasPendingChanges())) {
+    throw new Error(
+      "No se pudieron subir tus cambios pendientes. Intentá de nuevo en unos segundos."
+    );
+  }
 }
 
 // Cambio de gym activo. Primero empuja los pendientes del gym actual (la purga
@@ -2635,9 +2675,20 @@ export async function syncWithSupabase(
     // getSession() refresca el JWT si venció (autoRefreshToken=true); getUser()
     // solo lo valida contra el server sin refrescarlo, dejando el token vencido
     // y causando auth.uid()=NULL en todos los writes posteriores.
-    const {
-      data: { session: currentSession },
-    } = await supabase.auth.getSession();
+    let currentSession = null;
+    try {
+      const res = await withTimeout(
+        supabase.auth.getSession(),
+        10_000,
+        "getSession"
+      );
+      currentSession = res?.data?.session ?? null;
+    } catch (e) {
+      console.warn(
+        `⚠️ [SYNC] getSession no respondió a tiempo (lock de auth tomado por un refresh): sync abortado — ${e.message}`
+      );
+      return { success: false, reason: "auth-timeout" };
+    }
     const currentUserId = currentSession?.user?.id ?? null;
     if (!currentUserId) {
       console.warn("⚠️ [SYNC] Sin sesión válida — sync abortado");
@@ -2652,12 +2703,22 @@ export async function syncWithSupabase(
     // perfil), NO auth.uid — ver getSession.jsx. Las custom_* sí usan auth.uid.
     let currentProfileId = null;
     if (currentUserId) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", currentUserId)
-        .maybeSingle();
-      currentProfileId = prof?.id ?? null;
+      try {
+        const { data: prof } = await withTimeout(
+          supabase
+            .from("profiles")
+            .select("id")
+            .eq("user_id", currentUserId)
+            .maybeSingle(),
+          10_000,
+          "profiles fetch"
+        );
+        currentProfileId = prof?.id ?? null;
+      } catch (e) {
+        // Sin profile id las tablas profile-scoped (session_logs, plan_assignments)
+        // se saltean en este pase; el próximo sync las recupera. Mejor que colgar.
+        console.warn(`⚠️ [SYNC] profiles no respondió a tiempo: ${e.message}`);
+      }
     }
 
     // Tablas con columna gym_id: el pull se limita al gym activo (la RLS ahora
