@@ -105,7 +105,10 @@ const fetchGymPlanSummary = async (userId, assignment) => {
         // Solo logs de ESTA corrida del plan: al re-seguir un plan ya terminado, los
         // logs de la corrida anterior harían que resolveTarget lo dé por completado
         // al instante y la reconciliación del read cierre la asignación recién creada.
-        gte(session_logs.completed_at, assignment.start_date),
+        // Comparamos contra created_at (timestamp exacto), no start_date (solo fecha):
+        // re-seguir el MISMO plan más de una vez el mismo día con start_date como
+        // frontera contaría los logs de la corrida anterior de ese día como propios.
+        gte(session_logs.completed_at, assignment.created_at),
         ne(session_logs.sync_status, "deleted")
       )
     )
@@ -198,7 +201,7 @@ const fetchCustomPlanSummary = async (userId, assignment) => {
         eq(session_logs.user_id, userId),
         eq(session_logs.custom_plan_id, customPlanId),
         // Solo logs de ESTA corrida del plan (ver fetchGymPlanSummary).
-        gte(session_logs.completed_at, assignment.start_date),
+        gte(session_logs.completed_at, assignment.created_at),
         ne(session_logs.sync_status, "deleted")
       )
     )
@@ -307,6 +310,7 @@ export const fetchActivePlanSummary = async (userId) => {
       start_date: plan_assignments.start_date,
       end_date: plan_assignments.end_date,
       status: plan_assignments.status,
+      created_at: plan_assignments.created_at,
     })
     .from(plan_assignments)
     .where(
