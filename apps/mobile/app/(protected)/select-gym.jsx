@@ -15,7 +15,7 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 
 import { useActiveGym } from "../../src/contexts/active-gym-context";
-import { supabase } from "../../src/database/supabase";
+import { performLogout } from "../../src/auth/lib/logout";
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
 import { makeShadow } from "../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../src/constants/roles";
@@ -240,7 +240,7 @@ export default function SelectGymScreen() {
           </Pressable>
         ) : (
           <Pressable
-            onPress={() => supabase.auth.signOut().catch(() => {})}
+            onPress={() => performLogout()}
             disabled={!!switchingTo}
             className="items-center py-4 mt-5 rounded-2xl border border-ui-text-main/[8%] dark:border-white/[8%] active:opacity-70"
           >

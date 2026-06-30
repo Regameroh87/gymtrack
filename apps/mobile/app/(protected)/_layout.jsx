@@ -6,7 +6,7 @@ import { View, Text, Platform, Pressable } from "react-native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { ui } from "@gymtrack/core/colors";
 import { useTheme } from "../../src/theme/theme";
-import { supabase } from "../../src/database/supabase";
+import { performLogout } from "../../src/auth/lib/logout";
 
 // Techo del gate de carga del área protegida. Por debajo del techo de las queries
 // de arranque (memberships acotada en active-gym-context) para que normalmente
@@ -101,7 +101,7 @@ function NoGymScreen() {
         {message}
       </Text>
       <Pressable
-        onPress={() => supabase.auth.signOut().catch(() => {})}
+        onPress={() => performLogout()}
         className="px-6 py-3.5 rounded-2xl bg-brandPrimary-600 active:opacity-80"
       >
         <Text className="text-[14px] font-manrope-bold text-white">

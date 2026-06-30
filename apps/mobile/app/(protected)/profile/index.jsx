@@ -16,7 +16,7 @@ import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { supabase } from "../../../src/database/supabase";
+import { performLogout } from "../../../src/auth/lib/logout";
 import { useAuth } from "../../../src/auth/lib/getSession";
 import { useActiveGym } from "../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
@@ -163,8 +163,10 @@ export default function ProfileScreen() {
   };
 
   const onLogout = async () => {
-    await supabase.auth.signOut();
-    // El guard de ProtectedLayout redirige a login al detectar isLoggedIn = false
+    // Sube los pendientes antes de salir (device compartido); si no hay red y hay
+    // cambios sin sincronizar, performLogout aborta y avisa. ProtectedLayout
+    // redirige a login al detectar isLoggedIn = false.
+    await performLogout();
   };
 
   return (
