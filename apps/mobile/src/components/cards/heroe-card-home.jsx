@@ -411,7 +411,12 @@ function HeroeCardSkeleton() {
             <Skeleton width={70} height={8} radius={3} />
             <Skeleton width="90%" height={22} radius={6} />
             <Skeleton width="65%" height={22} radius={6} />
-            <Skeleton width="45%" height={13} radius={4} style={{ marginTop: 4 }} />
+            <Skeleton
+              width="45%"
+              height={13}
+              radius={4}
+              style={{ marginTop: 4 }}
+            />
           </View>
           <Skeleton width={128} height={128} radius={18} />
         </View>
