@@ -14,7 +14,7 @@ export default function AdminLayout() {
   // expulsamos: un staff tiene una ventana transitoria con role=null tras el
   // login y no debe ser tratado como member.
   if (loading || role == null) return null;
-  if (!isStaff) return <Redirect href="/(protected)/(tabs)/(home)/index" />;
+  if (!isStaff) return <Redirect href="/" />;
 
   return (
     <Stack

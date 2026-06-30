@@ -62,14 +62,14 @@ export default function SelectGymScreen() {
   const onSelect = async (option) => {
     if (switchingTo) return;
     if (option.gym_id === activeGymId) {
-      router.replace("/(protected)/(tabs)/(home)/index");
+      router.replace("/");
       return;
     }
     setSwitchingTo(option.gym_id);
     try {
       await switchGym(option.gym_id);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace("/(protected)/(tabs)/(home)/index");
+      router.replace("/");
     } catch (e) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Toast.show({

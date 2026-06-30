@@ -8,7 +8,7 @@ export default function AuthLayout() {
   //! ESTO ES PARA QUE NO SE MUESTRE EL LOGIN SI YA ESTA LOGUEADO
   const { isLoggedIn } = useAuth();
   if (isLoggedIn) {
-    return <Redirect href="/(protected)/(tabs)/(home)/index" />;
+    return <Redirect href="/" />;
   }
 
   return (
