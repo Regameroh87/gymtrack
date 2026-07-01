@@ -28,7 +28,7 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/platform" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/platform", moduleKey: "dashboard" },
   { icon: ShieldHalf, label: "Gimnasios", href: "/platform/gyms", moduleKey: "gyms" },
   { icon: Dumbbell, label: "Catálogo", href: "/platform/catalog", moduleKey: "catalog" },
   { icon: Receipt, label: "Facturación", href: "/platform/billing", moduleKey: "billing" },

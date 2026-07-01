@@ -103,11 +103,16 @@ export const PLATFORM_ASSIGNABLE_ROLES: Record<string, Role[]> = {
 };
 
 // Permisos por módulo del panel de plataforma (clave = path de /platform/<path>).
+// superadmin_coach SOLO opera sobre el catálogo: todo lo demás (dashboard con
+// stats de gyms, gestión de gyms, facturación, usuarios globales y ajustes) es
+// admin-tier. El único módulo que lo incluye es `catalog`.
 export const PLATFORM_MODULE_ROLES: Record<string, Role[]> = {
+  // Dashboard de plataforma (path raíz /platform): stats de gyms, no aplica al coach.
+  dashboard: PLATFORM_ADMIN_ROLES,
   gyms: PLATFORM_ADMIN_ROLES,
   catalog: PLATFORM_STAFF_ROLES,
   billing: [ROLES.SUPER_ADMIN],
-  users: PLATFORM_STAFF_ROLES,
+  users: PLATFORM_ADMIN_ROLES,
   settings: PLATFORM_ADMIN_ROLES,
 };
 
