@@ -134,11 +134,13 @@ Deno.serve(async (req) => {
 
     const { data: callerProfile, error: callerProfileError } = await supabaseAdmin
       .from('profiles')
-      .select('is_super_admin')
+      .select('is_super_admin, platform_staff_role')
       .eq('user_id', callerAuth.user.id)
       .single()
 
-    if (callerProfileError || !callerProfile?.is_super_admin) {
+    const callerIsPlatformAdmin =
+      !!callerProfile?.is_super_admin || callerProfile?.platform_staff_role === 'admin'
+    if (callerProfileError || !callerIsPlatformAdmin) {
       return new Response(JSON.stringify({ error: 'Solo el super_admin puede crear gyms.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 403,

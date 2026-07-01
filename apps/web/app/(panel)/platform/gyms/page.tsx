@@ -12,6 +12,7 @@ import { Plus } from "lucide-react";
 // Sesión, Supabase y tipos
 import { getSessionContext } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canAccessPlatformModule } from "@/lib/auth/roles";
 import { type Gym, type GymOwner } from "@/lib/gyms";
 
 // Shell y lista
@@ -20,7 +21,7 @@ import { GymsList, type GymWithOwner } from "@/components/platform/gyms-list";
 
 export default async function GymsPage() {
   const ctx = await getSessionContext();
-  if (!ctx.isSuperAdmin) redirect("/dashboard");
+  if (!canAccessPlatformModule(ctx.platformRole, "gyms")) redirect("/dashboard");
 
   const supabase = await createServerSupabase();
   const { data } = await supabase

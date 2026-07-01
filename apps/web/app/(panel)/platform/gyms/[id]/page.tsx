@@ -11,6 +11,7 @@ import { X } from "lucide-react";
 // Sesión, Supabase y tipos
 import { getSessionContext } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canAccessPlatformModule } from "@/lib/auth/roles";
 import { type Gym, type GymOwner } from "@/lib/gyms";
 
 // Shell y form
@@ -23,7 +24,7 @@ export default async function EditGymPage({
   params: Promise<{ id: string }>;
 }) {
   const ctx = await getSessionContext();
-  if (!ctx.isSuperAdmin) redirect("/dashboard");
+  if (!canAccessPlatformModule(ctx.platformRole, "gyms")) redirect("/dashboard");
 
   const { id } = await params;
   const supabase = await createServerSupabase();

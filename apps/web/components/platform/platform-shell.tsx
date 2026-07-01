@@ -16,21 +16,24 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { BRAND } from "@/lib/site";
+import { ROLE_LABELS, canAccessPlatformModule, resolvePlatformRole, type Role } from "@/lib/auth/roles";
 
 type NavItem = {
   icon: typeof ShieldHalf;
   label: string;
   href: string;
+  // Clave de PLATFORM_MODULE_ROLES; ausente = visible para todo staff de plataforma.
+  moduleKey?: string;
   comingSoon?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/platform" },
-  { icon: ShieldHalf, label: "Gimnasios", href: "/platform/gyms" },
-  { icon: Dumbbell, label: "Catálogo", href: "/platform/catalog" },
-  { icon: Receipt, label: "Facturación", href: "/platform/billing" },
-  { icon: Users, label: "Usuarios globales", href: "/platform/users" },
-  { icon: Settings, label: "Ajustes", href: "/platform/settings" },
+  { icon: ShieldHalf, label: "Gimnasios", href: "/platform/gyms", moduleKey: "gyms" },
+  { icon: Dumbbell, label: "Catálogo", href: "/platform/catalog", moduleKey: "catalog" },
+  { icon: Receipt, label: "Facturación", href: "/platform/billing", moduleKey: "billing" },
+  { icon: Users, label: "Usuarios globales", href: "/platform/users", moduleKey: "users" },
+  { icon: Settings, label: "Ajustes", href: "/platform/settings", moduleKey: "settings" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -43,6 +46,10 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   const { user, signOut } = useAuth();
   const email = (user?.email as string) || "";
   const initial = (email[0] || "A").toUpperCase();
+  const role: Role | null = resolvePlatformRole(user);
+  const navItems = NAV_ITEMS.filter(
+    (item) => !item.moduleKey || canAccessPlatformModule(role, item.moduleKey)
+  );
 
   return (
     <div className="flex h-screen w-[248px] shrink-0 flex-col bg-[#0C0B14]">
@@ -80,7 +87,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
           Plataforma
         </p>
 
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(pathname, item.href);
           const disabled = item.comingSoon || active;
@@ -153,7 +160,9 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
             <span className="font-jakarta text-sm font-bold text-white">{initial}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-manrope text-xs font-bold text-white/90">Super Admin</p>
+            <p className="font-manrope text-xs font-bold text-white/90">
+              {(role && ROLE_LABELS[role]) ?? "Super Admin"}
+            </p>
             <p className="truncate font-manrope text-[10px] text-white/30">{email}</p>
           </div>
         </div>

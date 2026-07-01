@@ -10,7 +10,7 @@ import { type User } from "@supabase/supabase-js";
 
 // Supabase y roles
 import { createServerSupabase } from "@/lib/supabase-server";
-import { ROLES, isStaffRole, type Role } from "@/lib/auth/roles";
+import { ROLES, isStaffRole, resolvePlatformRole, type Role } from "@/lib/auth/roles";
 
 export const ACTIVE_GYM_COOKIE = "active-gym-id";
 
@@ -39,6 +39,7 @@ export interface Profile {
   last_name?: string | null;
   email?: string | null;
   is_super_admin?: boolean;
+  platform_staff_role?: string | null;
   [key: string]: unknown;
 }
 
@@ -53,6 +54,9 @@ export interface SessionContext {
   authUser: User | null;
   profile: Profile | null;
   isSuperAdmin: boolean;
+  // Rol efectivo de plataforma (super_admin | superadmin_admin | superadmin_coach),
+  // null si la cuenta no es staff de plataforma. Ver resolvePlatformRole().
+  platformRole: Role | null;
   // Memberships usables (gym activo, no suspendido). Vacío si no hay sesión.
   memberships: Membership[];
   // Catálogo completo de gyms (solo super_admin, para su selector).
@@ -179,6 +183,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
       authUser: null,
       profile: null,
       isSuperAdmin: false,
+      platformRole: null,
       memberships: [],
       allGyms: [],
       gymOptions: [],
@@ -202,6 +207,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
   ]);
 
   const isSuperAdmin = !!profile?.is_super_admin;
+  const platformRole = resolvePlatformRole(profile);
   // allGyms depende de isSuperAdmin (que sale del perfil), por eso va después.
   // Solo afecta al super_admin (pocos usuarios); el resto se ahorra la consulta.
   const allGyms = isSuperAdmin ? await getAllGyms() : [];
@@ -224,16 +230,17 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const activeGym = activeMembership?.gyms ?? activeAdminGym ?? null;
   const role: Role | null = isSuperAdmin
     ? ROLES.SUPER_ADMIN
-    : ((activeMembership?.role as Role) ?? null);
+    : (platformRole ?? (activeMembership?.role as Role) ?? null);
 
   // Opciones del selector: super_admin sobre todos los gyms; resto, memberships.
   const gymOptions: GymOption[] = isSuperAdmin
     ? allGyms.map((g) => ({ key: g.id, gym_id: g.id, role: ROLES.SUPER_ADMIN, gym: g }))
     : memberships.map((m) => ({ key: m.id, gym_id: m.gym_id, role: m.role, gym: m.gyms }));
 
-  // En web el super_admin NO se fuerza al selector (su home base es /platform).
+  // En web el super_admin NO se fuerza al selector (su home base es /platform);
+  // lo mismo aplica a cualquier staff de plataforma (tampoco tiene gyms).
   // El resto necesita elegir si tiene >1 membership y ninguna activa.
-  const needsSelection = isSuperAdmin
+  const needsSelection = isSuperAdmin || platformRole
     ? false
     : memberships.length > 1 && !activeMembership;
 
@@ -241,6 +248,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
     authUser,
     profile,
     isSuperAdmin,
+    platformRole,
     memberships,
     allGyms,
     gymOptions,
@@ -254,7 +262,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext> => {
 // Destino post-login según rol/gym (espeja el routing de los layouts de Expo).
 export function getPostLoginPath(ctx: SessionContext): string {
   if (!ctx.authUser) return "/login";
-  if (ctx.isSuperAdmin) return "/platform";
+  if (ctx.isSuperAdmin || ctx.platformRole) return "/platform";
   if (ctx.needsSelection) return "/select-gym";
   // Staff con gym resuelto → panel del gym. Socio con gym resuelto → su home web.
   // Sin gym usable → selector, que muestra el aviso correspondiente.

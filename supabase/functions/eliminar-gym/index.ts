@@ -38,11 +38,13 @@ Deno.serve(async (req) => {
 
     const { data: callerProfile } = await supabaseAdmin
       .from('profiles')
-      .select('is_super_admin')
+      .select('is_super_admin, platform_staff_role')
       .eq('user_id', callerAuth.user.id)
       .single()
 
-    if (!callerProfile?.is_super_admin) {
+    const callerIsPlatformAdmin =
+      !!callerProfile?.is_super_admin || callerProfile?.platform_staff_role === 'admin'
+    if (!callerIsPlatformAdmin) {
       return jsonResponse({ error: 'Solo el super_admin puede eliminar gimnasios.' }, 403)
     }
 

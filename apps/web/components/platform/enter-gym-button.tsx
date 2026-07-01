@@ -12,6 +12,7 @@ import { ArrowRight } from "lucide-react";
 
 // Contexto
 import { useActiveGym } from "@/components/auth/active-gym-provider";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export function EnterGymButton({
   gymId,
@@ -21,7 +22,13 @@ export function EnterGymButton({
   variant?: "solid" | "ghost";
 }) {
   const { switchGym } = useActiveGym();
+  const { user } = useAuth();
   const [entering, setEntering] = useState(false);
+
+  // "Entrar" a un gym puntual es un bypass total de RLS (is_super_admin real):
+  // superadmin_admin/coach de plataforma no lo heredan, aunque sí gestionen
+  // /platform/gyms.
+  if (!user?.is_super_admin) return null;
 
   const handleEnter = async () => {
     if (entering) return;

@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { database } from "./index";
@@ -55,6 +56,27 @@ const CATALOG_PARENT_TABLES = new Set([
   "training_plans",
 ]);
 let isSyncing = false;
+// Store mínimo para exponer isSyncing a React (useSyncExternalStore). El sync
+// se dispara desde tres lugares independientes (selección de gym, reconexión
+// de red, vuelta a foreground): centralizarlo acá es la única forma de que un
+// consumer sepa "hay un sync en curso" sin importar quién lo disparó. Sirve
+// para que reads offline-first (p.ej. el hero card del home) distingan "no
+// hay dato local todavía" de "confirmado que no hay dato".
+const syncingListeners = new Set();
+function setSyncing(value) {
+  isSyncing = value;
+  syncingListeners.forEach((listener) => listener());
+}
+function subscribeSyncing(listener) {
+  syncingListeners.add(listener);
+  return () => syncingListeners.delete(listener);
+}
+function getSyncingSnapshot() {
+  return isSyncing;
+}
+export function useIsSyncing() {
+  return useSyncExternalStore(subscribeSyncing, getSyncingSnapshot, () => false);
+}
 
 // Acota una promesa a un techo de tiempo. El cliente Supabase espera el auth
 // processLock ANTES de disparar getSession/queries; si un refresh de token lo tiene
@@ -2689,7 +2711,7 @@ export async function syncWithSupabase(
     );
     return { success: false, skipped: true };
   }
-  isSyncing = true;
+  setSyncing(true);
   // Garantiza que isSyncing se libere aunque un await de Supabase nunca resuelva
   // (red hostil, captive portal, latencia extrema). Sin este timer el lock puede
   // quedar true para siempre bloqueando todos los syncs futuros.
@@ -2699,7 +2721,7 @@ export async function syncWithSupabase(
       console.warn(
         `⚠️ [SYNC] Timeout global (${GLOBAL_TIMEOUT_MS / 1000}s): liberando lock`
       );
-      isSyncing = false;
+      setSyncing(false);
     }
   }, GLOBAL_TIMEOUT_MS);
   try {
@@ -2982,7 +3004,7 @@ export async function syncWithSupabase(
     return { success: false, error };
   } finally {
     clearTimeout(safetyTimer);
-    isSyncing = false;
+    setSyncing(false);
   }
 }
 

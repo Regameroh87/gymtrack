@@ -12,6 +12,7 @@ import { ShieldHalf, Plus, ChevronRight, CheckCircle } from "lucide-react";
 
 // Sesión, Supabase y helpers
 import { getSessionContext } from "@/lib/auth/session";
+import { ROLES } from "@/lib/auth/roles";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { cloudinaryUrl } from "@/lib/cloudinary";
 import { formatGymDate, type Gym } from "@/lib/gyms";
@@ -35,7 +36,10 @@ type OverviewGym = Pick<
 export default async function PlatformPage() {
   const ctx = await getSessionContext();
   // Gating por rol (el middleware solo valida sesión, no rol).
-  if (!ctx.isSuperAdmin) redirect("/dashboard");
+  if (!ctx.platformRole) redirect("/dashboard");
+  // superadmin_coach no tiene acceso a gyms_select (RLS admin-tier): este
+  // dashboard (stats de gyms + "Entrar") no le sirve, va directo a Catálogo.
+  if (ctx.platformRole === ROLES.SUPERADMIN_COACH) redirect("/platform/catalog");
 
   const supabase = await createServerSupabase();
   const { data } = await supabase

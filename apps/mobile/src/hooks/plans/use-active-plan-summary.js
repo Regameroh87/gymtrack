@@ -21,6 +21,7 @@ import {
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
+import { useIsSyncing } from "../../database/sync";
 
 // Resuelve solo lo que el home necesita: el plan activo + el día que toca
 // según el progreso registrado en session_logs. Soporta tanto planes del gym
@@ -348,8 +349,9 @@ export const fetchActivePlanSummary = async (userId) => {
 
 export const useActivePlanSummary = () => {
   const { userId } = useAuth();
+  const isSyncing = useIsSyncing();
 
-  return useQuery({
+  const query = useQuery({
     // Comparte prefijo con ["plan_assignments"]: assign/drop/follow lo invalidan.
     // OJO: al registrar un session_log hay que invalidar esta key a mano
     // para que el día avance (el log no toca plan_assignments).
@@ -357,4 +359,15 @@ export const useActivePlanSummary = () => {
     enabled: !!userId,
     queryFn: () => fetchActivePlanSummary(userId),
   });
+
+  // En el primer login (SQLite local vacío), la query puede resolver `null`
+  // ANTES de que el sync inicial baje la asignación real (plan_assignments se
+  // puebla de forma asíncrona, en paralelo). Sin esto, la card mostraría
+  // "sin plan" por un instante y recién se autocorregiría cuando el sync
+  // invalide la query. Si ya hay un plan cacheado de una sesión previa, no
+  // se espera al sync (se muestra al instante, offline-first).
+  return {
+    ...query,
+    isPending: query.isPending || (isSyncing && query.data === null),
+  };
 };

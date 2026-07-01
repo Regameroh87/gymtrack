@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 // Sesión, Supabase y tipos
 import { getSessionContext } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { canAccessPlatformModule } from "@/lib/auth/roles";
 import { type OwnerCandidate } from "@/lib/gyms";
 
 // Shell y form
@@ -16,7 +17,7 @@ import { NewGymForm } from "@/components/platform/new-gym-form";
 
 export default async function NewGymPage() {
   const ctx = await getSessionContext();
-  if (!ctx.isSuperAdmin) redirect("/dashboard");
+  if (!canAccessPlatformModule(ctx.platformRole, "gyms")) redirect("/dashboard");
 
   const supabase = await createServerSupabase();
   const { data } = await supabase

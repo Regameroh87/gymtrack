@@ -4,12 +4,13 @@
 import { redirect } from "next/navigation";
 
 import { getSessionContext } from "@/lib/auth/session";
+import { canAccessPlatformModule } from "@/lib/auth/roles";
 import { PlatformShell } from "@/components/platform/platform-shell";
 import { CatalogTabs } from "@/components/platform/catalog/catalog-tabs";
 
 export default async function PlatformCatalogPage() {
   const ctx = await getSessionContext();
-  if (!ctx.isSuperAdmin) redirect("/dashboard");
+  if (!canAccessPlatformModule(ctx.platformRole, "catalog")) redirect("/dashboard");
 
   return (
     <PlatformShell>

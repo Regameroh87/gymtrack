@@ -4,12 +4,13 @@ import { redirect } from "next/navigation";
 import { Receipt, Clock, BarChart3 } from "lucide-react";
 
 import { getSessionContext } from "@/lib/auth/session";
+import { canAccessPlatformModule } from "@/lib/auth/roles";
 import { PlatformShell } from "@/components/platform/platform-shell";
 import { PlatformPlaceholder } from "@/components/platform/platform-placeholder";
 
 export default async function PlatformBillingPage() {
   const ctx = await getSessionContext();
-  if (!ctx.isSuperAdmin) redirect("/dashboard");
+  if (!canAccessPlatformModule(ctx.platformRole, "billing")) redirect("/dashboard");
 
   return (
     <PlatformShell>
