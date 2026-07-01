@@ -10,6 +10,9 @@
     "newArchEnabled": true,
     "jsEngine": "hermes",
     "scheme": "gymtrack",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "splash": {
       "image": "./assets/app-icon.png",
       "resizeMode": "contain",
