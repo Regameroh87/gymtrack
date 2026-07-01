@@ -93,12 +93,16 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json()
-    const { email, name, last_name } = body
+    const { email, name, last_name, image_profile, phone, document_number, address, gender } = body
     const newRole: string = body.role ?? ''
 
     if (!email) {
       return jsonResponse({ error: 'email es requerido.' }, 400)
     }
+
+    // Whitelist: cualquier valor fuera de la taxonomía se descarta a null.
+    const VALID_GENDERS = ['hombre', 'mujer', 'prefiero_no_decir']
+    const newGender = VALID_GENDERS.includes(gender) ? gender : null
 
     if (!allowed.includes(newRole)) {
       return jsonResponse({ error: `El rol '${callerRole}' no puede crear staff con rol '${newRole}'.` }, 403)
@@ -134,6 +138,11 @@ Deno.serve(async (req) => {
         email: email?.toLowerCase() ?? null,
         name: name?.toLowerCase() ?? null,
         last_name: last_name?.toLowerCase() ?? null,
+        image_profile: image_profile || null,
+        phone: phone ?? null,
+        document_number: document_number ?? null,
+        address: address?.toLowerCase() ?? null,
+        gender: newGender,
         is_super_admin: false,
         platform_staff_role: newRole,
       })
