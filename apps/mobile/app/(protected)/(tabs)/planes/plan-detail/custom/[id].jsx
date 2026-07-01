@@ -36,6 +36,8 @@ import { useRecordById } from "../../../../../../src/hooks/shared/use-record-by-
 import { useCustomPlanDetail } from "../../../../../../src/hooks/plans/use-custom-plan-detail";
 import { usePlanAssignments } from "../../../../../../src/hooks/plans/use-plan-assignments";
 import { useFollowCustomPlan } from "../../../../../../src/hooks/plans/use-follow-custom-plan";
+import { useAuth } from "../../../../../../src/auth/lib/getSession";
+import { useActiveGym } from "../../../../../../src/contexts/active-gym-context";
 
 // Constantes
 import {
@@ -105,9 +107,14 @@ export default function CustomPlanDetail() {
   const { data: assignments } = usePlanAssignments();
   const { mutate: followPlan, isPending: isFollowing } = useFollowCustomPlan();
 
+  const { userId } = useAuth();
+  const { gymId } = useActiveGym();
   const currentPlan = assignments?.currentPlan ?? null;
   const alreadyActive = currentPlan?.custom_plan_id === id;
   const hasOtherActive = !!currentPlan && !alreadyActive;
+  // Perfil (userId) y gym activo (gymId) cargan async: hasta que estén listos, el
+  // insert de la asignación viola NOT NULL. Gateamos el CTA para no dispararlo antes.
+  const ready = !!userId && !!gymId;
 
   const bg = isDark ? SURFACE_DARK : SURFACE_LIGHT;
 
@@ -750,7 +757,7 @@ export default function CustomPlanDetail() {
         }}
       >
         <Pressable
-          disabled={alreadyActive || isFollowing}
+          disabled={alreadyActive || isFollowing || !ready}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             if (hasOtherActive) {
@@ -788,7 +795,7 @@ export default function CustomPlanDetail() {
               alignItems: "center",
               justifyContent: "space-between",
               ...makeShadow({ color: alreadyActive ? "transparent" : BRAND_PRIMARY, opacity: alreadyActive ? 0 : 0.5, radius: 16, offset: { width: 0, height: 6 } }),
-              opacity: isFollowing ? 0.7 : 1,
+              opacity: isFollowing || !ready ? 0.7 : 1,
             }}
           >
             <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -812,7 +819,9 @@ export default function CustomPlanDetail() {
                   ? "Guardando…"
                   : alreadyActive
                     ? "Plan activo ✓"
-                    : "Seguir este plan"}
+                    : !ready
+                      ? "Cargando…"
+                      : "Seguir este plan"}
               </Text>
             </View>
             {!alreadyActive && (

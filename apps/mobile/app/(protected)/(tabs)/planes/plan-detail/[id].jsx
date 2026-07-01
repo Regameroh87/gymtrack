@@ -36,6 +36,8 @@ import {
 import { useRecordById } from "../../../../../src/hooks/shared/use-record-by-id";
 import { usePlanAssignments } from "../../../../../src/hooks/plans/use-plan-assignments";
 import { useAssignPlan } from "../../../../../src/hooks/plans/use-assign-plan";
+import { useAuth } from "../../../../../src/auth/lib/getSession";
+import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
 // Constantes
 import { SESSION_OBJECTIVES } from "../../../../../src/constants/sessionOptions";
@@ -86,10 +88,15 @@ export default function PlanDetail() {
   const insets = useSafeAreaInsets();
   const [selectedWeekIdx, setSelectedWeekIdx] = useState(0);
 
+  const { userId } = useAuth();
+  const { gymId } = useActiveGym();
   const { data: assignments } = usePlanAssignments();
   const { mutate: assignPlan, isPending: isAssigning } = useAssignPlan();
   const alreadyActive = assignments?.currentPlan?.plan_id === id;
   const hasOtherActive = !!assignments?.currentPlan && !alreadyActive;
+  // Perfil (userId) y gym activo (gymId) cargan async: hasta que estén listos, el
+  // insert de la asignación viola NOT NULL. Gateamos el CTA para no dispararlo antes.
+  const ready = !!userId && !!gymId;
 
   const { data: plan, isLoading } = useRecordById(
     "training_plan_detail",
@@ -702,7 +709,7 @@ export default function PlanDetail() {
         }}
       >
         <Pressable
-          disabled={alreadyActive || isAssigning}
+          disabled={alreadyActive || isAssigning || !ready}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             if (hasOtherActive) {
@@ -744,7 +751,7 @@ export default function PlanDetail() {
                 radius: 16,
                 offset: { width: 0, height: 6 },
               }),
-              opacity: isAssigning ? 0.7 : 1,
+              opacity: isAssigning || !ready ? 0.7 : 1,
             }}
           >
             <View className="flex-row items-center" style={{ gap: 10 }}>
@@ -768,7 +775,9 @@ export default function PlanDetail() {
                   ? "Guardando…"
                   : alreadyActive
                     ? "Plan activo ✓"
-                    : "Empezar este plan"}
+                    : !ready
+                      ? "Cargando…"
+                      : "Empezar este plan"}
               </Text>
             </View>
             {!alreadyActive && (

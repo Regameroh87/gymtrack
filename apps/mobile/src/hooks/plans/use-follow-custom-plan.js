@@ -1,3 +1,5 @@
+import { Alert } from "react-native";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { eq, and } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
@@ -17,6 +19,13 @@ export const useFollowCustomPlan = () => {
 
   return useMutation({
     mutationFn: async ({ customPlanId }) => {
+      // Guard: user_id/gym_id son NOT NULL. Si los contextos (perfil / gym activo)
+      // aún no resolvieron, un insert con undefined crashea en silencio; fallamos
+      // controlado para no insertar filas corruptas.
+      if (!userId || !gymId) {
+        throw new Error("Perfil o gimnasio todavía no está listo");
+      }
+
       const today = todayDate();
 
       await database
@@ -52,6 +61,13 @@ export const useFollowCustomPlan = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       checkNetInfoAndSync();
+    },
+    // Superficie el fallo (antes se tragaba con mutate) para no fallar en silencio.
+    onError: () => {
+      Alert.alert(
+        "No se pudo iniciar el plan",
+        "Intentá de nuevo en unos segundos."
+      );
     },
   });
 };
