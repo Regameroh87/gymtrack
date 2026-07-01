@@ -37,6 +37,7 @@ import {
 import { useActivePlanSummary } from "../../../src/hooks/plans/use-active-plan-summary.js";
 import { usePlanDayExercises } from "../../../src/hooks/plans/use-plan-day-exercises.js";
 import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-log.js";
+import { useLastExerciseSetLogs } from "../../../src/hooks/sessions/use-last-exercise-set-logs.js";
 import { useSessionDraft } from "@gymtrack/core/hooks/sessions/use-session-draft";
 
 import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
@@ -99,6 +100,15 @@ export default function SesionActiva() {
   const currentDay = summary?.currentDay ?? null;
   const { data: dayExercises = [], isLoading: loadingExercises } =
     usePlanDayExercises(currentDay?.id, summary?.isCustom);
+
+  // Series de la última sesión registrada por ejercicio, para pre-cargar los
+  // placeholders de peso/reps con lo que se hizo la vez anterior.
+  const baseExerciseIds = useMemo(
+    () => dayExercises.map((ex) => ex.base_exercise_id),
+    [dayExercises]
+  );
+  const { data: lastSetsByExercise = {} } =
+    useLastExerciseSetLogs(baseExerciseIds);
 
   const session = useMemo(() => {
     if (!summary || !currentDay) return null;
@@ -615,6 +625,10 @@ export default function SesionActiva() {
               const key = `${exercise.id}-${set.id}`;
               const done = completedSets.has(key);
               const data = setData[key] ?? {};
+              // Serie equivalente de la última sesión registrada: sus valores
+              // pisan la prescripción del plan como placeholder.
+              const lastSet =
+                lastSetsByExercise[exercise.base_exercise_id]?.[si];
               const intensityLabel =
                 exercise.intensity_mode === "rpe" && set.rpe != null
                   ? `RPE ${set.rpe}`
@@ -716,7 +730,11 @@ export default function SesionActiva() {
                         editable={!done}
                         selectTextOnFocus
                         placeholder={
-                          set.weight_kg != null ? String(set.weight_kg) : "—"
+                          lastSet?.weight_kg != null
+                            ? String(lastSet.weight_kg)
+                            : set.weight_kg != null
+                              ? String(set.weight_kg)
+                              : "—"
                         }
                         placeholderTextColor={placeholderColor}
                         className={`px-3 py-2.5 rounded-xl border font-jakarta-semi text-[16px] text-center ${
@@ -741,11 +759,13 @@ export default function SesionActiva() {
                           editable={!done}
                           selectTextOnFocus
                           placeholder={
-                            set.reps_max != null
-                              ? String(set.reps_max)
-                              : set.reps_min != null
-                                ? String(set.reps_min)
-                                : "—"
+                            lastSet?.reps != null
+                              ? String(lastSet.reps)
+                              : set.reps_max != null
+                                ? String(set.reps_max)
+                                : set.reps_min != null
+                                  ? String(set.reps_min)
+                                  : "—"
                           }
                           placeholderTextColor={placeholderColor}
                           className={`px-3 py-2.5 rounded-xl border font-jakarta-semi text-[16px] text-center ${
