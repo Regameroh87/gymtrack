@@ -7,8 +7,8 @@ import { ActivityIndicator, Alert, Platform, Pressable } from "react-native";
 // Librerías
 import * as Haptics from "expo-haptics";
 
-// BD
-import { supabase } from "../../database/supabase.js";
+// Auth
+import { performLogout } from "../../auth/lib/logout.js";
 
 // Assets
 import { Logout } from "../../../assets/icons.jsx";
@@ -19,25 +19,14 @@ export default function ButtonLogout({ size = 24, className = "" }) {
   const doLogout = async () => {
     setIsLoggingOut(true);
     try {
-      // En device compartido, el próximo login de otra cuenta purga la base
-      // local: subimos los cambios pendientes ANTES de salir para no perderlos.
-      // En web no hay SQLite local (se consulta Supabase directo), así que no
-      // hay nada que sincronizar.
-      const sync =
-        Platform.OS === "web" ? null : require("../../database/sync");
-      if (sync) await sync.flushPendingBeforeLogout();
-    } catch (e) {
-      // Pendientes sin subir: abortamos el logout y avisamos. No se cierra
-      // sesión para no perder los cambios al entrar otra cuenta en este device.
+      // performLogout sube los pendientes antes de salir (device compartido) y,
+      // si no puede, ofrece la salida forzada. Maneja web internamente.
+      await performLogout();
+    } finally {
+      // Si cerró sesión, ProtectedLayout desmonta este botón; si se canceló,
+      // volvemos al estado normal.
       setIsLoggingOut(false);
-      Alert.alert("No se pudo cerrar sesión", e.message);
-      return;
     }
-
-    // scope:'local' limpia la sesión local de inmediato sin esperar respuesta de
-    // red (la variante global hace POST a /auth/v1/logout antes de limpiar, lo que
-    // introduce 500ms–2s de latencia antes de que ProtectedLayout pueda redirigir).
-    await supabase.auth.signOut({ scope: "local" });
   };
 
   const handlePress = () => {

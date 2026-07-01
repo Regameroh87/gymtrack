@@ -140,6 +140,43 @@ export async function hasPendingChanges() {
   return false;
 }
 
+// Etiquetas legibles para el diagnóstico de logout (qué se le muestra al usuario
+// y qué se loguea). Sin entrada acá, cae al nombre crudo de la tabla.
+const PENDING_TABLE_LABELS = {
+  sessions: "rutinas",
+  session_exercises: "ejercicios de rutina",
+  exercises_base: "ejercicios",
+  equipment: "equipamiento",
+  training_plans: "planes",
+  plan_assignments: "asignaciones de plan",
+  session_logs: "registros",
+  session_set_logs: "series de registros",
+  custom_plans: "planes propios",
+  custom_sessions: "rutinas propias",
+  custom_exercises: "ejercicios propios",
+};
+
+// Diagnóstico: devuelve [{ table, label, count }] solo de las tablas que tienen
+// filas sin sincronizar. Más caro que hasPendingChanges (cuenta todas), así que
+// se usa para reportar/loguear, no en el hot path.
+export async function getPendingChangesSummary() {
+  const summary = [];
+  for (const [table, schemaTable] of Object.entries(SYNCED_TABLES)) {
+    const rows = await database
+      .select({ id: schemaTable.id })
+      .from(schemaTable)
+      .where(ne(schemaTable.sync_status, "synced"));
+    if (rows.length > 0) {
+      summary.push({
+        table,
+        label: PENDING_TABLE_LABELS[table] ?? table,
+        count: rows.length,
+      });
+    }
+  }
+  return summary;
+}
+
 // Vacía todas las tablas sincronizadas y descarta los watermarks por-tabla
 // (LAST_SYNC_KEY). Tras esto, un próximo sync hace full pull. No toca el
 // marcador de gym (ACTIVE_GYM_META_KEY): de eso se encarga cada caller.
@@ -254,9 +291,16 @@ export async function flushPendingBeforeLogout() {
   }
 
   const { success } = await syncWithSupabase();
-  if (!success || (await hasPendingChanges())) {
+  const stillPending = await getPendingChangesSummary();
+  if (!success || stillPending.length > 0) {
+    // Diagnóstico: qué tablas quedaron trabadas. El "por qué" (error de Supabase
+    // o skip por profile id) ya salió en los logs ❌/⏭️ [PUSH] del sync anterior.
+    console.warn("[LOGOUT] Cambios sin subir:", stillPending);
+    const detail = stillPending.map((t) => `${t.label}: ${t.count}`).join(", ");
     throw new Error(
-      "No se pudieron subir tus cambios pendientes. Intentá de nuevo en unos segundos."
+      detail
+        ? `No se pudieron subir tus cambios pendientes (${detail}). Intentá de nuevo en unos segundos.`
+        : "No se pudieron subir tus cambios pendientes. Intentá de nuevo en unos segundos."
     );
   }
 }
