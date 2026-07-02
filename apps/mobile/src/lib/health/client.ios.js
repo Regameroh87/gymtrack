@@ -38,7 +38,13 @@ export const requestPermissions = async () => {
   return { granted };
 };
 
-const dailyStatistics = async (identifier, statistics, unit, startDate, endDate) => {
+const dailyStatistics = async (
+  identifier,
+  statistics,
+  unit,
+  startDate,
+  endDate
+) => {
   const anchor = startOfLocalDay(startDate);
   return queryStatisticsCollectionForQuantity(
     identifier,
@@ -48,35 +54,64 @@ const dailyStatistics = async (identifier, statistics, unit, startDate, endDate)
     {
       unit,
       filter: {
-        date: { startDate: startOfLocalDay(startDate), endDate: endOfLocalDay(endDate) },
+        date: {
+          startDate: startOfLocalDay(startDate),
+          endDate: endOfLocalDay(endDate),
+        },
       },
-    },
+    }
   );
 };
 
 export const getDailyActivity = async ({ startDate, endDate }) => {
   const [steps, calories, distance] = await Promise.all([
-    dailyStatistics("HKQuantityTypeIdentifierStepCount", ["cumulativeSum"], "count", startDate, endDate),
-    dailyStatistics("HKQuantityTypeIdentifierActiveEnergyBurned", ["cumulativeSum"], "kcal", startDate, endDate),
-    dailyStatistics("HKQuantityTypeIdentifierDistanceWalkingRunning", ["cumulativeSum"], "m", startDate, endDate),
+    dailyStatistics(
+      "HKQuantityTypeIdentifierStepCount",
+      ["cumulativeSum"],
+      "count",
+      startDate,
+      endDate
+    ),
+    dailyStatistics(
+      "HKQuantityTypeIdentifierActiveEnergyBurned",
+      ["cumulativeSum"],
+      "kcal",
+      startDate,
+      endDate
+    ),
+    dailyStatistics(
+      "HKQuantityTypeIdentifierDistanceWalkingRunning",
+      ["cumulativeSum"],
+      "m",
+      startDate,
+      endDate
+    ),
   ]);
 
   const byDate = new Map();
   const row = (date) => {
     const key = toDateKey(date);
     if (!byDate.has(key)) {
-      byDate.set(key, { date: key, steps: null, activeCalories: null, distanceMeters: null });
+      byDate.set(key, {
+        date: key,
+        steps: null,
+        activeCalories: null,
+        distanceMeters: null,
+      });
     }
     return byDate.get(key);
   };
   for (const s of steps) {
-    if (s.startDate && s.sumQuantity) row(s.startDate).steps = Math.round(s.sumQuantity.quantity);
+    if (s.startDate && s.sumQuantity)
+      row(s.startDate).steps = Math.round(s.sumQuantity.quantity);
   }
   for (const c of calories) {
-    if (c.startDate && c.sumQuantity) row(c.startDate).activeCalories = c.sumQuantity.quantity;
+    if (c.startDate && c.sumQuantity)
+      row(c.startDate).activeCalories = c.sumQuantity.quantity;
   }
   for (const d of distance) {
-    if (d.startDate && d.sumQuantity) row(d.startDate).distanceMeters = d.sumQuantity.quantity;
+    if (d.startDate && d.sumQuantity)
+      row(d.startDate).distanceMeters = d.sumQuantity.quantity;
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 };
@@ -88,14 +123,14 @@ export const getDailyHeartRate = async ({ startDate, endDate }) => {
       ["discreteAverage", "discreteMin", "discreteMax"],
       "count/min",
       startDate,
-      endDate,
+      endDate
     ),
     dailyStatistics(
       "HKQuantityTypeIdentifierRestingHeartRate",
       ["discreteAverage"],
       "count/min",
       startDate,
-      endDate,
+      endDate
     ),
   ]);
 
@@ -127,14 +162,17 @@ export const getDailyHeartRate = async ({ startDate, endDate }) => {
 };
 
 export const getHeartRateSamples = async ({ startDate, endDate }) => {
-  const samples = await queryQuantitySamples("HKQuantityTypeIdentifierHeartRate", {
-    limit: -1,
-    ascending: true,
-    unit: "count/min",
-    filter: {
-      date: { startDate: new Date(startDate), endDate: new Date(endDate) },
-    },
-  });
+  const samples = await queryQuantitySamples(
+    "HKQuantityTypeIdentifierHeartRate",
+    {
+      limit: -1,
+      ascending: true,
+      unit: "count/min",
+      filter: {
+        date: { startDate: new Date(startDate), endDate: new Date(endDate) },
+      },
+    }
+  );
   return samples.map((s) => ({
     timestamp: new Date(s.startDate).toISOString(),
     bpm: s.quantity,
@@ -143,33 +181,41 @@ export const getHeartRateSamples = async ({ startDate, endDate }) => {
 
 // Devuelve la última medición de peso de cada día del rango.
 export const getBodyWeight = async ({ startDate, endDate }) => {
-  const samples = await queryQuantitySamples("HKQuantityTypeIdentifierBodyMass", {
-    limit: -1,
-    ascending: true,
-    unit: "kg",
-    filter: {
-      date: {
-        startDate: startOfLocalDay(startDate),
-        endDate: endOfLocalDay(endDate),
+  const samples = await queryQuantitySamples(
+    "HKQuantityTypeIdentifierBodyMass",
+    {
+      limit: -1,
+      ascending: true,
+      unit: "kg",
+      filter: {
+        date: {
+          startDate: startOfLocalDay(startDate),
+          endDate: endOfLocalDay(endDate),
+        },
       },
-    },
-  });
+    }
+  );
   const byDate = new Map();
   for (const s of samples) {
-    byDate.set(toDateKey(s.startDate), { date: toDateKey(s.startDate), weightKg: s.quantity });
+    byDate.set(toDateKey(s.startDate), {
+      date: toDateKey(s.startDate),
+      weightKg: s.quantity,
+    });
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 };
 
 export const writeWorkout = async ({ start, end, calories }) => {
   const totals =
-    typeof calories === "number" && calories > 0 ? { energyBurned: calories } : undefined;
+    typeof calories === "number" && calories > 0
+      ? { energyBurned: calories }
+      : undefined;
   await saveWorkoutSample(
     WorkoutActivityType.traditionalStrengthTraining,
     [],
     new Date(start),
     new Date(end),
-    totals,
+    totals
   );
   return true;
 };

@@ -82,7 +82,7 @@ export const useCreateManualLog = () => {
       // nunca lanza y queda solo on-device (no requiere consentimiento de subida).
       const end = new Date(variables?.completedAt ?? Date.now());
       const start = new Date(
-        end.getTime() - (variables?.durationSeconds ?? 0) * 1000,
+        end.getTime() - (variables?.durationSeconds ?? 0) * 1000
       );
       writeWorkout({ start, end });
     },

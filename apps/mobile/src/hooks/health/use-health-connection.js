@@ -39,7 +39,7 @@ export const useHealthConnection = () => {
           [
             { text: "Cancelar", style: "cancel" },
             { text: "Ir a Ajustes", onPress: () => Linking.openSettings() },
-          ],
+          ]
         );
         return false;
       }

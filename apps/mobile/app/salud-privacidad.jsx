@@ -21,7 +21,7 @@ const SECTIONS = [
   },
   {
     title: "Compartir con tu gimnasio",
-    body: "Tus métricas quedan en tu dispositivo salvo que actives \"Compartir con mi gimnasio\". Solo en ese caso subimos resúmenes diarios (no muestras crudas) a nuestros servidores para que tu entrenador pueda verlos. Esta opción viene desactivada.",
+    body: 'Tus métricas quedan en tu dispositivo salvo que actives "Compartir con mi gimnasio". Solo en ese caso subimos resúmenes diarios (no muestras crudas) a nuestros servidores para que tu entrenador pueda verlos. Esta opción viene desactivada.',
   },
   {
     title: "Control y eliminación",

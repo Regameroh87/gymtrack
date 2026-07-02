@@ -41,7 +41,9 @@ export const uploadHealthMetrics = async ({ authUserId }) => {
 
     // Se relee desde watermark−1d: los totales del día del último upload
     // pueden haber seguido creciendo después de subirlo.
-    const watermark = await AsyncStorage.getItem(healthWatermarkKey(authUserId));
+    const watermark = await AsyncStorage.getItem(
+      healthWatermarkKey(authUserId)
+    );
     const startDate = watermark
       ? daysAgo(1, new Date(`${watermark}T12:00:00`))
       : daysAgo(BACKFILL_DAYS);
@@ -103,7 +105,10 @@ export const uploadHealthMetrics = async ({ authUserId }) => {
       .upsert(rows, { onConflict: "user_id,date" });
     if (error) throw error;
 
-    await AsyncStorage.setItem(healthWatermarkKey(authUserId), toDateKey(endDate));
+    await AsyncStorage.setItem(
+      healthWatermarkKey(authUserId),
+      toDateKey(endDate)
+    );
   } catch (e) {
     console.warn("[HEALTH] upload falló:", e?.message ?? e);
   } finally {

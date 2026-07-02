@@ -11,7 +11,7 @@ function withHealthConnectRationale(config) {
 
     app["activity-alias"] = app["activity-alias"] ?? [];
     const hasAlias = app["activity-alias"].some(
-      (a) => a.$["android:name"] === "ViewPermissionUsageActivity",
+      (a) => a.$["android:name"] === "ViewPermissionUsageActivity"
     );
     if (!hasAlias) {
       app["activity-alias"].push({
@@ -19,15 +19,24 @@ function withHealthConnectRationale(config) {
           "android:name": "ViewPermissionUsageActivity",
           "android:exported": "true",
           "android:targetActivity": ".MainActivity",
-          "android:permission": "android.permission.START_VIEW_PERMISSION_USAGE",
+          "android:permission":
+            "android.permission.START_VIEW_PERMISSION_USAGE",
         },
         "intent-filter": [
           {
             action: [
-              { $: { "android:name": "android.intent.action.VIEW_PERMISSION_USAGE" } },
+              {
+                $: {
+                  "android:name": "android.intent.action.VIEW_PERMISSION_USAGE",
+                },
+              },
             ],
             category: [
-              { $: { "android:name": "android.intent.category.HEALTH_PERMISSIONS" } },
+              {
+                $: {
+                  "android:name": "android.intent.category.HEALTH_PERMISSIONS",
+                },
+              },
             ],
           },
         ],

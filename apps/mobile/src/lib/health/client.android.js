@@ -79,20 +79,29 @@ export const getDailyActivity = async ({ startDate, endDate }) => {
   const row = (startTime) => {
     const key = toDateKey(startTime);
     if (!byDate.has(key)) {
-      byDate.set(key, { date: key, steps: null, activeCalories: null, distanceMeters: null });
+      byDate.set(key, {
+        date: key,
+        steps: null,
+        activeCalories: null,
+        distanceMeters: null,
+      });
     }
     return byDate.get(key);
   };
   for (const bucket of steps) {
-    row(bucket.startTime).steps = orNull(Math.round(bucket.result.COUNT_TOTAL ?? 0));
+    row(bucket.startTime).steps = orNull(
+      Math.round(bucket.result.COUNT_TOTAL ?? 0)
+    );
   }
   for (const bucket of calories) {
     row(bucket.startTime).activeCalories = orNull(
-      bucket.result.ACTIVE_CALORIES_TOTAL?.inKilocalories ?? 0,
+      bucket.result.ACTIVE_CALORIES_TOTAL?.inKilocalories ?? 0
     );
   }
   for (const bucket of distance) {
-    row(bucket.startTime).distanceMeters = orNull(bucket.result.DISTANCE?.inMeters ?? 0);
+    row(bucket.startTime).distanceMeters = orNull(
+      bucket.result.DISTANCE?.inMeters ?? 0
+    );
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 };
@@ -155,7 +164,10 @@ export const getBodyWeight = async ({ startDate, endDate }) => {
   const byDate = new Map();
   for (const record of records) {
     const key = toDateKey(record.time);
-    byDate.set(key, { date: key, weightKg: record.weight?.inKilograms ?? null });
+    byDate.set(key, {
+      date: key,
+      weightKg: record.weight?.inKilograms ?? null,
+    });
   }
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
 };

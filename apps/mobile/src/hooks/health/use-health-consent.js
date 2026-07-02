@@ -33,7 +33,7 @@ export const useHealthConsent = () => {
       // Re-sincroniza el mirror local por si se otorgó/revocó en otro device.
       await AsyncStorage.setItem(
         healthConsentKey(authUserId),
-        consented ? "1" : "0",
+        consented ? "1" : "0"
       );
       return consented;
     },
@@ -70,7 +70,7 @@ export const useHealthConsent = () => {
     onError: () => {
       Alert.alert(
         "No se pudo actualizar",
-        "Hubo un problema al cambiar el permiso para compartir. Probá de nuevo con conexión.",
+        "Hubo un problema al cambiar el permiso para compartir. Probá de nuevo con conexión."
       );
     },
   });
@@ -88,7 +88,7 @@ export const useHealthConsent = () => {
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Compartir", onPress: () => mutation.mutate(true) },
-      ],
+      ]
     );
   };
 

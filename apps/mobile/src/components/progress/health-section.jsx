@@ -45,7 +45,11 @@ export default function HealthSection() {
         {connected ? (
           <ConnectedContent primary={primary} mint={mint} />
         ) : (
-          <ConnectCard connect={connect} isConnecting={isConnecting} primary={primary} />
+          <ConnectCard
+            connect={connect}
+            isConnecting={isConnecting}
+            primary={primary}
+          />
         )}
       </SectionCard>
     </Animated.View>
@@ -56,8 +60,8 @@ function ConnectCard({ connect, isConnecting, primary }) {
   return (
     <View style={{ gap: 12 }}>
       <SectionEmpty>
-        Conectá {STORE_NAME} para ver tus pasos, calorías, ritmo cardíaco y
-        peso junto a tus entrenamientos.
+        Conectá {STORE_NAME} para ver tus pasos, calorías, ritmo cardíaco y peso
+        junto a tus entrenamientos.
       </SectionEmpty>
       <Pressable
         onPress={() => connect()}
@@ -86,8 +90,7 @@ function ConnectedContent({ primary, mint }) {
   const weightSeries = weight.data ?? [];
   const lastWeight = weightSeries.at(-1);
 
-  const hasAnyData =
-    today != null || lastHr != null || weightSeries.length > 0;
+  const hasAnyData = today != null || lastHr != null || weightSeries.length > 0;
 
   return (
     <View>
@@ -125,7 +128,9 @@ function ConnectedContent({ primary, mint }) {
                     ? `${Math.round(lastHr.avgBpm)}`
                     : "—"
               }
-              label={lastHr?.restingBpm != null ? "FC en reposo" : "FC promedio"}
+              label={
+                lastHr?.restingBpm != null ? "FC en reposo" : "FC promedio"
+              }
               accent={primary}
               Icon={Heart}
             />
