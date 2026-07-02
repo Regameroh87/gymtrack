@@ -1,0 +1,13 @@
+diff --git a/node_modules/@expo/fingerprint/build/ExpoConfigLoader.js b/node_modules/@expo/fingerprint/build/ExpoConfigLoader.js
+index 247200a..f87fcc5 100644
+--- a/node_modules/@expo/fingerprint/build/ExpoConfigLoader.js
++++ b/node_modules/@expo/fingerprint/build/ExpoConfigLoader.js
+@@ -34,7 +34,7 @@ async function runAsync(programName, args = []) {
+     // @ts-expect-error: module internal _cache
+     const loadedModules = Object.keys(module_1.default._cache)
+         .filter((modulePath) => !loadedModulesBefore.has(modulePath))
+-        .map((modulePath) => path_1.default.relative(projectRoot, modulePath));
++        .map((modulePath) => path_1.default.relative(projectRoot, modulePath).replace(/\\/g, '/'));
+     const ignoredPaths = [
+         ...DEFAULT_CONFIG_LOADING_IGNORE_PATHS,
+         ...(await loadIgnoredPathsAsync(ignoredFile)),
