@@ -17,6 +17,9 @@ import { usePlanAdherence } from "../../../../src/hooks/progress/use-plan-adhere
 // Componentes
 import Screen from "../../../../src/components/Screen";
 import SectionCard from "../../../../src/components/progress/section-card";
+import StatTile from "../../../../src/components/progress/stat-tile";
+import SectionEmpty from "../../../../src/components/progress/section-empty";
+import HealthSection from "../../../../src/components/progress/health-section";
 import BarChart from "../../../../src/components/charts/bar-chart";
 import LineChart from "../../../../src/components/charts/line-chart";
 import Heatmap from "../../../../src/components/charts/heatmap";
@@ -83,6 +86,9 @@ export default function ProgresoTab() {
             mint={BRAND_MINT}
             primary={brandPrimary[500]}
           />
+          {/* Salud maneja su propio loading: no entra al gate de isLoading
+              para que la pantalla no bloquee en las APIs de Health. */}
+          <HealthSection />
           <TrainingSection
             data={training.data}
             primary={brandPrimary[500]}
@@ -93,47 +99,6 @@ export default function ProgresoTab() {
         </ScrollView>
       )}
     </Screen>
-  );
-}
-
-// ─── Stat tile compartido ─────────────────────────────────────────────────────
-function StatTile({ value, label, accent, Icon }) {
-  return (
-    <View className="flex-1 bg-ui-surface-light dark:bg-ui-surface-dark rounded-2xl px-4 py-3.5 border border-ui-input-border overflow-hidden">
-      <View
-        className="absolute rounded-full"
-        style={{
-          width: 64,
-          height: 64,
-          top: -24,
-          right: -24,
-          backgroundColor: accent,
-          opacity: 0.1,
-        }}
-      />
-      {Icon && <Icon size={16} color={accent} />}
-      <Text
-        className="font-jakarta-bold text-[24px] leading-[28px] mt-1"
-        style={{ color: accent }}
-      >
-        {value}
-      </Text>
-      <Text className="text-[10px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-// Texto guía dentro de una sección cuando todavía no hay datos.
-function SectionEmpty({ children }) {
-  return (
-    <Text
-      className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
-      style={{ fontSize: 13, lineHeight: 19 }}
-    >
-      {children}
-    </Text>
   );
 }
 

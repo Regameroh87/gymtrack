@@ -7,6 +7,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { ui } from "@gymtrack/core/colors";
 import { useTheme } from "../../src/theme/theme";
 import { performLogout } from "../../src/auth/lib/logout";
+import { useHealthAutoSync } from "../../src/hooks/health/use-health-auto-sync";
 
 // Techo del gate de carga del área protegida. Por debajo del techo de las queries
 // de arranque (memberships acotada en active-gym-context) para que normalmente
@@ -22,6 +23,11 @@ export default function ProtectedLayout() {
   } = useActiveGym();
   const { isDark } = useTheme();
   const pathname = usePathname();
+
+  // Sube métricas de salud a Supabase al abrir la app / volver a foreground.
+  // Se auto-gatea (consentimiento + health conectado + red), así que es no-op
+  // para usuarios que no usan la integración.
+  useHealthAutoSync();
 
   // Red de seguridad: el gate de carga no puede quedar pegado indefinidamente.
   // Deadline FIJO desde el montaje: a diferencia de un timer que se reinicia con
