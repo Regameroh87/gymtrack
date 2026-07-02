@@ -1,0 +1,6 @@
+# Carpetas nativas generadas por CNG (expo prebuild).
+# Este .gitignore debe existir acá y no solo en la raíz del monorepo: el worker
+# de EAS no tiene repo git y solo lee los .gitignore dentro de apps/mobile para
+# detectar el workflow managed al calcular el runtime version por fingerprint.
+/android
+/ios
