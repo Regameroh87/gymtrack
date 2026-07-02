@@ -25,7 +25,16 @@
     },
     "android": {
       "jsEngine": "hermes",
-      "permissions": ["VIBRATE", "VIBRATE"],
+      "permissions": [
+        "VIBRATE",
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_DISTANCE",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_HEART_RATE",
+        "android.permission.health.READ_RESTING_HEART_RATE",
+        "android.permission.health.READ_WEIGHT",
+        "android.permission.health.WRITE_EXERCISE"
+      ],
       "userInterfaceStyle": "automatic",
       "adaptiveIcon": {
         "foregroundImage": "./assets/app-adaptive-icon.png",
@@ -40,13 +49,24 @@
         "expo-build-properties",
         {
           "android": {
-            "newArchEnabled": true
+            "newArchEnabled": true,
+            "minSdkVersion": 26
           },
           "ios": {
             "newArchEnabled": true
           }
         }
       ],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "GymTrack lee tus pasos, calorías, distancia, frecuencia cardíaca y peso para mostrar tu progreso y, si lo autorizás, compartirlo con tu entrenador.",
+          "NSHealthUpdateUsageDescription": "GymTrack guarda tus entrenamientos completados en Apple Salud.",
+          "background": false
+        }
+      ],
+      "react-native-health-connect",
+      "./plugins/with-health-connect-rationale.js",
       "expo-sqlite",
       [
         "expo-camera",

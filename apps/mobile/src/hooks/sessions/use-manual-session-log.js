@@ -7,6 +7,7 @@ import * as Crypto from "expo-crypto";
 import { database } from "../../database";
 import { session_logs, session_set_logs } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { writeWorkout } from "../../lib/health";
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
@@ -70,13 +71,20 @@ export const useCreateManualLog = () => {
 
       return logId;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       // Refresca el historial y el resumen del plan activo (el día que toca
       // se calcula a partir de los session_logs).
       queryClient.invalidateQueries({ queryKey: ["session_logs"] });
       queryClient.invalidateQueries({ queryKey: ["plan_assignments"] });
       // Sube el log al toque si hay conexión; si no, queda pending para el próximo sync.
       checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
+      // Registro en Apple Salud / Health Connect, best-effort: writeWorkout
+      // nunca lanza y queda solo on-device (no requiere consentimiento de subida).
+      const end = new Date(variables?.completedAt ?? Date.now());
+      const start = new Date(
+        end.getTime() - (variables?.durationSeconds ?? 0) * 1000,
+      );
+      writeWorkout({ start, end });
     },
   });
 };

@@ -6,6 +6,7 @@ import Toast from "react-native-toast-message";
 import { database } from "../../database";
 import { session_logs, session_set_logs } from "../../database/schemas";
 import { checkNetInfoAndSync } from "../../database/sync";
+import { writeWorkout } from "../../lib/health";
 import { useAuth } from "../../auth/lib/getSession";
 import { useActiveGym } from "../../contexts/active-gym-context";
 
@@ -71,7 +72,7 @@ export const useSaveSessionLog = () => {
 
       return logId;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["session_logs", userId],
       });
@@ -92,6 +93,11 @@ export const useSaveSessionLog = () => {
       // Sube el log al toque si hay conexión (igual que el resto de los flujos de
       // escritura); si no, queda pending para el próximo sync.
       checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
+      // Registro en Apple Salud / Health Connect, best-effort: writeWorkout
+      // nunca lanza y queda solo on-device (no requiere consentimiento de subida).
+      const end = new Date();
+      const start = new Date(end.getTime() - (variables?.elapsed ?? 0) * 1000);
+      writeWorkout({ start, end });
     },
   });
 };
