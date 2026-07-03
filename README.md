@@ -100,6 +100,12 @@ eas build --platform ios
 
 ---
 
+## Flujo de trabajo con Git
+
+**Se trabaja directo sobre `main`. NO crear ramas nuevas** (aplica también a agentes/asistentes de código: commitear y pushear a `main`, nunca a una rama propia). Si por alguna razón existe una rama accesoria, mergearla a `main` y borrarla apenas termine su propósito.
+
+---
+
 ## Arquitectura
 
 ### Modelo multi-tenant (multi-gym)
