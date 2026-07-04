@@ -132,6 +132,31 @@ export function generateRamp(seedHex) {
 }
 
 /**
+ * Luminancia relativa WCAG de un hex (0 = negro, 1 = blanco).
+ * @param {string} hex
+ * @returns {number}
+ */
+export function relativeLuminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const lin = (c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/**
+ * true si sobre este fondo conviene tinta oscura en vez de blanca. El umbral
+ * 0.19 es el punto donde blanco y negro dan el mismo ratio de contraste WCAG.
+ * Pensado para elegir la tinta sobre colores de marca custom por gym.
+ * @param {string} hex - color de fondo (#RRGGBB).
+ * @returns {boolean}
+ */
+export function prefersDarkInk(hex) {
+  return relativeLuminance(hex) > 0.19;
+}
+
+/**
  * Convierte un hex a canales "R G B" separados por espacio, para usar en
  * CSS variables con el patrón `rgb(var(--x) / <alpha-value>)`.
  * @param {string} hex

@@ -9,7 +9,7 @@ import { Text, View } from "react-native";
 
 export default function BarChart({ data = [], color, height = 120 }) {
   const max = Math.max(...data.map((d) => d.value), 1);
-  const barArea = height - 18; // deja lugar para la etiqueta inferior
+  const barArea = height - 20; // deja lugar para la etiqueta inferior
 
   return (
     <View className="flex-row items-end justify-between" style={{ height }}>
@@ -34,7 +34,7 @@ export default function BarChart({ data = [], color, height = 120 }) {
             <Text
               numberOfLines={1}
               className="font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1.5"
-              style={{ fontSize: 8 }}
+              style={{ fontSize: 10 }}
             >
               {d.label ?? ""}
             </Text>

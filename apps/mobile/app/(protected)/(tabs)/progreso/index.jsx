@@ -20,12 +20,13 @@ import SectionCard from "../../../../src/components/progress/section-card";
 import StatTile from "../../../../src/components/progress/stat-tile";
 import SectionEmpty from "../../../../src/components/progress/section-empty";
 import HealthSection from "../../../../src/components/progress/health-section";
+import WeekStrip from "../../../../src/components/progress/week-strip";
 import BarChart from "../../../../src/components/charts/bar-chart";
 import LineChart from "../../../../src/components/charts/line-chart";
-import Heatmap from "../../../../src/components/charts/heatmap";
 
 // Utilidades
-import { formatRelativeDay } from "@gymtrack/core/format-date";
+import { formatRelativeDay, MONTHS_ES } from "@gymtrack/core/format-date";
+import { prefersDarkInk } from "@gymtrack/core/generate-ramp";
 
 // Tema / assets
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
@@ -38,12 +39,25 @@ const formatVolume = (kg) => {
   return `${(kg / 1000).toFixed(1)}k`;
 };
 
+// Etiquetas de eje para barras semanales: el mes ("ABR") solo en la primera
+// barra y en cada cambio de mes — es lo único que entra en columnas angostas.
+// `weeks` debe traer key = lunes "YYYY-MM-DD" (convención de los hooks).
+const monthAxisLabels = (weeks) =>
+  weeks.map((w, i, arr) => {
+    const month = Number(w.key.slice(5, 7));
+    const prev = i > 0 ? Number(arr[i - 1].key.slice(5, 7)) : null;
+    return month !== prev ? MONTHS_ES[month - 1] : "";
+  });
+
 export default function ProgresoTab() {
   const insets = useSafeAreaInsets();
   const { brandPrimary, brandSecondary } = useGymTheme();
   const { gymId } = useActiveGym();
   const { userId } = useAuth();
   const BRAND_MINT = brandSecondary[400];
+  // Tinta del check sobre el accent: oscura de la misma rampa si el accent es
+  // claro, blanca si es oscuro (el accent lo define cada gym).
+  const MINT_INK = prefersDarkInk(BRAND_MINT) ? brandSecondary[950] : "#FFFFFF";
 
   const attendance = useAttendanceStreak(gymId, userId);
   const training = useTrainingProgress();
@@ -84,6 +98,7 @@ export default function ProgresoTab() {
           <ConsistencySection
             data={attendance.data}
             mint={BRAND_MINT}
+            mintInk={MINT_INK}
             primary={brandPrimary[500]}
           />
           {/* Salud maneja su propio loading: no entra al gate de isLoading
@@ -103,9 +118,20 @@ export default function ProgresoTab() {
 }
 
 // ─── Consistencia / asistencia ────────────────────────────────────────────────
-function ConsistencySection({ data, mint, primary }) {
+function ConsistencySection({ data, mint, mintInk, primary }) {
   const hasData = (data?.totalCheckins ?? 0) > 0;
   const streak = data?.weekStreak ?? 0;
+
+  // Una barra por semana: altura = días con check-in (hace visible la racha).
+  const barData = useMemo(() => {
+    const weeks = data?.weeks ?? [];
+    const labels = monthAxisLabels(weeks);
+    return weeks.map((w, i) => ({
+      key: w.key,
+      value: w.days.filter((d) => d.count > 0).length,
+      label: labels[i],
+    }));
+  }, [data]);
 
   return (
     <Animated.View entering={FadeInDown.springify()}>
@@ -125,13 +151,21 @@ function ConsistencySection({ data, mint, primary }) {
         </View>
 
         {hasData ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 2 }}
-          >
-            <Heatmap weeks={data.weeks} color={mint} />
-          </ScrollView>
+          <>
+            <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mb-3">
+              Esta semana
+            </Text>
+            <WeekStrip
+              days={data?.weeks?.at(-1)?.days ?? []}
+              color={mint}
+              ink={mintInk}
+            />
+
+            <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mt-5 mb-2">
+              Días entrenados por semana
+            </Text>
+            <BarChart data={barData} color={mint} height={90} />
+          </>
         ) : (
           <SectionEmpty>
             Hacé check-in con el QR del gimnasio y acá vas a ver tu racha y los
@@ -147,17 +181,15 @@ function ConsistencySection({ data, mint, primary }) {
 function TrainingSection({ data, primary, mint }) {
   const hasData = (data?.totalWorkouts ?? 0) > 0;
 
-  // Para 12 semanas se muestran etiquetas salteadas (1 de cada 3) para no
-  // amontonarlas.
-  const barData = useMemo(
-    () =>
-      (data?.weeks ?? []).map((w, i, arr) => ({
-        key: w.key,
-        value: w.workouts,
-        label: i % 3 === 0 || i === arr.length - 1 ? w.label : "",
-      })),
-    [data]
-  );
+  const barData = useMemo(() => {
+    const weeks = data?.weeks ?? [];
+    const labels = monthAxisLabels(weeks);
+    return weeks.map((w, i) => ({
+      key: w.key,
+      value: w.workouts,
+      label: labels[i],
+    }));
+  }, [data]);
 
   const topMuscles = (data?.muscleVolume ?? []).slice(0, 5);
   const maxMuscle = Math.max(1, ...topMuscles.map((m) => m.volume));
@@ -186,9 +218,17 @@ function TrainingSection({ data, primary, mint }) {
             </Text>
             <BarChart data={barData} color={primary} height={110} />
 
-            <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mt-5 mb-2">
-              Tendencia de volumen
-            </Text>
+            <View className="flex-row justify-between items-end mt-5 mb-2">
+              <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark">
+                Tendencia de volumen
+              </Text>
+              <Text
+                className="font-jakarta-bold text-[13px]"
+                style={{ color: mint }}
+              >
+                {formatVolume(data?.weeks?.at(-1)?.volume ?? 0)} kg esta semana
+              </Text>
+            </View>
             <LineChart
               data={(data?.weeks ?? []).map((w) => ({ value: w.volume }))}
               color={mint}
@@ -316,12 +356,8 @@ function RecordsSection({ data, mint }) {
                 style={{ gap: 12 }}
               >
                 <View
-                  className="items-center justify-center rounded-xl"
-                  style={{
-                    width: 34,
-                    height: 34,
-                    backgroundColor: "rgba(45,212,191,0.14)",
-                  }}
+                  className="items-center justify-center rounded-xl bg-brandSecondary-400/15"
+                  style={{ width: 34, height: 34 }}
                 >
                   <Text
                     className="font-jakarta-bold"
