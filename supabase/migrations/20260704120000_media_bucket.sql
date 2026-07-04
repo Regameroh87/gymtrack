@@ -28,6 +28,7 @@ on conflict (id) do nothing;
 -- habilitará videos/). No hay policy de UPDATE/DELETE para clientes: el borrado
 -- lo hacen las edge functions con service role (bypassa RLS), igual que hoy con
 -- la cola cloudinary_delete_queue.
+drop policy if exists "media_images_insert_authenticated" on storage.objects;
 create policy "media_images_insert_authenticated"
   on storage.objects for insert to authenticated
   with check (
@@ -37,6 +38,7 @@ create policy "media_images_insert_authenticated"
 
 -- Lectura: el bucket público ya sirve los archivos por URL sin policy; esta
 -- habilita además list/download vía API (la usa el sweep de huérfanos del cron).
+drop policy if exists "media_select_public" on storage.objects;
 create policy "media_select_public"
   on storage.objects for select to public
   using (bucket_id = 'media');
