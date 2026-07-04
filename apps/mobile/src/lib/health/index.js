@@ -16,6 +16,8 @@ export const healthWatermarkKey = (authUserId) =>
 export const SOURCE = client.SOURCE;
 export const isAvailable = client.isAvailable;
 export const requestPermissions = client.requestPermissions;
+export const verifyReadAccess = client.verifyReadAccess;
+export const openSettings = client.openSettings;
 export const getDailyActivity = client.getDailyActivity;
 export const getDailyHeartRate = client.getDailyHeartRate;
 export const getHeartRateSamples = client.getHeartRateSamples;

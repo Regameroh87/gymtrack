@@ -8,6 +8,10 @@ export const isAvailable = async () => false;
 
 export const requestPermissions = async () => ({ granted: false });
 
+export const verifyReadAccess = async () => false;
+
+export const openSettings = () => {};
+
 export const getDailyActivity = async () => [];
 
 export const getHeartRateSamples = async () => [];

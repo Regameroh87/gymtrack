@@ -1,6 +1,7 @@
 // Client de Apple HealthKit (@kingstinct/react-native-healthkit).
 // Única capa que importa la lib nativa en iOS; el resto de la app consume
 // la API normalizada de ./index (unidades: count, kcal, m, bpm, kg).
+import { Linking } from "react-native";
 import {
   isHealthDataAvailableAsync,
   requestAuthorization,
@@ -37,6 +38,14 @@ export const requestPermissions = async () => {
   });
   return { granted };
 };
+
+// HealthKit no expone si la LECTURA fue concedida, así que no hay nada real que
+// verificar: confiamos en el flag "connected" que persiste el caller y tratamos
+// las lecturas vacías como "sin datos".
+export const verifyReadAccess = async () => true;
+
+// En iOS no se puede deep-linkear a la pantalla de Salud → abrimos Ajustes.
+export const openSettings = () => Linking.openSettings();
 
 const dailyStatistics = async (
   identifier,

@@ -14,7 +14,7 @@ import { useDailyActivity } from "../../hooks/health/use-daily-activity";
 import { useHeartRate } from "../../hooks/health/use-heart-rate";
 import { useBodyWeight } from "../../hooks/health/use-body-weight";
 import { useHealthConsent } from "../../hooks/health/use-health-consent";
-import { toDateKey } from "../../lib/health";
+import { toDateKey, openSettings } from "../../lib/health";
 import { Flame, Heart, Walk } from "../../../assets/icons";
 
 const STORE_NAME = Platform.OS === "ios" ? "Apple Salud" : "Health Connect";
@@ -160,10 +160,25 @@ function ConnectedContent({ primary, mint }) {
           )}
         </>
       ) : (
-        <SectionEmpty>
-          Todavía no hay datos en {STORE_NAME}. Salí a caminar con el teléfono
-          encima o registrá tu peso y los vas a ver acá.
-        </SectionEmpty>
+        <View style={{ gap: 12 }}>
+          <SectionEmpty>
+            Todavía no hay datos en {STORE_NAME}. Si conectaste pero no ves
+            nada, revisá que los permisos de actividad estén activados; si no,
+            salí a caminar con el teléfono encima o registrá tu peso.
+          </SectionEmpty>
+          <Pressable
+            onPress={() => openSettings()}
+            className="rounded-xl items-center py-3 border"
+            style={{ borderColor: primary }}
+          >
+            <Text
+              className="font-jakarta-semi text-[14px]"
+              style={{ color: primary }}
+            >
+              Abrir ajustes de {STORE_NAME}
+            </Text>
+          </Pressable>
+        </View>
       )}
 
       {/* Consentimiento de subida: el dato queda on-device salvo opt-in. */}

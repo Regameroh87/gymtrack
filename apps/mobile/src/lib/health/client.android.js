@@ -6,6 +6,8 @@ import {
   getSdkStatus,
   SdkAvailabilityStatus,
   requestPermission,
+  getGrantedPermissions,
+  openHealthConnectSettings,
   readRecords,
   aggregateGroupByPeriod,
   insertRecords,
@@ -25,6 +27,12 @@ const PERMISSIONS = [
   { accessType: "read", recordType: "Weight" },
   { accessType: "write", recordType: "ExerciseSession" },
 ];
+
+// Scope núcleo: sin lectura de Pasos no hay actividad que mostrar. Health
+// Connect concede permisos de a uno, así que exigimos éste puntualmente en vez
+// de dar por buena la conexión con cualquier permiso suelto.
+const hasStepsRead = (permissions) =>
+  permissions.some((p) => p.accessType === "read" && p.recordType === "Steps");
 
 let initialized = false;
 const ensureInitialized = async () => {
@@ -46,8 +54,19 @@ export const isAvailable = async () => {
 export const requestPermissions = async () => {
   await ensureInitialized();
   const granted = await requestPermission(PERMISSIONS);
-  return { granted: granted.length > 0 };
+  return { granted: hasStepsRead(granted) };
 };
+
+// Chequea contra el OS que el permiso de lectura de Pasos sigue concedido.
+// El caller usa esto para que "connected" refleje el estado real (el usuario
+// puede revocarlo desde Health Connect después de conectar).
+export const verifyReadAccess = async () => {
+  await ensureInitialized();
+  const granted = await getGrantedPermissions();
+  return hasStepsRead(granted);
+};
+
+export const openSettings = () => openHealthConnectSettings();
 
 const betweenFilter = (startDate, endDate) => ({
   operator: "between",
@@ -64,15 +83,26 @@ const aggregateDaily = async (recordType, startDate, endDate) => {
   });
 };
 
+// Agrega una métrica sin dejar que su fallo (p.ej. permiso de lectura no
+// concedido → SecurityException) tumbe al resto de las métricas del día.
+const aggregateDailySafe = async (recordType, startDate, endDate) => {
+  try {
+    return await aggregateDaily(recordType, startDate, endDate);
+  } catch (e) {
+    console.warn(`[HEALTH] aggregate ${recordType} falló:`, e?.message ?? e);
+    return [];
+  }
+};
+
 // Health Connect devuelve 0 (no null) en días sin datos dentro del rango;
 // lo normalizamos a null para no subir ceros falsos a Supabase.
 const orNull = (value) => (value ? value : null);
 
 export const getDailyActivity = async ({ startDate, endDate }) => {
   const [steps, calories, distance] = await Promise.all([
-    aggregateDaily("Steps", startDate, endDate),
-    aggregateDaily("ActiveCaloriesBurned", startDate, endDate),
-    aggregateDaily("Distance", startDate, endDate),
+    aggregateDailySafe("Steps", startDate, endDate),
+    aggregateDailySafe("ActiveCaloriesBurned", startDate, endDate),
+    aggregateDailySafe("Distance", startDate, endDate),
   ]);
 
   const byDate = new Map();
@@ -108,8 +138,8 @@ export const getDailyActivity = async ({ startDate, endDate }) => {
 
 export const getDailyHeartRate = async ({ startDate, endDate }) => {
   const [hr, resting] = await Promise.all([
-    aggregateDaily("HeartRate", startDate, endDate),
-    aggregateDaily("RestingHeartRate", startDate, endDate),
+    aggregateDailySafe("HeartRate", startDate, endDate),
+    aggregateDailySafe("RestingHeartRate", startDate, endDate),
   ]);
 
   const byDate = new Map();
