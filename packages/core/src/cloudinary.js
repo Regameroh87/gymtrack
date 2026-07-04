@@ -11,6 +11,13 @@ export const getCloudinaryUrl = (
     return null;
   }
 
+  // URLs completas (Supabase Storage — Fase 1 de la salida de Cloudinary) se
+  // devuelven tal cual: las transformaciones solo aplican a public_ids de
+  // Cloudinary; las imágenes de Storage se suben ya en su tamaño final.
+  if (publicId.startsWith("http://") || publicId.startsWith("https://")) {
+    return publicId;
+  }
+
   const cleanId = publicId.startsWith("/") ? publicId.slice(1) : publicId;
 
   if (cleanId.startsWith("videos/")) {

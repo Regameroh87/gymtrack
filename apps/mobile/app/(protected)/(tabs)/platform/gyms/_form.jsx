@@ -6,6 +6,7 @@ import { Image } from "expo-image";
 
 // BD / utils
 import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
+import { supabase } from "../../../../../src/database/supabase";
 
 // Tema
 import { ui, brandPrimary } from "@gymtrack/core/colors";
@@ -23,20 +24,17 @@ export const DEFAULT_ACCENT = "#2DD4BF";
 
 export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
-// Sube una imagen a Cloudinary (preset de imágenes pendientes de aprobación) y
-// devuelve su public_id.
+// Sube una imagen a Supabase Storage (bucket público "media", Fase 1 de la
+// salida de Cloudinary) y devuelve su URL pública (lo que guarda logo_url).
+// Corre en Expo web: `file` es un File del browser, se sube directo.
 export const uploadImageWeb = async (file) => {
-  const data = new FormData();
-  data.append("file", file);
-  data.append("upload_preset", "gymtrack_images");
-  data.append("tags", "pending_approval");
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    { method: "POST", body: data }
-  );
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error?.message || "Error al subir imagen");
-  return json.public_id;
+  const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
+  const path = `images/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
+  const { error } = await supabase.storage
+    .from("media")
+    .upload(path, file, { contentType: file.type || undefined });
+  if (error) throw new Error(error.message || "Error al subir imagen");
+  return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 };
 
 // Sube un video a Cloudinary (mismo preset/tag que el push del sync mobile) y

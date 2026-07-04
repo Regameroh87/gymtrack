@@ -11,6 +11,29 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const MAX_ATTEMPTS = 5;
 
+// Fase 1 salida de Cloudinary: las imágenes viven en Supabase Storage (bucket
+// público "media") y las columnas guardan su URL pública. La cola de
+// eliminación puede contener tanto public_ids de Cloudinary como estas URLs.
+const STORAGE_MARKER = "/storage/v1/object/public/media/";
+const isStorageUrl = (id: string) => id.includes(STORAGE_MARKER);
+const storagePathFromUrl = (url: string) =>
+  url.slice(url.indexOf(STORAGE_MARKER) + STORAGE_MARKER.length);
+
+// Tablas/columnas que referencian imágenes (mismas que delete_gym_cascade +
+// sync-cloudinary-webhook). Las usa el sweep de huérfanos de Storage.
+const IMAGE_REFS: Array<[table: string, column: string]> = [
+  ["gyms", "logo_url"],
+  ["gyms", "logo_url_dark"],
+  ["exercises_base", "image_uri"],
+  ["sessions", "cover_image_uri"],
+  ["training_plans", "cover_image_uri"],
+  ["equipment", "image_uri"],
+  ["profiles", "image_profile"],
+  ["custom_exercises", "image_uri"],
+  ["custom_sessions", "cover_image_uri"],
+  ["custom_plans", "cover_image_uri"],
+];
+
 serve(async () => {
   try {
     console.log("CLOUD_NAME:", CLOUD_NAME ? "✓" : "✗ VACÍO");
@@ -26,6 +49,8 @@ serve(async () => {
 
     const credentials = btoa(`${API_KEY}:${API_SECRET}`);
     const headers = { Authorization: `Basic ${credentials}` };
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // ═══════════════════════════════════════════════════════════════
     // FASE 1: Limpiar assets con tag "pending_approval" > 24hs
@@ -68,11 +93,76 @@ serve(async () => {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // FASE 1.5: Huérfanos en Supabase Storage (media/images > 24hs sin
+    // referencia en la BD). Equivalente del pending_approval de Cloudinary:
+    // cubre subidas cuyo formulario nunca llegó a crear la fila.
+    // ═══════════════════════════════════════════════════════════════
+    console.log("── FASE 1.5: Huérfanos en Supabase Storage ──");
+
+    const deletedOrphans: string[] = [];
+    const { data: storageFiles, error: listError } = await supabase.storage
+      .from("media")
+      .list("images", { limit: 500 });
+
+    if (listError) {
+      console.error("Error listando media/images:", listError.message);
+    } else {
+      const dayAgoMs = Date.now() - 86400 * 1000;
+      const oldFiles = (storageFiles ?? []).filter(
+        (f) => f.created_at && new Date(f.created_at).getTime() < dayAgoMs
+      );
+
+      if (oldFiles.length > 0) {
+        const urlFor = (name: string) =>
+          `${SUPABASE_URL}${STORAGE_MARKER}images/${name}`;
+        const candidateUrls = oldFiles.map((f) => urlFor(f.name));
+
+        // URLs referenciadas por alguna columna de imagen. Si una consulta
+        // falla se aborta el sweep entero: nunca borrar sin certeza.
+        const referenced = new Set<string>();
+        let sweepFailed = false;
+        for (const [table, column] of IMAGE_REFS) {
+          const { data, error } = await supabase
+            .from(table)
+            .select(column)
+            .in(column, candidateUrls);
+          if (error) {
+            console.error(`Error consultando ${table}.${column}:`, error.message);
+            sweepFailed = true;
+            break;
+          }
+          for (const row of data ?? []) {
+            const value = (row as Record<string, string | null>)[column];
+            if (value) referenced.add(value);
+          }
+        }
+
+        if (!sweepFailed) {
+          const orphanPaths = oldFiles
+            .filter((f) => !referenced.has(urlFor(f.name)))
+            .map((f) => `images/${f.name}`);
+
+          if (orphanPaths.length > 0) {
+            const { error: removeError } = await supabase.storage
+              .from("media")
+              .remove(orphanPaths);
+            if (removeError) {
+              console.error("Error borrando huérfanos:", removeError.message);
+            } else {
+              deletedOrphans.push(...orphanPaths);
+            }
+          }
+        }
+      }
+      console.log(
+        `Storage: ${storageFiles?.length ?? 0} archivos, huérfanos borrados: ${deletedOrphans.length}`
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // FASE 2: Procesar cola de eliminación (cloudinary_delete_queue)
     // ═══════════════════════════════════════════════════════════════
     console.log("── FASE 2: Procesando cola de eliminación ──");
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { data: queueItems, error: queueError } = await supabase
       .from("cloudinary_delete_queue")
@@ -91,7 +181,11 @@ serve(async () => {
       console.log(`Cola: ${queueItems.length} items pendientes`);
 
       for (const item of queueItems) {
-        const success = await deleteFromCloudinary(item.public_id, item.resource_type, CLOUD_NAME, credentials);
+        // La cola mezcla public_ids de Cloudinary y URLs de Supabase Storage
+        // (delete_gym_cascade y el webhook encolan el valor de la columna tal cual).
+        const success = isStorageUrl(item.public_id)
+          ? await deleteFromStorage(supabase, item.public_id)
+          : await deleteFromCloudinary(item.public_id, item.resource_type, CLOUD_NAME, credentials);
 
         if (success) {
           // Eliminación exitosa → quitar de la cola
@@ -125,6 +219,7 @@ serve(async () => {
 
     const summary = {
       pending_cleanup: { deleted_count: deletedPending.length, deleted: deletedPending },
+      storage_orphans: { deleted_count: deletedOrphans.length, deleted: deletedOrphans },
       queue_cleanup: { deleted_count: deletedFromQueue.length, deleted: deletedFromQueue, failed: failedFromQueue },
     };
 
@@ -139,6 +234,22 @@ serve(async () => {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 });
+
+/**
+ * Borra un asset de Supabase Storage (bucket "media") a partir de su URL pública.
+ * Retorna true si fue borrado o si ya no existía.
+ */
+async function deleteFromStorage(supabase: any, publicUrl: string): Promise<boolean> {
+  const path = storagePathFromUrl(publicUrl);
+  const { error } = await supabase.storage.from("media").remove([path]);
+  if (error) {
+    console.error(`Error al borrar de Storage ${path}:`, error.message);
+    return false;
+  }
+  // remove() no falla si el objeto no existe: mismo criterio que not_found.
+  console.log(`Borrado de Storage: ${path}`);
+  return true;
+}
 
 /**
  * Intenta borrar un asset de Cloudinary.

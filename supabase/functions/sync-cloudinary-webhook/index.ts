@@ -15,6 +15,14 @@ const ASSET_FIELDS = [
   { column: "logo_url", resource_type: "image" }, // gyms
 ] as const;
 
+// Fase 1 salida de Cloudinary: las imágenes viven en Supabase Storage y las
+// columnas guardan su URL pública. Esas URLs no se "confirman" (no hay tags) y
+// se destruyen contra Storage en vez de la API de Cloudinary.
+const STORAGE_MARKER = "/storage/v1/object/public/media/";
+const isStorageUrl = (id: string) => id.includes(STORAGE_MARKER);
+const storagePathFromUrl = (url: string) =>
+  url.slice(url.indexOf(STORAGE_MARKER) + STORAGE_MARKER.length);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") { return new Response("ok", { headers: corsHeaders }); }
 
@@ -43,6 +51,9 @@ serve(async (req) => {
 
     // Action 1: Remove pending tag and add "confirmed"
     const confirmAsset = async (public_id: string, resource_type: string = "image") => {
+      // Los assets de Supabase Storage no tienen ciclo pending/confirmed: el
+      // sweep de huérfanos del cron los limpia si nadie los referencia.
+      if (isStorageUrl(public_id)) return;
       const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/tags`;
       const data = new URLSearchParams([
         ["public_ids[]", public_id], ["tag", "confirmed"], ["command", "replace"]
@@ -58,6 +69,20 @@ serve(async (req) => {
 
     // Action 2: Delete asset permanently from Cloudinary. Si falla, encola para reintento.
     const destroyAsset = async (public_id: string, resource_type: string = "image") => {
+      // Assets de Supabase Storage: borrar del bucket con service role. Si
+      // falla, van a la misma cola de reintentos (el cron distingue por URL).
+      if (isStorageUrl(public_id)) {
+        const { error } = await supabase.storage
+          .from("media")
+          .remove([storagePathFromUrl(public_id)]);
+        if (error) {
+          console.error(`[!] Error al borrar de Storage ${public_id}:`, error.message);
+          await queueForDeletion(supabase, public_id, resource_type);
+        } else {
+          console.log(`[-] Asset de Storage ${public_id} deleted.`);
+        }
+        return;
+      }
       try {
         const url = `https://api.cloudinary.com/v1_1/${cloudName}/resources/${resource_type}/upload?public_ids[]=${public_id}`;
         const response = await fetch(url, { method: "DELETE", headers });

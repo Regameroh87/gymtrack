@@ -26,28 +26,13 @@ import {
 
 // Supabase, tema, helpers y constantes
 import { getBrowserSupabase } from "@/lib/supabase-browser";
-import { CLOUD_NAME } from "@/lib/cloudinary";
+import { uploadImageWeb } from "@/lib/gyms";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useUserRole } from "@/components/auth/use-user-role";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { ASSIGNABLE_ROLES, ROLE_LABELS, DEFAULT_ROLE } from "@/lib/auth/roles";
 import { PROFILE_GENDERS } from "@/lib/gender-options";
-
-// Sube una imagen directo a Cloudinary (unsigned preset). Devuelve el public_id.
-const uploadImageWeb = async (file: File): Promise<string> => {
-  const data = new FormData();
-  data.append("file", file);
-  data.append("upload_preset", "gymtrack_images");
-  data.append("tags", "pending_approval");
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    { method: "POST", body: data }
-  );
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error?.message || "Error al subir imagen");
-  return json.public_id as string;
-};
 
 type Notification = { type: "success" | "error"; message: string } | null;
 
