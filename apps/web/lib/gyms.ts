@@ -69,9 +69,12 @@ export async function uploadImageWeb(file: File): Promise<string> {
   const supabase = getBrowserSupabase();
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `images/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage
-    .from("media")
-    .upload(path, file, { contentType: file.type || undefined });
+  // cacheControl largo: los archivos son inmutables (nombre aleatorio único,
+  // nunca se reescriben), así el egress sale cacheado por el CDN (el barato).
+  const { error } = await supabase.storage.from("media").upload(path, file, {
+    contentType: file.type || undefined,
+    cacheControl: "31536000",
+  });
   if (error) {
     throw new Error(error.message || "Error al subir imagen");
   }

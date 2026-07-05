@@ -28,7 +28,11 @@ const uploadImageToStorage = async (fileUri) => {
     name: fileName,
   });
 
-  const { error } = await supabase.storage.from("media").upload(path, data);
+  // cacheControl largo: los archivos son inmutables (nombre aleatorio único,
+  // nunca se reescriben), así el egress sale cacheado por el CDN (el barato).
+  const { error } = await supabase.storage
+    .from("media")
+    .upload(path, data, { cacheControl: "31536000" });
   if (error) {
     throw new Error(error.message || "Error al subir a Supabase Storage");
   }

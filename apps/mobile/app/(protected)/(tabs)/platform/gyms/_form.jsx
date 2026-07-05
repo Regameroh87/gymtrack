@@ -30,9 +30,11 @@ export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 export const uploadImageWeb = async (file) => {
   const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
   const path = `images/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-  const { error } = await supabase.storage
-    .from("media")
-    .upload(path, file, { contentType: file.type || undefined });
+  // cacheControl largo: archivos inmutables (nombre único) → egress cacheado.
+  const { error } = await supabase.storage.from("media").upload(path, file, {
+    contentType: file.type || undefined,
+    cacheControl: "31536000",
+  });
   if (error) throw new Error(error.message || "Error al subir imagen");
   return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 };
