@@ -1,0 +1,7 @@
+# Artefactos de builds locales de Gradle/Kotlin dentro de node_modules.
+# Los defaults de @expo/fingerprint cubren build/ y .gradle/ de los gradle-plugins,
+# pero NO .kotlin/ (log del compilador Kotlin con timestamp -> hash no determinístico).
+# Sin esto, cualquier build local de Android envenena el fingerprint y EAS aborta
+# con "runtime version calculated on local machine not equal to ... during build".
+**/*-gradle-plugin/.kotlin/**/*
+**/.kotlin/**/*
