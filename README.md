@@ -15,7 +15,7 @@ App móvil multi-tenant (white-label SaaS) para gestión de gimnasios. Permite a
 | Validación de forms | TanStack Form + Zod |
 | BD local | SQLite via expo-sqlite + Drizzle ORM |
 | BD remota | Supabase (PostgreSQL + Auth + Edge Functions) |
-| Media | Cloudinary |
+| Media | Supabase Storage (bucket `media`; optimización client-side) |
 | Animaciones | Reanimated 4 + Gesture Handler 2 |
 
 ---
@@ -325,12 +325,13 @@ useMediaPicker copia el archivo a almacenamiento persistente (documentDirectory)
 Se guarda el file:// local en SQLite (sync_status = "pending")
     ↓
 Al sincronizar: si image_uri empieza con "file://",
-    uploadFileToCloudinary() → obtiene public_id
-    → reemplaza el file:// local con el public_id
-    → hace upsert en Supabase con el public_id
+    uploadFileToCloudinary() → optimiza (resize imágenes / compresión de video
+                               a ~720p) y sube a Supabase Storage
+    → reemplaza el file:// local con la URL pública
+    → hace upsert en Supabase con esa URL
 ```
 
-El archivo local se elimina después de subir exitosamente a Cloudinary.
+El archivo local se elimina después de subir exitosamente.
 
 #### Patrón B — Upload inline (operaciones 100% online)
 
@@ -343,16 +344,16 @@ useMediaPicker guarda el file:// local (preview inmediato)
     ↓
 Al hacer submit:
     si image_profile empieza con "file://"
-        uploadFileToCloudinary() → obtiene public_id
-    → llama a la Edge Function con el public_id (o null si falló)
+        uploadFileToCloudinary() → sube a Supabase Storage → URL pública
+    → llama a la Edge Function con la URL (o null si falló)
 ```
 
-> Los perfiles (`profiles`) no son una tabla offline-first — se crean directamente en Supabase via Edge Function, que es una operación de red bloqueante. Por eso el upload a Cloudinary ocurre inline en el submit, no de forma diferida.
+> Los perfiles (`profiles`) no son una tabla offline-first — se crean directamente en Supabase via Edge Function, que es una operación de red bloqueante. Por eso el upload ocurre inline en el submit, no de forma diferida.
 
-**Preset de Cloudinary:**
-- Imágenes: `gymtrack_images`
-- Videos: `gymtrack_videos`
-- Los archivos se suben con el tag `pending_approval` para revisión del admin
+**Media (Fase 2 de la salida de Cloudinary — todo en Supabase Storage):**
+- Bucket público `media` (límite 60 MB): imágenes en `images/`, videos en `videos/`. Las columnas (`image_uri`, `video_uri`, `logo_url`, etc.) guardan la URL pública completa; los helpers de URL devuelven las URLs http(s) tal cual. Los huérfanos (subidas sin fila en la BD) los barre el cron `cleanUp-cloudinary` a las 24hs.
+- Optimización client-side (Storage no procesa nada server-side): imágenes → resize a 1600px + compresión (expo-image-manipulator en mobile, canvas en web; PNG conserva alpha para logos). Videos → mobile transcodifica a ~720p H.264 con react-native-compressor; web no puede transcodificar, acepta hasta 25 MB con aviso de subir el video ya exportado (el bucket admite 60 MB para los videos largos comprimidos de mobile).
+- Los public_id viejos de Cloudinary siguen resolviendo (los helpers arman la URL de Cloudinary para valores que no son URL); la cuenta se elimina en la Fase 3.
 
 ---
 
@@ -364,8 +365,8 @@ Ubicadas en `supabase/functions/`. Todas validan el JWT del caller antes de ejec
 |---------|----------------------|----------|
 | `crear-gym` | `super_admin` | Crea un gym + membresía de owner. Si el email del dueño ya tiene cuenta, la reutiliza (multi-gym) |
 | `crear-socio` | staff del gym (ver matriz) | Crea un usuario con membresía en el gym indicado (`gym_id` del body = gym activo del caller; el rol del caller se valida server-side contra `memberships`). Si el email ya tiene cuenta, le agrega la membresía y responde `linked_existing: true` |
-| `sync-cloudinary-webhook` | Cloudinary (webhook) | Sincroniza eventos de Cloudinary |
-| `cleanUp-cloudinary` | Scheduled / manual | Elimina assets de Cloudinary sin referencia en la BD |
+| `sync-cloudinary-webhook` | DB webhooks | Ciclo de vida del media: confirma/destruye assets al insertar/actualizar/borrar filas (Cloudinary y Supabase Storage) |
+| `cleanUp-cloudinary` | Scheduled / manual | Elimina assets sin referencia en la BD (Cloudinary y Supabase Storage) y procesa la cola de reintentos |
 
 **Matriz de roles asignables en `crear-socio`** (cada rol crea estrictamente por debajo del suyo):
 - `super_admin` → owner, admin, coach, member
