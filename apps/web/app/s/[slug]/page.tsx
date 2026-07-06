@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { MapPin, Phone, Mail, Instagram, ArrowRight, Dumbbell } from "lucide-react";
 import { getPublicGym, instagramUrl, type PublicGym } from "@/lib/gym";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   BRAND,
   SITE_URL,
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const url = gymPublicUrl(slug);
   const title = gym.name;
   const description = `${gym.name} · Entrenamientos, planes y seguimiento con ${BRAND.name}. Ingresá a tu cuenta o pedí información.`;
-  const logo = cloudinaryUrl(gym.logo_url);
+  const logo = mediaUrl(gym.logo_url);
 
   return {
     title,
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 function JsonLd({ gym, url }: { gym: PublicGym; url: string }) {
-  const logo = cloudinaryUrl(gym.logo_url);
+  const logo = mediaUrl(gym.logo_url);
   const ig = instagramUrl(gym.instagram);
   const data = {
     "@context": "https://schema.org",
@@ -74,7 +74,7 @@ export default async function GymPage({ params }: Props) {
 
   const primary = gym.theme_primary || DEFAULT_PRIMARY;
   const accent = gym.theme_accent || DEFAULT_ACCENT;
-  const logo = cloudinaryUrl(gym.logo_url);
+  const logo = mediaUrl(gym.logo_url);
   const ig = instagramUrl(gym.instagram);
   const url = gymPublicUrl(slug);
 

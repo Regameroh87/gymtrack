@@ -12,7 +12,7 @@ import Link from "next/link";
 import { ShieldHalf, Users, Search, MapPin, Pencil } from "lucide-react";
 
 // Helpers y acciones
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { formatGymDate, ownerLabel, type Gym, type GymOwner } from "@/lib/gyms";
 import { EnterGymButton } from "@/components/platform/enter-gym-button";
 
@@ -152,7 +152,7 @@ function StatCard({
 }
 
 function GymCard({ gym }: { gym: GymWithOwner }) {
-  const logo = cloudinaryUrl(gym.logo_url);
+  const logo = mediaUrl(gym.logo_url);
   const suspended = gym.is_active === false;
 
   return (

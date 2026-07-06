@@ -7,15 +7,11 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 // BD
 import { supabase } from "../database/supabase";
 
-// Fase 2 de la salida de Cloudinary: todo el media va a Supabase Storage
-// (bucket público "media"). Las imágenes se redimensionan/comprimen y los
-// videos se transcodifican a ~720p (react-native-compressor) antes de subir,
-// porque Storage no procesa nada del lado del servidor. El public_id devuelto
-// es la URL pública completa — los helpers de URL devuelven las URLs http(s)
-// tal cual, así que los consumidores no cambian. Se conserva el nombre de la
-// función y el contrato { url, public_id } para no tocar a los llamadores
-// (sync, perfiles, forms); el param uploadPreset quedó sin uso y se elimina
-// junto con el rename del archivo en la Fase 3.
+// Sube media a Supabase Storage (bucket público "media"). Las imágenes se
+// redimensionan/comprimen y los videos se transcodifican a ~720p
+// (react-native-compressor) antes de subir, porque Storage no procesa nada
+// del lado del servidor. Devuelve { url, public_id }: ambos son la URL
+// pública completa, que es lo que guardan las columnas de media.
 
 const MAX_IMAGE_WIDTH = 1600;
 const IMAGE_QUALITY = 0.8;
@@ -125,7 +121,7 @@ const uploadVideo = async (fileUri) => {
   });
 };
 
-export const uploadFileToCloudinary = async ({ fileUri, typeFile }) => {
+export const uploadMedia = async ({ fileUri, typeFile }) => {
   if (typeFile === "image") {
     return uploadImage(fileUri);
   }

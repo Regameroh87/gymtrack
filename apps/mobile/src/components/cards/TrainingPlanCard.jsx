@@ -7,7 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 
 // Utilidades
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Constantes
 import { PLAN_GENDER_BADGES } from "../../constants/gender-options";
@@ -51,7 +51,7 @@ const TrainingPlanCard = ({ plan, onPress, isDraft = false }) => {
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
-      : getCloudinaryUrl(
+      : getMediaUrl(
           plan.cover_image_uri,
           "w_240,h_240,c_fill,f_auto,q_auto"
         )

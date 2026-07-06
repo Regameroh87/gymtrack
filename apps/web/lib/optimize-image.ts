@@ -1,6 +1,6 @@
 // Optimización de imágenes en el browser antes de subir a Supabase Storage
-// (Fase 2 salida de Cloudinary): Storage no procesa nada server-side, así que
-// el resize/compresión que antes hacía Cloudinary ocurre acá con canvas.
+// para Supabase Storage: Storage no procesa nada server-side, así que
+// el resize/compresión ocurre acá con canvas antes de subir.
 
 const MAX_WIDTH = 1600;
 const QUALITY = 0.8;

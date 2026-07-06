@@ -11,7 +11,7 @@ import Link from "next/link";
 
 // Contexto, helpers y constantes
 import { useGymTheme } from "@/components/auth/use-gym-theme";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { PLAN_GENDER_BADGES } from "@/lib/gender-options";
 
 // Iconos
@@ -313,7 +313,7 @@ function EmptyCurrentPlan({ onBrowseCatalog }: { onBrowseCatalog: () => void }) 
 function PlanCardWeb({ plan, index = 0 }: { plan: Plan; index?: number }) {
   const config = (plan.objective && OBJECTIVE_CONFIG[plan.objective]) || DEFAULT_CONFIG;
   const Icon = config.Icon;
-  const imageUrl = cloudinaryUrl(plan.cover_image_uri);
+  const imageUrl = mediaUrl(plan.cover_image_uri);
   const planNumber = String(index + 1).padStart(2, "0");
   const genderBadge = plan.target_gender ? PLAN_GENDER_BADGES[plan.target_gender] : undefined;
 
@@ -485,7 +485,7 @@ function CreatorChip({
   const fullName = [creator.name, creator.last_name].filter(Boolean).join(" ");
   const displayName = fullName.trim() || "—";
   const initial = displayName.charAt(0).toUpperCase();
-  const avatarUrl = cloudinaryUrl(creator.image_profile);
+  const avatarUrl = mediaUrl(creator.image_profile);
 
   return (
     <div className="flex max-w-[180px] items-center gap-2 rounded-full py-1 pl-1 pr-2.5" style={{ backgroundColor: "rgba(15,13,32,0.04)", border: "1px solid rgba(15,13,32,0.06)" }}>

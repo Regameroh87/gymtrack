@@ -47,7 +47,7 @@ import {
   type BuilderExercise,
 } from "@/lib/catalog-plan-helpers";
 import { uploadImageWeb } from "@/lib/gyms";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   PLAN_OBJECTIVES,
   PLAN_LEVELS,
@@ -363,10 +363,7 @@ function PlanRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const thumb = cloudinaryUrl(
-    plan.cover_image_uri,
-    "w_96,h_96,c_fill,f_auto,q_auto"
-  );
+  const thumb = mediaUrl(plan.cover_image_uri);
   return (
     <div
       className={`flex items-center gap-3 px-5 py-3.5 ${
@@ -428,10 +425,7 @@ function ArchivedPlanRow({
   onRestore: () => void;
   onPurge: () => void;
 }) {
-  const thumb = cloudinaryUrl(
-    plan.cover_image_uri,
-    "w_96,h_96,c_fill,f_auto,q_auto"
-  );
+  const thumb = mediaUrl(plan.cover_image_uri);
   const followers = Number(plan.active_followers ?? 0);
   const blocked = followers > 0;
 
@@ -780,7 +774,7 @@ function PlanBuilderModal({
 
   const week = weeks[activeWeek];
   const isTemplate = meta.duration_weeks === 0;
-  const coverSrc = previewUrl ?? cloudinaryUrl(meta.cover_image_uri);
+  const coverSrc = previewUrl ?? mediaUrl(meta.cover_image_uri);
 
   return (
     <ModalShell maxWidth={720} onClose={onClose}>
@@ -1255,10 +1249,7 @@ function PlanDetailDrawer({
 }) {
   const { data: detail, isLoading } = useCatalogPlanDetail(plan.id);
 
-  const heroUrl = cloudinaryUrl(
-    plan.cover_image_uri,
-    "w_480,h_480,c_fill,f_auto,q_auto"
-  );
+  const heroUrl = mediaUrl(plan.cover_image_uri);
   const meta = [
     plan.objective ? labelOf(PLAN_OBJECTIVES, plan.objective) : null,
     plan.level ? labelOf(PLAN_LEVELS, plan.level) : null,

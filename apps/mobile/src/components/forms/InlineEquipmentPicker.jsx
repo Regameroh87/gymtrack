@@ -3,7 +3,7 @@ import { useState, forwardRef } from "react";
 import { Photo } from "../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
 import { useMediaPicker } from "../../hooks/ui/use-media-picker";
-import { uploadFileToCloudinary } from "../../utils/uploadFileToCloudinary.js";
+import { uploadMedia } from "../../utils/uploadMedia.js";
 import { Image } from "expo-image";
 
 const InlineEquipmentPicker = forwardRef(function InlineEquipmentPicker(
@@ -19,9 +19,8 @@ const InlineEquipmentPicker = forwardRef(function InlineEquipmentPicker(
       onChange(result.uri);
       setIsUploading(true);
       try {
-        const uploadedImage = await uploadFileToCloudinary({
+        const uploadedImage = await uploadMedia({
           fileUri: result.uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         setImagePublicId(uploadedImage.public_id);

@@ -1,6 +1,6 @@
 // Alta de gimnasio (panel de plataforma, solo super_admin). El listado de
 // candidatos a dueño se resuelve en el servidor (cliente Supabase por request);
-// el form es cliente porque sube logos a Cloudinary e invoca la edge function.
+// el form es cliente porque sube logos a Supabase Storage e invoca la edge function.
 
 // Next
 import { redirect } from "next/navigation";

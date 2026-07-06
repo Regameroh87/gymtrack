@@ -6,7 +6,7 @@ import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 
 // Utils
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Tema / assets
 import { useGymTheme } from "../../contexts/gym-theme-context";
@@ -14,7 +14,7 @@ import { Play, Youtube } from "../../../assets/icons";
 
 function resolveVideoLink(exercise) {
   const cloudVideo = exercise.video_uri
-    ? (getCloudinaryUrl(exercise.video_uri) ?? exercise.video_uri)
+    ? (getMediaUrl(exercise.video_uri) ?? exercise.video_uri)
     : null;
   if (cloudVideo) return { url: cloudVideo, kind: "video" };
   if (exercise.youtube_video_url)
@@ -32,7 +32,7 @@ export default function SessionExerciseRow({
   const { brandPrimary } = useGymTheme();
   accent = accent ?? brandPrimary[500];
   const imageUri = exercise.image_uri
-    ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
+    ? (getMediaUrl(exercise.image_uri) ?? exercise.image_uri)
     : null;
   const videoLink = resolveVideoLink(exercise);
 

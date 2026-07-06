@@ -32,7 +32,7 @@ import {
 import { SESSION_LEVELS } from "../../../../../src/constants/sessionOptions";
 
 // Utils
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Hooks
 import {
@@ -162,7 +162,7 @@ export default function SessionDetail() {
   const levelLabel = SESSION_LEVELS.find((l) => l.value === data.level)?.label;
 
   const imageUri = data.cover_image_uri
-    ? (getCloudinaryUrl(data.cover_image_uri) ?? data.cover_image_uri)
+    ? (getMediaUrl(data.cover_image_uri) ?? data.cover_image_uri)
     : null;
 
   return (

@@ -8,7 +8,7 @@ import { Image } from "expo-image";
 import { useGymTheme } from "../contexts/gym-theme-context";
 
 // ── Utils ──
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 /**
  * Logo del gym activo, con fallback a iniciales sobre fondo branded.
@@ -26,7 +26,7 @@ export default function GymLogo({
   const { logoUrl, logoUrlDark, gymName, isDark } = useGymTheme();
   // En dark mode usa el logo dark si el gym lo cargó; si no, cae al principal.
   const activeLogo = isDark && logoUrlDark ? logoUrlDark : logoUrl;
-  const resolvedLogo = getCloudinaryUrl(activeLogo);
+  const resolvedLogo = getMediaUrl(activeLogo);
 
   // Ancho máximo del wordmark = ancho de pantalla menos el espacio reservado
   // para márgenes y el toggle de tema (headerRight). Acota el título para que

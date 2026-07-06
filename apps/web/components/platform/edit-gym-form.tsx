@@ -27,7 +27,7 @@ import {
 
 // Supabase, helpers y campos
 import { getBrowserSupabase } from "@/lib/supabase-browser";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   slugify,
   uploadImageWeb,
@@ -111,9 +111,9 @@ export function EditGymForm({
     setTimeout(() => setNotification(null), 4500);
   };
 
-  const currentLogoUrl = useMemo(() => cloudinaryUrl(gym.logo_url), [gym.logo_url]);
+  const currentLogoUrl = useMemo(() => mediaUrl(gym.logo_url), [gym.logo_url]);
   const currentLogoUrlDark = useMemo(
-    () => cloudinaryUrl(gym.logo_url_dark),
+    () => mediaUrl(gym.logo_url_dark),
     [gym.logo_url_dark]
   );
   const logoToShow = previewUrl || currentLogoUrl;

@@ -19,7 +19,7 @@ import {
 } from "@gymtrack/core/colors";
 
 import { useActiveGym } from "@/components/auth/active-gym-provider";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 
 export interface GymTheme {
   brandPrimary: Ramp;
@@ -37,6 +37,6 @@ export function useGymTheme(): GymTheme {
     brandSecondary: defaultSecondary,
     gradient: defaultGradient,
     gymName: gym?.name ?? null,
-    logoUrl: cloudinaryUrl(gym?.logo_url ?? null),
+    logoUrl: mediaUrl(gym?.logo_url ?? null),
   };
 }

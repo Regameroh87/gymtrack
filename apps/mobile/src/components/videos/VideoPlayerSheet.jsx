@@ -24,7 +24,7 @@ function isYoutubeUrl(url) {
   return url?.includes("youtube.com") || url?.includes("youtu.be");
 }
 
-function CloudinaryPlayer({ url }) {
+function StoragePlayer({ url }) {
   const player = useVideoPlayer(url, (p) => {
     p.loop = false;
     p.play();
@@ -128,7 +128,7 @@ export default function VideoPlayerSheet({ sheetRef, videoUrl, title }) {
               play={isOpen}
             />
           ) : !isYoutube ? (
-            <CloudinaryPlayer url={videoUrl} />
+            <StoragePlayer url={videoUrl} />
           ) : null
         ) : null}
       </View>

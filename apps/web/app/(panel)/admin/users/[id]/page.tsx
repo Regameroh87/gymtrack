@@ -32,7 +32,7 @@ import {
 } from "@/lib/hooks/use-admin-member";
 import { ROLE_LABELS, isStaffRole } from "@/lib/auth/roles";
 import { PROFILE_GENDERS } from "@/lib/gender-options";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -99,7 +99,7 @@ export default function MemberDetailPage() {
   const roleLabel = ROLE_LABELS[profile.role ?? ""] ?? profile.role ?? "—";
   const isActive = profile.is_active !== false;
   const avatar = profile.image_profile
-    ? cloudinaryUrl(profile.image_profile, "w_160,h_160,c_fill,f_auto,q_auto")
+    ? mediaUrl(profile.image_profile)
     : null;
 
   const activePlan = data?.activePlan as any;

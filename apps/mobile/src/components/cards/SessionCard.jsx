@@ -10,7 +10,7 @@ import * as Haptics from "expo-haptics";
 import { SESSION_LEVELS } from "../../constants/sessionOptions";
 
 // Base de datos / utils
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Tema / assets
 import { Barbell, ChartBar, ChevronRight } from "../../../assets/icons";
@@ -26,7 +26,7 @@ const SessionCard = ({ session, onPress }) => {
   )?.label;
 
   const imageUri = session.cover_image_uri
-    ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
+    ? (getMediaUrl(session.cover_image_uri) ?? session.cover_image_uri)
     : null;
 
   const handlePress = () => {

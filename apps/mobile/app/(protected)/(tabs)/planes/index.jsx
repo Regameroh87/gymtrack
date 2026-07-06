@@ -38,7 +38,7 @@ import {
 } from "../../../../src/constants/gender-options";
 
 // Utilidades
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../../../src/utils/box-shadow";
 
 // Componentes
@@ -809,7 +809,7 @@ function PlanTile({
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
-      : getCloudinaryUrl(
+      : getMediaUrl(
           plan.cover_image_uri,
           "w_500,h_500,c_fill,f_auto,q_auto"
         )

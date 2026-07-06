@@ -14,7 +14,7 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import { LinearGradient } from "expo-linear-gradient";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../contexts/gym-theme-context";
-import { getCloudinaryUrl, CLOUD_NAME } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { Barbell, ChevronRight, GripVertical, Trash } from "../../../assets/icons";
 
 const DEFAULT_SET = {
@@ -295,10 +295,7 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
   const showBody = expanded && !isActive;
   const isReps = (exercise.prescription_mode ?? "reps") === "reps";
   const hasIntensity = exercise.intensity_mode !== "none";
-  const exerciseImageUri = exercise.exercise_image_uri
-    ? (getCloudinaryUrl(exercise.exercise_image_uri) ??
-        `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${exercise.exercise_image_uri}`)
-    : null;
+  const exerciseImageUri = getMediaUrl(exercise.exercise_image_uri);
   const setConfigs = exercise.set_configs ?? [{ ...DEFAULT_SET }];
 
   const updateSetConfig = (setIdx, updates) => {

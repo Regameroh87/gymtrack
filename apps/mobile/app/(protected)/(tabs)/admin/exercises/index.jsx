@@ -51,7 +51,7 @@ import { Barbell, ChevronRight } from "../../../../../assets/icons";
 // Tema y utilidades
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { searchByQuery } from "@gymtrack/core/search-by-query";
 
 export default function ExercisesList() {
@@ -204,7 +204,7 @@ export default function ExercisesList() {
             {item.image_uri ? (
               <Image
                 source={{
-                  uri: getCloudinaryUrl(item.image_uri) ?? `${item.image_uri}`,
+                  uri: getMediaUrl(item.image_uri) ?? `${item.image_uri}`,
                 }}
                 width={"100%"}
                 height={"100%"}

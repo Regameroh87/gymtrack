@@ -71,7 +71,7 @@ export const useSaveCatalogExercise = () => {
   });
 };
 
-// Borrado de un ejercicio de catálogo. El webhook sync-cloudinary destruye su media
+// Borrado de un ejercicio de catálogo. El webhook sync-media destruye su media
 // (image_uri/video_uri) en el DELETE: el public_id es exclusivo de esta fila y el
 // contenido custom referencia al catálogo por id, no por public_id.
 export const useDeleteCatalogExercise = () => {

@@ -9,7 +9,7 @@ import { Loader2, Check, Trash2, X, Plus } from "lucide-react";
 
 import type { Option } from "@/lib/catalog-options";
 
-// ── Picker de portada cuadrada. `src` ya resuelto (preview local o URL Cloudinary). ──
+// ── Picker de portada cuadrada. `src` ya resuelto (preview local o URL de Storage). ──
 export function CoverPicker({
   src,
   onPick,

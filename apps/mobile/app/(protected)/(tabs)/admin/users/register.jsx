@@ -24,7 +24,7 @@ import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../../../../../src/database/supabase";
 
 // Utils
-import { uploadFileToCloudinary } from "../../../../../src/utils/uploadFileToCloudinary.js";
+import { uploadMedia } from "../../../../../src/utils/uploadMedia.js";
 
 // Assets
 import {
@@ -86,9 +86,8 @@ export default function RegisterUser() {
 
         if (image_profile?.startsWith("file://")) {
           try {
-            const { public_id } = await uploadFileToCloudinary({
+            const { public_id } = await uploadMedia({
               fileUri: image_profile,
-              uploadPreset: "gymtrack_images",
               typeFile: "image",
             });
             image_profile = public_id;

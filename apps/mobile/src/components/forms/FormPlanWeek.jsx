@@ -41,7 +41,7 @@ import { ChevronRight, Plus, X, Calendar } from "../../../assets/icons";
 
 // Media
 import { Image } from "expo-image";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // ─── Tarjeta de día ──────────────────────────────────────────────────────────
 
@@ -129,7 +129,7 @@ const SessionRow = memo(function SessionRow({
   const canExpand = (session.exercise_count ?? 0) > 0;
 
   const coverUri = session.cover_image_uri
-    ? (getCloudinaryUrl(session.cover_image_uri) ?? session.cover_image_uri)
+    ? (getMediaUrl(session.cover_image_uri) ?? session.cover_image_uri)
     : null;
 
   const subtitleParts = [

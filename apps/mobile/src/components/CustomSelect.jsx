@@ -9,7 +9,7 @@ import {
 import { Image } from "expo-image";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../contexts/gym-theme-context";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { Barbell } from "../../assets/icons";
 import { useColorScheme } from "nativewind";
 
@@ -215,7 +215,7 @@ const CustomSelect = ({
             const isSelected = value === option.value;
             const hasVisual = option.imageUri !== undefined || option.subtitle !== undefined || option.isCustom !== undefined;
             const resolvedUri = option.imageUri
-              ? (getCloudinaryUrl(option.imageUri) ?? option.imageUri)
+              ? (getMediaUrl(option.imageUri) ?? option.imageUri)
               : null;
             const accentColor = option.isCustom
               ? brandPrimary[400]

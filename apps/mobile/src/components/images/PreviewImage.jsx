@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { Pressable, View } from "react-native";
 import { Pencil } from "../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 export default function PreviewImage({
   value,
@@ -15,7 +15,7 @@ export default function PreviewImage({
       {value ? (
         <>
           <Image
-            source={{ uri: getCloudinaryUrl(value) ?? `${value}` }}
+            source={{ uri: getMediaUrl(value) ?? `${value}` }}
             style={{ width: "100%", height: "100%", borderRadius: 12 }}
           />
           <View className=" absolute -bottom-1 -right-1 z-20">

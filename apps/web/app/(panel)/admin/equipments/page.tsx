@@ -25,7 +25,7 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 
@@ -213,7 +213,7 @@ function StatCard({
 }
 
 function EquipmentCard({ equipment }: { equipment: Equipment }) {
-  const imageUrl = cloudinaryUrl(equipment.image_uri);
+  const imageUrl = mediaUrl(equipment.image_uri);
 
   return (
     <Link

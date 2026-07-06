@@ -14,7 +14,7 @@ import { ShieldHalf, Plus, ChevronRight, CheckCircle } from "lucide-react";
 import { getSessionContext } from "@/lib/auth/session";
 import { ROLES } from "@/lib/auth/roles";
 import { createServerSupabase } from "@/lib/supabase-server";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { formatGymDate, type Gym } from "@/lib/gyms";
 
 // Shell y acciones
@@ -186,7 +186,7 @@ export default async function PlatformPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {recent.map((gym) => {
-              const logo = cloudinaryUrl(gym.logo_url);
+              const logo = mediaUrl(gym.logo_url);
               const suspended = gym.is_active === false;
               return (
                 <div

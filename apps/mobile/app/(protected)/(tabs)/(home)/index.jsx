@@ -14,7 +14,7 @@ import { useTheme } from "../../../../src/theme/theme.jsx";
 import { brandPrimary, brandSecondary, ui } from "@gymtrack/core/colors";
 
 // ── Utils ──
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../../../src/utils/box-shadow.js";
 
 // ── Assets ──
@@ -81,7 +81,7 @@ export default function Home() {
   const rawFirst = (user?.name ?? "").split(" ")[0] || "Atleta";
   const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
   const imageProfile = require("../../../../assets/profile.png");
-  const profileUrl = getCloudinaryUrl(user?.image_profile);
+  const profileUrl = getMediaUrl(user?.image_profile);
   const iconMint = isDark ? brandSecondary[400] : brandSecondary[700];
 
   return (

@@ -27,7 +27,7 @@ import {
   type CatalogExerciseValues,
 } from "@/lib/hooks/use-catalog-admin";
 import { uploadImageWeb, uploadVideoWeb } from "@/lib/gyms";
-import { cloudinaryUrl, cloudinaryVideoUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   EXERCISE_CATEGORIES,
   MUSCLE_GROUPS,
@@ -144,10 +144,7 @@ export function CatalogExercisesSection() {
           </div>
         ) : (
           exercises.map((ex, i) => {
-            const thumb = cloudinaryUrl(
-              ex.image_uri,
-              "w_96,h_96,c_fill,f_auto,q_auto"
-            );
+            const thumb = mediaUrl(ex.image_uri);
             return (
               <div
                 key={ex.id}
@@ -342,12 +339,12 @@ function ExerciseFormModal({
 
   const imgToShow = useMemo(() => {
     if (previewUrl) return previewUrl;
-    return cloudinaryUrl(values.image_uri, "w_160,h_160,c_fill,f_auto,q_auto");
+    return mediaUrl(values.image_uri);
   }, [previewUrl, values.image_uri]);
 
   const videoToShow = useMemo(() => {
     if (videoPreviewUrl) return videoPreviewUrl;
-    return cloudinaryVideoUrl(values.video_uri);
+    return mediaUrl(values.video_uri);
   }, [videoPreviewUrl, values.video_uri]);
 
   return (
@@ -520,11 +517,8 @@ function ExerciseDetailDrawer({
   onEdit: (ex: CatalogExercise) => void;
   onDelete: (ex: CatalogExercise) => void;
 }) {
-  const heroUrl = cloudinaryUrl(
-    exercise.image_uri,
-    "w_480,h_480,c_fill,f_auto,q_auto"
-  );
-  const videoUrl = cloudinaryVideoUrl(exercise.video_uri);
+  const heroUrl = mediaUrl(exercise.image_uri);
+  const videoUrl = mediaUrl(exercise.video_uri);
 
   return (
     <div

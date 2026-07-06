@@ -36,7 +36,7 @@ import {
 } from "../../../../../src/constants/roles";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import {
   formatShortDate,
   formatRelativeDay,
@@ -55,7 +55,7 @@ import {
   Flame,
 } from "../../../../../assets/icons";
 
-const avatarUri = (raw) => getCloudinaryUrl(raw) ?? raw ?? null;
+const avatarUri = (raw) => getMediaUrl(raw) ?? raw ?? null;
 
 const safeDate = (iso) => {
   if (!iso) return "—";

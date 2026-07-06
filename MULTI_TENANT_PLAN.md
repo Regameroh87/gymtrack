@@ -261,7 +261,7 @@ create policy "via parent" on plan_weeks
 - [ ] Confirmar si base remota está vacía (solo 1 user de prueba — borrar antes de aplicar).
 - [ ] Decidir si seedeamos catálogo base de ejercicios al crear un gym nuevo, o si el coach arma desde cero.
 - [ ] Decidir si `plan_assignments` se hace ahora o más adelante.
-- [ ] Definir cómo se sube el logo (¿Cloudinary como ya usás, Supabase Storage, o asset bundleado?).
+- [x] Definir cómo se sube el logo → Supabase Storage (bucket público `media`).
 
 ---
 

@@ -33,7 +33,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useUserRole } from "@/components/auth/use-user-role";
 import { canAccessModule } from "@/lib/auth/roles";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 
 type NavItem = {
   icon: LucideIcon;
@@ -75,7 +75,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   );
 
   const gymName = gym?.name ?? "GymTrack";
-  const logo = cloudinaryUrl(gym?.logo_url ?? null);
+  const logo = mediaUrl(gym?.logo_url ?? null);
   const email = (user?.email as string) || "";
   const initial = (email[0] || "A").toUpperCase();
 

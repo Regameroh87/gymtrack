@@ -23,7 +23,7 @@ import { useActivePlanSummary } from "../../hooks/plans/use-active-plan-summary"
 import { useActiveSessionDraft } from "@gymtrack/core/hooks/sessions/use-active-session-draft";
 
 // ── Utils ──
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../utils/box-shadow";
 
 // ── UI ──
@@ -93,7 +93,7 @@ export default function HeroeCardHome({ image }) {
     (session?.cover_image_uri
       ? {
           uri:
-            getCloudinaryUrl(session.cover_image_uri) ??
+            getMediaUrl(session.cover_image_uri) ??
             session.cover_image_uri,
         }
       : null);
