@@ -83,10 +83,11 @@ export async function uploadImageWeb(file: File): Promise<string> {
   return uploadToStorage(await optimizeImageFile(file), "images");
 }
 
-// El browser no puede transcodificar video de forma razonable, así que web
-// acepta el archivo tal cual con un tope duro (el bucket también lo rechaza
-// server-side). Mobile sí comprime a ~720p antes de subir.
-const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
+// El browser no puede transcodificar video, así que web acepta el archivo tal
+// cual con un tope que fuerza a exportar comprimido (~1-2 min en 720p H.264).
+// El bucket tiene su propio tope server-side de 60 MB, más alto a propósito:
+// también recibe los videos largos ya comprimidos de mobile.
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 
 // Sube un video a Supabase Storage (bucket "media", prefijo videos/) y
 // devuelve su URL pública. En web no hay sync, así que se sube en el guardado
@@ -94,7 +95,7 @@ const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
 export async function uploadVideoWeb(file: File): Promise<string> {
   if (file.size > MAX_VIDEO_BYTES) {
     throw new Error(
-      "El video supera los 60 MB. Exportalo comprimido (720p, H.264) y volvé a subirlo."
+      "El video supera los 25 MB. Exportalo comprimido (720p, H.264) y volvé a subirlo."
     );
   }
   return uploadToStorage(file, "videos");

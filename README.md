@@ -352,7 +352,7 @@ Al hacer submit:
 
 **Media (Fase 2 de la salida de Cloudinary — todo en Supabase Storage):**
 - Bucket público `media` (límite 60 MB): imágenes en `images/`, videos en `videos/`. Las columnas (`image_uri`, `video_uri`, `logo_url`, etc.) guardan la URL pública completa; los helpers de URL devuelven las URLs http(s) tal cual. Los huérfanos (subidas sin fila en la BD) los barre el cron `cleanUp-cloudinary` a las 24hs.
-- Optimización client-side (Storage no procesa nada server-side): imágenes → resize a 1600px + compresión (expo-image-manipulator en mobile, canvas en web; PNG conserva alpha para logos). Videos → mobile transcodifica a ~720p H.264 con react-native-compressor; web no puede transcodificar, acepta hasta 60 MB con aviso de subir el video ya exportado.
+- Optimización client-side (Storage no procesa nada server-side): imágenes → resize a 1600px + compresión (expo-image-manipulator en mobile, canvas en web; PNG conserva alpha para logos). Videos → mobile transcodifica a ~720p H.264 con react-native-compressor; web no puede transcodificar, acepta hasta 25 MB con aviso de subir el video ya exportado (el bucket admite 60 MB para los videos largos comprimidos de mobile).
 - Los public_id viejos de Cloudinary siguen resolviendo (los helpers arman la URL de Cloudinary para valores que no son URL); la cuenta se elimina en la Fase 3.
 
 ---

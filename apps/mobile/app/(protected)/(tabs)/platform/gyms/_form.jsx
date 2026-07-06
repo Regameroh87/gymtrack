@@ -25,9 +25,10 @@ export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 const MAX_IMAGE_WIDTH = 1600;
 const IMAGE_QUALITY = 0.8;
-// El browser no puede transcodificar video: tope duro (el bucket también lo
-// rechaza server-side). Mobile sí comprime a ~720p antes de subir.
-const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
+// El browser no puede transcodificar video: tope que fuerza a exportar
+// comprimido (~1-2 min en 720p H.264). El bucket mantiene 60 MB server-side
+// para los videos largos ya comprimidos de mobile.
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 
 // cacheControl largo: archivos inmutables (nombre único) → egress cacheado.
 const uploadToStorage = async (file, prefix) => {
@@ -83,7 +84,7 @@ export const uploadImageWeb = async (file) =>
 export const uploadVideoWeb = async (file) => {
   if (file.size > MAX_VIDEO_BYTES) {
     throw new Error(
-      "El video supera los 60 MB. Exportalo comprimido (720p, H.264) y volvé a subirlo."
+      "El video supera los 25 MB. Exportalo comprimido (720p, H.264) y volvé a subirlo."
     );
   }
   return uploadToStorage(file, "videos");
