@@ -18,7 +18,7 @@ import {
   exercise_equipment as exerciseEquipmentTable,
   equipment as equipmentTable,
 } from "../../database/schemas";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import PreviewVideo from "../videos/PreviewVideo";
 import { Barbell, Pencil, Trash } from "../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
@@ -71,7 +71,7 @@ export default function ExerciseDetailSheet({
   useSheetBackHandler(sheetRef, isOpen);
 
   const imageUrl = exercise?.image_uri
-    ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
+    ? (getMediaUrl(exercise.image_uri) ?? exercise.image_uri)
     : null;
 
   const videoUrl = exercise?.youtube_video_url || exercise?.video_uri || null;

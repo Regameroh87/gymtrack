@@ -104,7 +104,7 @@ export function useSaveCatalogExercise() {
   });
 }
 
-// Borrado de un ejercicio del catálogo. El webhook sync-cloudinary destruye su media
+// Borrado de un ejercicio del catálogo. El webhook sync-media destruye su media
 // (image_uri/video_uri) en el DELETE.
 export function useDeleteCatalogExercise() {
   const queryClient = useQueryClient();

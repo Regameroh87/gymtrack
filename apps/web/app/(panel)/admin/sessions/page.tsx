@@ -25,7 +25,7 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { useDeleteAdminSession } from "@/lib/hooks/use-admin-sessions";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
 import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
@@ -302,7 +302,7 @@ function FilterChip({
 }
 
 function SessionCard({ session, onDelete }: { session: Session; onDelete: () => void }) {
-  const imageUrl = cloudinaryUrl(session.cover_image_uri);
+  const imageUrl = mediaUrl(session.cover_image_uri);
   const lvl = session.level ? LEVEL_META[session.level] : undefined;
 
   return (

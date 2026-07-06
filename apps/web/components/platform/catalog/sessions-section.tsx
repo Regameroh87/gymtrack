@@ -34,7 +34,7 @@ import {
   type CatalogExercise,
 } from "@/lib/hooks/use-catalog-admin";
 import { uploadImageWeb } from "@/lib/gyms";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { labelOf } from "@/lib/catalog-options";
 import {
   Field,
@@ -288,7 +288,7 @@ function SessionFormModal({
     }
   };
 
-  const coverSrc = previewUrl ?? cloudinaryUrl(values.cover_image_uri);
+  const coverSrc = previewUrl ?? mediaUrl(values.cover_image_uri);
 
   return (
     <>
@@ -422,7 +422,7 @@ function SessionExerciseItem({
   onDown: () => void;
   onRemove: () => void;
 }) {
-  const thumb = cloudinaryUrl(ex.image_uri, "w_72,h_72,c_fill,f_auto,q_auto");
+  const thumb = mediaUrl(ex.image_uri);
   return (
     <div className="flex items-center gap-3 rounded-xl border border-ui-input-light bg-ui-background-light px-3 py-2">
       <span className="w-4 font-manrope text-[12px] font-bold text-ui-text-muted">
@@ -484,10 +484,7 @@ function SessionRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const thumb = cloudinaryUrl(
-    session.cover_image_uri,
-    "w_96,h_96,c_fill,f_auto,q_auto"
-  );
+  const thumb = mediaUrl(session.cover_image_uri);
   return (
     <div
       className={`flex items-center gap-3 px-5 py-3.5 ${
@@ -619,10 +616,7 @@ export function ExercisePickerModal({
           ) : (
             filtered.map((ex) => {
               const added = selectedIds.includes(ex.id);
-              const thumb = cloudinaryUrl(
-                ex.image_uri,
-                "w_72,h_72,c_fill,f_auto,q_auto"
-              );
+              const thumb = mediaUrl(ex.image_uri);
               return (
                 <button
                   type="button"
@@ -681,10 +675,7 @@ function SessionDetailDrawer({
   const { data: exercises = [], isLoading } = useCatalogSessionExercises(
     session.id
   );
-  const heroUrl = cloudinaryUrl(
-    session.cover_image_uri,
-    "w_480,h_480,c_fill,f_auto,q_auto"
-  );
+  const heroUrl = mediaUrl(session.cover_image_uri);
   const count = session.exercise_count ?? exercises.length;
 
   return (
@@ -754,10 +745,7 @@ function SessionDetailDrawer({
             ) : (
               <div className="flex flex-col gap-2">
                 {exercises.map((ex, idx) => {
-                  const thumb = cloudinaryUrl(
-                    ex.image_uri,
-                    "w_72,h_72,c_fill,f_auto,q_auto"
-                  );
+                  const thumb = mediaUrl(ex.image_uri);
                   return (
                     <div
                       key={ex.id ?? idx}

@@ -6,7 +6,7 @@ export type EmailContext = {
   gymName: string;
   primary: string; // hex; default plataforma #4A44E4
   accent: string; // hex; default plataforma #2DD4BF
-  logoUrl: string | null; // URL Cloudinary ya construida, o null
+  logoUrl: string | null; // URL pública del logo (Supabase Storage), o null
   appUrl: string;
   data?: { name?: string | null };
 };

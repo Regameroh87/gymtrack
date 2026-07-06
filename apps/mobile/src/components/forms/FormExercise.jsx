@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { database } from "../../database";
 import { exercises_base, equipment } from "../../database/schemas";
 import useAsyncStorage from "@gymtrack/core/hooks/shared/use-async-storage";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { eq, and, ne } from "drizzle-orm";
 import { useEquipmentForm } from "../../hooks/exercises/use-equipment-form";
 
@@ -107,7 +107,7 @@ const FormExercise = forwardRef(function FormExercise(
       <View className=" flex w-10 h-10 rounded-lg overflow-hidden">
         <Image
           source={{
-            uri: getCloudinaryUrl(item.image_uri) ?? item.image_uri,
+            uri: getMediaUrl(item.image_uri) ?? item.image_uri,
           }}
           width={"100%"}
           height={"100%"}

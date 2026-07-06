@@ -17,7 +17,7 @@ import {
 } from "../../database/schemas";
 
 // Utils
-import { getCloudinaryUrl, CLOUD_NAME } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Tema / assets
 import { useGymTheme } from "../../contexts/gym-theme-context";
@@ -27,7 +27,7 @@ import { ChevronRight, Play, Youtube } from "../../../assets/icons";
 
 function resolveVideoLink(exercise) {
   const cloudVideo = exercise.video_uri
-    ? (getCloudinaryUrl(exercise.video_uri) ?? exercise.video_uri)
+    ? (getMediaUrl(exercise.video_uri) ?? exercise.video_uri)
     : null;
   if (cloudVideo) return { url: cloudVideo, kind: "video" };
   if (exercise.youtube_video_url)
@@ -62,7 +62,7 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress, onEq
   const [expanded, setExpanded] = useState(false);
 
   const imageUri = exercise.image_uri
-    ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
+    ? (getMediaUrl(exercise.image_uri) ?? exercise.image_uri)
     : null;
   const videoLink = resolveVideoLink(exercise);
   const summary = buildSummary(exercise);
@@ -267,12 +267,7 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress, onEq
               </Text>
               <View className="flex-row flex-wrap" style={{ gap: 6 }}>
                 {equipmentList.map((item, i) => {
-                  const equipImgUri = item.image_uri
-                    ? (getCloudinaryUrl(item.image_uri) ??
-                        (!item.image_uri.startsWith("file://")
-                          ? `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${item.image_uri}`
-                          : null))
-                    : null;
+                  const equipImgUri = getMediaUrl(item.image_uri);
                   const chipContent = (
                     <>
                       {equipImgUri ? (

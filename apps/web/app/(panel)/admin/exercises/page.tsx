@@ -26,7 +26,7 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { useDeleteAdminExercise } from "@/lib/hooks/use-admin-exercises";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
 import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
@@ -323,7 +323,7 @@ function ExerciseCard({
   brandSecondary: Record<number, string>;
   onDelete: () => void;
 }) {
-  const imageUrl = cloudinaryUrl(exercise.image_uri);
+  const imageUrl = mediaUrl(exercise.image_uri);
 
   return (
     <div className="relative overflow-hidden rounded-card-sm border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30">

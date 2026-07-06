@@ -9,7 +9,7 @@ import { ArrowLeft, Plus, Check } from "lucide-react";
 
 import { Field, Input, ErrorBanner } from "@/components/platform/catalog/catalog-ui";
 import { uploadImageWeb } from "@/lib/gyms";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   useSaveAdminEquipment,
   type AdminEquipment,
@@ -68,7 +68,7 @@ export function AdminEquipmentForm({
 
   const imgToShow = useMemo(() => {
     if (previewUrl) return previewUrl;
-    return cloudinaryUrl(imageUri, "w_160,h_160,c_fill,f_auto,q_auto");
+    return mediaUrl(imageUri);
   }, [previewUrl, imageUri]);
 
   const pending = saveEquipment.isPending || isSaving;

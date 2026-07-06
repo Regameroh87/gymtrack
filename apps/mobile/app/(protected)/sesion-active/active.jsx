@@ -40,7 +40,7 @@ import { useSaveSessionLog } from "../../../src/hooks/sessions/use-save-session-
 import { useLastExerciseSetLogs } from "../../../src/hooks/sessions/use-last-exercise-set-logs.js";
 import { useSessionDraft } from "@gymtrack/core/hooks/sessions/use-session-draft";
 
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../../src/utils/box-shadow.js";
 
 import VideoPlayerSheet from "../../../src/components/videos/VideoPlayerSheet.jsx";
@@ -254,7 +254,7 @@ export default function SesionActiva() {
   const canNext = currentIdx < session.exercises.length - 1;
   const isDuration = (exercise.prescription_mode ?? "reps") === "duration";
   const coverUrl = exercise.image_uri
-    ? (getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri)
+    ? (getMediaUrl(exercise.image_uri) ?? exercise.image_uri)
     : null;
 
   const totalSets = session.exercises.reduce((s, ex) => s + ex.sets.length, 0);
@@ -554,7 +554,7 @@ export default function SesionActiva() {
               onPress={() => {
                 setActiveVideo({
                   url:
-                    getCloudinaryUrl(exercise.video_uri) ?? exercise.video_uri,
+                    getMediaUrl(exercise.video_uri) ?? exercise.video_uri,
                   title: exercise.exercise_name,
                 });
                 videoSheetRef.current?.present();

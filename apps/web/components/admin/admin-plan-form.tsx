@@ -39,7 +39,7 @@ import {
   type BuilderExercise,
 } from "@/lib/catalog-plan-helpers";
 import { uploadImageWeb } from "@/lib/gyms";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   PLAN_OBJECTIVES,
   PLAN_LEVELS,
@@ -393,7 +393,7 @@ export function AdminPlanForm({
 
   const week = weeks[activeWeek];
   const isTemplate = meta.duration_weeks === 0;
-  const coverSrc = previewUrl ?? cloudinaryUrl(meta.cover_image_uri);
+  const coverSrc = previewUrl ?? mediaUrl(meta.cover_image_uri);
 
   return (
     <div className="p-4 pb-14 md:p-9">

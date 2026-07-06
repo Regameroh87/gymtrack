@@ -27,7 +27,7 @@ import ButtonAdd from "../../../../../src/components/buttons/ButtonAdd";
 import { Barbell, Trash, Pencil } from "../../../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { eq, ne } from "drizzle-orm";
 
 export default function EquipmentsList() {
@@ -112,7 +112,7 @@ export default function EquipmentsList() {
           {item.image_uri ? (
             <Image
               source={{
-                uri: getCloudinaryUrl(item.image_uri) ?? `${item.image_uri}`,
+                uri: getMediaUrl(item.image_uri) ?? `${item.image_uri}`,
               }}
               width={"100%"}
               height={"100%"}

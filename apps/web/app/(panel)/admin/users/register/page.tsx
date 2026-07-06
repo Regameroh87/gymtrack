@@ -1,7 +1,7 @@
 "use client";
 
 // Registrar socio (admin). Clon de apps/mobile admin/users/register.web.jsx:
-// form (react-form + zod) con foto opcional (upload directo a Cloudinary) y alta
+// form (react-form + zod) con foto opcional (upload a Supabase Storage) y alta
 // vía edge function crear-socio. Roles asignables según el rol del caller.
 
 // React / Next

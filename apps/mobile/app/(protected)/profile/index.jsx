@@ -20,8 +20,8 @@ import { performLogout } from "../../../src/auth/lib/logout";
 import { useAuth } from "../../../src/auth/lib/getSession";
 import { useActiveGym } from "../../../src/contexts/active-gym-context";
 import { useUserRole } from "../../../src/hooks/shared/use-user-role";
-import { uploadFileToCloudinary } from "../../../src/utils/uploadFileToCloudinary";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { uploadMedia } from "../../../src/utils/uploadMedia";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../../src/constants/roles";
 import { PROFILE_GENDERS } from "../../../src/constants/gender-options";
@@ -69,7 +69,7 @@ export default function ProfileScreen() {
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
-  const cloudUrl = getCloudinaryUrl(user?.image_profile);
+  const cloudUrl = getMediaUrl(user?.image_profile);
   const hasPhoto = !!localImageUri || !!cloudUrl;
 
   const avatarSource = localImageUri
@@ -105,9 +105,8 @@ export default function ProfileScreen() {
 
       if (localImageUri) {
         try {
-          const { public_id } = await uploadFileToCloudinary({
+          const { public_id } = await uploadMedia({
             fileUri: localImageUri,
-            uploadPreset: "gymtrack_images",
             typeFile: "image",
           });
           imageProfileUpdate = public_id;

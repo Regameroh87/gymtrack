@@ -4,14 +4,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useColorScheme } from "nativewind";
 import { gradient } from "@gymtrack/core/colors";
 import YoutubePlayer from "react-native-youtube-iframe";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 export default function PreviewVideo({ videoUrl, children }) {
   const { colorScheme } = useColorScheme();
   const isYoutube = videoUrl?.includes("youtube.com");
 
   const isDark = colorScheme === "dark";
-  const URL = getCloudinaryUrl(videoUrl) ?? videoUrl;
+  const URL = getMediaUrl(videoUrl) ?? videoUrl;
   const videoSource = !isYoutube && videoUrl ? URL : null;
   const player = useVideoPlayer(videoSource, (p) => {
     p.loop = true;

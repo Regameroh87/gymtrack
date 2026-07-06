@@ -27,7 +27,7 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
-import { cloudinaryUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import { PLAN_GENDER_BADGES } from "@/lib/gender-options";
 import { useDeleteAdminPlan } from "@/lib/hooks/use-admin-plans";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
@@ -346,7 +346,7 @@ function PlanCard({
   brandPrimary: Record<number, string>;
   onDelete: () => void;
 }) {
-  const imageUrl = cloudinaryUrl(plan.cover_image_uri);
+  const imageUrl = mediaUrl(plan.cover_image_uri);
   const lvl = plan.level ? LEVEL_META[plan.level] : undefined;
   const genderBadge = plan.target_gender ? PLAN_GENDER_BADGES[plan.target_gender] : undefined;
 

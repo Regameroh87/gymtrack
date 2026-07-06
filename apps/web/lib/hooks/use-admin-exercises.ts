@@ -186,7 +186,7 @@ export function useSaveAdminExercise(gymId: string | null) {
 
 // Borrado de un ejercicio del gym. Quita primero los links exercise_equipment y
 // luego la fila de exercises_base. La media (image_uri/video_uri) la destruye el
-// webhook sync-cloudinary en el DELETE. Si el ejercicio está referenciado por
+// webhook sync-media en el DELETE. Si el ejercicio está referenciado por
 // session_exercises (FK ON DELETE NO ACTION), Postgres lanza 23503 y lo
 // traducimos a un mensaje amistoso.
 export function useDeleteAdminExercise() {

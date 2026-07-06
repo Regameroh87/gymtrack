@@ -20,17 +20,12 @@ const FROM_LOCAL = "noreply";
 const DEFAULT_PRIMARY = "#4A44E4";
 const DEFAULT_ACCENT = "#2DD4BF";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://app.gymtrack.ar";
-const CLOUD_NAME = Deno.env.get("CLOUDINARY_CLOUD_NAME") ?? "ddupuyeko";
 
-// Portado de src/utils/cloudinary.js: logo_url es un public_id crudo; solo es
-// imagen servible si tiene el prefijo conocido. Si no, null → fallback a wordmark.
-function getCloudinaryUrl(publicId: string | null): string | null {
-  if (!publicId) return null;
-  const cleanId = publicId.startsWith("/") ? publicId.slice(1) : publicId;
-  if (cleanId.startsWith("images/")) {
-    return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/f_auto,q_auto/${cleanId}`;
-  }
-  return null;
+// logo_url guarda la URL pública completa (Supabase Storage); solo es imagen
+// servible si es una URL http(s). Si no, null → fallback a wordmark.
+function getLogoUrl(uri: string | null): string | null {
+  if (!uri) return null;
+  return uri.startsWith("http://") || uri.startsWith("https://") ? uri : null;
 }
 
 function jsonResponse(body: Record<string, unknown>, status: number) {
@@ -107,7 +102,7 @@ Deno.serve(async (req) => {
       if (gym?.name) gymName = gym.name;
       if (gym?.theme_primary) primary = gym.theme_primary;
       if (gym?.theme_accent) accent = gym.theme_accent;
-      logoUrl = getCloudinaryUrl(gym?.logo_url ?? null);
+      logoUrl = getLogoUrl(gym?.logo_url ?? null);
     }
 
     const rendered = renderEmail(type, { gymName, primary, accent, logoUrl, appUrl: APP_URL, data });

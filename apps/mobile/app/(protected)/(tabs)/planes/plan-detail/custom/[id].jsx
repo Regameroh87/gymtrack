@@ -46,7 +46,7 @@ import {
 } from "../../../../../../src/constants/sessionOptions";
 
 // Utilidades
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../../../../../src/utils/box-shadow";
 
 // Tema / assets
@@ -230,7 +230,7 @@ export default function CustomPlanDetail() {
   const imageUrl = plan.cover_image_uri
     ? plan.cover_image_uri.startsWith("file://")
       ? plan.cover_image_uri
-      : getCloudinaryUrl(
+      : getMediaUrl(
           plan.cover_image_uri,
           "w_1200,h_900,c_fill,f_auto,q_auto"
         )

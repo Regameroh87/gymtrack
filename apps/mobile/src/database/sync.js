@@ -28,7 +28,7 @@ import {
 } from "./schemas";
 import { supabase } from "../database/supabase";
 import { eq, ne, or, and, inArray, isNotNull } from "drizzle-orm";
-import { uploadFileToCloudinary } from "../utils/uploadFileToCloudinary";
+import { uploadMedia } from "../utils/uploadMedia";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
 import { queryClient } from "@gymtrack/core/query-client";
 
@@ -659,15 +659,14 @@ export async function pushEquipmentChanges() {
 
     let updatedLocal = false;
 
-    // 1. Subir Imagen a Cloudinary si es local
+    // 1. Subir imagen a Storage si es local
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
         console.log(
-          `⬆️  [PUSH] Subiendo imagen de "${row.name}" a Cloudinary...`
+          `⬆️  [PUSH] Subiendo imagen de "${row.name}" a Storage...`
         );
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
@@ -826,11 +825,10 @@ export async function pushExercisesChanges() {
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
         console.log(
-          `⬆️  [PUSH] Subiendo imagen de "${row.name}" a Cloudinary...`
+          `⬆️  [PUSH] Subiendo imagen de "${row.name}" a Storage...`
         );
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
@@ -856,11 +854,10 @@ export async function pushExercisesChanges() {
     if (row.video_uri && row.video_uri.startsWith("file://")) {
       try {
         console.log(
-          `⬆️  [PUSH] Subiendo video de "${row.name}" a Cloudinary...`
+          `⬆️  [PUSH] Subiendo video de "${row.name}" a Storage...`
         );
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.video_uri,
-          uploadPreset: "gymtrack_videos",
           typeFile: "video",
         });
         if (public_id) {
@@ -1025,12 +1022,11 @@ export async function pushSessionsChanges() {
       continue;
     }
 
-    // Subir imagen de portada a Cloudinary si es local
+    // Subir imagen de portada a Storage si es local
     if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
       try {
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.cover_image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
@@ -1361,9 +1357,8 @@ export async function pushTrainingPlansChanges() {
 
     if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
       try {
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.cover_image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
@@ -2129,9 +2124,8 @@ export async function pushCustomExercisesChanges() {
 
     if (row.image_uri && row.image_uri.startsWith("file://")) {
       try {
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
@@ -2152,9 +2146,8 @@ export async function pushCustomExercisesChanges() {
 
     if (row.video_uri && row.video_uri.startsWith("file://")) {
       try {
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.video_uri,
-          uploadPreset: "gymtrack_videos",
           typeFile: "video",
         });
         if (public_id) {
@@ -2233,9 +2226,8 @@ export async function pushCustomSessionsChanges() {
 
     if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
       try {
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.cover_image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {
@@ -2374,9 +2366,8 @@ export async function pushCustomPlansChanges() {
 
     if (row.cover_image_uri && row.cover_image_uri.startsWith("file://")) {
       try {
-        const { public_id } = await uploadFileToCloudinary({
+        const { public_id } = await uploadMedia({
           fileUri: row.cover_image_uri,
-          uploadPreset: "gymtrack_images",
           typeFile: "image",
         });
         if (public_id) {

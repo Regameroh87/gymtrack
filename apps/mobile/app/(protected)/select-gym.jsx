@@ -16,7 +16,7 @@ import Toast from "react-native-toast-message";
 
 import { useActiveGym } from "../../src/contexts/active-gym-context";
 import { performLogout } from "../../src/auth/lib/logout";
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../src/utils/box-shadow";
 import { ROLE_LABELS } from "../../src/constants/roles";
 import { generateRamp } from "@gymtrack/core/generate-ramp";
@@ -134,7 +134,7 @@ export default function SelectGymScreen() {
               ? generateRamp(gym.theme_primary)
               : defaultPrimary;
             const brand = ramp[600];
-            const logoUrl = getCloudinaryUrl(gym.logo_url);
+            const logoUrl = getMediaUrl(gym.logo_url);
             const isActive = m.gym_id === activeGymId;
             const isSwitching = switchingTo === m.gym_id;
             const initials = (gym.name ?? "?")

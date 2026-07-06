@@ -28,7 +28,7 @@ import {
 } from "@/components/platform/catalog/catalog-ui";
 import { EXERCISE_CATEGORIES, MUSCLE_GROUPS } from "@/lib/catalog-options";
 import { uploadImageWeb, uploadVideoWeb } from "@/lib/gyms";
-import { cloudinaryUrl, cloudinaryVideoUrl } from "@/lib/cloudinary";
+import { mediaUrl } from "@/lib/media";
 import {
   useGymEquipment,
   useSaveAdminExercise,
@@ -195,12 +195,12 @@ export function AdminExerciseForm({
 
   const imgToShow = useMemo(() => {
     if (previewUrl) return previewUrl;
-    return cloudinaryUrl(values.image_uri, "w_160,h_160,c_fill,f_auto,q_auto");
+    return mediaUrl(values.image_uri);
   }, [previewUrl, values.image_uri]);
 
   const videoToShow = useMemo(() => {
     if (videoPreviewUrl) return videoPreviewUrl;
-    return cloudinaryVideoUrl(values.video_uri);
+    return mediaUrl(values.video_uri);
   }, [videoPreviewUrl, values.video_uri]);
 
   const pending = saveExercise.isPending || isSaving;

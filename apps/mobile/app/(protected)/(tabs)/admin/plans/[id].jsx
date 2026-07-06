@@ -49,7 +49,7 @@ import {
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 
 // Utils
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Tema / assets
 import { ui } from "@gymtrack/core/colors";
@@ -161,7 +161,7 @@ function DayCard({ day, accent }) {
   const exCount = day.exercises.length;
   const hasSession = !!day.session_name;
   const imageUri = day.cover_image_uri
-    ? (getCloudinaryUrl(day.cover_image_uri) ?? day.cover_image_uri)
+    ? (getMediaUrl(day.cover_image_uri) ?? day.cover_image_uri)
     : null;
 
   return (

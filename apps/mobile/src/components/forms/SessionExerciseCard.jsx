@@ -7,7 +7,7 @@ import * as Haptics from "expo-haptics";
 import { useColorScheme } from "nativewind";
 
 // Utils
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 
 // Tema / assets
 import { ui } from "@gymtrack/core/colors";
@@ -28,7 +28,7 @@ export default function SessionExerciseCard({
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
   const disabledColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.15)";
 
-  const imageUri = getCloudinaryUrl(exercise.image_uri) ?? exercise.image_uri;
+  const imageUri = getMediaUrl(exercise.image_uri) ?? exercise.image_uri;
 
   return (
     <View className="mb-2.5 border border-ui-input-border rounded-xl overflow-hidden bg-ui-surface-light dark:bg-ui-surface-dark">

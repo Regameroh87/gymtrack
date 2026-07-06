@@ -32,7 +32,7 @@ import { useCustomSessions } from "../../../../src/hooks/sessions/use-custom-ses
 import { useCustomExercises } from "../../../../src/hooks/exercises/use-custom-exercises";
 
 // Utilidades
-import { getCloudinaryUrl } from "@gymtrack/core/cloudinary";
+import { getMediaUrl } from "@gymtrack/core/media";
 import { makeShadow } from "../../../../src/utils/box-shadow";
 
 // Componentes
@@ -264,7 +264,7 @@ function LibSessionRow({ session, onEdit, onDelete, isDark }) {
   const imageUrl = session.cover_image_uri
     ? session.cover_image_uri.startsWith("file://")
       ? session.cover_image_uri
-      : getCloudinaryUrl(
+      : getMediaUrl(
           session.cover_image_uri,
           "w_120,h_120,c_fill,f_auto,q_auto"
         )
@@ -317,7 +317,7 @@ function LibExerciseRow({ exercise, onEdit, onDelete, isDark }) {
   const imageUrl = exercise.image_uri
     ? exercise.image_uri.startsWith("file://")
       ? exercise.image_uri
-      : getCloudinaryUrl(exercise.image_uri, "w_120,h_120,c_fill,f_auto,q_auto")
+      : getMediaUrl(exercise.image_uri)
     : null;
 
   return (
