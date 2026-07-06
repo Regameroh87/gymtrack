@@ -5,7 +5,6 @@ import { View, Text, TextInput, Pressable } from "react-native";
 import { Image } from "expo-image";
 
 // BD / utils
-import { CLOUD_NAME } from "@gymtrack/core/cloudinary";
 import { supabase } from "../../../../../src/database/supabase";
 
 // Tema
@@ -24,35 +23,70 @@ export const DEFAULT_ACCENT = "#2DD4BF";
 
 export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
-// Sube una imagen a Supabase Storage (bucket público "media", Fase 1 de la
-// salida de Cloudinary) y devuelve su URL pública (lo que guarda logo_url).
-// Corre en Expo web: `file` es un File del browser, se sube directo.
-export const uploadImageWeb = async (file) => {
-  const ext = (file.name?.split(".").pop() || "jpg").toLowerCase();
-  const path = `images/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-  // cacheControl largo: archivos inmutables (nombre único) → egress cacheado.
+const MAX_IMAGE_WIDTH = 1600;
+const IMAGE_QUALITY = 0.8;
+// El browser no puede transcodificar video: tope duro (el bucket también lo
+// rechaza server-side). Mobile sí comprime a ~720p antes de subir.
+const MAX_VIDEO_BYTES = 60 * 1024 * 1024;
+
+// cacheControl largo: archivos inmutables (nombre único) → egress cacheado.
+const uploadToStorage = async (file, prefix) => {
+  const ext = (file.name?.split(".").pop() || "bin").toLowerCase();
+  const path = `${prefix}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
   const { error } = await supabase.storage.from("media").upload(path, file, {
     contentType: file.type || undefined,
     cacheControl: "31536000",
   });
-  if (error) throw new Error(error.message || "Error al subir imagen");
+  if (error) throw new Error(error.message || "Error al subir el archivo");
   return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
 };
 
-// Sube un video a Cloudinary (mismo preset/tag que el push del sync mobile) y
-// devuelve su public_id. En web no hay sync, así que se sube en el guardado del form.
+// Redimensiona/comprime con canvas (PNG conserva alpha de logos; el resto sale
+// JPEG). Ante cualquier fallo devuelve el original: mejor pesado que roto.
+const optimizeImageFile = async (file) => {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_IMAGE_WIDTH / bitmap.width);
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const keepAlpha = file.type === "image/png";
+    const type = keepAlpha ? "image/png" : "image/jpeg";
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, type, IMAGE_QUALITY)
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const baseName = (file.name || "imagen").replace(/\.[^.]+$/, "");
+    const ext = keepAlpha ? "png" : "jpg";
+    return new File([blob], `${baseName}.${ext}`, { type });
+  } catch {
+    return file;
+  }
+};
+
+// Sube una imagen a Supabase Storage (bucket público "media") y devuelve su
+// URL pública (lo que guarda logo_url). Corre en Expo web: `file` es un File
+// del browser, se optimiza con canvas y se sube.
+export const uploadImageWeb = async (file) =>
+  uploadToStorage(await optimizeImageFile(file), "images");
+
+// Sube un video a Supabase Storage (prefijo videos/) y devuelve su URL
+// pública. En web no hay sync, así que se sube en el guardado del form.
 export const uploadVideoWeb = async (file) => {
-  const data = new FormData();
-  data.append("file", file);
-  data.append("upload_preset", "gymtrack_videos");
-  data.append("tags", "pending_approval");
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`,
-    { method: "POST", body: data }
-  );
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error?.message || "Error al subir video");
-  return json.public_id;
+  if (file.size > MAX_VIDEO_BYTES) {
+    throw new Error(
+      "El video supera los 60 MB. Exportalo comprimido (720p, H.264) y volvé a subirlo."
+    );
+  }
+  return uploadToStorage(file, "videos");
 };
 
 // "Energym Río Cuarto" -> "energym-rio-cuarto"

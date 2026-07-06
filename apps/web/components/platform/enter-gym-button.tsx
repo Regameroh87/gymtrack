@@ -35,7 +35,9 @@ export function EnterGymButton({
     setEntering(true);
     try {
       await switchGym(gymId);
-    } catch {
+    } finally {
+      // Reset defensivo: el botón nunca queda colgado en "Entrando…" aunque la
+      // navegación no llegue a desmontarlo.
       setEntering(false);
     }
   };

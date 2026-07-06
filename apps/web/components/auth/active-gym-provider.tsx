@@ -50,8 +50,12 @@ export function ActiveGymProvider({
   // Elegir un gym: persiste la cookie y entra al panel del gym.
   const switchGym = useCallback(
     async (gymId: string) => {
-      if (gymId === seed.gymId) return;
-      await setActiveGym(gymId);
+      // El early-return solo evita reescribir la cookie si ya apunta al gym; la
+      // navegación a /admin debe ocurrir SIEMPRE. Si no, al "Entrar" a un gym que
+      // ya es el activo (cookie persistida), el caller queda sin navegar y colgado.
+      if (gymId !== seed.gymId) {
+        await setActiveGym(gymId);
+      }
       router.replace("/admin");
       router.refresh();
     },

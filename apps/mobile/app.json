@@ -45,6 +45,7 @@
     "plugins": [
       "expo-font",
       "expo-video",
+      "react-native-compressor",
       [
         "expo-build-properties",
         {

@@ -19,20 +19,25 @@ const isStorageUrl = (id: string) => id.includes(STORAGE_MARKER);
 const storagePathFromUrl = (url: string) =>
   url.slice(url.indexOf(STORAGE_MARKER) + STORAGE_MARKER.length);
 
-// Tablas/columnas que referencian imágenes (mismas que delete_gym_cascade +
+// Tablas/columnas que referencian media (mismas que delete_gym_cascade +
 // sync-cloudinary-webhook). Las usa el sweep de huérfanos de Storage.
-const IMAGE_REFS: Array<[table: string, column: string]> = [
+const MEDIA_REFS: Array<[table: string, column: string]> = [
   ["gyms", "logo_url"],
   ["gyms", "logo_url_dark"],
   ["exercises_base", "image_uri"],
+  ["exercises_base", "video_uri"],
   ["sessions", "cover_image_uri"],
   ["training_plans", "cover_image_uri"],
   ["equipment", "image_uri"],
   ["profiles", "image_profile"],
   ["custom_exercises", "image_uri"],
+  ["custom_exercises", "video_uri"],
   ["custom_sessions", "cover_image_uri"],
   ["custom_plans", "cover_image_uri"],
 ];
+
+// Prefijos del bucket que barre el sweep de huérfanos (Fase 2: también videos/).
+const STORAGE_PREFIXES = ["images", "videos"];
 
 serve(async () => {
   try {
@@ -93,71 +98,76 @@ serve(async () => {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // FASE 1.5: Huérfanos en Supabase Storage (media/images > 24hs sin
-    // referencia en la BD). Equivalente del pending_approval de Cloudinary:
-    // cubre subidas cuyo formulario nunca llegó a crear la fila.
+    // FASE 1.5: Huérfanos en Supabase Storage (media/images y media/videos
+    // > 24hs sin referencia en la BD). Equivalente del pending_approval de
+    // Cloudinary: cubre subidas cuyo formulario nunca llegó a crear la fila.
     // ═══════════════════════════════════════════════════════════════
     console.log("── FASE 1.5: Huérfanos en Supabase Storage ──");
 
     const deletedOrphans: string[] = [];
-    const { data: storageFiles, error: listError } = await supabase.storage
-      .from("media")
-      .list("images", { limit: 500 });
+    const dayAgoMs = Date.now() - 86400 * 1000;
 
-    if (listError) {
-      console.error("Error listando media/images:", listError.message);
-    } else {
-      const dayAgoMs = Date.now() - 86400 * 1000;
-      const oldFiles = (storageFiles ?? []).filter(
-        (f) => f.created_at && new Date(f.created_at).getTime() < dayAgoMs
-      );
-
-      if (oldFiles.length > 0) {
-        const urlFor = (name: string) =>
-          `${SUPABASE_URL}${STORAGE_MARKER}images/${name}`;
-        const candidateUrls = oldFiles.map((f) => urlFor(f.name));
-
-        // URLs referenciadas por alguna columna de imagen. Si una consulta
-        // falla se aborta el sweep entero: nunca borrar sin certeza.
-        const referenced = new Set<string>();
-        let sweepFailed = false;
-        for (const [table, column] of IMAGE_REFS) {
-          const { data, error } = await supabase
-            .from(table)
-            .select(column)
-            .in(column, candidateUrls);
-          if (error) {
-            console.error(`Error consultando ${table}.${column}:`, error.message);
-            sweepFailed = true;
-            break;
-          }
-          for (const row of data ?? []) {
-            const value = (row as Record<string, string | null>)[column];
-            if (value) referenced.add(value);
-          }
+    // Archivos viejos de todos los prefijos, con su path completo en el bucket.
+    const oldPaths: string[] = [];
+    let listFailed = false;
+    for (const prefix of STORAGE_PREFIXES) {
+      const { data: storageFiles, error: listError } = await supabase.storage
+        .from("media")
+        .list(prefix, { limit: 500 });
+      if (listError) {
+        console.error(`Error listando media/${prefix}:`, listError.message);
+        listFailed = true;
+        break;
+      }
+      for (const f of storageFiles ?? []) {
+        if (f.created_at && new Date(f.created_at).getTime() < dayAgoMs) {
+          oldPaths.push(`${prefix}/${f.name}`);
         }
+      }
+    }
 
-        if (!sweepFailed) {
-          const orphanPaths = oldFiles
-            .filter((f) => !referenced.has(urlFor(f.name)))
-            .map((f) => `images/${f.name}`);
+    if (!listFailed && oldPaths.length > 0) {
+      const urlFor = (path: string) => `${SUPABASE_URL}${STORAGE_MARKER}${path}`;
+      const candidateUrls = oldPaths.map(urlFor);
 
-          if (orphanPaths.length > 0) {
-            const { error: removeError } = await supabase.storage
-              .from("media")
-              .remove(orphanPaths);
-            if (removeError) {
-              console.error("Error borrando huérfanos:", removeError.message);
-            } else {
-              deletedOrphans.push(...orphanPaths);
-            }
+      // URLs referenciadas por alguna columna de media. Si una consulta
+      // falla se aborta el sweep entero: nunca borrar sin certeza.
+      const referenced = new Set<string>();
+      let sweepFailed = false;
+      for (const [table, column] of MEDIA_REFS) {
+        const { data, error } = await supabase
+          .from(table)
+          .select(column)
+          .in(column, candidateUrls);
+        if (error) {
+          console.error(`Error consultando ${table}.${column}:`, error.message);
+          sweepFailed = true;
+          break;
+        }
+        for (const row of data ?? []) {
+          const value = (row as Record<string, string | null>)[column];
+          if (value) referenced.add(value);
+        }
+      }
+
+      if (!sweepFailed) {
+        const orphanPaths = oldPaths.filter((p) => !referenced.has(urlFor(p)));
+
+        if (orphanPaths.length > 0) {
+          const { error: removeError } = await supabase.storage
+            .from("media")
+            .remove(orphanPaths);
+          if (removeError) {
+            console.error("Error borrando huérfanos:", removeError.message);
+          } else {
+            deletedOrphans.push(...orphanPaths);
           }
         }
       }
-      console.log(
-        `Storage: ${storageFiles?.length ?? 0} archivos, huérfanos borrados: ${deletedOrphans.length}`
-      );
     }
+    console.log(
+      `Storage: ${oldPaths.length} archivos >24hs, huérfanos borrados: ${deletedOrphans.length}`
+    );
 
     // ═══════════════════════════════════════════════════════════════
     // FASE 2: Procesar cola de eliminación (cloudinary_delete_queue)
