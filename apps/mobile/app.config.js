@@ -9,7 +9,10 @@ const variants = {
   production: { name: "Gymtrack", bundleId: "ar.gymtrack.app" },
 };
 
-const variant = variants[APP_ENV];
+// Si APP_ENV llega vacío o con un valor inesperado (p. ej. una env var que eas
+// inyecta desde el dashboard), caemos a production en vez de crashear el config
+// con "Cannot read properties of undefined" → exit 1 silencioso en `expo config`.
+const variant = variants[APP_ENV] ?? variants.production;
 
 export default {
   expo: {
