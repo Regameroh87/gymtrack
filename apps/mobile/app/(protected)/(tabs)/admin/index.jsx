@@ -26,6 +26,7 @@ import {
   Settings,
   ChartBar,
   Flame,
+  Calendar,
 } from "../../../../assets/icons";
 
 const buildModules = ({ brandSecondary, gradient }) => [
@@ -85,6 +86,15 @@ const buildModules = ({ brandSecondary, gradient }) => [
   },
   {
     n: "07",
+    icon: Calendar,
+    kicker: "OPERATIVO",
+    title: "Agenda",
+    subtitle: "Clases y horarios",
+    accent: ["#fb7185", "#f43f5e"],
+    path: "schedule",
+  },
+  {
+    n: "08",
     icon: Receipt,
     kicker: "FINANZAS",
     title: "Contabilidad",
@@ -93,7 +103,7 @@ const buildModules = ({ brandSecondary, gradient }) => [
     path: "billing",
   },
   {
-    n: "08",
+    n: "09",
     icon: ChartBar,
     kicker: "ANÁLISIS",
     title: "Reportes",
@@ -102,7 +112,7 @@ const buildModules = ({ brandSecondary, gradient }) => [
     path: "reports",
   },
   {
-    n: "09",
+    n: "10",
     icon: Settings,
     kicker: "SISTEMA",
     title: "Ajustes",

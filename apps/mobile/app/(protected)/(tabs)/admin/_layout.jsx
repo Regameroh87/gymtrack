@@ -144,6 +144,14 @@ export default function AdminLayout() {
           headerBackButtonDisplayMode: "minimal",
         }}
       />
+      {/* Agenda de clases */}
+      <Stack.Screen
+        name="schedule/index"
+        options={{
+          title: "Agenda",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
       {/* Placeholders */}
       <Stack.Screen
         name="billing/index"

@@ -38,6 +38,9 @@ export const MODULE_ROLES = {
   sessions: STAFF_ROLES,
   plans: STAFF_ROLES,
   attendance: STAFF_ROLES,
+  // Agenda de clases: el coach ve sus clases y las marca dictadas; la RLS
+  // limita la gestión completa a admin/owner.
+  schedule: STAFF_ROLES,
   // Define la oferta comercial y los precios ⇒ admin/owner, no coach.
   activities: ADMIN_ROLES,
   billing: ADMIN_ROLES,

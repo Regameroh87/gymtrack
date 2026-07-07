@@ -13,6 +13,7 @@ import { useActiveGym } from "../../../../../../src/contexts/active-gym-context"
 import FormActivity from "../../../../../../src/components/forms/FormActivity";
 import ActivityPlansManager from "../../../../../../src/components/admin/ActivityPlansManager";
 import ActivityCoachesManager from "../../../../../../src/components/admin/activity-coaches-manager";
+import ActivityScheduleManager from "../../../../../../src/components/admin/activity-schedule-manager";
 import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
 import { Trash } from "../../../../../../assets/icons";
 
@@ -140,6 +141,10 @@ function EditActivityForm({ item }) {
         {/* Coaches que la dictan y su esquema de pago */}
         <View className="h-px bg-ui-input-border my-6" />
         <ActivityCoachesManager activityId={item.id} />
+
+        {/* Horarios semanales (base de la Agenda) */}
+        <View className="h-px bg-ui-input-border my-6" />
+        <ActivityScheduleManager activityId={item.id} />
 
         <Pressable
           onPress={confirmDelete}
