@@ -11,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 import Screen from "../../../../../src/components/Screen";
@@ -31,6 +32,7 @@ import {
   Trash,
   ChevronRight,
   ChevronLeft,
+  Users,
 } from "../../../../../assets/icons";
 
 const money = (n) => `$${Number(n || 0).toLocaleString("es-AR")}`;
@@ -56,6 +58,7 @@ const FILTERS = [
 ];
 
 export default function BillingScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { brandPrimary } = useGymTheme();
   const { gymId } = useActiveGym();
@@ -123,16 +126,30 @@ export default function BillingScreen() {
               Membresías
             </Text>
           </View>
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setAltaOpen(true);
-            }}
-            className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600 active:opacity-80"
-          >
-            <Plus size={15} color="#fff" />
-            <Text className="text-[12px] font-manrope-bold text-white">Agregar</Text>
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/admin/billing/coaches");
+              }}
+              className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-80"
+            >
+              <Users size={15} color={brandPrimary[600]} />
+              <Text className="text-[12px] font-manrope-bold text-ui-text-main dark:text-ui-text-mainDark">
+                Coaches
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setAltaOpen(true);
+              }}
+              className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600 active:opacity-80"
+            >
+              <Plus size={15} color="#fff" />
+              <Text className="text-[12px] font-manrope-bold text-white">Agregar</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* Resumen */}

@@ -161,6 +161,13 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
+        name="billing/coaches"
+        options={{
+          title: "Pagos a coaches",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
+      <Stack.Screen
         name="settings/index"
         options={{
           title: "Configuración",
