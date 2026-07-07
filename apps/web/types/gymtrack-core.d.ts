@@ -39,7 +39,6 @@ declare module "@gymtrack/core/hooks/activities/use-gym-subscriptions" {
     activities: {
       name: string | null;
       color: string | null;
-      coach: { name: string | null; last_name: string | null } | null;
     } | null;
     activity_plans: { label: string | null; frequency_per_week: number | null } | null;
     member: {

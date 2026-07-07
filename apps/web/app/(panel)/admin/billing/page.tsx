@@ -91,7 +91,7 @@ export default function BillingPage() {
   }, [subs, filter, search]);
 
   const onRegisterPayment = (sub: GymSubscription) =>
-    registerPayment.mutate({ id: sub.id, memberId: sub.user_id });
+    registerPayment.mutate({ id: sub.id, price: sub.price, memberId: sub.user_id });
 
   const onCancel = (sub: GymSubscription) => {
     if (
