@@ -34,6 +34,15 @@ import { PageHeader } from "@/components/ui/page-header";
 
 const PAGE_SIZE = 18;
 
+// Etiqueta con los coaches asignados (activity_coaches), o null si no hay.
+const coachLabel = (rows: Activity["activity_coaches"] = []) => {
+  const names = (rows ?? [])
+    .filter((r) => r.is_active !== false && r.coach)
+    .map((r) => [r.coach?.name, r.coach?.last_name].filter(Boolean).join(" "));
+  if (!names.length) return null;
+  return `${names.length > 1 ? "Coaches" : "Coach"}: ${names.join(", ")}`;
+};
+
 // Precio mínimo entre los pases activos con precio (para "desde $X").
 const minActivePrice = (plans: ActivityPlan[] = []) => {
   const prices = plans
@@ -227,9 +236,9 @@ function ActivityCard({
           </p>
         ) : null}
 
-        {activity.coach && (
+        {coachLabel(activity.activity_coaches) && (
           <p className="mb-3 truncate font-manrope text-[11px] font-semibold text-ui-text-muted">
-            Coach: {[activity.coach.name, activity.coach.last_name].filter(Boolean).join(" ")}
+            {coachLabel(activity.activity_coaches)}
           </p>
         )}
 

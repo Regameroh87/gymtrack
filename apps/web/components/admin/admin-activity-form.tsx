@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 
 import { getBrowserSupabase } from "@/lib/supabase-browser";
-import { useGymStaff } from "@gymtrack/core/hooks/users/use-gym-staff";
 import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
 import {
   useActivityPlans,
@@ -45,12 +44,8 @@ export type ActivityInitial = {
   name: string | null;
   description: string | null;
   color: string | null;
-  coach_id: string | null;
   is_active: boolean | null;
 };
-
-const fullName = (p: { name: string | null; last_name: string | null }) =>
-  [p?.name, p?.last_name].filter(Boolean).join(" ") || "Sin nombre";
 
 // Pase cargado en memoria durante el alta (antes de existir el activity_id).
 type LocalPass = {
@@ -83,14 +78,10 @@ export function AdminActivityForm({
   const router = useRouter();
   const editingId = initial?.id ?? null;
   const { create, update, remove } = useActivityMutations(gymId);
-  const { data: staff = [] } = useGymStaff(gymId);
 
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [color, setColor] = useState(initial?.color ?? DEFAULT_ACTIVITY_COLOR);
-  const [coachId, setCoachId] = useState<string | null>(
-    initial?.coach_id ?? null
-  );
   const [isActive, setIsActive] = useState(initial?.is_active !== false);
   // En alta los pases se cargan en memoria y se persisten al crear la actividad.
   const [localPasses, setLocalPasses] = useState<LocalPass[]>([]);
@@ -115,7 +106,6 @@ export function AdminActivityForm({
       name,
       description,
       color,
-      coach_id: coachId,
       is_active: isActive,
     };
     try {
@@ -226,34 +216,6 @@ export function AdminActivityForm({
                 );
               })}
             </div>
-          </Field>
-
-          <Field label="COACH (OPCIONAL)">
-            {staff.length === 0 ? (
-              <span className="font-manrope text-[12px] text-ui-text-muted">
-                No hay coaches en este gimnasio todavía.
-              </span>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {staff.map((s) => {
-                  const selected = coachId === s.id;
-                  return (
-                    <button
-                      type="button"
-                      key={s.id}
-                      onClick={() => setCoachId(selected ? null : s.id)}
-                      className={`rounded-full border px-3 py-1.5 font-manrope text-[12px] font-semibold capitalize transition ${
-                        selected
-                          ? "border-brandPrimary-600 bg-brandPrimary-600 text-white"
-                          : "border-ui-input-border bg-white text-ui-text-muted hover:bg-ui-background-light"
-                      }`}
-                    >
-                      {fullName(s)}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </Field>
 
           <Toggle

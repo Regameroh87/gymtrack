@@ -127,13 +127,23 @@ declare module "@gymtrack/core/hooks/activities/use-activities" {
     sort_order: number | null;
     [k: string]: unknown;
   }
+  export interface ActivityCoach {
+    id: string;
+    coach_id: string;
+    monthly_fee: number | string | null;
+    revenue_share_pct: number | string | null;
+    rate_per_class: number | string | null;
+    is_active: boolean | null;
+    coach: { id: string; name: string | null; last_name: string | null } | null;
+    [k: string]: unknown;
+  }
   export interface Activity {
     id: string;
     name: string | null;
     description: string | null;
     color: string | null;
     is_active: boolean | null;
-    coach: { id: string; name: string | null; last_name: string | null } | null;
+    activity_coaches: ActivityCoach[];
     activity_plans: ActivityPlan[];
     [k: string]: unknown;
   }
@@ -238,7 +248,6 @@ declare module "@gymtrack/core/hooks/activities/use-activity-mutations" {
     name: string;
     description?: string | null;
     color?: string | null;
-    coach_id?: string | null;
     is_active?: boolean;
   }
   export interface ActivityRow {

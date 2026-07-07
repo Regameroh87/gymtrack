@@ -12,6 +12,7 @@ import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 import { useActiveGym } from "../../../../../../src/contexts/active-gym-context";
 import FormActivity from "../../../../../../src/components/forms/FormActivity";
 import ActivityPlansManager from "../../../../../../src/components/admin/ActivityPlansManager";
+import ActivityCoachesManager from "../../../../../../src/components/admin/activity-coaches-manager";
 import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
 import { Trash } from "../../../../../../assets/icons";
 
@@ -55,7 +56,6 @@ function EditActivityForm({ item }) {
       name: item.name ?? "",
       description: item.description ?? "",
       color: item.color ?? null,
-      coach_id: item.coach_id ?? null,
       is_active: item.is_active ?? true,
     },
     onSubmit: async ({ value }) => {
@@ -136,6 +136,10 @@ function EditActivityForm({ item }) {
         {/* Pases (frecuencia + precio) */}
         <View className="h-px bg-ui-input-border my-6" />
         <ActivityPlansManager activityId={item.id} />
+
+        {/* Coaches que la dictan y su esquema de pago */}
+        <View className="h-px bg-ui-input-border my-6" />
+        <ActivityCoachesManager activityId={item.id} />
 
         <Pressable
           onPress={confirmDelete}

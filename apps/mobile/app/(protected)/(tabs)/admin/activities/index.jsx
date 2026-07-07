@@ -20,6 +20,15 @@ import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 
+// Etiqueta de coaches asignados (activity_coaches) para la tarjeta, o null.
+const coachLabel = (rows = []) => {
+  const names = (rows ?? [])
+    .filter((r) => r.is_active !== false && r.coach)
+    .map((r) => [r.coach.name, r.coach.last_name].filter(Boolean).join(" "));
+  if (!names.length) return null;
+  return `${names.length > 1 ? "Coaches" : "Coach"}: ${names.join(", ")}`;
+};
+
 // Resumen de los pases de una actividad para la tarjeta: "N pases · desde $X/mes".
 const planSummary = (plans = []) => {
   if (!plans.length) return "Sin pases";
@@ -76,9 +85,9 @@ export default function ActivitiesList() {
         <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
           {planSummary(item.activity_plans)}
         </Text>
-        {item.coach && (
+        {coachLabel(item.activity_coaches) != null && (
           <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
-            Coach: {[item.coach.name, item.coach.last_name].filter(Boolean).join(" ")}
+            {coachLabel(item.activity_coaches)}
           </Text>
         )}
       </View>

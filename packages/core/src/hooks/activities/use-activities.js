@@ -13,13 +13,14 @@ export const useActivities = (gymId) => {
     queryKey: ["activities", gymId],
     enabled: !!gymId,
     queryFn: async () => {
-      // Embebe los pases (activity_plans) de cada actividad. PostgREST no ordena
-      // el recurso embebido de forma fiable, así que los ordenamos por sort_order
-      // en cliente.
+      // Embebe los pases (activity_plans) y los coaches asignados
+      // (activity_coaches, N por actividad con su esquema de pago). PostgREST no
+      // ordena el recurso embebido de forma fiable, así que los ordenamos por
+      // sort_order en cliente.
       const { data, error } = await supabase
         .from("activities")
         .select(
-          "*, activity_plans(*), coach:profiles!activities_coach_id_fkey(id, name, last_name)"
+          "*, activity_plans(*), activity_coaches(id, coach_id, monthly_fee, revenue_share_pct, rate_per_class, is_active, coach:profiles!activity_coaches_coach_id_fkey(id, name, last_name))"
         )
         .eq("gym_id", gymId)
         .order("created_at", { ascending: false });

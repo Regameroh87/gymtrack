@@ -26,7 +26,7 @@ export default function EditActivityPage() {
       const supabase = getBrowserSupabase();
       const { data, error } = await supabase
         .from("activities")
-        .select("id, name, description, color, coach_id, is_active")
+        .select("id, name, description, color, is_active")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;

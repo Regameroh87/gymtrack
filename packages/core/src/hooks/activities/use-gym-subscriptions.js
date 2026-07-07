@@ -5,9 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../supabase.js";
 
 // Todas las inscripciones ACTIVAS del gym activo, para el panel de Contabilidad.
-// La actividad (con su coach) y el pase se embeben; el socio no se puede embeber
-// directo (memberships/profiles apuntan a auth.users), así que se resuelve en dos
-// pasos como en use-gym-members. El staff accede por la rama is_staff_of de la RLS.
+// La actividad y el pase se embeben; el socio no se puede embeber directo
+// (memberships/profiles apuntan a auth.users), así que se resuelve en dos pasos
+// como en use-gym-members. El staff accede por la rama is_staff_of de la RLS.
 export const useGymSubscriptions = (gymId) => {
   return useQuery({
     queryKey: ["gym_subscriptions", gymId],
@@ -16,7 +16,7 @@ export const useGymSubscriptions = (gymId) => {
       const { data, error } = await supabase
         .from("activity_subscriptions")
         .select(
-          "*, activities(name, color, coach:profiles!activities_coach_id_fkey(name, last_name)), activity_plans(label, frequency_per_week)"
+          "*, activities(name, color), activity_plans(label, frequency_per_week)"
         )
         .eq("gym_id", gymId)
         .eq("status", "active")
