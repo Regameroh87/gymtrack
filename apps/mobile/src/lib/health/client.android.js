@@ -42,14 +42,7 @@ const ensureInitialized = async () => {
   return initialized;
 };
 
-export const isAvailable = async () => {
-  try {
-    const status = await getSdkStatus();
-    return status === SdkAvailabilityStatus.SDK_AVAILABLE;
-  } catch {
-    return false;
-  }
-};
+export const isAvailable = async () => false;
 
 export const requestPermissions = async () => {
   await ensureInitialized();

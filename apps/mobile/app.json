@@ -26,14 +26,7 @@
     "android": {
       "jsEngine": "hermes",
       "permissions": [
-        "VIBRATE",
-        "android.permission.health.READ_STEPS",
-        "android.permission.health.READ_DISTANCE",
-        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
-        "android.permission.health.READ_HEART_RATE",
-        "android.permission.health.READ_RESTING_HEART_RATE",
-        "android.permission.health.READ_WEIGHT",
-        "android.permission.health.WRITE_EXERCISE"
+        "VIBRATE"
       ],
       "userInterfaceStyle": "automatic",
       "adaptiveIcon": {
@@ -66,9 +59,6 @@
           "background": false
         }
       ],
-      "react-native-health-connect",
-      "./plugins/with-health-connect-rationale.js",
-      "./plugins/with-health-connect-delegate.js",
       "expo-sqlite",
       [
         "expo-camera",
