@@ -1,7 +1,17 @@
 // API pública de health. Todo el código de la app importa desde acá;
 // Metro resuelve el client por plataforma (client.ios.js / client.android.js
 // / stub client.js). Unidades normalizadas: count, kcal, m, bpm, kg.
-import * as client from "./client";
+import Constants from "expo-constants";
+
+// Feature flag (extra.healthEnabled, calculado en app.config.js): los builds
+// de producción salen SIN los módulos nativos de salud hasta que Google
+// apruebe la declaración de Health Connect. El require es condicional a
+// propósito: evaluar client.android.js sin el módulo nativo crashea, así que
+// con el flag apagado se carga el stub y la feature queda "no disponible".
+export const HEALTH_ENABLED =
+  Constants.expoConfig?.extra?.healthEnabled === true;
+
+const client = HEALTH_ENABLED ? require("./client") : require("./client.stub");
 
 export { toDateKey, startOfLocalDay, endOfLocalDay, daysAgo } from "./dates";
 

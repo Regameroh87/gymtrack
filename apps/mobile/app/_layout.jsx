@@ -2,6 +2,7 @@ import "../global.css";
 import "../src/theme/nativewind";
 import "../src/storage-init";
 import * as Sentry from "@sentry/react-native";
+import Constants from "expo-constants";
 import { useKeepAwake } from "expo-keep-awake";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -52,7 +53,7 @@ SplashScreen.preventAutoHideAsync();
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
   enabled: Boolean(process.env.EXPO_PUBLIC_SENTRY_DSN) && !__DEV__,
-  environment: process.env.EXPO_PUBLIC_APP_ENV ?? "production",
+  environment: Constants.expoConfig?.extra?.appEnv ?? "production",
   tracesSampleRate: 0.2,
 });
 
