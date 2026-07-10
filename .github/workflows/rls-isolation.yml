@@ -1,0 +1,28 @@
+name: RLS isolation
+
+# Test de aislamiento multi-tenant contra el proyecto real (crea y limpia sus
+# propios fixtures). Se corre a demanda — antes de un release o tras cambiar
+# policies — para no gastar usuarios/filas en cada push.
+#
+# Requiere estos secrets del repo:
+#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: node scripts/test-rls-isolation.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

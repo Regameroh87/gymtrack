@@ -1,6 +1,8 @@
 import "../global.css";
 import "../src/theme/nativewind";
 import "../src/storage-init";
+import * as Sentry from "@sentry/react-native";
+import Constants from "expo-constants";
 import { useKeepAwake } from "expo-keep-awake";
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -46,12 +48,21 @@ import { ActiveGymProvider } from "../src/contexts/active-gym-context";
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
 
+// Error tracking. Sin DSN (dev local sin env) queda desactivado; en dev nunca
+// reporta para no ensuciar el proyecto con errores de desarrollo.
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: Boolean(process.env.EXPO_PUBLIC_SENTRY_DSN) && !__DEV__,
+  environment: Constants.expoConfig?.extra?.appEnv ?? "production",
+  tracesSampleRate: 0.2,
+});
+
 function KeepAwake() {
   useKeepAwake();
   return null;
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -202,3 +213,6 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap agrega el error boundary raíz y el contexto de navegación.
+export default Sentry.wrap(RootLayout);

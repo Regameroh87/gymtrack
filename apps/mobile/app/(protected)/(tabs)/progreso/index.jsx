@@ -20,6 +20,7 @@ import SectionCard from "../../../../src/components/progress/section-card";
 import StatTile from "../../../../src/components/progress/stat-tile";
 import SectionEmpty from "../../../../src/components/progress/section-empty";
 import HealthSection from "../../../../src/components/progress/health-section";
+import { HEALTH_ENABLED } from "../../../../src/lib/health";
 import WeekStrip from "../../../../src/components/progress/week-strip";
 import BarChart from "../../../../src/components/charts/bar-chart";
 import LineChart from "../../../../src/components/charts/line-chart";
@@ -103,7 +104,8 @@ export default function ProgresoTab() {
           />
           {/* Salud maneja su propio loading: no entra al gate de isLoading
               para que la pantalla no bloquee en las APIs de Health. */}
-          <HealthSection />
+          {/* Oculta en builds sin salud (flag de app.config.js) */}
+          {HEALTH_ENABLED && <HealthSection />}
           <TrainingSection
             data={training.data}
             primary={brandPrimary[500]}

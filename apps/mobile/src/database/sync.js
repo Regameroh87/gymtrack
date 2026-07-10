@@ -27,6 +27,11 @@ import {
   sync_meta,
 } from "./schemas";
 import { supabase } from "../database/supabase";
+import {
+  buildLockedCompositeKeys,
+  planPullApplication,
+  reconcileDeletedIds,
+} from "./sync-core";
 import { eq, ne, or, and, inArray, isNotNull } from "drizzle-orm";
 import { uploadMedia } from "../utils/uploadMedia";
 import { deleteMediaLocally } from "../utils/saveMediaLocally";
@@ -491,41 +496,38 @@ async function pullTableChanges(
         .select()
         .from(schemaTable)
         .where(ne(schemaTable.sync_status, "synced"));
-      lockedCompositeKeys = new Set(
-        pendingRows.map((r) =>
-          compositeUniqueColumns.map((c) => r[c]).join("::")
-        )
+      lockedCompositeKeys = buildLockedCompositeKeys(
+        pendingRows,
+        compositeUniqueColumns
       );
     }
 
-    let skipped = 0;
-    for (const remoteRow of data) {
-      // Tombstone remoto: gana sobre la copia local sea cual sea su sync_status
-      // (incluso pending/dirty). Como el PULL corre antes que el PUSH, esto borra
-      // la copia local antes de que pueda re-subirse → evita la resurrección.
-      if (softDelete && remoteRow.deleted_at) {
-        await database
-          .delete(schemaTable)
-          .where(eq(schemaTable.id, remoteRow.id));
-        continue;
-      }
-      if (lockedIds.has(remoteRow.id)) {
-        skipped++;
-        continue;
-      }
-      if (lockedCompositeKeys) {
-        const key = compositeUniqueColumns.map((c) => remoteRow[c]).join("::");
-        if (lockedCompositeKeys.has(key)) {
-          skipped++;
-          continue;
-        }
-      }
+    // La decisión fila por fila (tombstones, locks por id / unique compuesta,
+    // mapeo de catálogo) vive en sync-core.js, donde está testeada.
+    const { tombstoneIds, upserts, skipped } = planPullApplication({
+      remoteRows: data,
+      lockedIds,
+      compositeUniqueColumns,
+      lockedCompositeKeys,
+      softDelete,
+      catalogMode,
+      catalogGymId: CATALOG_GYM_ID,
+    });
+
+    // Tombstones: el borrado remoto gana sea cual sea el estado local. Como el
+    // PULL corre antes que el PUSH, la copia local se borra antes de poder
+    // re-subirse → evita la resurrección.
+    for (const id of tombstoneIds) {
+      await database.delete(schemaTable).where(eq(schemaTable.id, id));
+    }
+
+    for (const remoteRow of upserts) {
       // Antes de insertar, eliminar cualquier fila local con el mismo composite
       // key pero distinto id. Pasa cuando un día/semana del plan cambia de UUID
       // en el servidor (p. ej. un slot vacío re-llenado con makeEmptyDay) y la
       // reconciliación de borrados —que corre más abajo— todavía no eliminó la
       // fila vieja. Las filas con cambios locales (pending/dirty/deleted) ya se
-      // saltearon arriba vía lockedCompositeKeys, así que esto solo toca filas
+      // saltearon vía lockedCompositeKeys, así que esto solo toca filas
       // "synced" obsoletas.
       if (compositeUniqueColumns) {
         await database
@@ -538,12 +540,6 @@ async function pullTableChanges(
               ne(schemaTable.id, remoteRow.id)
             )
           );
-      }
-      remoteRow.sync_status = "synced";
-      // Filas de catálogo: gym_id viene NULL del server; mapeamos al sentinel para
-      // satisfacer el NOT NULL local (se distinguen por is_catalog, no por gym_id).
-      if (catalogMode && remoteRow.gym_id == null) {
-        remoteRow.gym_id = CATALOG_GYM_ID;
       }
       await database.insert(schemaTable).values(remoteRow).onConflictDoUpdate({
         target: schemaTable.id,
@@ -578,7 +574,6 @@ async function pullTableChanges(
   }
 
   if (!idsError && remoteIds) {
-    const remoteIdSet = new Set(remoteIds.map((r) => r.id));
     // Acotar el set local a comparar:
     //  - catalogMode: solo filas de catálogo (no tocar el contenido del gym).
     //  - excludeCatalog: excluir las de catálogo (las gestiona su propio pase).
@@ -597,9 +592,10 @@ async function pullTableChanges(
       .select({ id: schemaTable.id })
       .from(schemaTable)
       .where(syncedFilter);
-    const idsToDelete = localSynced
-      .map((r) => r.id)
-      .filter((id) => !remoteIdSet.has(id));
+    const idsToDelete = reconcileDeletedIds(
+      localSynced.map((r) => r.id),
+      remoteIds.map((r) => r.id)
+    );
 
     if (idsToDelete.length > 0) {
       await database
