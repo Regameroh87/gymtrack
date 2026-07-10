@@ -10,7 +10,8 @@
     "postinstall": "patch-package",
     "mobile": "npm --workspace gymtrack run start",
     "mobile:android": "npm --workspace gymtrack run android",
-    "mobile:ios": "npm --workspace gymtrack run ios"
+    "mobile:ios": "npm --workspace gymtrack run ios",
+    "test:rls": "node scripts/test-rls-isolation.mjs"
   },
   "devDependencies": {
     "patch-package": "^8.0.1"
