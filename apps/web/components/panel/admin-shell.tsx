@@ -42,19 +42,43 @@ type NavItem = {
   comingSoon?: boolean;
 };
 
-// Espeja NAV_ITEMS de AdminSidebar.web.jsx (mismo orden y paths).
-const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "" },
-  { icon: Users, label: "Usuarios", path: "users" },
-  { icon: Dumbbell, label: "Ejercicios", path: "exercises" },
-  { icon: Dumbbell, label: "Máquinas", path: "equipments" },
-  { icon: ClipboardList, label: "Sesiones", path: "sessions" },
-  { icon: ClipboardList, label: "Planes", path: "plans" },
-  { icon: Flame, label: "Actividades", path: "activities" },
-  { icon: Receipt, label: "Contabilidad", path: "billing" },
-  { icon: QrCode, label: "Asistencias", path: "attendance" },
-  { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
-  { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
+type NavSection = {
+  title: string;
+  items: NavItem[];
+};
+
+// Nav agrupado por naturaleza: operación diaria (Socios) separada del catálogo
+// de contenido que se arma una vez (Entrenamiento), más General y Sistema.
+const NAV_SECTIONS: NavSection[] = [
+  {
+    title: "General",
+    items: [{ icon: LayoutDashboard, label: "Dashboard", path: "" }],
+  },
+  {
+    title: "Socios",
+    items: [
+      { icon: Users, label: "Usuarios", path: "users" },
+      { icon: Flame, label: "Actividades", path: "activities" },
+      { icon: QrCode, label: "Asistencias", path: "attendance" },
+      { icon: Receipt, label: "Contabilidad", path: "billing" },
+    ],
+  },
+  {
+    title: "Entrenamiento",
+    items: [
+      { icon: Dumbbell, label: "Ejercicios", path: "exercises" },
+      { icon: Dumbbell, label: "Máquinas", path: "equipments" },
+      { icon: ClipboardList, label: "Sesiones", path: "sessions" },
+      { icon: ClipboardList, label: "Planes", path: "plans" },
+    ],
+  },
+  {
+    title: "Sistema",
+    items: [
+      { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
+      { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
+    ],
+  },
 ];
 
 function isActive(pathname: string, itemPath: string): boolean {
@@ -69,10 +93,14 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   const { role } = useUserRole();
   const { gym, isSuperAdmin, exitGym } = useActiveGym();
 
-  // Dashboard siempre visible; el resto según permisos del rol.
-  const navItems = NAV_ITEMS.filter(
-    (item) => item.path === "" || canAccessModule(role, item.path)
-  );
+  // Dashboard siempre visible; el resto según permisos del rol. Se descartan
+  // secciones que quedan sin ítems visibles para el rol.
+  const navSections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter(
+      (item) => item.path === "" || canAccessModule(role, item.path)
+    ),
+  })).filter((section) => section.items.length > 0);
 
   const gymName = gym?.name ?? "GymTrack";
   const logo = mediaUrl(gym?.logo_url ?? null);
@@ -140,71 +168,79 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto pt-2 scrollbar-hide">
-        <p className="mb-1.5 mt-1 px-[18px] font-manrope text-[9px] font-semibold uppercase tracking-[1.5px] text-white/25">
-          Navegación
-        </p>
-
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(pathname, item.path);
-          const disabled = item.comingSoon || active;
-          const href = item.path ? `/admin/${item.path}` : "/admin";
-
-          const content = (
-            <>
-              {active && (
-                <span className="absolute -left-2 h-[22px] w-[3px] rounded-sm bg-brandSecondary-400" />
-              )}
-              <span
-                className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                  active ? "bg-white/20" : "bg-white/5"
-                }`}
-              >
-                <Icon
-                  size={14}
-                  color={active ? "#fff" : "rgba(255,255,255,0.55)"}
-                />
-              </span>
-              <span
-                className={`flex-1 text-[13px] ${
-                  active
-                    ? "font-manrope font-bold text-white"
-                    : "font-manrope text-white/55"
-                }`}
-              >
-                {item.label}
-              </span>
-              {item.comingSoon && (
-                <span className="rounded bg-white/5 px-1.5 py-0.5 font-manrope text-[8px] font-semibold tracking-wider text-white/30">
-                  SOON
-                </span>
-              )}
-            </>
-          );
-
-          const className = `relative mx-2 mb-0.5 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 ${
-            active
-              ? "bg-brandPrimary-600"
-              : item.comingSoon
-                ? "opacity-40"
-                : "hover:bg-white/5"
-          }`;
-
-          return disabled ? (
-            <div key={item.label} className={className}>
-              {content}
-            </div>
-          ) : (
-            <Link
-              key={item.label}
-              href={href}
-              onClick={onClose}
-              className={className}
+        {navSections.map((section, sectionIdx) => (
+          <div key={section.title}>
+            <p
+              className={`mb-1.5 px-[18px] font-manrope text-[9px] font-semibold uppercase tracking-[1.5px] text-white/25 ${
+                sectionIdx === 0 ? "mt-1" : "mt-4"
+              }`}
             >
-              {content}
-            </Link>
-          );
-        })}
+              {section.title}
+            </p>
+
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(pathname, item.path);
+              const disabled = item.comingSoon || active;
+              const href = item.path ? `/admin/${item.path}` : "/admin";
+
+              const content = (
+                <>
+                  {active && (
+                    <span className="absolute -left-2 h-[22px] w-[3px] rounded-sm bg-brandSecondary-400" />
+                  )}
+                  <span
+                    className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+                      active ? "bg-white/20" : "bg-white/5"
+                    }`}
+                  >
+                    <Icon
+                      size={14}
+                      color={active ? "#fff" : "rgba(255,255,255,0.55)"}
+                    />
+                  </span>
+                  <span
+                    className={`flex-1 text-[13px] ${
+                      active
+                        ? "font-manrope font-bold text-white"
+                        : "font-manrope text-white/55"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                  {item.comingSoon && (
+                    <span className="rounded bg-white/5 px-1.5 py-0.5 font-manrope text-[8px] font-semibold tracking-wider text-white/30">
+                      SOON
+                    </span>
+                  )}
+                </>
+              );
+
+              const className = `relative mx-2 mb-0.5 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 ${
+                active
+                  ? "bg-brandPrimary-600"
+                  : item.comingSoon
+                    ? "opacity-40"
+                    : "hover:bg-white/5"
+              }`;
+
+              return disabled ? (
+                <div key={item.label} className={className}>
+                  {content}
+                </div>
+              ) : (
+                <Link
+                  key={item.label}
+                  href={href}
+                  onClick={onClose}
+                  className={className}
+                >
+                  {content}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
 
         <div className="mx-4 my-4 h-px bg-white/5" />
 
