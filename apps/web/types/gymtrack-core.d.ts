@@ -261,6 +261,41 @@ declare module "@gymtrack/core/hooks/activities/use-activity-mutations" {
   };
 }
 
+declare module "@gymtrack/core/hooks/activities/use-activity-coaches" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  import type { ActivityCoach } from "@gymtrack/core/hooks/activities/use-activities";
+  export function useActivityCoaches(
+    activityId: string | null
+  ): UseQueryResult<ActivityCoach[]>;
+}
+
+declare module "@gymtrack/core/hooks/activities/use-activity-coach-mutations" {
+  import type { UseMutationResult } from "@tanstack/react-query";
+  export interface ActivityCoachInput {
+    coach_id: string;
+    monthly_fee?: number | string | null;
+    revenue_share_pct?: number | string | null;
+    rate_per_class?: number | string | null;
+    is_active?: boolean;
+  }
+  export interface ActivityCoachRow {
+    id: string;
+    [k: string]: unknown;
+  }
+  export function useActivityCoachMutations(
+    activityId: string | null,
+    gymId: string | null
+  ): {
+    create: UseMutationResult<ActivityCoachRow, Error, ActivityCoachInput>;
+    update: UseMutationResult<
+      ActivityCoachRow,
+      Error,
+      ActivityCoachInput & { id: string }
+    >;
+    remove: UseMutationResult<string, Error, string>;
+  };
+}
+
 declare module "@gymtrack/core/hooks/activities/use-activity-plan-mutations" {
   import type { UseMutationResult } from "@tanstack/react-query";
   export interface ActivityPlanInput {

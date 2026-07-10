@@ -15,6 +15,7 @@ import {
   Trash2,
   X,
   Loader2,
+  Users,
 } from "lucide-react";
 
 import { getBrowserSupabase } from "@/lib/supabase-browser";
@@ -22,8 +23,15 @@ import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activi
 import {
   useActivityPlans,
   type ActivityPlan,
+  type ActivityCoach,
 } from "@gymtrack/core/hooks/activities/use-activities";
 import { useActivityPlanMutations } from "@gymtrack/core/hooks/activities/use-activity-plan-mutations";
+import { useActivityCoaches } from "@gymtrack/core/hooks/activities/use-activity-coaches";
+import { useActivityCoachMutations } from "@gymtrack/core/hooks/activities/use-activity-coach-mutations";
+import {
+  useGymStaff,
+  type StaffMember,
+} from "@gymtrack/core/hooks/users/use-gym-staff";
 import {
   ACTIVITY_COLORS,
   DEFAULT_ACTIVITY_COLOR,
@@ -246,6 +254,9 @@ export function AdminActivityForm({
           <>
             <div className="my-6 h-px bg-ui-input-border" />
             <ActivityPlansManager activityId={editingId} gymId={gymId} />
+
+            <div className="my-6 h-px bg-ui-input-border" />
+            <ActivityCoachesManager activityId={editingId} gymId={gymId} />
 
             <button
               type="button"
@@ -767,6 +778,325 @@ function ActivityPlansManager({
               <button
                 type="button"
                 onClick={() => del(plan)}
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-red-50 transition hover:bg-red-100"
+              >
+                <Trash2 size={14} color="#dc2626" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Gestor de coaches (activity_coaches) ──
+type CoachDraft = {
+  id: string | null;
+  coach_id: string | null;
+  monthly_fee: string;
+  revenue_share_pct: string;
+  rate_per_class: string;
+  is_active: boolean;
+};
+
+const EMPTY_COACH_DRAFT: CoachDraft = {
+  id: null,
+  coach_id: null,
+  monthly_fee: "",
+  revenue_share_pct: "",
+  rate_per_class: "",
+  is_active: true,
+};
+
+const staffName = (p: { name: string | null; last_name: string | null } | null) =>
+  [p?.name, p?.last_name].filter(Boolean).join(" ") || "Sin nombre";
+
+const coachMoney = (v: number | string) => `$${Number(v).toLocaleString("es-AR")}`;
+
+const schemeSummary = (row: ActivityCoach) => {
+  const parts: string[] = [];
+  if (row.monthly_fee != null) parts.push(`${coachMoney(row.monthly_fee)} fijo`);
+  if (row.revenue_share_pct != null)
+    parts.push(`${Number(row.revenue_share_pct)}% ingresos`);
+  if (row.rate_per_class != null)
+    parts.push(`${coachMoney(row.rate_per_class)}/clase`);
+  return parts.length ? parts.join(" · ") : "Sin esquema de pago";
+};
+
+function ActivityCoachesManager({
+  activityId,
+  gymId,
+}: {
+  activityId: string;
+  gymId: string | null;
+}) {
+  const { data: coaches = [], isLoading } = useActivityCoaches(activityId);
+  const { data: staff = [] } = useGymStaff(gymId);
+  const { create, update, remove } = useActivityCoachMutations(activityId, gymId);
+
+  const [draft, setDraft] = useState<CoachDraft | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const assignedIds = new Set(coaches.map((c) => c.coach_id));
+
+  const openNew = () => {
+    setError(null);
+    setDraft({ ...EMPTY_COACH_DRAFT });
+  };
+  const openEdit = (row: ActivityCoach) => {
+    setError(null);
+    setDraft({
+      id: row.id,
+      coach_id: row.coach_id,
+      monthly_fee: row.monthly_fee == null ? "" : String(row.monthly_fee),
+      revenue_share_pct:
+        row.revenue_share_pct == null ? "" : String(row.revenue_share_pct),
+      rate_per_class: row.rate_per_class == null ? "" : String(row.rate_per_class),
+      is_active: row.is_active ?? true,
+    });
+  };
+  const close = () => setDraft(null);
+
+  const save = async () => {
+    if (!draft) return;
+    if (!draft.coach_id) {
+      setError("Elegí un coach.");
+      return;
+    }
+    const pct =
+      draft.revenue_share_pct === "" ? null : Number(draft.revenue_share_pct);
+    if (pct != null && (Number.isNaN(pct) || pct < 0 || pct > 100)) {
+      setError("El % de ingresos debe estar entre 0 y 100.");
+      return;
+    }
+    setError(null);
+    try {
+      const value = {
+        coach_id: draft.coach_id,
+        monthly_fee: draft.monthly_fee,
+        revenue_share_pct: draft.revenue_share_pct,
+        rate_per_class: draft.rate_per_class,
+        is_active: draft.is_active,
+      };
+      if (draft.id) {
+        await update.mutateAsync({ id: draft.id, ...value });
+      } else {
+        await create.mutateAsync(value);
+      }
+      close();
+    } catch (err) {
+      setError((err as Error)?.message || "No se pudo guardar el coach.");
+    }
+  };
+
+  const del = async (row: ActivityCoach) => {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm(`¿Quitar a ${staffName(row.coach)} de esta actividad?`)
+    )
+      return;
+    try {
+      await remove.mutateAsync(row.id);
+      if (draft?.id === row.id) close();
+    } catch (err) {
+      setError((err as Error)?.message || "No se pudo quitar el coach.");
+    }
+  };
+
+  const saving = create.isPending || update.isPending;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
+          Coaches
+        </span>
+        {!draft && (
+          <button
+            type="button"
+            onClick={openNew}
+            className="flex items-center gap-1.5 rounded-lg bg-brandPrimary-50 px-3 py-1.5 transition hover:bg-brandPrimary-100"
+          >
+            <Plus size={13} className="text-brandPrimary-600" />
+            <span className="font-manrope text-[12px] font-bold text-brandPrimary-600">
+              Asignar coach
+            </span>
+          </button>
+        )}
+      </div>
+
+      <ErrorBanner message={error} />
+
+      {draft && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-ui-input-border bg-ui-background-light p-4">
+          <div className="flex items-center justify-between">
+            <span className="font-jakarta text-[14px] font-bold text-ui-text-main">
+              {draft.id ? "Editar coach" : "Asignar coach"}
+            </span>
+            <button type="button" onClick={close}>
+              <X size={16} className="text-ui-text-muted" />
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
+              Coach
+            </span>
+            {staff.length === 0 ? (
+              <span className="font-manrope text-[12px] text-ui-text-muted">
+                No hay coaches en este gimnasio todavía.
+              </span>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {staff
+                  .filter((s: StaffMember) =>
+                    draft.id ? s.id === draft.coach_id : !assignedIds.has(s.id)
+                  )
+                  .map((s: StaffMember) => {
+                    const selected = draft.coach_id === s.id;
+                    return (
+                      <button
+                        type="button"
+                        key={s.id}
+                        disabled={!!draft.id}
+                        onClick={() =>
+                          setDraft((d) =>
+                            d
+                              ? { ...d, coach_id: selected ? null : s.id }
+                              : d
+                          )
+                        }
+                        className={`rounded-full border px-3 py-1.5 font-manrope text-[12px] font-semibold transition disabled:cursor-default ${
+                          selected
+                            ? "border-brandPrimary-600 bg-brandPrimary-600 text-white"
+                            : "border-ui-input-border bg-white text-ui-text-muted hover:bg-white"
+                        }`}
+                      >
+                        {staffName(s)}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+
+          <Field label="FIJO MENSUAL">
+            <Input
+              placeholder="0.00 (opcional)"
+              inputMode="decimal"
+              value={draft.monthly_fee}
+              onChange={(e) =>
+                setDraft((d) => (d ? { ...d, monthly_fee: e.target.value } : d))
+              }
+            />
+          </Field>
+
+          <Field label="% DE LOS INGRESOS DE LA ACTIVIDAD">
+            <Input
+              placeholder="Ej: 10 (opcional)"
+              inputMode="decimal"
+              value={draft.revenue_share_pct}
+              onChange={(e) =>
+                setDraft((d) =>
+                  d ? { ...d, revenue_share_pct: e.target.value } : d
+                )
+              }
+            />
+          </Field>
+
+          <Field label="TARIFA POR CLASE DICTADA">
+            <Input
+              placeholder="0.00 (opcional)"
+              inputMode="decimal"
+              value={draft.rate_per_class}
+              onChange={(e) =>
+                setDraft((d) => (d ? { ...d, rate_per_class: e.target.value } : d))
+              }
+            />
+          </Field>
+
+          <Toggle
+            label="Asignación activa"
+            value={draft.is_active}
+            onChange={(v) => setDraft((d) => (d ? { ...d, is_active: v } : d))}
+          />
+
+          <div className="mt-1 flex gap-2">
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white ${
+                saving
+                  ? "bg-brandPrimary-400"
+                  : "bg-brandPrimary-600 hover:bg-brandPrimary-700"
+              }`}
+            >
+              {saving ? "Guardando..." : draft.id ? "Guardar" : "Asignar"}
+            </button>
+            {draft.id && (
+              <button
+                type="button"
+                onClick={() => {
+                  const row = coaches.find((c) => c.id === draft.id);
+                  if (row) del(row);
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-red-50 transition hover:bg-red-100"
+              >
+                <Trash2 size={14} color="#dc2626" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-6">
+          <Loader2 size={18} className="animate-spin text-brandPrimary-600" />
+        </div>
+      ) : coaches.length === 0 ? (
+        !draft && (
+          <div className="rounded-2xl border border-dashed border-ui-input-border bg-ui-background-light/50 px-6 py-6 text-center">
+            <Users size={20} className="mx-auto mb-2 text-ui-text-muted" />
+            <span className="font-manrope text-[12px] text-ui-text-muted">
+              Sin coaches asignados. Asigná quién dicta esta actividad y cómo
+              cobra para poder calcular sus pagos.
+            </span>
+          </div>
+        )
+      ) : (
+        <div className="flex flex-col gap-2">
+          {coaches.map((row) => (
+            <div
+              key={row.id}
+              className="flex items-center gap-3 rounded-2xl border border-ui-input-border bg-white p-3.5"
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-jakarta text-[14px] font-bold text-ui-text-main">
+                    {staffName(row.coach)}
+                  </span>
+                  {!row.is_active && (
+                    <span className="rounded bg-ui-background-light px-1.5 py-0.5 font-manrope text-[9px] font-bold uppercase tracking-wider text-ui-text-muted">
+                      Inactivo
+                    </span>
+                  )}
+                </div>
+                <span className="mt-0.5 font-manrope text-[12px] text-ui-text-muted">
+                  {schemeSummary(row)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => openEdit(row)}
+                className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brandPrimary-50 transition hover:bg-brandPrimary-100"
+              >
+                <Pencil size={14} className="text-brandPrimary-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => del(row)}
                 className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-red-50 transition hover:bg-red-100"
               >
                 <Trash2 size={14} color="#dc2626" />
