@@ -18,6 +18,7 @@ import Screen from "../../../../../src/components/Screen";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../src/contexts/gym-theme-context";
 import { useGymSubscriptions } from "@gymtrack/core/hooks/activities/use-gym-subscriptions";
+import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-subscription-payments";
 import { useActivitySubscriptionMutations } from "../../../../../src/hooks/activities/use-activity-subscription-mutations";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
@@ -33,6 +34,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Users,
+  Calendar,
+  Clock,
+  X,
 } from "../../../../../assets/icons";
 
 const money = (n) => `$${Number(n || 0).toLocaleString("es-AR")}`;
@@ -51,6 +55,35 @@ const formatDate = (iso) => {
   }
 };
 
+// "YYYY-MM" del mes de una fecha ISO (o del mes en curso si es null).
+const monthValue = (iso) =>
+  (iso ?? new Date().toISOString().slice(0, 10)).slice(0, 7);
+
+// Etiqueta legible de un mes, tipo "ago 2026". Acepta "YYYY-MM" o fecha ISO.
+const monthLabel = (value) => {
+  if (!value) return "—";
+  try {
+    const iso = value.length === 7 ? `${value}-01` : value;
+    return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", {
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+};
+
+// Opciones de mes alrededor de un mes base (para elegir qué mes se paga):
+// permite cobrar meses atrasados (-2, -1) o adelantar (+1, +2).
+const monthOptions = (baseValue) => {
+  const [y, m] = baseValue.split("-").map(Number);
+  return [-2, -1, 0, 1, 2].map((offset) => {
+    const d = new Date(y, m - 1 + offset, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    return { value, label: monthLabel(value) };
+  });
+};
+
 const FILTERS = [
   { key: "all", label: "Todas" },
   { key: "ok", label: "Al día" },
@@ -65,9 +98,11 @@ export default function BillingScreen() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [altaOpen, setAltaOpen] = useState(false);
+  const [payingSub, setPayingSub] = useState(null);
+  const [detailSub, setDetailSub] = useState(null);
 
   const { data: subs, isLoading } = useGymSubscriptions(gymId);
-  const { registerPayment, cancel } = useActivitySubscriptionMutations();
+  const { cancel } = useActivitySubscriptionMutations();
 
   const stats = useMemo(() => {
     const rows = subs ?? [];
@@ -87,11 +122,12 @@ export default function BillingScreen() {
 
   const onRegisterPayment = (sub) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    registerPayment.mutate({
-      id: sub.id,
-      price: sub.price,
-      memberId: sub.user_id,
-    });
+    setPayingSub(sub);
+  };
+
+  const onDetail = (sub) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDetailSub(sub);
   };
 
   const onCancel = (sub) => {
@@ -221,6 +257,7 @@ export default function BillingScreen() {
                 sub={sub}
                 brandPrimary={brandPrimary}
                 onRegisterPayment={() => onRegisterPayment(sub)}
+                onDetail={() => onDetail(sub)}
                 onCancel={() => onCancel(sub)}
               />
             ))}
@@ -231,6 +268,20 @@ export default function BillingScreen() {
       <AltaMembresiaModal
         visible={altaOpen}
         onClose={() => setAltaOpen(false)}
+        brandPrimary={brandPrimary}
+        insets={insets}
+      />
+
+      <RegistrarPagoModal
+        sub={payingSub}
+        onClose={() => setPayingSub(null)}
+        brandPrimary={brandPrimary}
+        insets={insets}
+      />
+
+      <DetallePagosModal
+        sub={detailSub}
+        onClose={() => setDetailSub(null)}
         brandPrimary={brandPrimary}
         insets={insets}
       />
@@ -251,7 +302,7 @@ function MiniStat({ label, value, tone }) {
   );
 }
 
-function SubRow({ sub, brandPrimary, onRegisterPayment, onCancel }) {
+function SubRow({ sub, brandPrimary, onRegisterPayment, onDetail, onCancel }) {
   const badge = paymentBadge(sub.due_date);
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
@@ -292,6 +343,12 @@ function SubRow({ sub, brandPrimary, onRegisterPayment, onCancel }) {
           >
             <Receipt size={13} color="#16a34a" />
             <Text className="text-[11px] font-manrope-semi text-green-600">Registrar pago</Text>
+          </Pressable>
+          <Pressable
+            onPress={onDetail}
+            className="p-2 rounded-lg bg-brandPrimary-50 dark:bg-brandPrimary-900/30 active:scale-95"
+          >
+            <Clock size={14} color={brandPrimary[600]} />
           </Pressable>
           <Pressable
             onPress={onCancel}
