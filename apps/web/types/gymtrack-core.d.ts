@@ -54,6 +54,23 @@ declare module "@gymtrack/core/hooks/activities/use-gym-subscriptions" {
   ): UseQueryResult<GymSubscription[]>;
 }
 
+declare module "@gymtrack/core/hooks/activities/use-subscription-payments" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface SubscriptionPayment {
+    id: string;
+    subscription_id: string;
+    user_id: string;
+    amount: number | string | null;
+    paid_at: string | null;
+    period_start: string | null;
+    period_end: string | null;
+    [k: string]: unknown;
+  }
+  export function useSubscriptionPayments(
+    subscriptionId: string | null
+  ): UseQueryResult<SubscriptionPayment[]>;
+}
+
 declare module "@gymtrack/core/colors" {
   export type Ramp = Record<number, string>;
   export const brandPrimary: Ramp;

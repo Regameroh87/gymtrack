@@ -21,6 +21,8 @@ import {
   Trash2,
   X,
   Loader2,
+  History,
+  Calendar,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +33,7 @@ import {
 } from "@gymtrack/core/hooks/activities/use-gym-subscriptions";
 import { useGymMembers, type GymMember } from "@gymtrack/core/hooks/users/use-gym-members";
 import { useActivities, type Activity, type ActivityPlan } from "@gymtrack/core/hooks/activities/use-activities";
+import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-subscription-payments";
 import { paymentBadge, isOverdue } from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
@@ -58,6 +61,23 @@ const formatDate = (iso: string | null) => {
   }
 };
 
+// "YYYY-MM" para el <input type="month"> (default = mes del vencimiento actual).
+const monthValue = (iso: string | null) =>
+  (iso ?? new Date().toISOString().slice(0, 10)).slice(0, 7);
+
+// Etiqueta legible del mes cubierto por un cobro, tipo "ago 2026".
+const monthLabel = (iso: string | null) => {
+  if (!iso) return "—";
+  try {
+    return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", {
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+};
+
 const FILTERS = [
   { key: "all", label: "Todas" },
   { key: "ok", label: "Al día" },
@@ -70,9 +90,11 @@ export default function BillingPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [altaOpen, setAltaOpen] = useState(false);
+  const [payingSub, setPayingSub] = useState<GymSubscription | null>(null);
+  const [detailSub, setDetailSub] = useState<GymSubscription | null>(null);
 
   const { data: subs, isLoading } = useGymSubscriptions(gymId);
-  const { registerPayment, cancel } = useActivitySubscriptionMutations();
+  const { cancel } = useActivitySubscriptionMutations();
 
   const stats = useMemo(() => {
     const rows = subs ?? [];
@@ -89,9 +111,6 @@ export default function BillingPage() {
     if (q) rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
     return rows;
   }, [subs, filter, search]);
-
-  const onRegisterPayment = (sub: GymSubscription) =>
-    registerPayment.mutate({ id: sub.id, price: sub.price, memberId: sub.user_id });
 
   const onCancel = (sub: GymSubscription) => {
     if (
@@ -185,9 +204,10 @@ export default function BillingPage() {
               sub={sub}
               last={i === filtered.length - 1}
               brandPrimary={brandPrimary}
-              onRegisterPayment={() => onRegisterPayment(sub)}
+              onRegisterPayment={() => setPayingSub(sub)}
+              onDetail={() => setDetailSub(sub)}
               onCancel={() => onCancel(sub)}
-              busy={registerPayment.isPending || cancel.isPending}
+              busy={cancel.isPending}
             />
           ))}
         </div>
@@ -196,6 +216,20 @@ export default function BillingPage() {
       {/* Alta modal */}
       {altaOpen && (
         <AltaMembresiaModal onClose={() => setAltaOpen(false)} brandPrimary={brandPrimary} />
+      )}
+
+      {/* Registrar pago (elegir mes) */}
+      {payingSub && (
+        <RegistrarPagoModal sub={payingSub} onClose={() => setPayingSub(null)} />
+      )}
+
+      {/* Detalle / historial de pagos del socio */}
+      {detailSub && (
+        <DetallePagosModal
+          sub={detailSub}
+          brandPrimary={brandPrimary}
+          onClose={() => setDetailSub(null)}
+        />
       )}
     </>
   );
@@ -236,6 +270,7 @@ function SubRow({
   last,
   brandPrimary,
   onRegisterPayment,
+  onDetail,
   onCancel,
   busy,
 }: {
@@ -243,6 +278,7 @@ function SubRow({
   last: boolean;
   brandPrimary: Record<number, string>;
   onRegisterPayment: () => void;
+  onDetail: () => void;
   onCancel: () => void;
   busy: boolean;
 }) {
@@ -285,7 +321,7 @@ function SubRow({
       </div>
 
       {/* Acciones */}
-      <div className="flex w-44 items-center justify-end gap-2">
+      <div className="flex w-56 items-center justify-end gap-2">
         <button
           type="button"
           disabled={busy}
@@ -296,6 +332,14 @@ function SubRow({
           <span className="font-manrope text-[11px] font-semibold text-green-600">
             Registrar pago
           </span>
+        </button>
+        <button
+          type="button"
+          onClick={onDetail}
+          title="Ver detalle de pagos"
+          className="rounded-lg bg-brandPrimary-50 p-2 hover:bg-brandPrimary-100/70"
+        >
+          <History size={14} color={brandPrimary[600]} />
         </button>
         <button
           type="button"
@@ -512,6 +556,190 @@ function Empty({ text }: { text: string }) {
   return (
     <div className="flex items-center justify-center py-10">
       <span className="font-manrope text-xs text-ui-text-muted">{text}</span>
+    </div>
+  );
+}
+
+// Modal de cobro: el admin elige el mes que se paga (default = mes del
+// vencimiento actual) y confirma el monto. Permite cobrar meses atrasados o
+// adelantar.
+function RegistrarPagoModal({
+  sub,
+  onClose,
+}: {
+  sub: GymSubscription;
+  onClose: () => void;
+}) {
+  const { registerPayment } = useActivitySubscriptionMutations();
+  const [month, setMonth] = useState(monthValue(sub.due_date));
+  const [amount, setAmount] = useState(sub.price == null ? "" : String(sub.price));
+
+  const onConfirm = () => {
+    registerPayment.mutate(
+      {
+        id: sub.id,
+        price: amount === "" ? null : amount,
+        periodStart: `${month}-01`,
+        memberId: sub.user_id,
+      },
+      { onSuccess: onClose }
+    );
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="w-[420px] overflow-hidden rounded-2xl bg-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-ui-input-border px-5 py-4">
+          <div className="flex items-center gap-2">
+            <Receipt size={18} color="#16a34a" />
+            <span className="font-jakarta text-[16px] font-bold text-ui-text-main">
+              Registrar pago
+            </span>
+          </div>
+          <button type="button" onClick={onClose}>
+            <X size={18} color={ui.text.muted} />
+          </button>
+        </div>
+
+        <div className="p-5">
+          <p className="mb-1 font-jakarta text-[15px] font-bold capitalize text-ui-text-main">
+            {fullName(sub.member)}
+          </p>
+          <p className="mb-4 font-manrope text-[12px] text-ui-text-muted">
+            {sub.activities?.name ?? "Actividad"} · {sub.activity_plans?.label ?? "Pase"}
+          </p>
+
+          {/* Mes que se paga */}
+          <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+            Mes que paga
+          </label>
+          <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+            <Calendar size={15} color={ui.text.muted} />
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none"
+            />
+          </div>
+
+          {/* Monto */}
+          <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+            Monto
+          </label>
+          <div className="mb-5 flex items-center gap-2 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+            <span className="font-jakarta text-[14px] font-bold text-ui-text-muted">$</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
+            />
+          </div>
+
+          <Button
+            onClick={onConfirm}
+            loading={registerPayment.isPending}
+            className="w-full justify-center"
+          >
+            {`Cobrar ${money(amount)} · ${monthLabel(`${month}-01`)}`}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Modal de detalle: historial de cobros de la suscripción, con el mes que cubre
+// cada uno, cuándo se cobró y el monto.
+function DetallePagosModal({
+  sub,
+  brandPrimary,
+  onClose,
+}: {
+  sub: GymSubscription;
+  brandPrimary: Record<number, string>;
+  onClose: () => void;
+}) {
+  const { data: payments, isLoading } = useSubscriptionPayments(sub.id);
+  const rows = payments ?? [];
+  const total = rows.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+  return (
+    <div
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[80%] w-[460px] flex-col overflow-hidden rounded-2xl bg-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-ui-input-border px-5 py-4">
+          <div className="flex items-center gap-2">
+            <History size={18} color={brandPrimary[600]} />
+            <div>
+              <span className="block font-jakarta text-[15px] font-bold capitalize text-ui-text-main">
+                {fullName(sub.member)}
+              </span>
+              <span className="font-manrope text-[11px] text-ui-text-muted">
+                {sub.activities?.name ?? "Actividad"} · Historial de pagos
+              </span>
+            </div>
+          </div>
+          <button type="button" onClick={onClose}>
+            <X size={18} color={ui.text.muted} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto">
+          {isLoading ? (
+            <Loading color={brandPrimary[600]} />
+          ) : rows.length === 0 ? (
+            <Empty text="Todavía no hay pagos registrados." />
+          ) : (
+            rows.map((p, i) => (
+              <div
+                key={p.id}
+                className={`flex items-center px-5 py-3 ${i === rows.length - 1 ? "" : "border-b border-ui-input-border"}`}
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-green-500/10">
+                  <Calendar size={15} color="#16a34a" />
+                </div>
+                <div className="ml-3 min-w-0 flex-1">
+                  <p className="font-jakarta text-[13px] font-bold capitalize text-ui-text-main">
+                    {monthLabel(p.period_start)}
+                  </p>
+                  <p className="font-manrope text-[11px] text-ui-text-muted">
+                    Cobrado el {formatDate(p.paid_at)}
+                  </p>
+                </div>
+                <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
+                  {money(p.amount)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {rows.length > 0 && (
+          <div className="flex items-center justify-between border-t border-ui-input-border bg-brandPrimary-50/50 px-5 py-3">
+            <span className="font-manrope text-[12px] font-semibold text-ui-text-muted">
+              {rows.length} {rows.length === 1 ? "pago" : "pagos"}
+            </span>
+            <span className="font-jakarta text-[15px] font-bold text-ui-text-main">
+              Total {money(total)}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

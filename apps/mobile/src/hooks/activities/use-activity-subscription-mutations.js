@@ -29,8 +29,9 @@ export const useActivitySubscriptionMutations = () => {
   const invalidate = (memberId) => {
     queryClient.invalidateQueries({ queryKey: ["gym_subscriptions", gymId] });
     // Cada cobro queda registrado en subscription_payments y alimenta el % de
-    // ingresos de los coaches: refrescar también esas vistas.
-    queryClient.invalidateQueries({ queryKey: ["subscription_payments", gymId] });
+    // ingresos de los coaches: refrescar también esas vistas. Prefijo (sin
+    // gymId) para cubrir además el historial por-suscripción del modal.
+    queryClient.invalidateQueries({ queryKey: ["subscription_payments"] });
     queryClient.invalidateQueries({ queryKey: ["coach_payment_summary", gymId] });
     if (memberId) {
       queryClient.invalidateQueries({
@@ -76,7 +77,9 @@ export const useActivitySubscriptionMutations = () => {
       if (insErr) throw insErr;
 
       // El alta asume el primer mes pagado: dejar ese cobro registrado en caja
-      // (subscription_payments) para que ingresos y % de coaches cierren.
+      // (subscription_payments) para que ingresos y % de coaches cierren. El
+      // período cubierto es el mes en curso.
+      const periodStart = `${today.slice(0, 7)}-01`;
       const { error: payErr } = await supabase
         .from("subscription_payments")
         .insert({
@@ -85,6 +88,8 @@ export const useActivitySubscriptionMutations = () => {
           activity_id: activityId,
           user_id: memberId,
           amount: normalizedPrice ?? 0,
+          period_start: periodStart,
+          period_end: addOneMonth(periodStart),
           registered_by: staffProfileId,
         });
       if (payErr) throw payErr;
@@ -94,15 +99,17 @@ export const useActivitySubscriptionMutations = () => {
   });
 
   // Registra un pago vía RPC atómico: inserta el cobro en subscription_payments
-  // Y mueve el vencimiento en la misma transacción (caja y "al día" no divergen).
+  // (con el mes que cubre) Y mueve el vencimiento en la misma transacción (caja
+  // y "al día" no divergen). periodStart = primer día del mes a pagar; si se
+  // omite, el RPC usa el mes del vencimiento actual.
   const registerPayment = useMutation({
-    mutationFn: async ({ id, price, nextDueDate }) => {
+    mutationFn: async ({ id, price, periodStart }) => {
       const { data, error } = await supabase.rpc(
         "register_subscription_payment",
         {
           p_subscription_id: id,
           p_amount: price == null || price === "" ? null : Number(price),
-          p_next_due_date: nextDueDate ?? addOneMonth(),
+          p_period_start: periodStart ?? null,
         }
       );
       if (error) throw error;
