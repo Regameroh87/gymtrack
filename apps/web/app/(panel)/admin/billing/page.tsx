@@ -105,7 +105,7 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="p-4 pb-14 md:p-9">
+    <>
       <PageHeader
         section="Contabilidad"
         title="Membresías y cobranza"
@@ -122,7 +122,7 @@ export default function BillingPage() {
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
-        <StatCard icon={Receipt} label="Ingreso mensual" value={money(stats.revenue)} iconColor={brandPrimary[600]} bubble="bg-brandPrimary-50" />
+        <StatCard icon={Receipt} label="Facturación estimada" value={money(stats.revenue)} iconColor={brandPrimary[600]} bubble="bg-brandPrimary-50" />
         <StatCard icon={CheckCircle} label="Al día" value={stats.ok} iconColor="#16a34a" bubble="bg-emerald-50" />
         <StatCard icon={Clock} label="Vencidas" value={stats.overdue} iconColor="#ef4444" bubble="bg-red-50" />
       </div>
@@ -197,7 +197,7 @@ export default function BillingPage() {
       {altaOpen && (
         <AltaMembresiaModal onClose={() => setAltaOpen(false)} brandPrimary={brandPrimary} />
       )}
-    </div>
+    </>
   );
 }
 
