@@ -523,3 +523,224 @@ function Empty({ text }) {
     </View>
   );
 }
+
+// Modal de cobro: el admin elige el mes que se paga (default = mes del
+// vencimiento actual) y confirma el monto. Permite cobrar meses atrasados o
+// adelantar.
+function RegistrarPagoModal({ sub, onClose, brandPrimary, insets }) {
+  const { registerPayment } = useActivitySubscriptionMutations();
+  const [month, setMonth] = useState(null);
+  const [amount, setAmount] = useState("");
+
+  useEffect(() => {
+    if (sub) {
+      setMonth(monthValue(sub.due_date));
+      setAmount(sub.price == null ? "" : String(sub.price));
+    }
+  }, [sub]);
+
+  // Opciones centradas en el mes del vencimiento (no en el seleccionado, para
+  // que la lista no se corra al tocar).
+  const options = sub ? monthOptions(monthValue(sub.due_date)) : [];
+
+  const onConfirm = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    registerPayment.mutate(
+      {
+        id: sub.id,
+        price: amount === "" ? null : amount,
+        periodStart: `${month}-01`,
+        memberId: sub.user_id,
+      },
+      { onSuccess: onClose }
+    );
+  };
+
+  return (
+    <Modal visible={!!sub} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable className="flex-1 bg-black/40 justify-end" onPress={onClose}>
+        <Pressable
+          className="bg-ui-background-light dark:bg-ui-background-dark rounded-t-3xl"
+          style={{ paddingBottom: insets.bottom + 16 }}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <View className="items-center pt-3 pb-1">
+            <View className="w-10 h-1 rounded-full bg-ui-input-border" />
+          </View>
+
+          {sub && (
+            <View className="px-6 pt-2">
+              <View className="flex-row items-center justify-between mb-1">
+                <Text className="text-lg font-jakarta tracking-tight text-ui-text-main dark:text-ui-text-mainDark">
+                  Registrar pago
+                </Text>
+                <Pressable onPress={onClose} className="p-1">
+                  <X size={20} color={ui.text.muted} />
+                </Pressable>
+              </View>
+              <Text className="text-[13px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize">
+                {fullName(sub.member)}
+              </Text>
+              <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mb-4">
+                {sub.activities?.name ?? "Actividad"} · {sub.activity_plans?.label ?? "Pase"}
+              </Text>
+
+              {/* Mes que se paga */}
+              <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mb-2">
+                Mes que paga
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mb-4 -mx-1"
+                contentContainerStyle={{ paddingHorizontal: 4, gap: 8 }}
+              >
+                {options.map((opt) => {
+                  const active = opt.value === month;
+                  return (
+                    <Pressable
+                      key={opt.value}
+                      onPress={() => setMonth(opt.value)}
+                      className={`px-3.5 py-2 rounded-xl border ${
+                        active
+                          ? "bg-brandPrimary-600 border-brandPrimary-600"
+                          : "bg-ui-surface-light dark:bg-ui-surface-dark border-ui-input-border"
+                      }`}
+                    >
+                      <Text
+                        className={`text-[12px] font-manrope-semi capitalize ${
+                          active ? "text-white" : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                        }`}
+                      >
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Monto */}
+              <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mb-2">
+                Monto
+              </Text>
+              <View className="flex-row items-center gap-2 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl px-3.5 py-3 border border-ui-input-border mb-5">
+                <Text className="text-[14px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark">
+                  $
+                </Text>
+                <TextInput
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyboardType="numeric"
+                  placeholder="0"
+                  placeholderTextColor={ui.text.muted}
+                  className="flex-1 text-[14px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+                />
+              </View>
+
+              <Pressable
+                onPress={onConfirm}
+                disabled={registerPayment.isPending}
+                className="items-center py-3.5 rounded-2xl bg-brandPrimary-600 active:opacity-80"
+                style={{ opacity: registerPayment.isPending ? 0.6 : 1 }}
+              >
+                {registerPayment.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text className="text-[14px] font-manrope-bold text-white">
+                    Cobrar {money(amount)} · {monthLabel(month)}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          )}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+// Modal de detalle: historial de cobros de la suscripción, con el mes que cubre
+// cada uno, cuándo se cobró y el monto.
+function DetallePagosModal({ sub, onClose, brandPrimary, insets }) {
+  const { data: payments, isLoading } = useSubscriptionPayments(sub?.id ?? null);
+  const rows = payments ?? [];
+  const total = rows.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+  return (
+    <Modal visible={!!sub} animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable className="flex-1 bg-black/40 justify-end" onPress={onClose}>
+        <Pressable
+          className="bg-ui-background-light dark:bg-ui-background-dark rounded-t-3xl max-h-[78%]"
+          style={{ paddingBottom: insets.bottom + 12 }}
+          onPress={(e) => e.stopPropagation()}
+        >
+          <View className="items-center pt-3 pb-1">
+            <View className="w-10 h-1 rounded-full bg-ui-input-border" />
+          </View>
+
+          {sub && (
+            <>
+              <View className="flex-row items-center justify-between px-6 pt-2 pb-3">
+                <View className="flex-1 pr-3">
+                  <Text
+                    className="text-lg font-jakarta tracking-tight text-ui-text-main dark:text-ui-text-mainDark capitalize"
+                    numberOfLines={1}
+                  >
+                    {fullName(sub.member)}
+                  </Text>
+                  <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+                    {sub.activities?.name ?? "Actividad"} · Historial de pagos
+                  </Text>
+                </View>
+                <Pressable onPress={onClose} className="p-1">
+                  <X size={20} color={ui.text.muted} />
+                </Pressable>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {isLoading ? (
+                  <Loading color={brandPrimary[600]} />
+                ) : rows.length === 0 ? (
+                  <Empty text="Todavía no hay pagos registrados." />
+                ) : (
+                  rows.map((p) => (
+                    <View
+                      key={p.id}
+                      className="flex-row items-center px-6 py-3 border-b border-ui-input-border"
+                    >
+                      <View className="w-9 h-9 rounded-[10px] items-center justify-center bg-green-500/10 mr-3">
+                        <Calendar size={15} color="#16a34a" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[13px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize">
+                          {monthLabel(p.period_start)}
+                        </Text>
+                        <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+                          Cobrado el {formatDate(p.paid_at)}
+                        </Text>
+                      </View>
+                      <Text className="text-[14px] font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark">
+                        {money(p.amount)}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+
+              {rows.length > 0 && (
+                <View className="flex-row items-center justify-between px-6 py-3 border-t border-ui-input-border">
+                  <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark">
+                    {rows.length} {rows.length === 1 ? "pago" : "pagos"}
+                  </Text>
+                  <Text className="text-[15px] font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark">
+                    Total {money(total)}
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
