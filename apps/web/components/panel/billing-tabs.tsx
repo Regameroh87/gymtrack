@@ -9,6 +9,7 @@ import Link from "next/link";
 
 const TABS = [
   { href: "/admin/billing", label: "Membresías", exact: true },
+  { href: "/admin/billing/payments", label: "Pagos recibidos", exact: false },
   { href: "/admin/billing/income", label: "Ingresos por actividad", exact: false },
   { href: "/admin/billing/coaches", label: "Pagos a coaches", exact: false },
 ];

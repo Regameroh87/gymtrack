@@ -26,6 +26,7 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { PageHeader } from "@/components/ui/page-header";
 import { MonthPicker, monthRange } from "@/components/ui/month-picker";
+import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
 
 const money = (n: number | string | null | undefined) =>
   `$${Number(n || 0).toLocaleString("es-AR")}`;
@@ -40,6 +41,15 @@ const formatPaidAt = (ts: string | null) => {
     return "—";
   }
 };
+
+interface PaymentRow {
+  id: string;
+  coach_id: string;
+  total_amount: number | string;
+  paid_at: string | null;
+  notes: string | null;
+  coach: { id: string; name: string | null; last_name: string | null } | null;
+}
 
 interface SummaryRow {
   coach_id: string;
@@ -67,6 +77,7 @@ export default function CoachPaymentsPage() {
   const { register, remove } = useCoachPaymentMutations();
 
   const [paying, setPaying] = useState<SummaryRow | null>(null);
+  const [removingPayment, setRemovingPayment] = useState<PaymentRow | null>(null);
 
   const paidByCoach = useMemo(() => {
     const map: Record<string, number> = {};

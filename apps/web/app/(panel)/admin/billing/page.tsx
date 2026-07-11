@@ -43,6 +43,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { ConfirmDialog } from "@/components/platform/catalog/catalog-ui";
 
 const money = (n: number | string | null | undefined) =>
   `$${Number(n || 0).toLocaleString("es-AR")}`;
@@ -93,6 +94,7 @@ export default function BillingPage() {
   const [altaOpen, setAltaOpen] = useState(false);
   const [payingSub, setPayingSub] = useState<GymSubscription | null>(null);
   const [detailSub, setDetailSub] = useState<GymSubscription | null>(null);
+  const [cancelSub, setCancelSub] = useState<GymSubscription | null>(null);
 
   const { data: subs, isLoading } = useGymSubscriptions(gymId);
   const { cancel } = useActivitySubscriptionMutations();
@@ -113,22 +115,19 @@ export default function BillingPage() {
     return rows;
   }, [subs, filter, search]);
 
-  const onCancel = (sub: GymSubscription) => {
-    if (
-      typeof window !== "undefined" &&
-      window.confirm(
-        `¿Dar de baja la membresía de ${fullName(sub.member)} en ${sub.activities?.name ?? "esta actividad"}?`
-      )
-    ) {
-      cancel.mutate(
-        { id: sub.id, memberId: sub.user_id },
-        {
-          onSuccess: () => toast.success("Membresía dada de baja"),
-          onError: (error) =>
-            toast.error("No se pudo dar de baja la membresía", { description: error.message }),
-        }
-      );
-    }
+  const confirmCancel = () => {
+    if (!cancelSub) return;
+    cancel.mutate(
+      { id: cancelSub.id, memberId: cancelSub.user_id },
+      {
+        onSuccess: () => {
+          toast.success("Membresía dada de baja");
+          setCancelSub(null);
+        },
+        onError: (error) =>
+          toast.error("No se pudo dar de baja la membresía", { description: error.message }),
+      }
+    );
   };
 
   return (
@@ -214,7 +213,7 @@ export default function BillingPage() {
               brandPrimary={brandPrimary}
               onRegisterPayment={() => setPayingSub(sub)}
               onDetail={() => setDetailSub(sub)}
-              onCancel={() => onCancel(sub)}
+              onCancel={() => setCancelSub(sub)}
               busy={cancel.isPending}
             />
           ))}
@@ -239,6 +238,24 @@ export default function BillingPage() {
           onClose={() => setDetailSub(null)}
         />
       )}
+
+      {/* Dar de baja membresía */}
+      <ConfirmDialog
+        visible={!!cancelSub}
+        title="Dar de baja membresía"
+        message={
+          cancelSub
+            ? `¿Dar de baja la membresía de ${fullName(cancelSub.member)} en ${
+                cancelSub.activities?.name ?? "esta actividad"
+              }?`
+            : ""
+        }
+        isPending={cancel.isPending}
+        confirmLabel="Dar de baja"
+        tone="warning"
+        onCancel={() => setCancelSub(null)}
+        onConfirm={confirmCancel}
+      />
     </>
   );
 }

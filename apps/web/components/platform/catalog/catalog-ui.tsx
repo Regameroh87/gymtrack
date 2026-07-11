@@ -5,7 +5,7 @@
 // catalog/_form-web.jsx). Mantienen el lenguaje visual del panel.
 
 import type { ReactNode } from "react";
-import { Loader2, Check, Trash2, X, Plus } from "lucide-react";
+import { Loader2, Check, Trash2, X, Plus, AlertTriangle } from "lucide-react";
 
 import type { Option } from "@/lib/catalog-options";
 
@@ -244,7 +244,92 @@ export function ModalShell({
   );
 }
 
-// ── Confirmación de borrado ──
+// ── Confirmación genérica (reemplaza window.confirm en todo el panel) ──
+// tone "danger" = borrado permanente; "warning" = acción reversible (dar de
+// baja, quitar una asignación).
+const CONFIRM_TONE = {
+  danger: {
+    bubble: "bg-red-50",
+    iconColor: "#dc2626",
+    button: (pending?: boolean) => (pending ? "bg-red-300" : "bg-red-600 hover:bg-red-700"),
+  },
+  warning: {
+    bubble: "bg-amber-50",
+    iconColor: "#d97706",
+    button: (pending?: boolean) => (pending ? "bg-amber-300" : "bg-amber-600 hover:bg-amber-700"),
+  },
+};
+
+export function ConfirmDialog({
+  visible,
+  title,
+  message,
+  error,
+  isPending,
+  confirmLabel = "Confirmar",
+  cancelLabel = "Cancelar",
+  tone = "danger",
+  onCancel,
+  onConfirm,
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  error?: string | null;
+  isPending?: boolean;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  tone?: "danger" | "warning";
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!visible) return null;
+  const palette = CONFIRM_TONE[tone];
+  const Icon = tone === "warning" ? AlertTriangle : Trash2;
+
+  return (
+    <ModalShell maxWidth={420} onClose={onCancel}>
+      <div className="mb-3 flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${palette.bubble}`}>
+          <Icon size={18} color={palette.iconColor} />
+        </div>
+        <span className="font-jakarta text-[16px] font-bold tracking-tight text-ui-text-main">
+          {title}
+        </span>
+      </div>
+      <p className="mb-5 font-manrope text-[12px] leading-5 text-ui-text-muted">
+        {message}
+      </p>
+      <ErrorBanner message={error} />
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 rounded-[11px] border border-ui-input-border bg-white py-2.5 text-center font-manrope text-[13px] font-semibold text-ui-text-main transition hover:bg-ui-background-light"
+        >
+          {cancelLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={isPending}
+          className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white ${palette.button(
+            isPending
+          )}`}
+        >
+          {isPending ? (
+            <Loader2 size={14} color="#fff" className="animate-spin" />
+          ) : (
+            <Icon size={14} color="#fff" />
+          )}
+          {confirmLabel}
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+// ── Confirmación de borrado (wrapper de ConfirmDialog para eliminaciones permanentes) ──
 export function DeleteConfirmModal({
   visible,
   title,
@@ -262,45 +347,17 @@ export function DeleteConfirmModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
-  if (!visible) return null;
   return (
-    <ModalShell maxWidth={420} onClose={onCancel}>
-      <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
-          <Trash2 size={18} color="#dc2626" />
-        </div>
-        <span className="font-jakarta text-[16px] font-bold tracking-tight text-ui-text-main">
-          {title}
-        </span>
-      </div>
-      <p className="mb-5 font-manrope text-[12px] leading-5 text-ui-text-muted">
-        {message}
-      </p>
-      <ErrorBanner message={error} />
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 rounded-[11px] border border-ui-input-border bg-white py-2.5 text-center font-manrope text-[13px] font-semibold text-ui-text-main transition hover:bg-ui-background-light"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={isPending}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white ${
-            isPending ? "bg-red-300" : "bg-red-600 hover:bg-red-700"
-          }`}
-        >
-          {isPending ? (
-            <Loader2 size={14} color="#fff" className="animate-spin" />
-          ) : (
-            <Trash2 size={14} color="#fff" />
-          )}
-          Eliminar
-        </button>
-      </div>
-    </ModalShell>
+    <ConfirmDialog
+      visible={visible}
+      title={title}
+      message={message}
+      error={error}
+      isPending={isPending}
+      confirmLabel="Eliminar"
+      tone="danger"
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   );
 }
