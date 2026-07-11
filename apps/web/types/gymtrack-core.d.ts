@@ -323,6 +323,72 @@ declare module "@gymtrack/core/hooks/activities/use-activity-plan-mutations" {
   };
 }
 
+declare module "@gymtrack/core/hooks/activities/use-activity-income-summary" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface ActivityIncomeRow {
+    activity_id: string;
+    activity_name: string | null;
+    activity_color: string | null;
+    payments_count: number;
+    total: number | string;
+    active_students: number;
+    [k: string]: unknown;
+  }
+  export function useActivityIncomeSummary(
+    gymId: string | null,
+    fromISO: string | null,
+    toISO: string | null
+  ): UseQueryResult<ActivityIncomeRow[]>;
+}
+
+declare module "@gymtrack/core/hooks/coaches/use-coach-payment-summary" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface CoachPaymentSummaryRow {
+    coach_id: string;
+    fixed_total: number | string;
+    revenue_total: number | string;
+    classes_count: number;
+    classes_total: number | string;
+    total: number | string;
+    coach: {
+      id: string;
+      name: string | null;
+      last_name: string | null;
+      image_profile: string | null;
+    } | null;
+    [k: string]: unknown;
+  }
+  export function useCoachPaymentSummary(
+    gymId: string | null,
+    fromISO: string | null,
+    toISO: string | null
+  ): UseQueryResult<CoachPaymentSummaryRow[]>;
+}
+
+declare module "@gymtrack/core/hooks/coaches/use-coach-payments" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export interface CoachPayment {
+    id: string;
+    coach_id: string;
+    period_start: string;
+    period_end: string;
+    fixed_amount: number | string;
+    revenue_share_amount: number | string;
+    classes_count: number;
+    classes_amount: number | string;
+    total_amount: number | string;
+    notes: string | null;
+    paid_at: string | null;
+    coach: { id: string; name: string | null; last_name: string | null } | null;
+    [k: string]: unknown;
+  }
+  export function useCoachPayments(
+    gymId: string | null,
+    fromISO: string | null,
+    toISO: string | null
+  ): UseQueryResult<CoachPayment[]>;
+}
+
 declare module "@gymtrack/core/hooks/users/use-gym-members" {
   import type { UseQueryResult } from "@tanstack/react-query";
   export interface GymMember {

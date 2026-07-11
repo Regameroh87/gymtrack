@@ -31,6 +31,7 @@ export const useActivitySubscriptionMutations = () => {
     // de los coaches: refrescar también esas vistas.
     queryClient.invalidateQueries({ queryKey: ["subscription_payments", gymId] });
     queryClient.invalidateQueries({ queryKey: ["coach_payment_summary", gymId] });
+    queryClient.invalidateQueries({ queryKey: ["activity_income_summary", gymId] });
     if (memberId) {
       queryClient.invalidateQueries({ queryKey: ["member_subscriptions", memberId] });
     }
