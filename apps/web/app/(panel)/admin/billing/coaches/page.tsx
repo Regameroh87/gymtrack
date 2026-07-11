@@ -94,10 +94,11 @@ export default function CoachPaymentsPage() {
     return { due, paid, balance: due - paid };
   }, [summary, paidByCoach]);
 
-  const onRemovePayment = (id: string) => {
-    if (typeof window !== "undefined" && window.confirm("¿Eliminar este pago registrado?")) {
-      remove.mutate(id);
-    }
+  const confirmRemovePayment = () => {
+    if (!removingPayment) return;
+    remove.mutate(removingPayment.id, {
+      onSuccess: () => setRemovingPayment(null),
+    });
   };
 
   return (
@@ -185,7 +186,7 @@ export default function CoachPaymentsPage() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => onRemovePayment(p.id)}
+                  onClick={() => setRemovingPayment(p)}
                   className="rounded-lg bg-red-100 p-2 hover:bg-red-200/70"
                 >
                   <Trash2 size={14} color="#ef4444" />
@@ -207,6 +208,22 @@ export default function CoachPaymentsPage() {
           register={register}
         />
       )}
+
+      {/* Eliminar pago registrado */}
+      <DeleteConfirmModal
+        visible={!!removingPayment}
+        title="Eliminar pago"
+        message={
+          removingPayment
+            ? `Vas a eliminar el pago de ${money(removingPayment.total_amount)} a ${fullName(
+                removingPayment.coach
+              )}. Esta acción no se puede deshacer.`
+            : ""
+        }
+        isPending={remove.isPending}
+        onCancel={() => setRemovingPayment(null)}
+        onConfirm={confirmRemovePayment}
+      />
     </>
   );
 }

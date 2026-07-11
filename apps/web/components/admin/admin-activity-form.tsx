@@ -45,6 +45,7 @@ import {
   ErrorBanner,
   FormActions,
   DeleteConfirmModal,
+  ConfirmDialog,
 } from "@/components/platform/catalog/catalog-ui";
 
 export type ActivityInitial = {
@@ -548,6 +549,7 @@ function ActivityPlansManager({
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ActivityPlan | null>(null);
 
   const openNew = () => {
     setError(null);
@@ -608,17 +610,15 @@ function ActivityPlansManager({
     }
   };
 
-  const del = async (plan: ActivityPlan) => {
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm(`¿Eliminar el pase "${plan.label}"?`)
-    )
-      return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
     try {
-      await remove.mutateAsync(plan.id);
-      if (draft?.id === plan.id) close();
+      await remove.mutateAsync(pendingDelete.id);
+      if (draft?.id === pendingDelete.id) close();
+      setPendingDelete(null);
     } catch (err) {
       setError((err as Error)?.message || "No se pudo eliminar el pase.");
+      setPendingDelete(null);
     }
   };
 
@@ -777,7 +777,7 @@ function ActivityPlansManager({
               </button>
               <button
                 type="button"
-                onClick={() => del(plan)}
+                onClick={() => setPendingDelete(plan)}
                 className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-red-50 transition hover:bg-red-100"
               >
                 <Trash2 size={14} color="#dc2626" />
@@ -786,6 +786,15 @@ function ActivityPlansManager({
           ))}
         </div>
       )}
+
+      <DeleteConfirmModal
+        visible={!!pendingDelete}
+        title="Eliminar pase"
+        message={pendingDelete ? `¿Eliminar el pase "${pendingDelete.label}"?` : ""}
+        isPending={remove.isPending}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
@@ -837,6 +846,7 @@ function ActivityCoachesManager({
 
   const [draft, setDraft] = useState<CoachDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingRemove, setPendingRemove] = useState<ActivityCoach | null>(null);
 
   const assignedIds = new Set(coaches.map((c) => c.coach_id));
 
@@ -890,17 +900,15 @@ function ActivityCoachesManager({
     }
   };
 
-  const del = async (row: ActivityCoach) => {
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm(`¿Quitar a ${staffName(row.coach)} de esta actividad?`)
-    )
-      return;
+  const confirmRemove = async () => {
+    if (!pendingRemove) return;
     try {
-      await remove.mutateAsync(row.id);
-      if (draft?.id === row.id) close();
+      await remove.mutateAsync(pendingRemove.id);
+      if (draft?.id === pendingRemove.id) close();
+      setPendingRemove(null);
     } catch (err) {
       setError((err as Error)?.message || "No se pudo quitar el coach.");
+      setPendingRemove(null);
     }
   };
 
@@ -1040,7 +1048,7 @@ function ActivityCoachesManager({
                 type="button"
                 onClick={() => {
                   const row = coaches.find((c) => c.id === draft.id);
-                  if (row) del(row);
+                  if (row) setPendingRemove(row);
                 }}
                 className="flex h-10 w-10 items-center justify-center rounded-[11px] bg-red-50 transition hover:bg-red-100"
               >
@@ -1096,7 +1104,7 @@ function ActivityCoachesManager({
               </button>
               <button
                 type="button"
-                onClick={() => del(row)}
+                onClick={() => setPendingRemove(row)}
                 className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-red-50 transition hover:bg-red-100"
               >
                 <Trash2 size={14} color="#dc2626" />
@@ -1105,6 +1113,21 @@ function ActivityCoachesManager({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        visible={!!pendingRemove}
+        title="Quitar coach"
+        message={
+          pendingRemove
+            ? `¿Quitar a ${staffName(pendingRemove.coach)} de esta actividad?`
+            : ""
+        }
+        isPending={remove.isPending}
+        confirmLabel="Quitar"
+        tone="warning"
+        onCancel={() => setPendingRemove(null)}
+        onConfirm={confirmRemove}
+      />
     </div>
   );
 }
