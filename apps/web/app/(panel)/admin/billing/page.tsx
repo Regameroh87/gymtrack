@@ -25,6 +25,7 @@ import {
   Calendar,
   type LucideIcon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Hooks de datos, contextos y helpers
 import {
@@ -119,7 +120,14 @@ export default function BillingPage() {
         `¿Dar de baja la membresía de ${fullName(sub.member)} en ${sub.activities?.name ?? "esta actividad"}?`
       )
     ) {
-      cancel.mutate({ id: sub.id, memberId: sub.user_id });
+      cancel.mutate(
+        { id: sub.id, memberId: sub.user_id },
+        {
+          onSuccess: () => toast.success("Membresía dada de baja"),
+          onError: (error) =>
+            toast.error("No se pudo dar de baja la membresía", { description: error.message }),
+        }
+      );
     }
   };
 
@@ -398,7 +406,11 @@ function AltaMembresiaModal({
         activityPlanId: pass.id,
         price: pass.price,
       },
-      { onSuccess: close }
+      {
+        onSuccess: close,
+        onError: (error) =>
+          toast.error("No se pudo agregar la membresía", { description: error.message }),
+      }
     );
   };
 
@@ -582,7 +594,14 @@ function RegistrarPagoModal({
         periodStart: `${month}-01`,
         memberId: sub.user_id,
       },
-      { onSuccess: onClose }
+      {
+        onSuccess: () => {
+          toast.success("Pago registrado");
+          onClose();
+        },
+        onError: (error) =>
+          toast.error("No se pudo registrar el pago", { description: error.message }),
+      }
     );
   };
 
