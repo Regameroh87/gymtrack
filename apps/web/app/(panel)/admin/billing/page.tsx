@@ -311,7 +311,7 @@ function SubRow({
   const badge = paymentBadge(sub.due_date);
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
-    <div className={`flex items-center px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"}`}>
+    <div className={`flex flex-wrap items-center gap-y-2 px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"}`}>
       {/* Socio */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}1A` }}>
@@ -325,17 +325,29 @@ function SubRow({
             {sub.activities?.name ?? "Actividad"} · {sub.activity_plans?.label ?? "Pase"} ·{" "}
             {freqText(sub.activity_plans?.frequency_per_week)}
           </p>
+          {/* Cuota + estado compactos, solo mobile */}
+          <div className="mt-1 flex items-center gap-2 md:hidden">
+            <span className="font-jakarta text-[12px] font-bold text-ui-text-main">
+              {money(sub.price)}
+              <span className="font-manrope text-[10px] font-normal text-ui-text-muted">/mes</span>
+            </span>
+            <div className={`rounded-md px-1.5 py-0.5 ${badge.chip}`}>
+              <span className={`font-manrope text-[9px] font-bold uppercase tracking-wider ${badge.text}`}>
+                {badge.label}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Cuota */}
-      <p className="w-28 text-right font-jakarta text-[14px] font-bold text-ui-text-main">
+      <p className="hidden w-28 text-right font-jakarta text-[14px] font-bold text-ui-text-main md:block">
         {money(sub.price)}
         <span className="font-manrope text-[10px] text-ui-text-muted">/mes</span>
       </p>
 
       {/* Estado de pago */}
-      <div className="flex w-32 flex-col items-center">
+      <div className="hidden w-32 flex-col items-center md:flex">
         <div className={`rounded-md px-2 py-0.5 ${badge.chip}`}>
           <span className={`font-manrope text-[9px] font-bold uppercase tracking-wider ${badge.text}`}>
             {badge.label}
@@ -347,7 +359,7 @@ function SubRow({
       </div>
 
       {/* Acciones */}
-      <div className="flex w-56 items-center justify-end gap-2">
+      <div className="flex w-full items-center justify-end gap-2 md:w-56">
         <button
           type="button"
           disabled={busy}
@@ -355,7 +367,7 @@ function SubRow({
           className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-3 py-2 hover:bg-green-500/15 disabled:opacity-60"
         >
           <Receipt size={13} color="#16a34a" />
-          <span className="font-manrope text-[11px] font-semibold text-green-600">
+          <span className="hidden font-manrope text-[11px] font-semibold text-green-600 sm:inline">
             Registrar pago
           </span>
         </button>
@@ -442,11 +454,11 @@ function AltaMembresiaModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4"
       onClick={close}
     >
       <div
-        className="max-h-[80%] w-[460px] overflow-hidden rounded-2xl bg-white"
+        className="max-h-[80%] w-full max-w-[460px] overflow-hidden rounded-2xl bg-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -631,11 +643,11 @@ function RegistrarPagoModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
     >
       <div
-        className="w-[420px] overflow-hidden rounded-2xl bg-white"
+        className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-ui-input-border px-5 py-4">
@@ -739,11 +751,11 @@ function DetallePagosModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[80%] w-[460px] flex-col overflow-hidden rounded-2xl bg-white"
+        className="flex max-h-[80%] w-full max-w-[460px] flex-col overflow-hidden rounded-2xl bg-white"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-ui-input-border px-5 py-4">

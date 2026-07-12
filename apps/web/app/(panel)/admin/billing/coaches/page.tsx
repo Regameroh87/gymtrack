@@ -386,9 +386,9 @@ function PayModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
-        className="w-[420px] overflow-hidden rounded-2xl bg-white"
+        className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-ui-input-border px-5 py-4">
