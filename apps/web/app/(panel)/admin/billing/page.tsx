@@ -38,6 +38,7 @@ import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-sub
 import { paymentBadge, isOverdue } from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
+import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-method-options";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
@@ -602,14 +603,20 @@ function RegistrarPagoModal({
   const { registerPayment } = useActivitySubscriptionMutations();
   const [month, setMonth] = useState(monthValue(sub.due_date));
   const [amount, setAmount] = useState(sub.price == null ? "" : String(sub.price));
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const onConfirm = () => {
+    if (!paymentMethod) {
+      toast.error("Elegí un método de pago");
+      return;
+    }
     registerPayment.mutate(
       {
         id: sub.id,
         price: amount === "" ? null : amount,
         periodStart: `${month}-01`,
         memberId: sub.user_id,
+        paymentMethod,
       },
       {
         onSuccess: () => {
@@ -679,6 +686,27 @@ function RegistrarPagoModal({
               placeholder="0"
               className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
             />
+          </div>
+
+          {/* Método de pago */}
+          <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+            Método de pago
+          </label>
+          <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="flex-1 cursor-pointer bg-transparent font-manrope text-[13px] text-ui-text-main outline-none"
+            >
+              <option value="" disabled>
+                Elegí un método
+              </option>
+              {PAYMENT_METHOD_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <Button

@@ -10,7 +10,7 @@
 import { useMemo, useState } from "react";
 
 // Librerías
-import { Receipt, Search, Flame, Wallet, Hash, Loader2, Calendar, User } from "lucide-react";
+import { Receipt, Search, Flame, Wallet, Hash, Loader2, Calendar, User, Banknote, Landmark, CreditCard, QrCode } from "lucide-react";
 
 // Hooks de datos, contextos y helpers
 import { useGymPayments, type GymPayment } from "@gymtrack/core/hooks/activities/use-gym-payments";
@@ -20,6 +20,14 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { PageHeader } from "@/components/ui/page-header";
 import { MonthPicker, monthRange } from "@/components/ui/month-picker";
+import { PAYMENT_METHOD_OPTIONS, PAYMENT_METHOD_LABELS } from "@/lib/payment-method-options";
+
+const PAYMENT_METHOD_ICONS: Record<string, typeof Banknote> = {
+  efectivo: Banknote,
+  transferencia: Landmark,
+  tarjeta: CreditCard,
+  mercado_pago: QrCode,
+};
 
 const money = (n: number | string | null | undefined) =>
   `$${Number(n || 0).toLocaleString("es-AR")}`;
@@ -66,6 +74,7 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("");
   const [activityId, setActivityId] = useState("");
   const [registrantId, setRegistrantId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const { data: payments, isLoading } = useGymPayments(gymId, fromISO, toISO);
   const { data: activities } = useActivities(gymId);
@@ -83,10 +92,11 @@ export default function PaymentsPage() {
     let rows = payments ?? [];
     if (activityId) rows = rows.filter((r) => r.activity_id === activityId);
     if (registrantId) rows = rows.filter((r) => r.registered_by === registrantId);
+    if (paymentMethod) rows = rows.filter((r) => r.payment_method === paymentMethod);
     const q = search.trim().toLowerCase();
     if (q) rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
     return rows;
-  }, [payments, activityId, registrantId, search]);
+  }, [payments, activityId, registrantId, paymentMethod, search]);
 
   const stats = useMemo(() => {
     const total = filtered.reduce((s, r) => s + (Number(r.amount) || 0), 0);
@@ -94,7 +104,7 @@ export default function PaymentsPage() {
     return { total, count, avg: count ? Math.round(total / count) : 0 };
   }, [filtered]);
 
-  const hasFilters = !!(search || activityId || registrantId);
+  const hasFilters = !!(search || activityId || registrantId || paymentMethod);
 
   return (
     <>
@@ -134,6 +144,13 @@ export default function PaymentsPage() {
           {registrants.map((r) => (
             <option key={r.id} value={r.id}>
               {r.name}
+            </option>
+          ))}
+        </FilterSelect>
+        <FilterSelect value={paymentMethod} onChange={setPaymentMethod} allLabel="Todos los métodos">
+          {PAYMENT_METHOD_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </FilterSelect>
@@ -263,6 +280,26 @@ function PaymentRow({
           </span>
         </div>
         <span className="mt-0.5 font-manrope text-[10px] text-ui-text-muted">mes cubierto</span>
+      </div>
+
+      {/* Método de pago */}
+      <div className="hidden w-32 flex-col items-center lg:flex">
+        {payment.payment_method ? (
+          <>
+            <div className="flex items-center gap-1">
+              {(() => {
+                const Icon = PAYMENT_METHOD_ICONS[payment.payment_method] ?? Banknote;
+                return <Icon size={12} color={ui.text.muted} />;
+              })()}
+              <span className="font-manrope text-[12px] font-semibold text-ui-text-main">
+                {PAYMENT_METHOD_LABELS[payment.payment_method] ?? payment.payment_method}
+              </span>
+            </div>
+            <span className="mt-0.5 font-manrope text-[10px] text-ui-text-muted">método</span>
+          </>
+        ) : (
+          <span className="font-manrope text-[12px] text-ui-text-muted">—</span>
+        )}
       </div>
 
       {/* Fecha de cobro + quién */}

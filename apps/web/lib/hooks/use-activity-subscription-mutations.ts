@@ -111,17 +111,20 @@ export const useActivitySubscriptionMutations = () => {
       id,
       price,
       periodStart,
+      paymentMethod,
     }: {
       id: string;
       price?: number | string | null;
       memberId?: string | null;
       periodStart?: string | null;
+      paymentMethod: string;
     }) => {
       const supabase = getBrowserSupabase();
       const { data, error } = await supabase.rpc("register_subscription_payment", {
         p_subscription_id: id,
         p_amount: price == null || price === "" ? null : Number(price),
         p_period_start: periodStart ?? null,
+        p_payment_method: paymentMethod,
       });
       if (error) throw error;
       return data as string; // id del cobro

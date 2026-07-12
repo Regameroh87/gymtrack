@@ -83,6 +83,7 @@ declare module "@gymtrack/core/hooks/activities/use-gym-payments" {
     period_start: string | null;
     period_end: string | null;
     registered_by: string | null;
+    payment_method: string | null;
     activities: { name: string | null; color: string | null } | null;
     activity_plans: { label: string | null; frequency_per_week: number | null } | null;
     member: { id: string; name: string | null; last_name: string | null; image_profile: string | null } | null;
