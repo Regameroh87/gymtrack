@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { and, asc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm";
 
 import { database } from "../../database";
 import {
@@ -9,6 +9,7 @@ import {
   custom_plan_week_day_exercise_sets,
   custom_sessions,
   custom_session_exercises,
+  custom_exercises,
   exercises_base,
   session_exercises,
   sessions,
@@ -111,16 +112,22 @@ export const useCustomPlanDetail = (planId) =>
       const exNameMap = {};
 
       if (sessionExIds.length) {
-        // Intentar desde custom_session_exercises primero
+        // Intentar desde custom_session_exercises primero. El nombre puede venir de
+        // exercises_base o de custom_exercises según exercise_source: coalesce sobre
+        // ambos leftJoin (ids UUID únicos entre tablas).
         const customExRows = await database
           .select({
             id: custom_session_exercises.id,
-            name: exercises_base.name,
+            name: sql`coalesce(${exercises_base.name}, ${custom_exercises.name})`,
           })
           .from(custom_session_exercises)
           .leftJoin(
             exercises_base,
             eq(custom_session_exercises.exercise_id, exercises_base.id)
+          )
+          .leftJoin(
+            custom_exercises,
+            eq(custom_session_exercises.exercise_id, custom_exercises.id)
           )
           .where(inArray(custom_session_exercises.id, sessionExIds));
         customExRows.forEach((r) => {
