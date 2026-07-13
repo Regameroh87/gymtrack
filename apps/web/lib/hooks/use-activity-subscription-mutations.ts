@@ -31,6 +31,7 @@ export const useActivitySubscriptionMutations = () => {
     // de los coaches: refrescar también esas vistas. Prefijo (sin gymId) para
     // cubrir además el historial por-suscripción del modal de detalle.
     queryClient.invalidateQueries({ queryKey: ["subscription_payments"] });
+    queryClient.invalidateQueries({ queryKey: ["gym_payments", gymId] });
     queryClient.invalidateQueries({ queryKey: ["coach_payment_summary", gymId] });
     queryClient.invalidateQueries({ queryKey: ["activity_income_summary", gymId] });
     if (memberId) {
@@ -132,6 +133,28 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
+  // Anula un cobro (insert-only: la fila nunca se edita ni se borra). El RPC
+  // valida permiso payments.void o ventana de gracia del mismo día para quien
+  // registró el pago, y revierte el vencimiento de la suscripción.
+  const voidPayment = useMutation({
+    mutationFn: async ({
+      paymentId,
+      reason,
+    }: {
+      paymentId: string;
+      reason: string;
+      memberId?: string | null;
+    }) => {
+      const supabase = getBrowserSupabase();
+      const { error } = await supabase.rpc("void_subscription_payment", {
+        p_payment_id: paymentId,
+        p_reason: reason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => invalidate(vars.memberId),
+  });
+
   // Da de baja una inscripción (conserva el historial).
   const cancel = useMutation({
     mutationFn: async ({ id }: { id: string; memberId?: string | null }) => {
@@ -146,5 +169,5 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
-  return { assign, registerPayment, cancel };
+  return { assign, registerPayment, voidPayment, cancel };
 };

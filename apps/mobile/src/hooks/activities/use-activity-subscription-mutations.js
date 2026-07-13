@@ -32,7 +32,9 @@ export const useActivitySubscriptionMutations = () => {
     // ingresos de los coaches: refrescar también esas vistas. Prefijo (sin
     // gymId) para cubrir además el historial por-suscripción del modal.
     queryClient.invalidateQueries({ queryKey: ["subscription_payments"] });
-    queryClient.invalidateQueries({ queryKey: ["coach_payment_summary", gymId] });
+    queryClient.invalidateQueries({
+      queryKey: ["coach_payment_summary", gymId],
+    });
     if (memberId) {
       queryClient.invalidateQueries({
         queryKey: ["member_subscriptions", memberId],
@@ -45,7 +47,13 @@ export const useActivitySubscriptionMutations = () => {
   // respetar el único-activo por actividad. Asume el primer mes pagado (vence el
   // mes que viene) → el badge arranca "Al día".
   const assign = useMutation({
-    mutationFn: async ({ memberId, activityId, activityPlanId, price, dueDate }) => {
+    mutationFn: async ({
+      memberId,
+      activityId,
+      activityPlanId,
+      price,
+      dueDate,
+    }) => {
       const today = todayDate();
 
       const { error: closeErr } = await supabase
@@ -118,6 +126,20 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
+  // Anula un cobro (insert-only: la fila nunca se edita ni se borra). El RPC
+  // valida permiso payments.void o ventana de gracia del mismo día para quien
+  // registró el pago, y revierte el vencimiento de la suscripción.
+  const voidPayment = useMutation({
+    mutationFn: async ({ paymentId, reason }) => {
+      const { error } = await supabase.rpc("void_subscription_payment", {
+        p_payment_id: paymentId,
+        p_reason: reason,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => invalidate(vars.memberId),
+  });
+
   // Da de baja una inscripción (no la borra: conserva el historial).
   const cancel = useMutation({
     mutationFn: async ({ id }) => {
@@ -131,5 +153,5 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
-  return { assign, registerPayment, cancel };
+  return { assign, registerPayment, voidPayment, cancel };
 };
