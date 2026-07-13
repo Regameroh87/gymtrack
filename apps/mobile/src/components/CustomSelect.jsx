@@ -213,7 +213,10 @@ const CustomSelect = ({
           }}
           renderItem={({ item: option }) => {
             const isSelected = value === option.value;
-            const hasVisual = option.imageUri !== undefined || option.subtitle !== undefined || option.isCustom !== undefined;
+            const hasVisual =
+              option.imageUri !== undefined ||
+              option.subtitle !== undefined ||
+              option.isCustom !== undefined;
             const resolvedUri = option.imageUri
               ? (getMediaUrl(option.imageUri) ?? option.imageUri)
               : null;
@@ -249,7 +252,9 @@ const CustomSelect = ({
                       height: 44,
                       borderRadius: 10,
                       overflow: "hidden",
-                      backgroundColor: resolvedUri ? "transparent" : accentColor + "22",
+                      backgroundColor: resolvedUri
+                        ? "transparent"
+                        : accentColor + "22",
                       borderWidth: 1,
                       borderColor: accentColor + "44",
                       marginRight: 12,
@@ -271,16 +276,31 @@ const CustomSelect = ({
                 )}
 
                 <View className="flex-1 mr-2">
-                  <Text
-                    className={`text-base font-manrope ${
-                      isSelected
-                        ? "text-brandPrimary-600 font-manrope-bold"
-                        : "text-ui-text-main dark:text-ui-text-mainDark"
-                    }`}
-                    numberOfLines={1}
-                  >
-                    {option.label}
-                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <Text
+                      className={`text-base font-manrope flex-shrink ${
+                        isSelected
+                          ? "text-brandPrimary-600 font-manrope-bold"
+                          : "text-ui-text-main dark:text-ui-text-mainDark"
+                      }`}
+                      numberOfLines={1}
+                    >
+                      {option.label}
+                    </Text>
+                    {option.badge ? (
+                      <View
+                        className="px-1.5 py-0.5 rounded-md flex-shrink-0"
+                        style={{ backgroundColor: accentColor + "22" }}
+                      >
+                        <Text
+                          className="text-[10px] font-manrope-semi uppercase tracking-wide"
+                          style={{ color: accentColor }}
+                        >
+                          {option.badge}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
                   {option.subtitle ? (
                     <Text
                       className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5"

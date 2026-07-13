@@ -22,6 +22,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
+import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { useStore } from "@tanstack/react-form";
 import ReorderableList, {
@@ -36,6 +37,7 @@ import PlanDayExerciseCard from "./PlanDayExerciseCard";
 // Hooks
 import { useExercises } from "../../hooks/exercises/use-exercises";
 import { useCatalogExercises } from "../../hooks/exercises/use-catalog-exercises";
+import { useCustomExercises } from "../../hooks/exercises/use-custom-exercises";
 
 // Utils
 import { forkSession } from "../../utils/fork-session";
@@ -98,6 +100,7 @@ export default function DayPrescriptionEditor({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const { brandPrimary } = useGymTheme();
+  const router = useRouter();
 
   // Selector narrowo: solo re-renderiza cuando cambia ESTE día — no otros días ni semanas.
   const day = useStore(
@@ -120,13 +123,19 @@ export default function DayPrescriptionEditor({
   // Ejercicios de catálogo (read-only): se agregan al plan referenciados por id igual
   // que los del gym; el fork a custom los resuelve por exercise_source="base".
   const { data: catalogExercises = [] } = useCatalogExercises();
+  // Ejercicios propios del usuario: se agregan con exercise_source="custom".
+  const { data: customExercises = [] } = useCustomExercises();
 
   const allExercises = useMemo(() => {
     const byId = new Map();
-    for (const e of gymExercises) byId.set(e.id, e);
-    for (const e of catalogExercises) if (!byId.has(e.id)) byId.set(e.id, e);
+    for (const e of gymExercises)
+      byId.set(e.id, { ...e, exercise_source: "base" });
+    for (const e of catalogExercises)
+      if (!byId.has(e.id)) byId.set(e.id, { ...e, exercise_source: "base" });
+    for (const e of customExercises)
+      if (!byId.has(e.id)) byId.set(e.id, { ...e, exercise_source: "custom" });
     return [...byId.values()];
-  }, [gymExercises, catalogExercises]);
+  }, [gymExercises, catalogExercises, customExercises]);
 
   const pickerExercises = useMemo(
     () =>
@@ -236,6 +245,7 @@ export default function DayPrescriptionEditor({
         id: Crypto.randomUUID(),
         session_exercise_id: null,
         exercise_id: ex.id,
+        exercise_source: ex.exercise_source ?? "base",
         exercise_name: ex.name,
         exercise_muscle_group: ex.muscle_group ?? "",
         exercise_image_uri: ex.image_uri ?? null,
@@ -489,6 +499,26 @@ export default function DayPrescriptionEditor({
                 borderColor: ui.input.border,
               }}
             />
+            <Pressable
+              onPress={() => {
+                exerciseSheetRef.current?.dismiss();
+                setSearchQuery("");
+                setTimeout(
+                  () => router.push("/planes/builder/custom-exercise"),
+                  300
+                );
+              }}
+              className="mt-3 flex-row items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed active:opacity-60"
+              style={{ borderColor: brandPrimary[500] + "50" }}
+            >
+              <Plus size={14} color={brandPrimary[500]} />
+              <Text
+                className="text-sm font-manrope-semi"
+                style={{ color: brandPrimary[500] }}
+              >
+                Crear ejercicio nuevo
+              </Text>
+            </Pressable>
           </View>
 
           <BottomSheetFlatList
@@ -533,6 +563,19 @@ export default function DayPrescriptionEditor({
                           style={{ color: brandPrimary[600] }}
                         >
                           Catálogo
+                        </Text>
+                      </View>
+                    )}
+                    {item.exercise_source === "custom" && (
+                      <View
+                        className="px-1.5 py-0.5 rounded-md flex-shrink-0"
+                        style={{ backgroundColor: brandPrimary[400] + "22" }}
+                      >
+                        <Text
+                          className="text-[10px] font-manrope-semi uppercase tracking-wide"
+                          style={{ color: brandPrimary[400] }}
+                        >
+                          Mi ejercicio
                         </Text>
                       </View>
                     )}

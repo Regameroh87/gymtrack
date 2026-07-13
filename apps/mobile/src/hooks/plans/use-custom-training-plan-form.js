@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { asc, eq, inArray, ne } from "drizzle-orm";
+import { asc, eq, inArray, ne, sql } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -17,6 +17,7 @@ import {
   custom_plan_week_day_exercise_sets,
   custom_sessions,
   custom_session_exercises,
+  custom_exercises,
   exercises_base,
 } from "../../database/schemas";
 import { supabase } from "../../database/supabase";
@@ -142,9 +143,11 @@ const persistCustomWeeks = async (
 };
 
 // Los campos de display del ejercicio (nombre, grupo muscular, imagen) son DERIVADOS:
-// su fuente de verdad es `exercises_base`, no el borrador. Al restaurar el borrador
-// los re-derivamos siempre desde la DB por `exercise_id`, en vez de confiar en las
-// copias persistidas. Así el borrador nunca queda con datos viejos y agregar un campo
+// su fuente de verdad es la tabla del ejercicio (`exercises_base` para los base,
+// `custom_exercises` para los propios), no el borrador. Al restaurar el borrador los
+// re-derivamos siempre desde la DB por `exercise_id`, en vez de confiar en las copias
+// persistidas. Como los ids son UUID únicos entre ambas tablas, unimos los dos result
+// sets en un solo mapa. Así el borrador nunca queda con datos viejos y agregar un campo
 // de display nuevo no requiere migraciones ni backfills: se suma una línea acá.
 const enrichExercisesFromBase = async (weeks) => {
   if (!Array.isArray(weeks)) return;
@@ -154,16 +157,29 @@ const enrichExercisesFromBase = async (weeks) => {
       for (const ex of d.exercises ?? []) if (ex.exercise_id) all.push(ex);
   if (!all.length) return;
   const ids = [...new Set(all.map((e) => e.exercise_id))];
-  const rows = await database
-    .select({
-      id: exercises_base.id,
-      name: exercises_base.name,
-      muscle_group: exercises_base.muscle_group,
-      image_uri: exercises_base.image_uri,
-    })
-    .from(exercises_base)
-    .where(inArray(exercises_base.id, ids));
-  const byId = Object.fromEntries(rows.map((r) => [r.id, r]));
+  const [baseRows, customRows] = await Promise.all([
+    database
+      .select({
+        id: exercises_base.id,
+        name: exercises_base.name,
+        muscle_group: exercises_base.muscle_group,
+        image_uri: exercises_base.image_uri,
+      })
+      .from(exercises_base)
+      .where(inArray(exercises_base.id, ids)),
+    database
+      .select({
+        id: custom_exercises.id,
+        name: custom_exercises.name,
+        muscle_group: custom_exercises.muscle_group,
+        image_uri: custom_exercises.image_uri,
+      })
+      .from(custom_exercises)
+      .where(inArray(custom_exercises.id, ids)),
+  ]);
+  const byId = Object.fromEntries(
+    [...baseRows, ...customRows].map((r) => [r.id, r])
+  );
   for (const ex of all) {
     const base = byId[ex.exercise_id];
     if (!base) continue;
@@ -421,9 +437,9 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
                 session_exercise_id:
                   custom_plan_week_day_exercises.session_exercise_id,
                 exercise_id: custom_session_exercises.exercise_id,
-                exercise_name: exercises_base.name,
-                exercise_muscle_group: exercises_base.muscle_group,
-                exercise_image_uri: exercises_base.image_uri,
+                exercise_name: sql`coalesce(${exercises_base.name}, ${custom_exercises.name})`,
+                exercise_muscle_group: sql`coalesce(${exercises_base.muscle_group}, ${custom_exercises.muscle_group})`,
+                exercise_image_uri: sql`coalesce(${exercises_base.image_uri}, ${custom_exercises.image_uri})`,
                 position: custom_plan_week_day_exercises.position,
                 prescription_mode:
                   custom_plan_week_day_exercises.prescription_mode,
@@ -443,6 +459,10 @@ export const useCustomTrainingPlanForm = ({ id = null, onSuccess } = {}) => {
               .leftJoin(
                 exercises_base,
                 eq(custom_session_exercises.exercise_id, exercises_base.id)
+              )
+              .leftJoin(
+                custom_exercises,
+                eq(custom_session_exercises.exercise_id, custom_exercises.id)
               )
               .where(
                 inArray(custom_plan_week_day_exercises.week_day_id, dayIds)

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import Toast from "react-native-toast-message";
@@ -14,6 +14,7 @@ import {
   custom_plan_week_days,
   custom_plan_week_day_exercises,
   custom_plan_week_day_exercise_sets,
+  custom_exercises,
   exercises_base,
 } from "../../database/schemas";
 import { supabase } from "../../database/supabase";
@@ -54,12 +55,19 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
               .where(eq(custom_sessions.id, id));
 
             const existingSEs = await tx
-              .select({ id: custom_session_exercises.id, exercise_id: custom_session_exercises.exercise_id })
+              .select({
+                id: custom_session_exercises.id,
+                exercise_id: custom_session_exercises.exercise_id,
+              })
               .from(custom_session_exercises)
               .where(eq(custom_session_exercises.session_id, id));
 
-            const existingMap = new Map(existingSEs.map((se) => [se.exercise_id, se.id]));
-            const newExerciseIds = new Set(value.exercises.map((ex) => ex.exercise_id));
+            const existingMap = new Map(
+              existingSEs.map((se) => [se.exercise_id, se.id])
+            );
+            const newExerciseIds = new Set(
+              value.exercises.map((ex) => ex.exercise_id)
+            );
 
             const removedSEIds = existingSEs
               .filter((se) => !newExerciseIds.has(se.exercise_id))
@@ -68,6 +76,7 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
             const newSEs = value.exercises.map((ex, idx) => ({
               id: existingMap.get(ex.exercise_id) ?? Crypto.randomUUID(),
               exercise_id: ex.exercise_id,
+              exercise_source: ex.exercise_source ?? "base",
               position: idx,
               isNew: !existingMap.has(ex.exercise_id),
             }));
@@ -78,12 +87,22 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
               const planExRows = await tx
                 .select({ id: custom_plan_week_day_exercises.id })
                 .from(custom_plan_week_day_exercises)
-                .where(inArray(custom_plan_week_day_exercises.session_exercise_id, removedSEIds));
+                .where(
+                  inArray(
+                    custom_plan_week_day_exercises.session_exercise_id,
+                    removedSEIds
+                  )
+                );
               const planExIds = planExRows.map((r) => r.id);
               if (planExIds.length) {
                 await tx
                   .delete(custom_plan_week_day_exercise_sets)
-                  .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, planExIds));
+                  .where(
+                    inArray(
+                      custom_plan_week_day_exercise_sets.exercise_id,
+                      planExIds
+                    )
+                  );
                 await tx
                   .delete(custom_plan_week_day_exercises)
                   .where(inArray(custom_plan_week_day_exercises.id, planExIds));
@@ -101,7 +120,7 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
                   session_id: id,
                   exercise_id: se.exercise_id,
                   position: se.position,
-                  exercise_source: "base",
+                  exercise_source: se.exercise_source ?? "base",
                 });
               } else {
                 await tx
@@ -135,7 +154,9 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
                     sync_status: "pending",
                   }))
                 );
-                await tx.insert(custom_plan_week_day_exercises).values(newPlanExRows);
+                await tx
+                  .insert(custom_plan_week_day_exercises)
+                  .values(newPlanExRows);
               }
             }
           });
@@ -161,7 +182,7 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
               session_id: sessionId,
               exercise_id: ex.exercise_id,
               position: idx,
-              exercise_source: "base",
+              exercise_source: ex.exercise_source ?? "base",
             });
           }
 
@@ -205,18 +226,26 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
 
       if (!session) return null;
 
+      // El display (nombre/músculo/imagen) puede venir de exercises_base o de
+      // custom_exercises según exercise_source. Los ids son UUID únicos entre tablas,
+      // así que resolvemos con coalesce sobre ambos leftJoin sin ramificar.
       const exercises = await database
         .select({
           id: custom_session_exercises.id,
           exercise_id: custom_session_exercises.exercise_id,
-          name: exercises_base.name,
-          muscle_group: exercises_base.muscle_group,
-          image_uri: exercises_base.image_uri,
+          exercise_source: custom_session_exercises.exercise_source,
+          name: sql`coalesce(${exercises_base.name}, ${custom_exercises.name})`,
+          muscle_group: sql`coalesce(${exercises_base.muscle_group}, ${custom_exercises.muscle_group})`,
+          image_uri: sql`coalesce(${exercises_base.image_uri}, ${custom_exercises.image_uri})`,
         })
         .from(custom_session_exercises)
         .leftJoin(
           exercises_base,
           eq(custom_session_exercises.exercise_id, exercises_base.id)
+        )
+        .leftJoin(
+          custom_exercises,
+          eq(custom_session_exercises.exercise_id, custom_exercises.id)
         )
         .where(eq(custom_session_exercises.session_id, id))
         .orderBy(asc(custom_session_exercises.position));
@@ -229,6 +258,7 @@ export const useCustomSessionForm = ({ id = null, onSuccess } = {}) => {
         exercises: exercises.map((ex) => ({
           id: ex.id,
           exercise_id: ex.exercise_id,
+          exercise_source: ex.exercise_source ?? "base",
           name: ex.name,
           muscle_group: ex.muscle_group,
           image_uri: ex.image_uri,

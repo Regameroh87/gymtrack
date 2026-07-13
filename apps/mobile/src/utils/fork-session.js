@@ -5,7 +5,12 @@ import { custom_sessions, custom_session_exercises } from "../database/schemas";
 
 // Crea una copia de una sesión gym como custom_session, incluyendo los ejercicios
 // ya presentes en el día del plan más uno nuevo. Devuelve el ID de la sesión creada.
-export async function forkSession(userId, sessionName, currentExercises, newExercise) {
+export async function forkSession(
+  userId,
+  sessionName,
+  currentExercises,
+  newExercise
+) {
   const customSessionId = Crypto.randomUUID();
   const now = new Date().toISOString();
 
@@ -27,7 +32,7 @@ export async function forkSession(userId, sessionName, currentExercises, newExer
         session_id: customSessionId,
         exercise_id: ex.exercise_id,
         position: idx,
-        exercise_source: "base",
+        exercise_source: ex.exercise_source ?? "base",
         sync_status: "pending",
         created_at: now,
         updated_at: now,

@@ -9,8 +9,10 @@ import {
 } from "react-native";
 
 // Librerías externas
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useColorScheme } from "nativewind";
+import { useRouter } from "expo-router";
 import { z } from "zod";
 import * as Crypto from "expo-crypto";
 import * as Haptics from "expo-haptics";
@@ -21,6 +23,7 @@ import { exercises_base } from "../../database/schemas";
 
 // Hooks
 import useAsyncStorage from "@gymtrack/core/hooks/shared/use-async-storage";
+import { useCustomExercises } from "../../hooks/exercises/use-custom-exercises";
 
 // Constantes
 import { SESSION_LEVELS } from "../../constants/sessionOptions";
@@ -58,6 +61,7 @@ export default function FormSession({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const mutedColor = isDark ? ui.text.mutedDark : ui.text.muted;
+  const router = useRouter();
 
   const { data: dbExercises = [] } = useQuery({
     queryKey: ["exercises"],
@@ -76,6 +80,30 @@ export default function FormSession({
     },
     staleTime: Infinity,
   });
+
+  // Ejercicios propios del usuario (custom_exercises). Se combinan con los del
+  // catálogo/gym; cada opción arrastra su exercise_source para persistirlo correcto.
+  const { data: customExercises = [] } = useCustomExercises();
+
+  const allExercises = useMemo(() => {
+    const base = dbExercises.map((e) => ({
+      id: e.id,
+      name: e.name,
+      muscle_group: e.muscle_group,
+      image_uri: e.image_uri,
+      exercise_source: "base",
+    }));
+    const custom = customExercises.map((e) => ({
+      id: e.id,
+      name: e.name,
+      muscle_group: e.muscle_group,
+      image_uri: e.image_uri,
+      exercise_source: "custom",
+    }));
+    return [...base, ...custom].sort((a, b) =>
+      (a.name ?? "").localeCompare(b.name ?? "")
+    );
+  }, [dbExercises, customExercises]);
 
   useAsyncStorage({
     form,
@@ -226,7 +254,7 @@ export default function FormSession({
 
                 <CustomSelect
                   placeholder="Buscar y agregar ejercicio..."
-                  options={dbExercises
+                  options={allExercises
                     .filter(
                       (e) =>
                         !field.state.value.find((v) => v.exercise_id === e.id)
@@ -236,12 +264,21 @@ export default function FormSession({
                       value: e.id,
                       imageUri: e.image_uri ?? undefined,
                       subtitle: e.muscle_group ?? undefined,
+                      isCustom: e.exercise_source === "custom",
+                      badge:
+                        e.exercise_source === "custom"
+                          ? "Mi ejercicio"
+                          : undefined,
                     }))}
                   value=""
                   searchable
+                  actionLabel="Crear ejercicio nuevo"
+                  onActionPress={() =>
+                    router.push("/planes/builder/custom-exercise")
+                  }
                   onChange={(exerciseId) => {
                     if (!exerciseId) return;
-                    const ex = dbExercises.find((e) => e.id === exerciseId);
+                    const ex = allExercises.find((e) => e.id === exerciseId);
                     if (!ex) return;
                     const newEntry = {
                       id: Crypto.randomUUID(),
@@ -249,6 +286,7 @@ export default function FormSession({
                       name: ex.name,
                       muscle_group: ex.muscle_group,
                       image_uri: ex.image_uri,
+                      exercise_source: ex.exercise_source,
                       position: field.state.value.length,
                     };
                     field.handleChange([...field.state.value, newEntry]);
