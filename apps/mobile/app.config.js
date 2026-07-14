@@ -14,20 +14,17 @@ const variants = {
 // con "Cannot read properties of undefined" → exit 1 silencioso en `expo config`.
 const variant = variants[APP_ENV] ?? variants.production;
 
-// Plugin de Sentry solo si el build tiene credenciales (EAS secrets): sube
-// sourcemaps/símbolos nativos. Sin token, el build funciona igual y el SDK
-// JS reporta errores sin symbolicar (mejor que nada).
-const sentryPlugin = process.env.SENTRY_AUTH_TOKEN
-  ? [
-      [
-        "@sentry/react-native/expo",
-        {
-          organization: process.env.SENTRY_ORG,
-          project: process.env.SENTRY_PROJECT ?? "gymtrack-mobile",
-        },
-      ],
-    ]
-  : [];
+// El plugin de Sentry se incluye SIEMPRE. Antes se agregaba solo si existía
+// SENTRY_AUTH_TOKEN, pero eso hacía que el SET de plugins dependiera de una env que
+// existe en EAS (secret) y no en la máquina local → el fingerprint del runtimeVersion
+// daba distinto local vs build y EAS abortaba con "Runtime version calculated on local
+// machine not equal to runtime version calculated during build".
+// org/token NO van en la config (serían env-dependientes): sentry-cli los toma de
+// SENTRY_ORG/SENTRY_AUTH_TOKEN del entorno SOLO al subir sourcemaps. Sin credenciales
+// (local/dev) el build corre igual y simplemente no sube símbolos.
+const sentryPlugin = [
+  ["@sentry/react-native/expo", { project: "gymtrack-mobile" }],
+];
 
 // Health Connect / HealthKit tras feature flag. Producción se lanza SIN los
 // permisos de salud (Google Play exige una declaración de salud aprobada, que
