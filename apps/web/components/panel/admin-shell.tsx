@@ -25,6 +25,7 @@ import {
   ArrowLeft,
   Menu,
   X,
+  UserCog,
   type LucideIcon,
 } from "lucide-react";
 
@@ -58,6 +59,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Socios",
     items: [
       { icon: Users, label: "Usuarios", path: "users" },
+      { icon: UserCog, label: "Equipo", path: "team" },
       { icon: Flame, label: "Actividades", path: "activities" },
       { icon: QrCode, label: "Asistencias", path: "attendance" },
       { icon: Receipt, label: "Contabilidad", path: "billing" },
