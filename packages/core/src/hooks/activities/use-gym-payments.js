@@ -28,7 +28,8 @@ export const useGymPayments = (gymId, fromISO, toISO) => {
             "activities!subscription_payments_activity_id_fkey(name, color), " +
             "subscription:activity_subscriptions!subscription_payments_subscription_id_fkey(activity_plans(label, frequency_per_week)), " +
             "member:profiles!subscription_payments_user_id_fkey(id, name, last_name, image_profile), " +
-            "registrant:profiles!subscription_payments_registered_by_fkey(id, name, last_name)"
+            "registrant:profiles!subscription_payments_registered_by_fkey(id, name, last_name), " +
+            "voider:profiles!subscription_payments_voided_by_fkey(id, name, last_name)"
         )
         .eq("gym_id", gymId)
         .gte("paid_at", fromISO)

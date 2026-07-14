@@ -22,8 +22,11 @@ import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-sub
 import { useActivitySubscriptionMutations } from "../../../../../src/hooks/activities/use-activity-subscription-mutations";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
+import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
 import { useGymMembers } from "@gymtrack/core/hooks/users/use-gym-members";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
+import { useMembershipPermissions } from "@gymtrack/core/hooks/users/use-membership-permissions";
+import { PERMISSIONS, hasGymPermission } from "@gymtrack/core/permissions";
 import { paymentBadge, isOverdue } from "@gymtrack/core";
 import {
   Receipt,
@@ -94,7 +97,17 @@ export default function BillingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { brandPrimary } = useGymTheme();
-  const { gymId } = useActiveGym();
+  const { gymId, activeMembership } = useActiveGym();
+  const { role } = useUserRole();
+  const { userId: myProfileId } = useAuth();
+  const { data: ownGrants } = useMembershipPermissions(
+    activeMembership?.id ?? null
+  );
+  const canVoidAny = hasGymPermission(
+    role,
+    ownGrants ?? [],
+    PERMISSIONS.PAYMENTS_VOID
+  );
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [altaOpen, setAltaOpen] = useState(false);
@@ -116,7 +129,8 @@ export default function BillingScreen() {
     if (filter === "overdue") rows = rows.filter((r) => isOverdue(r.due_date));
     else if (filter === "ok") rows = rows.filter((r) => !isOverdue(r.due_date));
     const q = search.trim().toLowerCase();
-    if (q) rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
+    if (q)
+      rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
     return rows;
   }, [subs, filter, search]);
 
@@ -183,16 +197,26 @@ export default function BillingScreen() {
               className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600 active:opacity-80"
             >
               <Plus size={15} color="#fff" />
-              <Text className="text-[12px] font-manrope-bold text-white">Agregar</Text>
+              <Text className="text-[12px] font-manrope-bold text-white">
+                Agregar
+              </Text>
             </Pressable>
           </View>
         </View>
 
         {/* Resumen */}
         <View className="flex-row gap-2.5 px-6 mb-4">
-          <MiniStat label="Ingreso/mes" value={money(stats.revenue)} tone="text-ui-text-main dark:text-ui-text-mainDark" />
+          <MiniStat
+            label="Ingreso/mes"
+            value={money(stats.revenue)}
+            tone="text-ui-text-main dark:text-ui-text-mainDark"
+          />
           <MiniStat label="Al día" value={stats.ok} tone="text-green-600" />
-          <MiniStat label="Vencidas" value={stats.overdue} tone="text-red-500" />
+          <MiniStat
+            label="Vencidas"
+            value={stats.overdue}
+            tone="text-red-500"
+          />
         </View>
 
         {/* Filtros */}
@@ -211,7 +235,9 @@ export default function BillingScreen() {
               >
                 <Text
                   className={`text-[12px] font-manrope-semi ${
-                    active ? "text-white" : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                    active
+                      ? "text-white"
+                      : "text-ui-text-muted dark:text-ui-text-mutedDark"
                   }`}
                 >
                   {f.label}
@@ -284,6 +310,8 @@ export default function BillingScreen() {
         onClose={() => setDetailSub(null)}
         brandPrimary={brandPrimary}
         insets={insets}
+        canVoidAny={canVoidAny}
+        myProfileId={myProfileId}
       />
     </Screen>
   );
@@ -292,7 +320,10 @@ export default function BillingScreen() {
 function MiniStat({ label, value, tone }) {
   return (
     <View className="flex-1 bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3">
-      <Text className={`text-[17px] font-jakarta-bold ${tone}`} numberOfLines={1}>
+      <Text
+        className={`text-[17px] font-jakarta-bold ${tone}`}
+        numberOfLines={1}
+      >
         {value}
       </Text>
       <Text className="text-[10px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
@@ -321,12 +352,18 @@ function SubRow({ sub, brandPrimary, onRegisterPayment, onDetail, onCancel }) {
           >
             {fullName(sub.member)}
           </Text>
-          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark" numberOfLines={1}>
-            {sub.activities?.name ?? "Actividad"} · {sub.activity_plans?.label ?? "Pase"} · {money(sub.price)}/mes
+          <Text
+            className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
+            numberOfLines={1}
+          >
+            {sub.activities?.name ?? "Actividad"} ·{" "}
+            {sub.activity_plans?.label ?? "Pase"} · {money(sub.price)}/mes
           </Text>
         </View>
         <View className={`px-2 py-0.5 rounded-md ${badge.chip}`}>
-          <Text className={`text-[9px] font-manrope-bold uppercase tracking-wider ${badge.text}`}>
+          <Text
+            className={`text-[9px] font-manrope-bold uppercase tracking-wider ${badge.text}`}
+          >
             {badge.label}
           </Text>
         </View>
@@ -342,7 +379,9 @@ function SubRow({ sub, brandPrimary, onRegisterPayment, onDetail, onCancel }) {
             className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 active:scale-95"
           >
             <Receipt size={13} color="#16a34a" />
-            <Text className="text-[11px] font-manrope-semi text-green-600">Registrar pago</Text>
+            <Text className="text-[11px] font-manrope-semi text-green-600">
+              Registrar pago
+            </Text>
           </Pressable>
           <Pressable
             onPress={onDetail}
@@ -370,7 +409,8 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
     user?.user_id ?? null,
     { onlyRole: "member" }
   );
-  const { data: activities, isLoading: activitiesLoading } = useActivities(gymId);
+  const { data: activities, isLoading: activitiesLoading } =
+    useActivities(gymId);
   const { assign } = useActivitySubscriptionMutations();
 
   const [pickedMember, setPickedMember] = useState(null);
@@ -401,10 +441,19 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
 
   const step = !pickedMember ? 1 : !pickedActivity ? 2 : 3;
   const title =
-    step === 1 ? "Elegí el socio" : step === 2 ? "Elegí la actividad" : "Elegí el pase";
+    step === 1
+      ? "Elegí el socio"
+      : step === 2
+        ? "Elegí la actividad"
+        : "Elegí el pase";
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={close}
+    >
       <Pressable className="flex-1 bg-black/40 justify-end" onPress={close}>
         <Pressable
           className="bg-ui-background-light dark:bg-ui-background-dark rounded-t-3xl max-h-[78%]"
@@ -417,7 +466,9 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
           <View className="flex-row items-center px-6 pt-2 pb-3 gap-2">
             {step > 1 && (
               <Pressable
-                onPress={() => (step === 3 ? setPickedActivity(null) : setPickedMember(null))}
+                onPress={() =>
+                  step === 3 ? setPickedActivity(null) : setPickedMember(null)
+                }
                 className="p-1 -ml-1"
               >
                 <ChevronLeft size={20} color={ui.text.muted} />
@@ -436,7 +487,12 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
                 <Empty text="No hay socios para mostrar." />
               ) : (
                 members.map((m) => (
-                  <PickRow key={m.id} title={fullName(m)} subtitle={m.email} onPress={() => setPickedMember(m)} />
+                  <PickRow
+                    key={m.id}
+                    title={fullName(m)}
+                    subtitle={m.email}
+                    onPress={() => setPickedMember(m)}
+                  />
                 ))
               ))}
 
@@ -492,11 +548,17 @@ function PickRow({ title, subtitle, color, onPress, disabled }) {
         <Flame size={18} color={color ?? "#4A44E4"} />
       </View>
       <View className="flex-1">
-        <Text className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize" numberOfLines={1}>
+        <Text
+          className="text-[14px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize"
+          numberOfLines={1}
+        >
           {title}
         </Text>
         {subtitle ? (
-          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark" numberOfLines={1}>
+          <Text
+            className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark"
+            numberOfLines={1}
+          >
             {subtitle}
           </Text>
         ) : null}
@@ -557,7 +619,12 @@ function RegistrarPagoModal({ sub, onClose, brandPrimary, insets }) {
   };
 
   return (
-    <Modal visible={!!sub} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal
+      visible={!!sub}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
       <Pressable className="flex-1 bg-black/40 justify-end" onPress={onClose}>
         <Pressable
           className="bg-ui-background-light dark:bg-ui-background-dark rounded-t-3xl"
@@ -582,7 +649,8 @@ function RegistrarPagoModal({ sub, onClose, brandPrimary, insets }) {
                 {fullName(sub.member)}
               </Text>
               <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mb-4">
-                {sub.activities?.name ?? "Actividad"} · {sub.activity_plans?.label ?? "Pase"}
+                {sub.activities?.name ?? "Actividad"} ·{" "}
+                {sub.activity_plans?.label ?? "Pase"}
               </Text>
 
               {/* Mes que se paga */}
@@ -609,7 +677,9 @@ function RegistrarPagoModal({ sub, onClose, brandPrimary, insets }) {
                     >
                       <Text
                         className={`text-[12px] font-manrope-semi capitalize ${
-                          active ? "text-white" : "text-ui-text-muted dark:text-ui-text-mutedDark"
+                          active
+                            ? "text-white"
+                            : "text-ui-text-muted dark:text-ui-text-mutedDark"
                         }`}
                       >
                         {opt.label}
@@ -660,14 +730,57 @@ function RegistrarPagoModal({ sub, onClose, brandPrimary, insets }) {
 }
 
 // Modal de detalle: historial de cobros de la suscripción, con el mes que cubre
-// cada uno, cuándo se cobró y el monto.
-function DetallePagosModal({ sub, onClose, brandPrimary, insets }) {
-  const { data: payments, isLoading } = useSubscriptionPayments(sub?.id ?? null);
+// cada uno, cuándo se cobró y el monto. Permite anular un cobro (insert-only:
+// nunca se edita/borra) si el staff tiene payments.void o registró ese cobro
+// hoy mismo (ventana de gracia que valida el RPC).
+function DetallePagosModal({
+  sub,
+  onClose,
+  brandPrimary,
+  insets,
+  canVoidAny,
+  myProfileId,
+}) {
+  const { data: payments, isLoading } = useSubscriptionPayments(
+    sub?.id ?? null
+  );
+  const { voidPayment } = useActivitySubscriptionMutations();
+  const [voidingPayment, setVoidingPayment] = useState(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [voidError, setVoidError] = useState(null);
   const rows = payments ?? [];
-  const total = rows.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const total = rows
+    .filter((p) => !p.voided_at)
+    .reduce((s, p) => s + (Number(p.amount) || 0), 0);
+
+  const startVoid = (payment) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setVoidError(null);
+    setVoidReason("");
+    setVoidingPayment(payment);
+  };
+
+  const confirmVoid = () => {
+    const reason = voidReason.trim();
+    if (!reason || !voidingPayment) return;
+    setVoidError(null);
+    voidPayment.mutate(
+      { paymentId: voidingPayment.id, reason, memberId: sub?.user_id },
+      {
+        onSuccess: () => setVoidingPayment(null),
+        onError: (err) =>
+          setVoidError(err?.message || "No se pudo anular el pago."),
+      }
+    );
+  };
 
   return (
-    <Modal visible={!!sub} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal
+      visible={!!sub}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
       <Pressable className="flex-1 bg-black/40 justify-end" onPress={onClose}>
         <Pressable
           className="bg-ui-background-light dark:bg-ui-background-dark rounded-t-3xl max-h-[78%]"
@@ -703,39 +816,108 @@ function DetallePagosModal({ sub, onClose, brandPrimary, insets }) {
                 ) : rows.length === 0 ? (
                   <Empty text="Todavía no hay pagos registrados." />
                 ) : (
-                  rows.map((p) => (
-                    <View
-                      key={p.id}
-                      className="flex-row items-center px-6 py-3 border-b border-ui-input-border"
-                    >
-                      <View className="w-9 h-9 rounded-[10px] items-center justify-center bg-green-500/10 mr-3">
-                        <Calendar size={15} color="#16a34a" />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-[13px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize">
-                          {monthLabel(p.period_start)}
+                  rows.map((p) => {
+                    const voided = !!p.voided_at;
+                    const canVoid =
+                      !voided &&
+                      (canVoidAny || p.registered_by === myProfileId);
+                    return (
+                      <View
+                        key={p.id}
+                        className={`flex-row items-center px-6 py-3 border-b border-ui-input-border ${voided ? "opacity-50" : ""}`}
+                      >
+                        <View className="w-9 h-9 rounded-[10px] items-center justify-center bg-green-500/10 mr-3">
+                          <Calendar size={15} color="#16a34a" />
+                        </View>
+                        <View className="flex-1">
+                          <Text
+                            className={`text-[13px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize ${voided ? "line-through" : ""}`}
+                          >
+                            {monthLabel(p.period_start)}
+                          </Text>
+                          <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+                            {voided
+                              ? `Anulado · ${p.void_reason ?? ""}`
+                              : `Cobrado el ${formatDate(p.paid_at)}`}
+                          </Text>
+                        </View>
+                        <Text
+                          className={`text-[14px] font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark ${voided ? "line-through" : ""}`}
+                        >
+                          {money(p.amount)}
                         </Text>
-                        <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
-                          Cobrado el {formatDate(p.paid_at)}
-                        </Text>
+                        {canVoid && (
+                          <Pressable
+                            onPress={() => startVoid(p)}
+                            className="ml-3 p-1.5"
+                          >
+                            <Trash size={15} color="#dc2626" />
+                          </Pressable>
+                        )}
                       </View>
-                      <Text className="text-[14px] font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark">
-                        {money(p.amount)}
-                      </Text>
-                    </View>
-                  ))
+                    );
+                  })
                 )}
               </ScrollView>
 
-              {rows.length > 0 && (
-                <View className="flex-row items-center justify-between px-6 py-3 border-t border-ui-input-border">
-                  <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark">
-                    {rows.length} {rows.length === 1 ? "pago" : "pagos"}
+              {voidingPayment ? (
+                <View className="px-6 py-4 border-t border-ui-input-border">
+                  <Text className="text-[12px] font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark mb-2">
+                    Anular {money(voidingPayment.amount)} ·{" "}
+                    {monthLabel(voidingPayment.period_start)}
                   </Text>
-                  <Text className="text-[15px] font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark">
-                    Total {money(total)}
-                  </Text>
+                  <TextInput
+                    value={voidReason}
+                    onChangeText={setVoidReason}
+                    placeholder="Motivo (obligatorio)"
+                    placeholderTextColor={ui.text.muted}
+                    multiline
+                    className="bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl px-3.5 py-3 border border-ui-input-border text-[13px] font-manrope text-ui-text-main dark:text-ui-text-mainDark mb-3"
+                  />
+                  {voidError && (
+                    <Text className="text-[11px] font-manrope text-red-600 mb-2">
+                      {voidError}
+                    </Text>
+                  )}
+                  <View className="flex-row gap-2.5">
+                    <Pressable
+                      onPress={() => setVoidingPayment(null)}
+                      className="flex-1 items-center py-3 rounded-xl border border-ui-input-border"
+                    >
+                      <Text className="text-[13px] font-manrope-semi text-ui-text-main dark:text-ui-text-mainDark">
+                        Cancelar
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={confirmVoid}
+                      disabled={voidPayment.isPending || !voidReason.trim()}
+                      style={{
+                        opacity:
+                          voidPayment.isPending || !voidReason.trim() ? 0.6 : 1,
+                      }}
+                      className="flex-1 items-center py-3 rounded-xl bg-red-600"
+                    >
+                      {voidPayment.isPending ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text className="text-[13px] font-manrope-bold text-white">
+                          Anular
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
                 </View>
+              ) : (
+                rows.length > 0 && (
+                  <View className="flex-row items-center justify-between px-6 py-3 border-t border-ui-input-border">
+                    <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark">
+                      {rows.length} {rows.length === 1 ? "pago" : "pagos"}
+                    </Text>
+                    <Text className="text-[15px] font-jakarta-bold text-ui-text-main dark:text-ui-text-mainDark">
+                      Total {money(total)}
+                    </Text>
+                  </View>
+                )
               )}
             </>
           )}

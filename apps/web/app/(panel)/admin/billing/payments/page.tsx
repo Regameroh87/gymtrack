@@ -7,20 +7,26 @@
 // @gymtrack/core/hooks/activities/use-gym-payments.
 
 // React / Next
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Librerías
-import { Receipt, Search, Flame, Wallet, Hash, Loader2, Calendar, User, Banknote, Landmark, CreditCard, QrCode } from "lucide-react";
+import { Receipt, Search, Flame, Wallet, Hash, Loader2, Calendar, User, Banknote, Landmark, CreditCard, QrCode, Ban, AlertTriangle } from "lucide-react";
 
 // Hooks de datos, contextos y helpers
 import { useGymPayments, type GymPayment } from "@gymtrack/core/hooks/activities/use-gym-payments";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
+import { useMembershipPermissions } from "@gymtrack/core/hooks/users/use-membership-permissions";
+import { PERMISSIONS, hasGymPermission } from "@gymtrack/core/permissions";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useUserRole } from "@/components/auth/use-user-role";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
+import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
 import { PageHeader } from "@/components/ui/page-header";
 import { MonthPicker, monthRange } from "@/components/ui/month-picker";
 import { PAYMENT_METHOD_OPTIONS, PAYMENT_METHOD_LABELS } from "@/lib/payment-method-options";
+import { ModalShell, Field, Textarea, ErrorBanner } from "@/components/platform/catalog/catalog-ui";
 
 const PAYMENT_METHOD_ICONS: Record<string, typeof Banknote> = {
   efectivo: Banknote,
@@ -62,7 +68,31 @@ const monthLabel = (iso: string | null) => {
 
 export default function PaymentsPage() {
   const { brandPrimary } = useGymTheme();
-  const { gymId } = useActiveGym();
+  const { gymId, memberships } = useActiveGym();
+  const { role } = useUserRole();
+  const { userId: myProfileId } = useAuth();
+  const { voidPayment } = useActivitySubscriptionMutations();
+
+  // Permisos propios: para saber si puedo anular pagos ajenos (payments.void),
+  // más allá de la ventana de gracia sobre mis propios cobros (que valida el RPC).
+  const ownMembershipId = memberships.find((m) => m.gym_id === gymId)?.id ?? null;
+  const { data: ownGrants } = useMembershipPermissions(ownMembershipId);
+  const canVoidAny = hasGymPermission(role, ownGrants ?? [], PERMISSIONS.PAYMENTS_VOID);
+
+  const [voidingPayment, setVoidingPayment] = useState<GymPayment | null>(null);
+  const [voidError, setVoidError] = useState<string | null>(null);
+
+  const confirmVoid = (reason: string) => {
+    if (!voidingPayment) return;
+    setVoidError(null);
+    voidPayment.mutate(
+      { paymentId: voidingPayment.id, reason, memberId: voidingPayment.user_id },
+      {
+        onSuccess: () => setVoidingPayment(null),
+        onError: (err) => setVoidError((err as Error)?.message || "No se pudo anular el pago."),
+      }
+    );
+  };
 
   const today = new Date();
   const [cursor, setCursor] = useState({
@@ -98,9 +128,11 @@ export default function PaymentsPage() {
     return rows;
   }, [payments, activityId, registrantId, paymentMethod, search]);
 
+  // Los pagos anulados quedan visibles en la lista (auditoría) pero no suman.
   const stats = useMemo(() => {
-    const total = filtered.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-    const count = filtered.length;
+    const active = filtered.filter((r) => !r.voided_at);
+    const total = active.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const count = active.length;
     return { total, count, avg: count ? Math.round(total / count) : 0 };
   }, [filtered]);
 
@@ -182,10 +214,23 @@ export default function PaymentsPage() {
               payment={p}
               last={i === filtered.length - 1}
               brandPrimary={brandPrimary}
+              canVoid={!p.voided_at && (canVoidAny || p.registered_by === myProfileId)}
+              onVoid={() => setVoidingPayment(p)}
             />
           ))}
         </div>
       )}
+
+      <VoidPaymentModal
+        payment={voidingPayment}
+        isPending={voidPayment.isPending}
+        error={voidError}
+        onCancel={() => {
+          setVoidingPayment(null);
+          setVoidError(null);
+        }}
+        onConfirm={confirmVoid}
+      />
     </>
   );
 }
@@ -247,27 +292,45 @@ function PaymentRow({
   payment,
   last,
   brandPrimary,
+  canVoid,
+  onVoid,
 }: {
   payment: GymPayment;
   last: boolean;
   brandPrimary: Record<number, string>;
+  canVoid: boolean;
+  onVoid: () => void;
 }) {
   const color = payment.activities?.color ?? brandPrimary[600];
+  const voided = !!payment.voided_at;
   return (
-    <div className={`flex items-center px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"}`}>
+    <div
+      className={`flex items-center px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"} ${voided ? "opacity-60" : ""}`}
+    >
       {/* Socio + actividad + pase */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: `${color}1A` }}>
           <Flame size={18} color={color} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-jakarta text-[14px] font-bold capitalize text-ui-text-main">
+          <p
+            className={`truncate font-jakarta text-[14px] font-bold capitalize text-ui-text-main ${voided ? "line-through" : ""}`}
+          >
             {fullName(payment.member)}
           </p>
           <p className="truncate font-manrope text-[11px] text-ui-text-muted">
             {payment.activities?.name ?? "Actividad"}
             {payment.activity_plans?.label ? ` · ${payment.activity_plans.label}` : ""}
           </p>
+          {voided && (
+            <p
+              className="mt-0.5 truncate font-manrope text-[10px] font-semibold text-red-500"
+              title={payment.void_reason ?? undefined}
+            >
+              Anulado{payment.voider ? ` · ${fullName(payment.voider)}` : ""}
+              {payment.void_reason ? ` · ${payment.void_reason}` : ""}
+            </p>
+          )}
         </div>
       </div>
 
@@ -318,9 +381,108 @@ function PaymentRow({
       </div>
 
       {/* Monto */}
-      <p className="w-28 text-right font-jakarta text-[15px] font-bold text-ui-text-main">
+      <p className={`w-28 text-right font-jakarta text-[15px] font-bold text-ui-text-main ${voided ? "line-through" : ""}`}>
         {money(payment.amount)}
       </p>
+
+      {/* Anular */}
+      <div className="flex w-9 justify-end">
+        {canVoid && (
+          <button
+            type="button"
+            onClick={onVoid}
+            title="Anular pago"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-ui-text-muted transition hover:bg-red-50 hover:text-red-600"
+          >
+            <Ban size={15} />
+          </button>
+        )}
+      </div>
     </div>
+  );
+}
+
+// ── Anular pago: insert-only, se pide motivo obligatorio ──
+function VoidPaymentModal({
+  payment,
+  isPending,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  payment: GymPayment | null;
+  isPending: boolean;
+  error?: string | null;
+  onCancel: () => void;
+  onConfirm: (reason: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    setReason("");
+  }, [payment?.id]);
+
+  if (!payment) return null;
+
+  const submit = () => {
+    const trimmed = reason.trim();
+    if (!trimmed) return;
+    onConfirm(trimmed);
+  };
+
+  return (
+    <ModalShell
+      maxWidth={420}
+      onClose={() => {
+        setReason("");
+        onCancel();
+      }}
+    >
+      <div className="mb-3 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+          <AlertTriangle size={18} color="#d97706" />
+        </div>
+        <span className="font-jakarta text-[16px] font-bold tracking-tight text-ui-text-main">
+          Anular pago
+        </span>
+      </div>
+      <p className="mb-4 font-manrope text-[12px] leading-5 text-ui-text-muted">
+        {money(payment.amount)} de {fullName(payment.member)}, cobrado el {formatDate(payment.paid_at)}.
+        El pago queda anulado (no se borra) y el mes vuelve a quedar pendiente.
+      </p>
+      <Field label="Motivo" hint="Obligatorio: por qué se anula este pago.">
+        <Textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Ej: error de tipeo en el monto"
+        />
+      </Field>
+      <ErrorBanner message={error} />
+      <div className="mt-5 flex gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            setReason("");
+            onCancel();
+          }}
+          className="flex-1 rounded-[11px] border border-ui-input-border bg-white py-2.5 text-center font-manrope text-[13px] font-semibold text-ui-text-main transition hover:bg-ui-background-light"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={submit}
+          disabled={isPending || !reason.trim()}
+          className="flex flex-1 items-center justify-center gap-2 rounded-[11px] bg-amber-600 py-2.5 font-manrope text-[13px] font-bold text-white transition hover:bg-amber-700 disabled:opacity-60"
+        >
+          {isPending ? (
+            <Loader2 size={14} color="#fff" className="animate-spin" />
+          ) : (
+            <AlertTriangle size={14} color="#fff" />
+          )}
+          Anular
+        </button>
+      </div>
+    </ModalShell>
   );
 }
