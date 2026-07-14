@@ -95,7 +95,8 @@ export const useCustomPlanDetail = (planId) =>
             id: custom_plan_week_day_exercises.id,
             week_day_id: custom_plan_week_day_exercises.week_day_id,
             position: custom_plan_week_day_exercises.position,
-            session_exercise_id: custom_plan_week_day_exercises.session_exercise_id,
+            session_exercise_id:
+              custom_plan_week_day_exercises.session_exercise_id,
           })
           .from(custom_plan_week_day_exercises)
           .where(
@@ -108,7 +109,9 @@ export const useCustomPlanDetail = (planId) =>
       }
 
       // 5. Nombres de ejercicios (desde custom_session_exercises o session_exercises según origen)
-      const sessionExIds = exRows.map((e) => e.session_exercise_id).filter(Boolean);
+      const sessionExIds = exRows
+        .map((e) => e.session_exercise_id)
+        .filter(Boolean);
       const exNameMap = {};
 
       if (sessionExIds.length) {
@@ -161,7 +164,8 @@ export const useCustomPlanDetail = (planId) =>
             set_number: custom_plan_week_day_exercise_sets.set_number,
             reps_min: custom_plan_week_day_exercise_sets.reps_min,
             reps_max: custom_plan_week_day_exercise_sets.reps_max,
-            duration_seconds: custom_plan_week_day_exercise_sets.duration_seconds,
+            duration_seconds:
+              custom_plan_week_day_exercise_sets.duration_seconds,
           })
           .from(custom_plan_week_day_exercise_sets)
           .where(inArray(custom_plan_week_day_exercise_sets.exercise_id, exIds))

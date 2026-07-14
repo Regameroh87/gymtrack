@@ -12,6 +12,7 @@ import {
   custom_plan_week_day_exercises,
   custom_plan_week_day_exercise_sets,
   custom_session_exercises,
+  custom_exercises,
 } from "../../database/schemas";
 
 // Trae los ejercicios prescritos de un día del plan (plan_week_day) con sus
@@ -77,9 +78,8 @@ export const fetchPlanDayExercises = async (weekDayId) => {
 
 // Variante custom: lee de las tablas custom_plan_week_day_*. El ejercicio base
 // se resuelve vía custom_session_exercises (o session_exercises si la sesión
-// del día es del gym), siempre apuntando a exercises_base. Los ejercicios con
-// origen 100% custom (custom_exercises) quedan fuera de scope por ahora: se
-// descartan en vez de romper el render.
+// del día es del gym), apuntando a exercises_base o a custom_exercises según
+// exercise_source (ids UUID únicos entre tablas).
 export const fetchCustomPlanDayExercises = async (weekDayId) => {
   if (!weekDayId) return [];
 
@@ -135,7 +135,8 @@ export const fetchCustomPlanDayExercises = async (weekDayId) => {
     });
   }
 
-  // 3. Datos del ejercicio base
+  // 3. Datos del ejercicio base: puede vivir en exercises_base o en custom_exercises
+  // (ejercicio propio del usuario), según de dónde salió al armar la sesión/plan.
   const baseIds = [
     ...new Set(Object.values(baseIdBySessionEx).filter(Boolean)),
   ];
@@ -156,6 +157,23 @@ export const fetchCustomPlanDayExercises = async (weekDayId) => {
       .where(inArray(exercises_base.id, baseIds));
     baseRows.forEach((b) => {
       baseById[b.id] = b;
+    });
+
+    const customRows = await database
+      .select({
+        id: custom_exercises.id,
+        name: custom_exercises.name,
+        muscle_group: custom_exercises.muscle_group,
+        instructions: custom_exercises.instructions,
+        image_uri: custom_exercises.image_uri,
+        video_uri: custom_exercises.video_uri,
+        youtube_video_url: custom_exercises.youtube_video_url,
+        is_unilateral: custom_exercises.is_unilateral,
+      })
+      .from(custom_exercises)
+      .where(inArray(custom_exercises.id, baseIds));
+    customRows.forEach((b) => {
+      if (!baseById[b.id]) baseById[b.id] = b;
     });
   }
 
