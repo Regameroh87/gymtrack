@@ -62,6 +62,10 @@ export const MODULE_ROLES: Record<string, Role[]> = {
   // Define la oferta comercial y los precios ⇒ admin/owner, no coach.
   activities: ADMIN_ROLES,
   billing: ADMIN_ROLES,
+  // Gestión de staff (datos, altas/bajas, permisos) ⇒ admin/owner. Los toggles
+  // de permisos puntuales dentro de la ficha siguen siendo solo del owner
+  // (gate aparte, ver PermissionsCard en team/[id]).
+  team: ADMIN_ROLES,
   reports: ADMIN_ROLES,
   settings: ADMIN_ROLES,
 };

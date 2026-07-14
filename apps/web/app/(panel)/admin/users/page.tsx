@@ -250,10 +250,11 @@ function UserRow({ user, isLast }: { user: GymMember; isLast: boolean }) {
     `${user.name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase() || "U";
   const staff = isStaffRole(user.role);
   const roleLabel = ROLE_LABELS[user.role ?? ""] ?? user.role ?? "—";
+  const href = staff ? `/admin/team/${user.id}` : `/admin/users/${user.id}`;
 
   return (
     <Link
-      href={`/admin/users/${user.id}`}
+      href={href}
       className={`flex items-center px-5 py-3 transition hover:bg-brandPrimary-50/40 ${isLast ? "" : "border-b border-ui-input-border"}`}
       style={{ opacity: user.is_active === false ? 0.55 : 1 }}
     >

@@ -297,10 +297,15 @@ declare module "@gymtrack/core/hooks/users/use-gym-staff" {
   import type { UseQueryResult } from "@tanstack/react-query";
   export interface StaffMember {
     id: string;
+    user_id: string;
     name: string | null;
     last_name: string | null;
+    email: string | null;
+    phone: string | null;
     role: string | null;
+    is_active: boolean | null;
     image_profile: string | null;
+    created_at: string | null;
     [k: string]: unknown;
   }
   export function useGymStaff(

@@ -24,19 +24,16 @@ import {
 
 import { useMemberDetail } from "@gymtrack/core/hooks/users/use-member-detail";
 import { useMemberSubscriptions } from "@gymtrack/core/hooks/activities/use-member-subscriptions";
-import { useMembershipPermissions } from "@gymtrack/core/hooks/users/use-membership-permissions";
-import { PERMISSIONS, hasGymPermission } from "@gymtrack/core/permissions";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useUserRole } from "@/components/auth/use-user-role";
 import {
   useToggleMemberActive,
   useDeleteMember,
 } from "@/lib/hooks/use-admin-member";
-import { useMembershipPermissionMutations } from "@/lib/hooks/use-membership-permission-mutations";
 import { ROLE_LABELS, isStaffRole } from "@/lib/auth/roles";
 import { PROFILE_GENDERS } from "@/lib/gender-options";
 import { mediaUrl } from "@/lib/media";
-import { DeleteConfirmModal, Toggle, ErrorBanner } from "@/components/platform/catalog/catalog-ui";
+import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -61,7 +58,7 @@ export default function MemberDetailPage() {
   const id = typeof params.id === "string" ? params.id : "";
   const router = useRouter();
   const { gymId } = useActiveGym();
-  const { isAdmin, isOwner } = useUserRole();
+  const { isAdmin } = useUserRole();
 
   const { data, isLoading, isError } = useMemberDetail(id, gymId);
   const { data: subs } = useMemberSubscriptions(id, gymId);
@@ -300,12 +297,6 @@ export default function MemberDetailPage() {
         </div>
       </div>
 
-      {/* Permisos: solo el owner decide, por persona, quién puede registrar/anular
-          cobros más allá de lo que ya le da su rol. No aplica a otro owner. */}
-      {isOwner && profile.role !== "owner" && (
-        <PermissionsCard membershipId={profile.membership_id} role={profile.role} />
-      )}
-
       {/* Historial */}
       <div className="mt-4 rounded-[18px] border border-ui-input-border bg-white p-6">
         <SectionTitle>Últimos entrenamientos</SectionTitle>
@@ -362,83 +353,6 @@ function BackLink() {
         Usuarios
       </span>
     </Link>
-  );
-}
-
-// Permisos puntuales sobre pagos. Cada fila es "incluido por su rol" (no
-// editable: ya lo tiene por default) o un Toggle que otorga/revoca el grant
-// explícito en membership_permissions.
-const PERMISSION_ITEMS = [
-  {
-    key: PERMISSIONS.PAYMENTS_REGISTER,
-    label: "Registrar cobros",
-    hint: "Puede registrar el pago de un socio.",
-  },
-  {
-    key: PERMISSIONS.PAYMENTS_VOID,
-    label: "Anular cobros",
-    hint: "Puede anular un cobro ya registrado (con motivo).",
-  },
-];
-
-function PermissionsCard({
-  membershipId,
-  role,
-}: {
-  membershipId: string | null;
-  role: string | null;
-}) {
-  const { data: grants } = useMembershipPermissions(membershipId);
-  const { grant, revoke } = useMembershipPermissionMutations(membershipId);
-  const [error, setError] = useState<string | null>(null);
-
-  const toggle = async (permission: string, next: boolean) => {
-    setError(null);
-    try {
-      if (next) await grant.mutateAsync(permission);
-      else await revoke.mutateAsync(permission);
-    } catch (err) {
-      setError((err as Error)?.message || "No se pudo actualizar el permiso.");
-    }
-  };
-
-  return (
-    <div className="mt-4 rounded-[18px] border border-ui-input-border bg-white p-6">
-      <SectionTitle>Permisos</SectionTitle>
-      <ErrorBanner message={error} />
-      <div className="flex flex-col gap-2.5">
-        {PERMISSION_ITEMS.map((item) => {
-          // Si el rol ya lo incluye por default, no es un grant editable.
-          const isDefault = hasGymPermission(role, [], item.key);
-          if (isDefault) {
-            return (
-              <div
-                key={item.key}
-                className="flex items-center justify-between gap-3 rounded-xl border border-ui-input-border bg-ui-background-light px-3.5 py-3"
-              >
-                <span className="flex-1">
-                  <span className="block font-manrope text-[13px] font-bold text-ui-text-main">
-                    {item.label}
-                  </span>
-                  <span className="mt-0.5 block font-manrope text-[11px] text-ui-text-muted">
-                    Incluido por su rol.
-                  </span>
-                </span>
-              </div>
-            );
-          }
-          return (
-            <Toggle
-              key={item.key}
-              label={item.label}
-              hint={item.hint}
-              value={hasGymPermission(role, grants ?? [], item.key)}
-              onChange={(next) => toggle(item.key, next)}
-            />
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
