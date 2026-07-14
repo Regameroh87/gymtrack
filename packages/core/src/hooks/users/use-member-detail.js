@@ -26,12 +26,13 @@ export const useMemberDetail = (memberId, gymId) => {
 
       const { data: membership } = await supabase
         .from("memberships")
-        .select("role, status")
+        .select("id, role, status")
         .eq("user_id", profile.user_id)
         .eq("gym_id", gymId)
         .maybeSingle();
       profile.role = membership?.role ?? null;
       profile.membership_status = membership?.status ?? null;
+      profile.membership_id = membership?.id ?? null;
 
       // 2. Asignaciones de plan (normales y custom).
       const { data: assignments, error: aErr } = await supabase

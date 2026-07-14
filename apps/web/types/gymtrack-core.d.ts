@@ -84,10 +84,14 @@ declare module "@gymtrack/core/hooks/activities/use-gym-payments" {
     period_end: string | null;
     registered_by: string | null;
     payment_method: string | null;
+    voided_at: string | null;
+    voided_by: string | null;
+    void_reason: string | null;
     activities: { name: string | null; color: string | null } | null;
     activity_plans: { label: string | null; frequency_per_week: number | null } | null;
     member: { id: string; name: string | null; last_name: string | null; image_profile: string | null } | null;
     registrant: { id: string; name: string | null; last_name: string | null } | null;
+    voider: { id: string; name: string | null; last_name: string | null } | null;
     [k: string]: unknown;
   }
   export function useGymPayments(
@@ -95,6 +99,25 @@ declare module "@gymtrack/core/hooks/activities/use-gym-payments" {
     fromISO: string | null,
     toISO: string | null
   ): UseQueryResult<GymPayment[]>;
+}
+
+declare module "@gymtrack/core/hooks/users/use-membership-permissions" {
+  import type { UseQueryResult } from "@tanstack/react-query";
+  export function useMembershipPermissions(
+    membershipId: string | null
+  ): UseQueryResult<string[]>;
+}
+
+declare module "@gymtrack/core/permissions" {
+  export const PERMISSIONS: {
+    PAYMENTS_REGISTER: "payments.register";
+    PAYMENTS_VOID: "payments.void";
+  };
+  export function hasGymPermission(
+    role: string | null | undefined,
+    grants: string[] | null | undefined,
+    permission: string
+  ): boolean;
 }
 
 declare module "@gymtrack/core/colors" {
@@ -210,6 +233,7 @@ declare module "@gymtrack/core/hooks/users/use-member-detail" {
     image_profile: string | null;
     role: string | null;
     membership_status: string | null;
+    membership_id: string | null;
     is_active: boolean | null;
     created_at: string | null;
     [k: string]: unknown;
