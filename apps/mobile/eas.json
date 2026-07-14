@@ -5,17 +5,20 @@
   },
   "build": {
     "development": {
+      "channel": "development",
       "developmentClient": true,
       "distribution": "internal",
       "env": { "APP_ENV": "development" },
       "android": { "buildType": "apk" }
     },
     "preview": {
+      "channel": "preview",
       "distribution": "internal",
       "env": { "APP_ENV": "preview" },
       "android": { "buildType": "apk" }
     },
     "production": {
+      "channel": "production",
       "autoIncrement": true,
       "env": { "APP_ENV": "production" }
     }
