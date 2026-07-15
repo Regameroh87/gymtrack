@@ -43,6 +43,11 @@ export const STAFF_ROLES: Role[] = [
 // Roles con permisos administrativos plenos del gym (staff, billing, ajustes).
 export const ADMIN_ROLES: Role[] = [ROLES.SUPER_ADMIN, ROLES.OWNER, ROLES.ADMIN];
 
+// Roles que gestionan el CONTENIDO de entrenamiento (ejercicios, máquinas, sesiones,
+// planes). Es tarea de owner/coach, no de la administración (admin). super_admin se
+// incluye porque opera dentro de un gym como soporte (mismo criterio que ADMIN_ROLES).
+export const TRAINING_ROLES: Role[] = [ROLES.SUPER_ADMIN, ROLES.OWNER, ROLES.COACH];
+
 export const isStaffRole = (role: string | null | undefined): boolean =>
   !!role && STAFF_ROLES.includes(role as Role);
 export const isAdminRole = (role: string | null | undefined): boolean =>
@@ -54,10 +59,12 @@ export const isSuperAdminRole = (role: string | null | undefined): boolean =>
 // Si un módulo no figura, se asume visible para todo el staff.
 export const MODULE_ROLES: Record<string, Role[]> = {
   users: STAFF_ROLES,
-  exercises: STAFF_ROLES,
-  equipments: STAFF_ROLES,
-  sessions: STAFF_ROLES,
-  plans: STAFF_ROLES,
+  // Contenido de entrenamiento ⇒ owner/coach, no admin (la administración no arma
+  // ejercicios/sesiones/planes ni gestiona el inventario de máquinas).
+  exercises: TRAINING_ROLES,
+  equipments: TRAINING_ROLES,
+  sessions: TRAINING_ROLES,
+  plans: TRAINING_ROLES,
   attendance: STAFF_ROLES,
   // Define la oferta comercial y los precios ⇒ admin/owner, no coach.
   activities: ADMIN_ROLES,

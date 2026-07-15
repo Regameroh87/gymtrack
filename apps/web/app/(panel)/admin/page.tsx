@@ -96,7 +96,9 @@ export default function AdminDashboardPage() {
   const { brandPrimary, brandSecondary, gymName } = useGymTheme();
 
   const STATS = buildStats(brandPrimary);
-  const QUICK_ACTIONS = buildQuickActions(brandPrimary, brandSecondary);
+  const QUICK_ACTIONS = buildQuickActions(brandPrimary, brandSecondary).filter((action) =>
+    canAccessModule(role, action.path.split("/")[0])
+  );
   const modules = buildModules(brandPrimary, brandSecondary).filter((mod) =>
     canAccessModule(role, mod.path)
   );
