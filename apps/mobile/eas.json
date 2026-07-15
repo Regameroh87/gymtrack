@@ -8,13 +8,13 @@
       "channel": "development",
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "APP_ENV": "development" },
+      "env": { "APP_ENV": "development", "SENTRY_DISABLE_AUTO_UPLOAD": "true" },
       "android": { "buildType": "apk" }
     },
     "preview": {
       "channel": "preview",
       "distribution": "internal",
-      "env": { "APP_ENV": "preview" },
+      "env": { "APP_ENV": "preview", "SENTRY_DISABLE_AUTO_UPLOAD": "true" },
       "android": { "buildType": "apk" }
     },
     "production": {
