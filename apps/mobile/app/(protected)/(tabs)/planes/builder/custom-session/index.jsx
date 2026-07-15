@@ -1,8 +1,9 @@
-﻿import { View, ActivityIndicator } from "react-native";
+﻿import { View, ActivityIndicator, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useCustomSessionForm } from "../../../../../../src/hooks/sessions/use-custom-session-form";
 import FormSession from "../../../../../../src/components/forms/FormSession";
+import Screen from "../../../../../../src/components/Screen";
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
 export default function UserSessionBuilder() {
@@ -24,7 +25,7 @@ export default function UserSessionBuilder() {
   }
 
   return (
-    <>
+    <Screen safe={Platform.OS === "android"}>
       <FormSession
         form={form}
         session={id ?? null}
@@ -32,6 +33,6 @@ export default function UserSessionBuilder() {
         hideDescription
         hideLevel
       />
-    </>
+    </Screen>
   );
 }

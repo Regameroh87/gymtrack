@@ -1,5 +1,5 @@
 ﻿import { useRef } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 import { HeaderBackButton } from "@react-navigation/elements";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
@@ -15,6 +15,7 @@ import { database } from "../../../../../../src/database";
 import { custom_exercises } from "../../../../../../src/database/schemas";
 import { checkNetInfoAndSync } from "../../../../../../src/database/sync";
 import FormExercise from "../../../../../../src/components/forms/FormExercise";
+import Screen from "../../../../../../src/components/Screen";
 import { ui } from "@gymtrack/core/colors";
 import { useGymTheme } from "../../../../../../src/contexts/gym-theme-context";
 
@@ -121,7 +122,7 @@ export default function UserExerciseBuilder() {
   }
 
   return (
-    <>
+    <Screen safe={Platform.OS === "android"}>
       <Stack.Screen
         options={{
           headerLeft: () => (
@@ -147,6 +148,6 @@ export default function UserExerciseBuilder() {
             : "Completá los datos para agregar un ejercicio a tu biblioteca."
         }
       />
-    </>
+    </Screen>
   );
 }
