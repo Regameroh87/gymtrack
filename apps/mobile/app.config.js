@@ -19,11 +19,16 @@ const variant = variants[APP_ENV] ?? variants.production;
 // existe en EAS (secret) y no en la máquina local → el fingerprint del runtimeVersion
 // daba distinto local vs build y EAS abortaba con "Runtime version calculated on local
 // machine not equal to runtime version calculated during build".
-// org/token NO van en la config (serían env-dependientes): sentry-cli los toma de
-// SENTRY_ORG/SENTRY_AUTH_TOKEN del entorno SOLO al subir sourcemaps. Sin credenciales
-// (local/dev) el build corre igual y simplemente no sube símbolos.
+// org/project van ESTÁTICOS (constantes → mismo fingerprint local y EAS): sin org,
+// la task SentryUpload de gradle aborta el build con "An organization ID or slug is
+// required". El token NO va acá: sentry-cli lo toma de SENTRY_AUTH_TOKEN (env de EAS)
+// al subir sourcemaps. En dev/preview la subida se apaga vía SENTRY_DISABLE_AUTO_UPLOAD
+// en eas.json; production sube sourcemaps reales.
 const sentryPlugin = [
-  ["@sentry/react-native/expo", { project: "gymtrack-mobile" }],
+  [
+    "@sentry/react-native/expo",
+    { organization: "gymtrack-mobile", project: "gymtrack-mobile" },
+  ],
 ];
 
 // Health Connect / HealthKit tras feature flag. Producción se lanza SIN los
