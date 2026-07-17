@@ -21,11 +21,24 @@ if (channel !== "preview" && channel !== "production") {
   process.exit(1);
 }
 
+// eas update exporta --platform=all por default, que incluye web; el bundle web
+// rompe por expo-sqlite (wa-sqlite.wasm ausente) y esta app no corre en web (la
+// web es apps/web / Next.js). Restringimos a android (único target distribuido
+// hoy; no hay builds iOS). El flag --platform NO afecta el fingerprint, así que
+// es seguro respecto del runtime del build instalado. Para publicar iOS más
+// adelante: pasar `-- --platform ios` (o all cuando web deje de romper). NO
+// arreglar esto tocando `platforms` en app.json: eso cambia el fingerprint y el
+// update quedaría en un runtime que ningún build instalado pide.
+const hasPlatform = extraArgs.some(
+  (a) => a === "--platform" || a === "-p" || a.startsWith("--platform=")
+);
+const platformArgs = hasPlatform ? [] : ["--platform", "android"];
+
 // El canal es también el branch y el APP_ENV: los tres coinciden por diseño
 // (ver variants en app.config.js). Si en el futuro divergen, mapear acá.
 const result = spawnSync(
   "npx",
-  ["eas-cli", "update", "--branch", channel, ...extraArgs],
+  ["eas-cli", "update", "--branch", channel, ...platformArgs, ...extraArgs],
   {
     stdio: "inherit",
     shell: true,
