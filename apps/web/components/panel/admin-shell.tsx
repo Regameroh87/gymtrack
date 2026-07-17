@@ -32,8 +32,7 @@ import {
 // Contextos y helpers
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
-import { useUserRole } from "@/components/auth/use-user-role";
-import { canAccessModule } from "@/lib/auth/roles";
+import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { mediaUrl } from "@/lib/media";
 
 type NavItem = {
@@ -92,15 +91,16 @@ function isActive(pathname: string, itemPath: string): boolean {
 function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const { role } = useUserRole();
   const { gym, isSuperAdmin, exitGym } = useActiveGym();
+  const { canAccessModule } = useGymPermissions();
 
-  // Dashboard siempre visible; el resto según permisos del rol. Se descartan
-  // secciones que quedan sin ítems visibles para el rol.
+  // Dashboard siempre visible; el resto según rol + grants de la membership
+  // (p.ej. un coach con payments.register ve Contabilidad). Se descartan
+  // secciones que quedan sin ítems visibles.
   const navSections = NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items.filter(
-      (item) => item.path === "" || canAccessModule(role, item.path)
+      (item) => item.path === "" || canAccessModule(item.path)
     ),
   })).filter((section) => section.items.length > 0);
 

@@ -24,9 +24,8 @@ import {
 
 // Contextos y helpers
 import { ui } from "@gymtrack/core/colors";
-import { useUserRole } from "@/components/auth/use-user-role";
+import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
-import { canAccessModule } from "@/lib/auth/roles";
 import { StatCard } from "@/components/ui/stat-card";
 
 type Stat = {
@@ -92,15 +91,15 @@ const COMING_SOON = [
 ];
 
 export default function AdminDashboardPage() {
-  const { role } = useUserRole();
+  const { canAccessModule } = useGymPermissions();
   const { brandPrimary, brandSecondary, gymName } = useGymTheme();
 
   const STATS = buildStats(brandPrimary);
   const QUICK_ACTIONS = buildQuickActions(brandPrimary, brandSecondary).filter((action) =>
-    canAccessModule(role, action.path.split("/")[0])
+    canAccessModule(action.path.split("/")[0])
   );
   const modules = buildModules(brandPrimary, brandSecondary).filter((mod) =>
-    canAccessModule(role, mod.path)
+    canAccessModule(mod.path)
   );
 
   const [dateStr, setDateStr] = useState("");
@@ -158,8 +157,8 @@ export default function AdminDashboardPage() {
 
             <div className="mt-5 flex gap-5">
               {[
-                { label: "Módulos activos", val: "6" },
-                { label: "Próximamente", val: "2" },
+                { label: "Módulos activos", val: String(modules.length) },
+                { label: "Próximamente", val: String(COMING_SOON.length) },
               ].map((s) => (
                 <div key={s.label}>
                   <p className="font-jakarta text-[22px] font-bold tracking-tight text-white">

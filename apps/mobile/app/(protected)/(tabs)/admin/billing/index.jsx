@@ -22,11 +22,11 @@ import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-sub
 import { useActivitySubscriptionMutations } from "../../../../../src/hooks/activities/use-activity-subscription-mutations";
 import { useActiveGym } from "../../../../../src/contexts/active-gym-context";
 import { useAuth } from "../../../../../src/auth/lib/getSession";
-import { useUserRole } from "../../../../../src/hooks/shared/use-user-role";
+import { useGymPermissions } from "../../../../../src/hooks/shared/use-gym-permissions";
+import { isAdminRole } from "../../../../../src/constants/roles";
 import { useGymMembers } from "@gymtrack/core/hooks/users/use-gym-members";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
-import { useMembershipPermissions } from "@gymtrack/core/hooks/users/use-membership-permissions";
-import { PERMISSIONS, hasGymPermission } from "@gymtrack/core/permissions";
+import { PERMISSIONS } from "@gymtrack/core/permissions";
 import { paymentBadge, isOverdue } from "@gymtrack/core";
 import {
   Receipt,
@@ -97,17 +97,14 @@ export default function BillingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { brandPrimary } = useGymTheme();
-  const { gymId, activeMembership } = useActiveGym();
-  const { role } = useUserRole();
+  const { gymId } = useActiveGym();
   const { userId: myProfileId } = useAuth();
-  const { data: ownGrants } = useMembershipPermissions(
-    activeMembership?.id ?? null
-  );
-  const canVoidAny = hasGymPermission(
-    role,
-    ownGrants ?? [],
-    PERMISSIONS.PAYMENTS_VOID
-  );
+  const { role, can } = useGymPermissions();
+  // Un coach puede llegar acá solo con grant de cobro: ve registrar pago, pero no
+  // la gestión de altas/bajas de membresía (rol admin; la RLS igual la corta).
+  const canVoidAny = can(PERMISSIONS.PAYMENTS_VOID);
+  const canRegister = can(PERMISSIONS.PAYMENTS_REGISTER);
+  const canManage = isAdminRole(role);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [altaOpen, setAltaOpen] = useState(false);
@@ -176,32 +173,34 @@ export default function BillingScreen() {
               Membresías
             </Text>
           </View>
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/admin/billing/coaches");
-              }}
-              className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-80"
-            >
-              <Users size={15} color={brandPrimary[600]} />
-              <Text className="text-[12px] font-manrope-bold text-ui-text-main dark:text-ui-text-mainDark">
-                Coaches
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setAltaOpen(true);
-              }}
-              className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600 active:opacity-80"
-            >
-              <Plus size={15} color="#fff" />
-              <Text className="text-[12px] font-manrope-bold text-white">
-                Agregar
-              </Text>
-            </Pressable>
-          </View>
+          {canManage && (
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push("/admin/billing/coaches");
+                }}
+                className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border active:opacity-80"
+              >
+                <Users size={15} color={brandPrimary[600]} />
+                <Text className="text-[12px] font-manrope-bold text-ui-text-main dark:text-ui-text-mainDark">
+                  Coaches
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setAltaOpen(true);
+                }}
+                className="flex-row items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-brandPrimary-600 active:opacity-80"
+              >
+                <Plus size={15} color="#fff" />
+                <Text className="text-[12px] font-manrope-bold text-white">
+                  Agregar
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
 
         {/* Resumen */}
@@ -282,6 +281,8 @@ export default function BillingScreen() {
                 key={sub.id}
                 sub={sub}
                 brandPrimary={brandPrimary}
+                canRegister={canRegister}
+                canManage={canManage}
                 onRegisterPayment={() => onRegisterPayment(sub)}
                 onDetail={() => onDetail(sub)}
                 onCancel={() => onCancel(sub)}
@@ -333,7 +334,15 @@ function MiniStat({ label, value, tone }) {
   );
 }
 
-function SubRow({ sub, brandPrimary, onRegisterPayment, onDetail, onCancel }) {
+function SubRow({
+  sub,
+  brandPrimary,
+  canRegister,
+  canManage,
+  onRegisterPayment,
+  onDetail,
+  onCancel,
+}) {
   const badge = paymentBadge(sub.due_date);
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
@@ -374,27 +383,31 @@ function SubRow({ sub, brandPrimary, onRegisterPayment, onDetail, onCancel }) {
           Vence {formatDate(sub.due_date)}
         </Text>
         <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={onRegisterPayment}
-            className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 active:scale-95"
-          >
-            <Receipt size={13} color="#16a34a" />
-            <Text className="text-[11px] font-manrope-semi text-green-600">
-              Registrar pago
-            </Text>
-          </Pressable>
+          {canRegister && (
+            <Pressable
+              onPress={onRegisterPayment}
+              className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 active:scale-95"
+            >
+              <Receipt size={13} color="#16a34a" />
+              <Text className="text-[11px] font-manrope-semi text-green-600">
+                Registrar pago
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             onPress={onDetail}
             className="p-2 rounded-lg bg-brandPrimary-50 dark:bg-brandPrimary-900/30 active:scale-95"
           >
             <Clock size={14} color={brandPrimary[600]} />
           </Pressable>
-          <Pressable
-            onPress={onCancel}
-            className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 active:scale-95"
-          >
-            <Trash size={14} color="#ef4444" />
-          </Pressable>
+          {canManage && (
+            <Pressable
+              onPress={onCancel}
+              className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 active:scale-95"
+            >
+              <Trash size={14} color="#ef4444" />
+            </Pressable>
+          )}
         </View>
       </View>
     </View>

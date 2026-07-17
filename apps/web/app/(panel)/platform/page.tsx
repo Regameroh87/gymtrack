@@ -12,7 +12,7 @@ import { ShieldHalf, Plus, ChevronRight, CheckCircle } from "lucide-react";
 
 // Sesión, Supabase y helpers
 import { getSessionContext } from "@/lib/auth/session";
-import { ROLES } from "@/lib/auth/roles";
+import { PLATFORM_ROLES } from "@/lib/auth/roles";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { mediaUrl } from "@/lib/media";
 import { formatGymDate, type Gym } from "@/lib/gyms";
@@ -39,7 +39,7 @@ export default async function PlatformPage() {
   if (!ctx.platformRole) redirect("/dashboard");
   // superadmin_coach no tiene acceso a gyms_select (RLS admin-tier): este
   // dashboard (stats de gyms + "Entrar") no le sirve, va directo a Catálogo.
-  if (ctx.platformRole === ROLES.SUPERADMIN_COACH) redirect("/platform/catalog");
+  if (ctx.platformRole === PLATFORM_ROLES.SUPERADMIN_COACH) redirect("/platform/catalog");
 
   const supabase = await createServerSupabase();
   const { data } = await supabase

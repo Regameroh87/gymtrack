@@ -120,6 +120,37 @@ declare module "@gymtrack/core/permissions" {
   ): boolean;
 }
 
+declare module "@gymtrack/core/roles" {
+  export const ROLES: {
+    SUPER_ADMIN: "super_admin";
+    OWNER: "owner";
+    ADMIN: "admin";
+    COACH: "coach";
+    MEMBER: "member";
+  };
+  export const STAFF_ROLES: string[];
+  export const ADMIN_ROLES: string[];
+  export const TRAINING_ROLES: string[];
+  export const DEFAULT_ROLE: string;
+  export const MODULE_ROLES: Record<string, string[]>;
+  export const MODULE_PERMISSIONS: Record<string, string[]>;
+  export const ASSIGNABLE_ROLES: Record<string, string[]>;
+  export const ROLE_LABELS: Record<string, string>;
+  export function isStaffRole(role: string | null | undefined): boolean;
+  export function isAdminRole(role: string | null | undefined): boolean;
+  export function isSuperAdminRole(role: string | null | undefined): boolean;
+  export function unlocksModule(
+    role: string | null | undefined,
+    grants: string[] | null | undefined,
+    path: string
+  ): boolean;
+  export function canAccessModule(
+    role: string | null | undefined,
+    path: string,
+    grants?: string[] | null | undefined
+  ): boolean;
+}
+
 declare module "@gymtrack/core/colors" {
   export type Ramp = Record<number, string>;
   export const brandPrimary: Ramp;

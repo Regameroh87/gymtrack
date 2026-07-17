@@ -15,12 +15,11 @@ import { Receipt, Search, Flame, Wallet, Hash, Loader2, Calendar, User, Banknote
 // Hooks de datos, contextos y helpers
 import { useGymPayments, type GymPayment } from "@gymtrack/core/hooks/activities/use-gym-payments";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
-import { useMembershipPermissions } from "@gymtrack/core/hooks/users/use-membership-permissions";
-import { PERMISSIONS, hasGymPermission } from "@gymtrack/core/permissions";
+import { PERMISSIONS } from "@gymtrack/core/permissions";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
-import { useUserRole } from "@/components/auth/use-user-role";
+import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
 import { PageHeader } from "@/components/ui/page-header";
@@ -68,16 +67,14 @@ const monthLabel = (iso: string | null) => {
 
 export default function PaymentsPage() {
   const { brandPrimary } = useGymTheme();
-  const { gymId, memberships } = useActiveGym();
-  const { role } = useUserRole();
+  const { gymId } = useActiveGym();
   const { userId: myProfileId } = useAuth();
   const { voidPayment } = useActivitySubscriptionMutations();
 
   // Permisos propios: para saber si puedo anular pagos ajenos (payments.void),
   // más allá de la ventana de gracia sobre mis propios cobros (que valida el RPC).
-  const ownMembershipId = memberships.find((m) => m.gym_id === gymId)?.id ?? null;
-  const { data: ownGrants } = useMembershipPermissions(ownMembershipId);
-  const canVoidAny = hasGymPermission(role, ownGrants ?? [], PERMISSIONS.PAYMENTS_VOID);
+  const { can } = useGymPermissions();
+  const canVoidAny = can(PERMISSIONS.PAYMENTS_VOID);
 
   const [voidingPayment, setVoidingPayment] = useState<GymPayment | null>(null);
   const [voidError, setVoidError] = useState<string | null>(null);

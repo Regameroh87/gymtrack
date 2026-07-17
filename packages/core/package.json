@@ -16,6 +16,7 @@
     "./colors": "./src/colors.js",
     "./storage": "./src/storage.js",
     "./permissions": "./src/permissions.js",
+    "./roles": "./src/roles.js",
     "./hooks/*": "./src/hooks/*.js"
   },
   "dependencies": {

@@ -37,10 +37,13 @@ import { useActivities, type Activity, type ActivityPlan } from "@gymtrack/core/
 import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-subscription-payments";
 import { paymentBadge, isOverdue } from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
+import { PERMISSIONS } from "@gymtrack/core/permissions";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
 import { PAYMENT_METHOD_OPTIONS } from "@/lib/payment-method-options";
+import { isAdminRole } from "@/lib/auth/roles";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
@@ -90,6 +93,11 @@ const FILTERS = [
 export default function BillingPage() {
   const { brandPrimary } = useGymTheme();
   const { gymId } = useActiveGym();
+  const { role, can } = useGymPermissions();
+  // Un coach puede llegar acá solo con grant de cobro: ve registrar pago, pero
+  // no la gestión de altas/bajas de membresía (rol admin; la RLS igual la corta).
+  const canRegister = can(PERMISSIONS.PAYMENTS_REGISTER);
+  const canManage = isAdminRole(role);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [altaOpen, setAltaOpen] = useState(false);
@@ -138,12 +146,14 @@ export default function BillingPage() {
         title="Membresías y cobranza"
         description="Inscripciones activas, cuotas y estado de pago de tus socios"
         cta={
-          <Button
-            icon={<Plus size={15} color="#fff" />}
-            onClick={() => setAltaOpen(true)}
-          >
-            Agregar membresía
-          </Button>
+          canManage ? (
+            <Button
+              icon={<Plus size={15} color="#fff" />}
+              onClick={() => setAltaOpen(true)}
+            >
+              Agregar membresía
+            </Button>
+          ) : undefined
         }
       />
 
@@ -212,6 +222,8 @@ export default function BillingPage() {
               sub={sub}
               last={i === filtered.length - 1}
               brandPrimary={brandPrimary}
+              canRegister={canRegister}
+              canManage={canManage}
               onRegisterPayment={() => setPayingSub(sub)}
               onDetail={() => setDetailSub(sub)}
               onCancel={() => setCancelSub(sub)}
@@ -295,6 +307,8 @@ function SubRow({
   sub,
   last,
   brandPrimary,
+  canRegister,
+  canManage,
   onRegisterPayment,
   onDetail,
   onCancel,
@@ -303,6 +317,8 @@ function SubRow({
   sub: GymSubscription;
   last: boolean;
   brandPrimary: Record<number, string>;
+  canRegister: boolean;
+  canManage: boolean;
   onRegisterPayment: () => void;
   onDetail: () => void;
   onCancel: () => void;
@@ -360,17 +376,19 @@ function SubRow({
 
       {/* Acciones */}
       <div className="flex w-full items-center justify-end gap-2 md:w-56">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={onRegisterPayment}
-          className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-3 py-2 hover:bg-green-500/15 disabled:opacity-60"
-        >
-          <Receipt size={13} color="#16a34a" />
-          <span className="hidden font-manrope text-[11px] font-semibold text-green-600 sm:inline">
-            Registrar pago
-          </span>
-        </button>
+        {canRegister && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onRegisterPayment}
+            className="flex items-center gap-1.5 rounded-lg bg-green-500/10 px-3 py-2 hover:bg-green-500/15 disabled:opacity-60"
+          >
+            <Receipt size={13} color="#16a34a" />
+            <span className="hidden font-manrope text-[11px] font-semibold text-green-600 sm:inline">
+              Registrar pago
+            </span>
+          </button>
+        )}
         <button
           type="button"
           onClick={onDetail}
@@ -379,14 +397,16 @@ function SubRow({
         >
           <History size={14} color={brandPrimary[600]} />
         </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={onCancel}
-          className="rounded-lg bg-red-100 p-2 hover:bg-red-200/70 disabled:opacity-60"
-        >
-          <Trash2 size={14} color="#ef4444" />
-        </button>
+        {canManage && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onCancel}
+            className="rounded-lg bg-red-100 p-2 hover:bg-red-200/70 disabled:opacity-60"
+          >
+            <Trash2 size={14} color="#ef4444" />
+          </button>
+        )}
       </div>
     </div>
   );

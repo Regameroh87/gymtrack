@@ -11,8 +11,7 @@ import AdminHeader from "../../../../src/components/AdminHeader";
 import AdminModuleCard from "../../../../src/components/cards/AdminModuleCard";
 
 // ── Roles ──
-import { useUserRole } from "../../../../src/hooks/shared/use-user-role";
-import { canAccessModule } from "../../../../src/constants/roles";
+import { useGymPermissions } from "../../../../src/hooks/shared/use-gym-permissions";
 
 // ── Tema ──
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
@@ -125,14 +124,15 @@ const buildModules = ({ brandSecondary, gradient }) => [
 export default function AdminDashboard() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { role } = useUserRole();
+  const { canAccessModule } = useGymPermissions();
   const { brandSecondary, gradient } = useGymTheme();
 
   const nav = (path) => router.push(`/admin/${path}`);
 
-  // Solo los módulos permitidos para el rol (coach no ve Billing/Reportes/Ajustes).
+  // Solo los módulos permitidos por rol + grants de la membership (p.ej. un coach
+  // con payments.register ve Contabilidad; sin grant no ve Billing/Reportes/Ajustes).
   const modules = buildModules({ brandSecondary, gradient }).filter((m) =>
-    canAccessModule(role, m.path)
+    canAccessModule(m.path)
   );
 
   return (
