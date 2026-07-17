@@ -44,6 +44,11 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GymThemeProvider } from "../src/contexts/gym-theme-context";
 import { ActiveGymProvider } from "../src/contexts/active-gym-context";
+import UpdateGate from "../src/components/update-gate";
+import {
+  useStartupUpdate,
+  STARTUP_UPDATE_STATUS,
+} from "../src/hooks/shared/use-startup-update";
 
 // Evita que el splash se oculte solo
 SplashScreen.preventAutoHideAsync();
@@ -64,6 +69,10 @@ function KeepAwake() {
 
 function RootLayout() {
   const { colorScheme } = useColorScheme();
+
+  // Gate OTA del arranque: busca/descarga/aplica el update antes de mostrar la
+  // app (inactivo en dev → "done" inmediato). Corre en paralelo con las fuentes.
+  const updateStatus = useStartupUpdate();
 
   const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_300Light,
@@ -114,12 +123,26 @@ function RootLayout() {
     return () => sub.remove();
   }, []);
 
-  // Se oculta el Splash cuando las fuentes están listas (o fallaron)
+  // Se oculta el Splash nativo cuando las fuentes están listas (o fallaron), o
+  // en cuanto el gate de update necesita pintarse: si no, el splash nativo
+  // taparía la pantalla "Buscando actualizaciones…" durante el check.
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (
+      fontsLoaded ||
+      fontError ||
+      updateStatus !== STARTUP_UPDATE_STATUS.DONE
+    ) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, updateStatus]);
+
+  // Primer gate del arranque: mientras se busca/descarga un update OTA mostramos
+  // el splash de actualización. Al terminar (o si no hay update / no hay red)
+  // cae a "done" y seguimos con los gates de fuentes y base de datos.
+  if (updateStatus !== STARTUP_UPDATE_STATUS.DONE) {
+    return <UpdateGate status={updateStatus} />;
+  }
+
   // Si las fuentes no están listas (y no fallaron) O el auth sigue cargando, mostramos nuestra vista de carga
   if (!fontsLoaded && !fontError) {
     return (
