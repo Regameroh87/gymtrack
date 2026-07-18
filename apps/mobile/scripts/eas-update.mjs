@@ -8,8 +8,17 @@
 // forma cross-platform (npm scripts corren en cmd o sh según el SO, y no hay
 // una sintaxis inline de env var que sirva en ambos).
 //
-// Uso: node scripts/eas-update.mjs <preview|production> [args extra de eas]
+// Uso: node apps/mobile/scripts/eas-update.mjs <preview|production> [args extra]
+// (invocable desde la raíz del monorepo o desde apps/mobile — ver cwd abajo)
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+// eas update tiene que correr en el proyecto mobile (donde está eas.json). Este
+// script vive en apps/mobile/scripts/, así que el dir del app es su carpeta
+// padre. Fijamos cwd a mano para que funcione tanto llamado desde la raíz
+// (npm run update:preview) como desde apps/mobile.
+const mobileDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const channel = process.argv[2];
 const extraArgs = process.argv.slice(3);
@@ -42,6 +51,7 @@ const result = spawnSync(
   {
     stdio: "inherit",
     shell: true,
+    cwd: mobileDir,
     env: { ...process.env, APP_ENV: channel },
   }
 );

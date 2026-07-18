@@ -8,9 +8,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "echo 'La web se sirve desde apps/web (Next.js). Corré: cd ../web && npm run dev'",
-    "test": "vitest run",
-    "update:preview": "node scripts/eas-update.mjs preview",
-    "update:production": "node scripts/eas-update.mjs production"
+    "test": "vitest run"
   },
   "dependencies": {
     "@expo-google-fonts/lexend": "^0.4.1",

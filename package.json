@@ -11,6 +11,8 @@
     "mobile": "npm --workspace gymtrack run start",
     "mobile:android": "npm --workspace gymtrack run android",
     "mobile:ios": "npm --workspace gymtrack run ios",
+    "update:preview": "node apps/mobile/scripts/eas-update.mjs preview",
+    "update:production": "node apps/mobile/scripts/eas-update.mjs production",
     "test:rls": "node scripts/test-rls-isolation.mjs"
   },
   "devDependencies": {
