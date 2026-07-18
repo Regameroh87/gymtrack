@@ -27,11 +27,12 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  // Carga del perfil (query a profiles), separada de `loading` (hidratación de
-  // sesión). La sesión se resuelve en ~20ms desde AsyncStorage, pero el perfil
-  // pega a Supabase y puede tardar: este flag deja que las pantallas muestren un
-  // skeleton en vez del fallback "Atleta" durante esa ventana.
-  const [profileLoading, setProfileLoading] = useState(false);
+  // Último auth.uid() para el que el fetch del perfil YA terminó. De acá se
+  // deriva profileLoading (ver useMemo al final), en vez de un flag manual: un
+  // flag que arranca en false deja un frame con sesión + user null en el que la
+  // UI muestra el fallback "Atleta" antes de que corra ningún efecto, y deja
+  // toda la ventana de refreshSession() (token vencido) sin skeleton.
+  const [loadedProfileUid, setLoadedProfileUid] = useState(null);
   const accessTokenRef = useRef(null);
   const authUserIdRef = useRef(null);
 
@@ -81,6 +82,7 @@ export const AuthProvider = ({ children }) => {
       if (!newSession) {
         setUser(null);
         setProfileUid(null);
+        setLoadedProfileUid(null);
         return;
       }
       setProfileUid(newSession.user.id);
@@ -124,6 +126,7 @@ export const AuthProvider = ({ children }) => {
                     setSession(null);
                     setUser(null);
                     setProfileUid(null);
+                    setLoadedProfileUid(null);
                   }
                   // Refresh OK → onAuthStateChange (TOKEN_REFRESHED) aplica la
                   // sesión fresca y dispara la carga del perfil.
@@ -168,22 +171,31 @@ export const AuthProvider = ({ children }) => {
   // el processLock ya se liberó, así que la query a profiles no deadlockea.
   useEffect(() => {
     if (!profileUid) {
-      setProfileLoading(false);
+      setLoadedProfileUid(null);
       return;
     }
     let isMounted = true;
-    setProfileLoading(true);
     fetchProfile(profileUid).then((profile) => {
       if (!isMounted) return;
       setUser(profile);
-      // Apagamos el flag pase lo que pase: un perfil null legítimo (sin fila)
-      // debe caer al fallback "Atleta", no quedar en skeleton para siempre.
-      setProfileLoading(false);
+      // Marcamos el uid como resuelto pase lo que pase: un perfil null legítimo
+      // (sin fila) debe caer al fallback "Atleta", no quedar en skeleton para
+      // siempre.
+      setLoadedProfileUid(profileUid);
     });
     return () => {
       isMounted = false;
     };
   }, [profileUid, fetchProfile]);
+
+  // Derivado, no un flag: apenas hay sesión (incluso la vencida que todavía se
+  // está refrescando) el uid no coincide con el resuelto ⇒ true desde el primer
+  // render, sin depender de que corra ningún efecto. Al cambiar de usuario
+  // vuelve a true solo, así no se muestra el nombre del usuario anterior.
+  // refreshProfile() no toca loadedProfileUid: un self-update reemplaza `user`
+  // sin disparar un flash de skeleton.
+  const authUid = session?.user?.id ?? null;
+  const profileLoading = !!authUid && loadedProfileUid !== authUid;
 
   const value = useMemo(
     () => ({
