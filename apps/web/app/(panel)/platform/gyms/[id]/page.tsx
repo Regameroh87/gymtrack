@@ -1,6 +1,7 @@
 // Detalle / edición de un gimnasio (panel de plataforma, solo super_admin). El
-// gym y su dueño se resuelven en el servidor (cliente Supabase por request); el
-// form es cliente (guardar, suspender, borrar). El borrado va por edge function.
+// gym, su dueño y los candidatos a nuevo dueño se resuelven en el servidor
+// (cliente Supabase por request); el form es cliente (guardar, transferir,
+// suspender, borrar). Borrado y transferencia van por edge function.
 
 // Next
 import { redirect } from "next/navigation";
@@ -12,7 +13,7 @@ import { X } from "lucide-react";
 import { getSessionContext } from "@/lib/auth/session";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { canAccessPlatformModule } from "@/lib/auth/roles";
-import { type Gym, type GymOwner } from "@/lib/gyms";
+import { type Gym, type GymOwner, type OwnerCandidate } from "@/lib/gyms";
 
 // Shell y form
 import { PlatformShell } from "@/components/platform/platform-shell";
@@ -64,9 +65,19 @@ export default async function EditGymPage({
     owner = (ownerRow as GymOwner) ?? null;
   }
 
+  // Candidatos para la transferencia de dueño (misma query que el alta).
+  const { data: candidates } = await supabase
+    .from("profiles")
+    .select("id, user_id, name, last_name, email")
+    .order("name", { ascending: true });
+
   return (
     <PlatformShell>
-      <EditGymForm gym={gym as Gym} owner={owner} />
+      <EditGymForm
+        gym={gym as Gym}
+        owner={owner}
+        owners={(candidates as OwnerCandidate[]) ?? []}
+      />
     </PlatformShell>
   );
 }

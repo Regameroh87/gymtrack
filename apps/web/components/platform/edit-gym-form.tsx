@@ -5,7 +5,9 @@
 //  - Guardar: update directo a gyms (RLS gyms_update, gated a super_admin).
 //  - Suspender/reactivar: update de is_active (mismo policy).
 //  - Eliminar: edge function eliminar-gym (borrado atómico en cascada + cuentas).
-// El dueño es solo lectura (no se reasigna desde acá).
+//  - Transferir dueño: edge function transferir-owner. NO va con el guardado del
+//    form: mover el dueño toca gyms.owner_id y dos memberships a la vez, y eso
+//    solo es atómico dentro del RPC transfer_gym_owner.
 
 // React / Next
 import { useMemo, useRef, useState } from "react";
@@ -22,6 +24,7 @@ import {
   ShieldHalf,
   Lock,
   Trash2,
+  ArrowLeftRight,
   X,
 } from "lucide-react";
 
@@ -38,6 +41,7 @@ import {
   DEFAULT_ACCENT,
   type Gym,
   type GymOwner,
+  type OwnerCandidate,
 } from "@/lib/gyms";
 import {
   Field,
@@ -48,17 +52,24 @@ import {
   HeaderConfigFields,
   Toggle,
 } from "@/components/platform/gym-form-fields";
+import { OwnerPicker, type OwnerMode } from "@/components/platform/owner-picker";
 
 type Notification = { type: "success" | "error"; message: string } | null;
+
+// Qué pasa con el dueño saliente. 'demote' es el default porque conserva su
+// acceso al gym: es la opción reversible.
+type PreviousAction = "demote" | "remove";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function EditGymForm({
   gym,
   owner,
+  owners,
 }: {
   gym: Gym;
   owner: GymOwner | null;
+  owners: OwnerCandidate[];
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +91,19 @@ export function EditGymForm({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmSlug, setConfirmSlug] = useState("");
   const [suspendOpen, setSuspendOpen] = useState(false);
+
+  // Transferencia de dueño
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const [transferSlug, setTransferSlug] = useState("");
+  const [ownerMode, setOwnerMode] = useState<OwnerMode>("existing");
+  const [selectedOwner, setSelectedOwner] = useState<OwnerCandidate | null>(null);
+  const [previousAction, setPreviousAction] = useState<PreviousAction>("demote");
+  const [newOwnerName, setNewOwnerName] = useState("");
+  const [newOwnerLastName, setNewOwnerLastName] = useState("");
+  const [newOwnerEmail, setNewOwnerEmail] = useState("");
+  const [newOwnerPhone, setNewOwnerPhone] = useState("");
+  const [transferErrors, setTransferErrors] = useState<Record<string, string>>({});
 
   // Estado del gym (is_active puede cambiar sin recargar la página).
   const [isActive, setIsActive] = useState(gym.is_active !== false);
@@ -119,8 +143,24 @@ export function EditGymForm({
   const logoToShow = previewUrl || currentLogoUrl;
   const logoToShowDark = previewUrlDark || currentLogoUrlDark;
 
-  const canConfirmDelete =
-    confirmSlug.trim().toLowerCase() === (gym.slug ?? "").trim().toLowerCase();
+  const slugMatches = (value: string) =>
+    value.trim().toLowerCase() === (gym.slug ?? "").trim().toLowerCase();
+
+  const canConfirmDelete = slugMatches(confirmSlug);
+  const canConfirmTransfer = slugMatches(transferSlug);
+
+  const openTransfer = () => {
+    setOwnerMode("existing");
+    setSelectedOwner(null);
+    setPreviousAction("demote");
+    setNewOwnerName("");
+    setNewOwnerLastName("");
+    setNewOwnerEmail("");
+    setNewOwnerPhone("");
+    setTransferErrors({});
+    setTransferSlug("");
+    setTransferOpen(true);
+  };
 
   const validate = (): boolean => {
     const next: Record<string, string> = {};
@@ -211,6 +251,60 @@ export function EditGymForm({
             : "No se pudo guardar el gimnasio.";
       notify("error", msg);
       setSaving(false);
+    }
+  };
+
+  // Toda la transferencia (gym + membership saliente + membership entrante) la
+  // resuelve la edge function en una sola llamada; acá solo se valida la entrada.
+  const handleTransfer = async () => {
+    if (transferring) return;
+
+    const next: Record<string, string> = {};
+    if (ownerMode === "existing" && !selectedOwner) {
+      next.owner = "Seleccioná el nuevo dueño.";
+    }
+    if (ownerMode === "new") {
+      if (!newOwnerEmail.trim()) next.owner_email = "El email es obligatorio";
+      else if (!EMAIL_RE.test(newOwnerEmail.trim()))
+        next.owner_email = "Correo electrónico inválido";
+    }
+    setTransferErrors(next);
+    if (Object.keys(next).length > 0) return;
+
+    setTransferring(true);
+    try {
+      const supabase = getBrowserSupabase();
+      const { error } = await supabase.functions.invoke("transferir-owner", {
+        body: {
+          gym_id: gym.id,
+          mode: ownerMode,
+          user_id: ownerMode === "existing" ? selectedOwner?.user_id : undefined,
+          email:
+            ownerMode === "new" ? newOwnerEmail.trim().toLowerCase() : undefined,
+          name: ownerMode === "new" ? newOwnerName.trim() || null : undefined,
+          last_name:
+            ownerMode === "new" ? newOwnerLastName.trim() || null : undefined,
+          phone: ownerMode === "new" ? newOwnerPhone.trim() || null : undefined,
+          previous_action: previousAction,
+        },
+      });
+
+      if (error) {
+        throw new Error(
+          await readFunctionError(error, "No se pudo transferir el gimnasio.")
+        );
+      }
+
+      setTransferOpen(false);
+      notify("success", "Dueño transferido correctamente.");
+      router.refresh();
+    } catch (err) {
+      notify(
+        "error",
+        err instanceof Error ? err.message : "No se pudo transferir el gimnasio."
+      );
+    } finally {
+      setTransferring(false);
     }
   };
 
@@ -435,10 +529,10 @@ export function EditGymForm({
 
         <div className="my-7 h-px w-full bg-gray-100" />
 
-        {/* ── Sección 2 · Dueño (solo lectura) ── */}
+        {/* ── Sección 2 · Dueño ── */}
         <SectionTitle step="2" title="Dueño" subtitle="Quién administra este gimnasio" />
-        <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3">
-          <ShieldHalf size={15} className="text-brandPrimary-700" />
+        <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 sm:flex-row sm:items-center">
+          <ShieldHalf size={15} className="shrink-0 text-brandPrimary-700" />
           <span className="flex-1 font-manrope text-[13px] font-semibold text-gray-900">
             {ownerLabel(owner)}
             {owner?.email ? (
@@ -448,9 +542,20 @@ export function EditGymForm({
               </span>
             ) : null}
           </span>
+          <button
+            type="button"
+            onClick={openTransfer}
+            className="flex shrink-0 items-center justify-center gap-1.5 rounded-[10px] border border-gray-200 bg-white px-3 py-2 transition hover:bg-brandPrimary-50"
+          >
+            <ArrowLeftRight size={13} className="text-brandPrimary-700" />
+            <span className="font-manrope text-[12px] font-bold text-brandPrimary-700">
+              Transferir
+            </span>
+          </button>
         </div>
         <p className="mt-1.5 font-manrope text-[11px] text-gray-400">
-          El dueño no se modifica desde esta pantalla.
+          Transferir cambia quién es el dueño y sus permisos sobre el gimnasio.
+          No se guarda con el resto del formulario.
         </p>
 
         <div className="my-7 h-px w-full bg-gray-100" />
@@ -602,6 +707,143 @@ export function EditGymForm({
           </button>
         </div>
       </div>
+
+      {/* Modal de transferencia de dueño */}
+      {transferOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/45 p-6">
+          <div className="my-auto w-full max-w-[520px] rounded-[20px] border border-gray-200 bg-white p-7">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brandPrimary-50">
+                <ArrowLeftRight size={18} className="text-brandPrimary-700" />
+              </div>
+              <div className="flex-1">
+                <p className="font-jakarta text-[17px] font-bold tracking-tight text-gray-900">
+                  Transferir dueño
+                </p>
+                <p className="font-manrope text-[11px] text-gray-400">
+                  Dueño actual: {ownerLabel(owner)}
+                </p>
+              </div>
+            </div>
+
+            <div className="my-5 h-px w-full bg-gray-100" />
+
+            <OwnerPicker
+              owners={owners}
+              mode={ownerMode}
+              onModeChange={setOwnerMode}
+              selectedOwner={selectedOwner}
+              onSelectOwner={setSelectedOwner}
+              name={newOwnerName}
+              onNameChange={setNewOwnerName}
+              lastName={newOwnerLastName}
+              onLastNameChange={setNewOwnerLastName}
+              email={newOwnerEmail}
+              onEmailChange={setNewOwnerEmail}
+              phone={newOwnerPhone}
+              onPhoneChange={setNewOwnerPhone}
+              errors={transferErrors}
+              existingHint="Pasa a ser el dueño de este gimnasio; si ya pertenece a otros gyms, conserva esas membresías."
+            />
+
+            <div className="my-5 h-px w-full bg-gray-100" />
+
+            {/* Qué pasa con el dueño saliente */}
+            <span className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-gray-400">
+              Dueño actual
+            </span>
+            <div className="mt-2 flex flex-col gap-2">
+              {(
+                [
+                  {
+                    value: "demote" as const,
+                    label: "Bajar a administrador",
+                    hint: "Conserva el acceso al gimnasio y puede seguir operando, sin el rol de dueño.",
+                  },
+                  {
+                    value: "remove" as const,
+                    label: "Quitarle el acceso",
+                    hint: "Pierde su membresía en este gimnasio. Si no pertenece a otros gyms, queda sin acceso a la app.",
+                  },
+                ]
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setPreviousAction(opt.value)}
+                  className={`flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition ${
+                    previousAction === opt.value
+                      ? "border-brandPrimary-300 bg-brandPrimary-50"
+                      : "border-gray-200 bg-white hover:bg-gray-50"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                      previousAction === opt.value
+                        ? "border-brandPrimary-700"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {previousAction === opt.value && (
+                      <span className="h-2 w-2 rounded-full bg-brandPrimary-700" />
+                    )}
+                  </span>
+                  <span className="flex-1">
+                    <span className="block font-manrope text-[13px] font-semibold text-gray-900">
+                      {opt.label}
+                    </span>
+                    <span className="block font-manrope text-[11px] leading-4 text-gray-400">
+                      {opt.hint}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="my-5 h-px w-full bg-gray-100" />
+
+            <p className="mb-2.5 font-manrope text-[12px] leading-5 text-gray-400">
+              La transferencia cambia los permisos reales sobre el gimnasio. Para
+              confirmar, escribí su slug:{" "}
+              <span className="font-bold text-gray-900">{gym.slug}</span>.
+            </p>
+
+            <input
+              value={transferSlug}
+              onChange={(e) => setTransferSlug(e.target.value)}
+              placeholder={gym.slug ?? ""}
+              autoCapitalize="none"
+              className="mb-5 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 font-manrope text-[13px] text-gray-900 outline-none placeholder:text-gray-400"
+            />
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setTransferOpen(false)}
+                disabled={transferring}
+                className="flex-1 rounded-[11px] border border-gray-200 bg-white py-2.5 font-manrope text-[13px] font-semibold text-gray-900 transition hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleTransfer}
+                disabled={!canConfirmTransfer || transferring}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 ${
+                  !canConfirmTransfer || transferring
+                    ? "bg-brandPrimary-400"
+                    : "bg-brandPrimary-700 hover:bg-brandPrimary-600"
+                }`}
+              >
+                <ArrowLeftRight size={14} color="#fff" />
+                <span className="font-manrope text-[13px] font-bold text-white">
+                  {transferring ? "Transfiriendo…" : "Transferir"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmación de borrado */}
       {confirmOpen && (

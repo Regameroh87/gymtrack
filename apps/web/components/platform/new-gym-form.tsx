@@ -6,7 +6,7 @@
 // Sin TanStack Form: estado controlado clásico + validación inline.
 
 // React / Next
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Iconos
@@ -17,7 +17,6 @@ import {
   Link as LinkIcon,
   ArrowLeft,
   CheckCircle,
-  Search,
   ShieldHalf,
   X,
 } from "lucide-react";
@@ -41,11 +40,7 @@ import {
   LogoPickers,
   HeaderConfigFields,
 } from "@/components/platform/gym-form-fields";
-
-const OWNER_MODES = [
-  { value: "existing", label: "Usuario existente" },
-  { value: "new", label: "Crear nuevo" },
-] as const;
+import { OwnerPicker, type OwnerMode } from "@/components/platform/owner-picker";
 
 type Notification = { type: "success" | "error"; message: string } | null;
 
@@ -68,9 +63,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Selector de dueño
-  const [ownerMode, setOwnerMode] = useState<"existing" | "new">("existing");
-  const [ownerSearch, setOwnerSearch] = useState("");
-  const [ownerOpen, setOwnerOpen] = useState(false);
+  const [ownerMode, setOwnerMode] = useState<OwnerMode>("existing");
   const [selectedOwner, setSelectedOwner] = useState<OwnerCandidate | null>(null);
 
   // Campos del form
@@ -94,19 +87,6 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4500);
   };
-
-  const ownerOptions = useMemo(() => {
-    const q = ownerSearch.trim().toLowerCase();
-    const rows = !q
-      ? owners
-      : owners.filter(
-          (p) =>
-            p.name?.toLowerCase().includes(q) ||
-            p.last_name?.toLowerCase().includes(q) ||
-            p.email?.toLowerCase().includes(q)
-        );
-    return rows.slice(0, 6);
-  }, [owners, ownerSearch]);
 
   const validate = (): boolean => {
     const next: Record<string, string> = {};
@@ -380,146 +360,23 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
 
         {/* ── Sección 2 · Dueño ── */}
         <SectionTitle step="2" title="Dueño" subtitle="Quién administra este gimnasio" />
-        <div className="flex flex-col gap-y-5">
-          {/* Toggle existente / nuevo */}
-          <div className="flex self-start rounded-xl bg-gray-50 p-1">
-            {OWNER_MODES.map((m) => (
-              <button
-                key={m.value}
-                type="button"
-                onClick={() => setOwnerMode(m.value)}
-                className={`rounded-lg px-4 py-1.5 font-manrope text-[12px] ${
-                  ownerMode === m.value
-                    ? "bg-white font-bold text-brandPrimary-700 shadow-sm"
-                    : "font-semibold text-gray-400"
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-
-          {ownerMode === "existing" ? (
-            <Field
-              label="Dueño"
-              hint="Recibe la membresía de Dueño del gimnasio nuevo; si ya pertenece a otros gyms, conserva esas membresías."
-            >
-              {selectedOwner ? (
-                <div className="flex items-center gap-2.5 rounded-xl border border-brandPrimary-300 bg-brandPrimary-50 px-3.5 py-2.5">
-                  <ShieldHalf size={15} className="text-brandPrimary-700" />
-                  <span className="flex-1 font-manrope text-[13px] font-semibold text-gray-900">
-                    {`${selectedOwner.name ?? ""} ${selectedOwner.last_name ?? ""}`.trim() ||
-                      selectedOwner.email}
-                    <span className="font-normal text-gray-400">
-                      {"  ·  "}
-                      {selectedOwner.email}
-                    </span>
-                  </span>
-                  <button type="button" onClick={() => setSelectedOwner(null)}>
-                    <X size={14} className="text-gray-400" />
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5">
-                    <Search size={15} className="text-gray-400" />
-                    <input
-                      value={ownerSearch}
-                      onChange={(e) => setOwnerSearch(e.target.value)}
-                      onFocus={() => setOwnerOpen(true)}
-                      placeholder="Buscar usuario por nombre o email..."
-                      className="flex-1 bg-transparent font-manrope text-[13px] text-gray-900 outline-none placeholder:text-gray-400"
-                    />
-                  </div>
-
-                  {ownerOpen && ownerOptions.length > 0 && (
-                    <div className="mt-1.5 overflow-hidden rounded-xl border border-gray-200 bg-white">
-                      {ownerOptions.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedOwner(p);
-                            setOwnerOpen(false);
-                          }}
-                          className="flex w-full items-center gap-2.5 border-b border-gray-100 px-3.5 py-2.5 text-left transition last:border-b-0 hover:bg-brandPrimary-50"
-                        >
-                          <div className="flex-1">
-                            <p className="font-manrope text-[13px] font-semibold text-gray-900">
-                              {`${p.name ?? ""} ${p.last_name ?? ""}`.trim() ||
-                                p.email}
-                            </p>
-                            <p className="font-manrope text-[11px] text-gray-400">
-                              {p.email}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </Field>
-          ) : (
-            <div className="flex flex-col gap-y-5">
-              <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
-                <div className="flex-1">
-                  <Field label="Nombre">
-                    <Input
-                      placeholder="Ej: Juan"
-                      value={ownerName}
-                      onChange={(e) => setOwnerName(e.target.value)}
-                    />
-                  </Field>
-                </div>
-                <div className="flex-1">
-                  <Field label="Apellido (opcional)">
-                    <Input
-                      placeholder="Ej: Pérez"
-                      value={ownerLastName}
-                      onChange={(e) => setOwnerLastName(e.target.value)}
-                    />
-                  </Field>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-y-5 sm:flex-row sm:gap-4">
-                <div className="flex-1">
-                  <Field label="Email" error={errors.owner_email}>
-                    <Input
-                      placeholder="dueno@energym.com"
-                      icon={<Mail size={15} className="text-gray-400" />}
-                      value={ownerEmail}
-                      onChange={(e) => setOwnerEmail(e.target.value)}
-                      inputMode="email"
-                      autoCapitalize="none"
-                    />
-                  </Field>
-                </div>
-                <div className="flex-1">
-                  <Field label="Teléfono (opcional)">
-                    <Input
-                      placeholder="123456789"
-                      icon={<Phone size={15} className="text-gray-400" />}
-                      value={ownerPhone}
-                      onChange={(e) => setOwnerPhone(e.target.value)}
-                      inputMode="numeric"
-                    />
-                  </Field>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-xl border border-brandPrimary-200 bg-brandPrimary-50 px-3.5 py-2.5">
-                <ShieldHalf size={14} className="text-brandPrimary-700" />
-                <span className="flex-1 font-manrope text-[11px] text-gray-400">
-                  Se crea su cuenta con rol Dueño y contraseña temporal{" "}
-                  <span className="font-bold text-gray-900">tugimnasio123</span>.
-                  El email queda confirmado automáticamente.
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+        <OwnerPicker
+          owners={owners}
+          mode={ownerMode}
+          onModeChange={setOwnerMode}
+          selectedOwner={selectedOwner}
+          onSelectOwner={setSelectedOwner}
+          name={ownerName}
+          onNameChange={setOwnerName}
+          lastName={ownerLastName}
+          onLastNameChange={setOwnerLastName}
+          email={ownerEmail}
+          onEmailChange={setOwnerEmail}
+          phone={ownerPhone}
+          onPhoneChange={setOwnerPhone}
+          errors={errors}
+          existingHint="Recibe la membresía de Dueño del gimnasio nuevo; si ya pertenece a otros gyms, conserva esas membresías."
+        />
 
         <div className="my-7 h-px w-full bg-gray-100" />
 
