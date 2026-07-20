@@ -62,6 +62,8 @@ export const MODULE_ROLES = {
   team: ADMIN_ROLES,
   reports: ADMIN_ROLES,
   settings: ADMIN_ROLES,
+  // Export/import masivo de los datos del gym (web /admin/data).
+  data: ADMIN_ROLES,
 };
 
 // Permisos que, por sí solos, abren un módulo del panel a quien no lo tiene por
