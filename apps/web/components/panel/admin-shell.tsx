@@ -20,6 +20,7 @@ import {
   Receipt,
   QrCode,
   BarChart3,
+  Database,
   Settings,
   LogOut,
   ArrowLeft,
@@ -76,6 +77,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Sistema",
     items: [
+      { icon: Database, label: "Datos", path: "data" },
       { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
       { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
     ],
