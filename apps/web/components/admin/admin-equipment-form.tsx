@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Check } from "lucide-react";
 import { Field, Input, ErrorBanner } from "@/components/platform/catalog/catalog-ui";
 import { uploadImageWeb } from "@/lib/gyms";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 import {
   useSaveAdminEquipment,
   type AdminEquipment,
@@ -107,18 +108,15 @@ export function AdminEquipmentForm({
           />
           <div className="flex flex-col items-center">
             <button type="button" onClick={() => fileRef.current?.click()}>
-              {imgToShow ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={imgToShow}
-                  alt=""
-                  className="h-24 w-24 rounded-[18px] object-cover"
-                />
-              ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-[18px] border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50">
-                  <Plus size={22} className="text-brandPrimary-600" />
-                </div>
-              )}
+              <MediaImage
+                src={imgToShow}
+                wrapperClassName="h-24 w-24 rounded-[18px]"
+                fallback={
+                  <div className="flex h-24 w-24 items-center justify-center rounded-[18px] border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50">
+                    <Plus size={22} className="text-brandPrimary-600" />
+                  </div>
+                }
+              />
             </button>
             <span className="mt-2 font-manrope text-[11px] text-ui-text-muted">
               Imagen (opcional)

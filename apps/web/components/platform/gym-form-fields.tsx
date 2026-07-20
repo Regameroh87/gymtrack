@@ -12,6 +12,7 @@ import { Camera, ImageIcon } from "lucide-react";
 
 // Helpers
 import { HEX_RE, DEFAULT_PRIMARY } from "@/lib/gyms";
+import { MediaImage } from "@/components/ui/media-image";
 
 // Tokens de tamaño del logo del header → px (espeja HEADER_LOGO_PX de Expo).
 const HEADER_LOGO_PX: Record<string, number> = { sm: 30, md: 40, lg: 48 };
@@ -222,18 +223,16 @@ export function LogoPickers({
         className="flex flex-col items-center gap-3 transition hover:opacity-80"
       >
         <div className="relative">
-          {logoUri ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUri}
-              alt="Logo principal"
-              className="h-[88px] w-[88px] rounded-[22px] object-cover"
-            />
-          ) : (
-            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-[22px] border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50">
-              <ImageIcon size={30} className="text-brandPrimary-500" />
-            </div>
-          )}
+          <MediaImage
+            src={logoUri}
+            alt="Logo principal"
+            wrapperClassName="h-[88px] w-[88px] rounded-[22px]"
+            fallback={
+              <div className="flex h-[88px] w-[88px] items-center justify-center rounded-[22px] border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50">
+                <ImageIcon size={30} className="text-brandPrimary-500" />
+              </div>
+            }
+          />
           <span className="absolute bottom-0 right-0 rounded-full border-2 border-white bg-brandPrimary-700 p-2 shadow-sm">
             <Camera size={13} color="#fff" />
           </span>
@@ -255,20 +254,16 @@ export function LogoPickers({
         className="flex flex-col items-center gap-3 transition hover:opacity-80"
       >
         <div className="relative">
-          {logoUriDark ? (
-            <div className="flex h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-[22px] bg-[#0F0D20]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={logoUriDark}
-                alt="Logo modo oscuro"
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="flex h-[88px] w-[88px] items-center justify-center rounded-[22px] border-2 border-dashed border-white/20 bg-[#0F0D20]">
-              <ImageIcon size={30} color="rgba(255,255,255,0.55)" />
-            </div>
-          )}
+          <MediaImage
+            src={logoUriDark}
+            alt="Logo modo oscuro"
+            wrapperClassName="h-[88px] w-[88px] rounded-[22px] bg-[#0F0D20]"
+            fallback={
+              <div className="flex h-[88px] w-[88px] items-center justify-center rounded-[22px] border-2 border-dashed border-white/20 bg-[#0F0D20]">
+                <ImageIcon size={30} color="rgba(255,255,255,0.55)" />
+              </div>
+            }
+          />
           <span className="absolute bottom-0 right-0 rounded-full border-2 border-white bg-brandPrimary-700 p-2 shadow-sm">
             <Camera size={13} color="#fff" />
           </span>

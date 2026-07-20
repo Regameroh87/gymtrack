@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { Loader2, Check, Trash2, X, Plus, AlertTriangle } from "lucide-react";
 
 import type { Option } from "@/lib/catalog-options";
+import { MediaImage } from "@/components/ui/media-image";
 
 // ── Picker de portada cuadrada. `src` ya resuelto (preview local o URL de Storage). ──
 export function CoverPicker({
@@ -22,18 +23,15 @@ export function CoverPicker({
   return (
     <div className="flex flex-col items-center">
       <button type="button" onClick={onPick}>
-        {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt=""
-            className="h-28 w-28 rounded-[20px] object-cover"
-          />
-        ) : (
-          <div className="flex h-28 w-28 items-center justify-center rounded-[20px] border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50">
-            <Plus size={24} className="text-brandPrimary-600" />
-          </div>
-        )}
+        <MediaImage
+          src={src}
+          wrapperClassName="h-28 w-28 rounded-[20px]"
+          fallback={
+            <div className="flex h-28 w-28 items-center justify-center rounded-[20px] border-2 border-dashed border-brandPrimary-300 bg-brandPrimary-50">
+              <Plus size={24} className="text-brandPrimary-600" />
+            </div>
+          }
+        />
       </button>
       <span className="mt-2 font-manrope text-[11px] text-ui-text-muted">
         {label}

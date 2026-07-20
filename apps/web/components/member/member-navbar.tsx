@@ -16,6 +16,7 @@ import { Dumbbell, ClipboardList, Home, LogOut, type LucideIcon } from "lucide-r
 // Contextos
 import { useAuth } from "@/components/auth/auth-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
+import { MediaImage } from "@/components/ui/media-image";
 
 const NAV: { label: string; icon: LucideIcon; path: string }[] = [
   { label: "Inicio", icon: Home, path: "/home" },
@@ -105,18 +106,15 @@ export function MemberNavbar() {
                 background: `linear-gradient(135deg, ${brandPrimary[700]}, ${brandPrimary[600]})`,
               }}
             >
-              {imageProfile ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={imageProfile}
-                  alt=""
-                  className="h-8 w-8 rounded-[10px] object-cover"
-                />
-              ) : (
-                <span className="font-jakarta text-[13px] font-bold text-white">
-                  {initial}
-                </span>
-              )}
+              <MediaImage
+                src={imageProfile}
+                wrapperClassName="h-8 w-8 rounded-[10px]"
+                fallback={
+                  <span className="font-jakarta text-[13px] font-bold text-white">
+                    {initial}
+                  </span>
+                }
+              />
             </span>
             {!!firstName && (
               <span className="font-manrope text-[13px] font-semibold text-ui-text-main">

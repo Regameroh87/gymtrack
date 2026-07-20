@@ -34,6 +34,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 
 type NavItem = {
   icon: LucideIcon;
@@ -115,18 +116,15 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
       <div className="bg-gradient-to-b from-brandPrimary-800 to-[#0C0B14] px-5 pb-6 pt-7">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            {logo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logo}
-                alt=""
-                className="h-[38px] w-[38px] rounded-[9px] object-cover"
-              />
-            ) : (
-              <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px] bg-gradient-to-br from-brandPrimary-700 to-brandPrimary-600">
-                <Dumbbell size={18} color="#fff" />
-              </div>
-            )}
+            <MediaImage
+              src={logo}
+              wrapperClassName="h-[38px] w-[38px] shrink-0 rounded-[9px]"
+              fallback={
+                <div className="flex h-[38px] w-[38px] items-center justify-center rounded-[11px] bg-gradient-to-br from-brandPrimary-700 to-brandPrimary-600">
+                  <Dumbbell size={18} color="#fff" />
+                </div>
+              }
+            />
             <div>
               <p className="font-jakarta text-base font-bold tracking-tight text-white">
                 {gymName}
