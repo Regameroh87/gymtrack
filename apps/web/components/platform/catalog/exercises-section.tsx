@@ -28,6 +28,7 @@ import {
 } from "@/lib/hooks/use-catalog-admin";
 import { uploadImageWeb, uploadVideoWeb } from "@/lib/gyms";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 import {
   EXERCISE_CATEGORIES,
   MUSCLE_GROUPS,
@@ -157,18 +158,15 @@ export function CatalogExercisesSection() {
                   onClick={() => setDetail(ex)}
                   className="flex flex-1 items-center gap-3 text-left"
                 >
-                  {thumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={thumb}
-                      alt=""
-                      className="h-11 w-11 rounded-[10px] object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-brandPrimary-50">
-                      <Dumbbell size={16} className="text-brandPrimary-600" />
-                    </div>
-                  )}
+                  <MediaImage
+                    src={thumb}
+                    wrapperClassName="h-11 w-11 rounded-[10px]"
+                    fallback={
+                      <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-brandPrimary-50">
+                        <Dumbbell size={16} className="text-brandPrimary-600" />
+                      </div>
+                    }
+                  />
                   <div className="flex-1">
                     <p className="font-manrope text-[14px] font-bold text-ui-text-main">
                       {ex.name}
@@ -540,18 +538,15 @@ function ExerciseDetailDrawer({
             </button>
           </div>
 
-          {heroUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={heroUrl}
-              alt=""
-              className="aspect-square w-full rounded-[18px] object-cover"
-            />
-          ) : (
-            <div className="flex aspect-square w-full items-center justify-center rounded-[18px] bg-brandPrimary-50">
-              <Dumbbell size={40} className="text-brandPrimary-600" />
-            </div>
-          )}
+          <MediaImage
+            src={heroUrl}
+            wrapperClassName="aspect-square w-full rounded-[18px]"
+            fallback={
+              <div className="flex aspect-square w-full items-center justify-center rounded-[18px] bg-brandPrimary-50">
+                <Dumbbell size={40} className="text-brandPrimary-600" />
+              </div>
+            }
+          />
 
           <h3 className="mt-4 font-jakarta text-[20px] font-bold tracking-tight text-ui-text-main">
             {exercise.name}

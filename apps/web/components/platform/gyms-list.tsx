@@ -15,6 +15,7 @@ import { ShieldHalf, Users, Search, MapPin, Pencil } from "lucide-react";
 import { mediaUrl } from "@/lib/media";
 import { formatGymDate, ownerLabel, type Gym, type GymOwner } from "@/lib/gyms";
 import { EnterGymButton } from "@/components/platform/enter-gym-button";
+import { MediaImage } from "@/components/ui/media-image";
 
 const PAGE_SIZE = 12;
 
@@ -162,18 +163,15 @@ function GymCard({ gym }: { gym: GymWithOwner }) {
       }`}
     >
       <div className="flex items-center gap-3 p-4">
-        {logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={logo}
-            alt=""
-            className="h-12 w-12 rounded-xl object-cover"
-          />
-        ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brandSecondary-500/10">
-            <ShieldHalf size={20} className="text-brandSecondary-500" />
-          </div>
-        )}
+        <MediaImage
+          src={logo}
+          wrapperClassName="h-12 w-12 shrink-0 rounded-xl"
+          fallback={
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brandSecondary-500/10">
+              <ShieldHalf size={20} className="text-brandSecondary-500" />
+            </div>
+          }
+        />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">

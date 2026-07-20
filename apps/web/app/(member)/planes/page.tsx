@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { mediaUrl } from "@/lib/media";
 import { PLAN_GENDER_BADGES } from "@/lib/gender-options";
+import { MediaImage } from "@/components/ui/media-image";
 
 // Iconos
 import {
@@ -374,14 +375,14 @@ function PlanCardWeb({ plan, index = 0 }: { plan: Plan; index?: number }) {
         <div className="flex flex-col items-center gap-1.5">
           <div className="absolute left-[-10px] top-3 h-9 w-[3px] rounded-full bg-brandSecondary-400" />
           <div className="relative h-[110px] w-[110px] overflow-hidden rounded-[18px] bg-brandPrimary-50" style={{ border: "1px solid rgba(15,13,32,0.08)" }}>
-            {imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center" style={{ background: BRAND_FALLBACK_GRADIENT }}>
-                <Icon size={48} color="rgba(255,255,255,0.4)" />
-              </div>
-            )}
+            <MediaImage
+              src={imageUrl}
+              fallback={
+                <div className="absolute inset-0 flex items-center justify-center" style={{ background: BRAND_FALLBACK_GRADIENT }}>
+                  <Icon size={48} color="rgba(255,255,255,0.4)" />
+                </div>
+              }
+            />
           </div>
           <div className="flex items-center gap-1">
             <div className="h-px w-3" style={{ backgroundColor: "rgba(15,13,32,0.2)" }} />
@@ -490,12 +491,12 @@ function CreatorChip({
   return (
     <div className="flex max-w-[180px] items-center gap-2 rounded-full py-1 pl-1 pr-2.5" style={{ backgroundColor: "rgba(15,13,32,0.04)", border: "1px solid rgba(15,13,32,0.06)" }}>
       <div className="relative flex h-5 w-5 items-center justify-center overflow-hidden rounded-full" style={{ backgroundColor: "rgba(48,35,205,0.18)" }}>
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatarUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        ) : (
-          <span className="font-jakarta text-[10px] font-bold text-brandPrimary-700">{initial}</span>
-        )}
+        <MediaImage
+          src={avatarUrl}
+          fallback={
+            <span className="font-jakarta text-[10px] font-bold text-brandPrimary-700">{initial}</span>
+          }
+        />
       </div>
       <span className="flex-shrink truncate font-manrope text-[9px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
         Por {displayName}

@@ -31,6 +31,7 @@ import {
 } from "@/components/platform/catalog/catalog-ui";
 import { uploadImageWeb } from "@/lib/gyms";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 import {
   useSaveAdminSession,
   useDeleteAdminSession,
@@ -338,14 +339,15 @@ function SessionExerciseItem({
       <span className="w-4 font-manrope text-[12px] font-bold text-ui-text-muted">
         {idx + 1}
       </span>
-      {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt="" className="h-[34px] w-[34px] rounded-lg object-cover" />
-      ) : (
-        <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-brandPrimary-50">
-          <Dumbbell size={14} className="text-brandPrimary-600" />
-        </div>
-      )}
+      <MediaImage
+        src={thumb}
+        wrapperClassName="h-[34px] w-[34px] rounded-lg"
+        fallback={
+          <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-brandPrimary-50">
+            <Dumbbell size={14} className="text-brandPrimary-600" />
+          </div>
+        }
+      />
       <div className="flex-1">
         <p className="font-manrope text-[13px] font-bold text-ui-text-main">
           {ex.name}
@@ -467,14 +469,15 @@ function ExercisePickerModal({
                       : "transition hover:bg-ui-background-light"
                   }`}
                 >
-                  {thumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb} alt="" className="h-9 w-9 rounded-lg object-cover" />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brandPrimary-50">
-                      <Dumbbell size={14} className="text-brandPrimary-600" />
-                    </div>
-                  )}
+                  <MediaImage
+                    src={thumb}
+                    wrapperClassName="h-9 w-9 rounded-lg"
+                    fallback={
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brandPrimary-50">
+                        <Dumbbell size={14} className="text-brandPrimary-600" />
+                      </div>
+                    }
+                  />
                   <div className="flex-1">
                     <p className="font-manrope text-[13px] font-bold text-ui-text-main">
                       {ex.name}

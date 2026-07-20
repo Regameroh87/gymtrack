@@ -36,6 +36,7 @@ import {
 import { uploadImageWeb } from "@/lib/gyms";
 import { mediaUrl } from "@/lib/media";
 import { labelOf } from "@/lib/catalog-options";
+import { MediaImage } from "@/components/ui/media-image";
 import {
   Field,
   Input,
@@ -428,14 +429,15 @@ function SessionExerciseItem({
       <span className="w-4 font-manrope text-[12px] font-bold text-ui-text-muted">
         {idx + 1}
       </span>
-      {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt="" className="h-[34px] w-[34px] rounded-lg object-cover" />
-      ) : (
-        <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-brandPrimary-50">
-          <Dumbbell size={14} className="text-brandPrimary-600" />
-        </div>
-      )}
+      <MediaImage
+        src={thumb}
+        wrapperClassName="h-[34px] w-[34px] rounded-lg"
+        fallback={
+          <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-brandPrimary-50">
+            <Dumbbell size={14} className="text-brandPrimary-600" />
+          </div>
+        }
+      />
       <div className="flex-1">
         <p className="font-manrope text-[13px] font-bold text-ui-text-main">
           {ex.name}
@@ -496,14 +498,15 @@ function SessionRow({
         onClick={onView}
         className="flex flex-1 items-center gap-3 text-left"
       >
-        {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt="" className="h-11 w-11 rounded-[10px] object-cover" />
-        ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-brandPrimary-50">
-            <Dumbbell size={16} className="text-brandPrimary-600" />
-          </div>
-        )}
+        <MediaImage
+          src={thumb}
+          wrapperClassName="h-11 w-11 rounded-[10px]"
+          fallback={
+            <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-brandPrimary-50">
+              <Dumbbell size={16} className="text-brandPrimary-600" />
+            </div>
+          }
+        />
         <div className="flex-1">
           <p className="font-manrope text-[14px] font-bold text-ui-text-main">
             {session.name}
@@ -627,14 +630,15 @@ export function ExercisePickerModal({
                     added ? "opacity-40" : "transition hover:bg-ui-background-light"
                   }`}
                 >
-                  {thumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb} alt="" className="h-9 w-9 rounded-lg object-cover" />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brandPrimary-50">
-                      <Dumbbell size={14} className="text-brandPrimary-600" />
-                    </div>
-                  )}
+                  <MediaImage
+                    src={thumb}
+                    wrapperClassName="h-9 w-9 rounded-lg"
+                    fallback={
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brandPrimary-50">
+                        <Dumbbell size={14} className="text-brandPrimary-600" />
+                      </div>
+                    }
+                  />
                   <div className="flex-1">
                     <p className="font-manrope text-[13px] font-bold text-ui-text-main">
                       {ex.name}
@@ -698,18 +702,15 @@ function SessionDetailDrawer({
             </button>
           </div>
 
-          {heroUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={heroUrl}
-              alt=""
-              className="aspect-square w-full rounded-[18px] object-cover"
-            />
-          ) : (
-            <div className="flex aspect-square w-full items-center justify-center rounded-[18px] bg-brandPrimary-50">
-              <Dumbbell size={40} className="text-brandPrimary-600" />
-            </div>
-          )}
+          <MediaImage
+            src={heroUrl}
+            wrapperClassName="aspect-square w-full rounded-[18px]"
+            fallback={
+              <div className="flex aspect-square w-full items-center justify-center rounded-[18px] bg-brandPrimary-50">
+                <Dumbbell size={40} className="text-brandPrimary-600" />
+              </div>
+            }
+          />
 
           <h3 className="mt-4 font-jakarta text-[20px] font-bold tracking-tight text-ui-text-main">
             {session.name}
@@ -754,14 +755,15 @@ function SessionDetailDrawer({
                       <span className="w-4 font-manrope text-[12px] font-bold text-ui-text-muted">
                         {idx + 1}
                       </span>
-                      {thumb ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={thumb} alt="" className="h-[34px] w-[34px] rounded-lg object-cover" />
-                      ) : (
-                        <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-brandPrimary-50">
-                          <Dumbbell size={14} className="text-brandPrimary-600" />
-                        </div>
-                      )}
+                      <MediaImage
+                        src={thumb}
+                        wrapperClassName="h-[34px] w-[34px] rounded-lg"
+                        fallback={
+                          <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-brandPrimary-50">
+                            <Dumbbell size={14} className="text-brandPrimary-600" />
+                          </div>
+                        }
+                      />
                       <div className="flex-1">
                         <p className="font-manrope text-[13px] font-bold text-ui-text-main">
                           {ex.name}

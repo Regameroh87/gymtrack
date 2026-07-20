@@ -29,6 +29,7 @@ import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
+import { MediaImage } from "@/components/ui/media-image";
 
 const PAGE_SIZE = 14;
 const RANGE_FILTERS = [
@@ -463,14 +464,15 @@ function ManualCheckInModal({
                 onClick={() => insert.mutate(m.id)}
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-brandPrimary-50/50 disabled:opacity-60"
               >
-                {m.image_profile ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.image_profile} alt="" className="h-[30px] w-[30px] rounded-lg object-cover" />
-                ) : (
-                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brandPrimary-50">
-                    <Users size={14} color={brandPrimary[600]} />
-                  </div>
-                )}
+                <MediaImage
+                  src={m.image_profile}
+                  wrapperClassName="h-[30px] w-[30px] shrink-0 rounded-lg"
+                  fallback={
+                    <div className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-brandPrimary-50">
+                      <Users size={14} color={brandPrimary[600]} />
+                    </div>
+                  }
+                />
                 <div className="flex-1">
                   <p className="font-manrope text-[13px] font-bold text-ui-text-main">
                     {m.name} {m.last_name}
@@ -540,16 +542,17 @@ function AttendanceRow({ row, isLast }: { row: AttendanceRowT; isLast: boolean }
   return (
     <div className={`flex items-center px-5 py-3 ${isLast ? "" : "border-b border-ui-input-border"}`}>
       <div className="flex items-center gap-3" style={{ flex: 3 }}>
-        {p?.image_profile ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.image_profile} alt="" className="h-8 w-8 rounded-[9px] object-cover" />
-        ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-brandPrimary-50">
-            <span className="font-jakarta text-[11px] font-bold text-brandPrimary-600">
-              {initials}
-            </span>
-          </div>
-        )}
+        <MediaImage
+          src={p?.image_profile}
+          wrapperClassName="h-8 w-8 shrink-0 rounded-[9px]"
+          fallback={
+            <div className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-brandPrimary-50">
+              <span className="font-jakarta text-[11px] font-bold text-brandPrimary-600">
+                {initials}
+              </span>
+            </div>
+          }
+        />
         <span className="truncate font-manrope text-[13px] font-bold text-ui-text-main">
           {p?.name} {p?.last_name}
         </span>

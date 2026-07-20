@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page-header";
+import { MediaImage } from "@/components/ui/media-image";
 
 const formatDate = (iso: string | null) => {
   if (!iso) return "—";
@@ -197,16 +198,17 @@ function StaffRow({
     >
       {/* Usuario */}
       <div className="flex items-center gap-3" style={{ flex: 3 }}>
-        {staff.image_profile ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={staff.image_profile} alt="" className="h-9 w-9 rounded-[10px] object-cover" />
-        ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brandPrimary-50">
-            <span className="font-jakarta text-xs font-bold text-brandPrimary-600">
-              {initials}
-            </span>
-          </div>
-        )}
+        <MediaImage
+          src={staff.image_profile}
+          wrapperClassName="h-9 w-9 shrink-0 rounded-[10px]"
+          fallback={
+            <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-brandPrimary-50">
+              <span className="font-jakarta text-xs font-bold text-brandPrimary-600">
+                {initials}
+              </span>
+            </div>
+          }
+        />
         <span className="truncate font-manrope text-[13px] font-bold text-ui-text-main">
           {staff.name} {staff.last_name}
           {isSelf && (

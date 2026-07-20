@@ -26,6 +26,7 @@ import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 import { useDeleteAdminSession } from "@/lib/hooks/use-admin-sessions";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
 import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
@@ -320,14 +321,14 @@ function SessionCard({ session, onDelete }: { session: Session; onDelete: () => 
       </div>
 
       <div className="relative w-full overflow-hidden bg-ui-background-light" style={{ aspectRatio: "16 / 10" }}>
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-violet-500/5">
-            <ClipboardList size={32} color="#7c3aed" />
-          </div>
-        )}
+        <MediaImage
+          src={imageUrl}
+          fallback={
+            <div className="flex h-full items-center justify-center bg-violet-500/5">
+              <ClipboardList size={32} color="#7c3aed" />
+            </div>
+          }
+        />
         {lvl && (
           <div className={`absolute left-2.5 top-2.5 flex items-center gap-1 rounded-md px-2 py-0.5 ${lvl.bubble}`}>
             <span className="h-1 w-1 rounded-full" style={{ backgroundColor: lvl.color }} />

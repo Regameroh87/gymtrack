@@ -20,6 +20,7 @@ import { formatGymDate, type Gym } from "@/lib/gyms";
 // Shell y acciones
 import { PlatformShell } from "@/components/platform/platform-shell";
 import { EnterGymButton } from "@/components/platform/enter-gym-button";
+import { MediaImage } from "@/components/ui/media-image";
 
 type OverviewGym = Pick<
   Gym,
@@ -195,18 +196,15 @@ export default async function PlatformPage() {
                     suspended ? "opacity-60" : ""
                   }`}
                 >
-                  {logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={logo}
-                      alt=""
-                      className="h-[42px] w-[42px] rounded-[11px] object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-brandSecondary-500/10">
-                      <ShieldHalf size={18} className="text-brandSecondary-500" />
-                    </div>
-                  )}
+                  <MediaImage
+                    src={logo}
+                    wrapperClassName="h-[42px] w-[42px] shrink-0 rounded-[11px]"
+                    fallback={
+                      <div className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-brandSecondary-500/10">
+                        <ShieldHalf size={18} className="text-brandSecondary-500" />
+                      </div>
+                    }
+                  />
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">

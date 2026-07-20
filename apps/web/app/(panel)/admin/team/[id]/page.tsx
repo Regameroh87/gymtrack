@@ -39,6 +39,7 @@ import { ROLE_LABELS, ROLES, isStaffRole } from "@/lib/auth/roles";
 import { PROFILE_GENDERS } from "@/lib/gender-options";
 import { mediaUrl } from "@/lib/media";
 import { DeleteConfirmModal, Toggle, ErrorBanner } from "@/components/platform/catalog/catalog-ui";
+import { MediaImage } from "@/components/ui/media-image";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -142,16 +143,17 @@ export default function StaffDetailPage() {
 
       {/* Header card */}
       <div className="mt-3 flex flex-col items-start gap-4 rounded-[20px] border border-ui-input-border bg-white p-6 md:flex-row md:items-center">
-        {avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatar} alt="" className="h-20 w-20 rounded-[18px] object-cover" />
-        ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-[18px] bg-violet-50">
-            <span className="font-jakarta text-xl font-bold text-violet-600">
-              {initials}
-            </span>
-          </div>
-        )}
+        <MediaImage
+          src={avatar}
+          wrapperClassName="h-20 w-20 shrink-0 rounded-[18px]"
+          fallback={
+            <div className="flex h-20 w-20 items-center justify-center rounded-[18px] bg-violet-50">
+              <span className="font-jakarta text-xl font-bold text-violet-600">
+                {initials}
+              </span>
+            </div>
+          }
+        />
 
         <div className="flex-1">
           <h1 className="font-jakarta text-[24px] font-bold capitalize tracking-tight text-ui-text-main">

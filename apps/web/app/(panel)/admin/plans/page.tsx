@@ -28,6 +28,7 @@ import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 import { PLAN_GENDER_BADGES } from "@/lib/gender-options";
 import { useDeleteAdminPlan } from "@/lib/hooks/use-admin-plans";
 import { CardActionsMenu } from "@/components/admin/card-actions-menu";
@@ -369,14 +370,14 @@ function PlanCard({
 
       {/* Cover */}
       <div className="overflow-hidden bg-ui-background-light" style={{ width: 160 }}>
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-sky-500/5">
-            <ClipboardList size={32} color="#0284c7" />
-          </div>
-        )}
+        <MediaImage
+          src={imageUrl}
+          fallback={
+            <div className="flex h-full items-center justify-center bg-sky-500/5">
+              <ClipboardList size={32} color="#0284c7" />
+            </div>
+          }
+        />
       </div>
 
       {/* Body */}

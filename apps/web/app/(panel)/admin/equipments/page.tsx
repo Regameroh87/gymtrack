@@ -26,6 +26,7 @@ import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { mediaUrl } from "@/lib/media";
+import { MediaImage } from "@/components/ui/media-image";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 
@@ -221,14 +222,14 @@ function EquipmentCard({ equipment }: { equipment: Equipment }) {
       className="overflow-hidden rounded-card-sm border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30 active:scale-[0.99]"
     >
       <div className="w-full overflow-hidden bg-ui-background-light" style={{ aspectRatio: "16 / 10" }}>
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-rose-500/5">
-            <Dumbbell size={32} color="#f43f5e" />
-          </div>
-        )}
+        <MediaImage
+          src={imageUrl}
+          fallback={
+            <div className="flex h-full items-center justify-center bg-rose-500/5">
+              <Dumbbell size={32} color="#f43f5e" />
+            </div>
+          }
+        />
       </div>
 
       <div className="p-3.5">

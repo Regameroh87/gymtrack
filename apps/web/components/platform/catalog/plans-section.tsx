@@ -55,6 +55,7 @@ import {
   type Option,
 } from "@/lib/catalog-options";
 import { PLAN_TARGET_GENDERS } from "@/lib/gender-options";
+import { MediaImage } from "@/components/ui/media-image";
 import {
   Field,
   Input,
@@ -375,14 +376,15 @@ function PlanRow({
         onClick={onView}
         className="flex flex-1 items-center gap-3 text-left"
       >
-        {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumb} alt="" className="h-11 w-11 rounded-[10px] object-cover" />
-        ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-brandPrimary-50">
-            <Calendar size={16} className="text-brandPrimary-600" />
-          </div>
-        )}
+        <MediaImage
+          src={thumb}
+          wrapperClassName="h-11 w-11 rounded-[10px]"
+          fallback={
+            <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-brandPrimary-50">
+              <Calendar size={16} className="text-brandPrimary-600" />
+            </div>
+          }
+        />
         <div className="flex-1">
           <p className="font-manrope text-[14px] font-bold text-ui-text-main">
             {plan.name}
@@ -435,14 +437,16 @@ function ArchivedPlanRow({
         first ? "" : "border-t border-ui-input-light"
       }`}
     >
-      {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt="" className="h-11 w-11 rounded-[10px] object-cover opacity-65" />
-      ) : (
-        <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-ui-background-light">
-          <Calendar size={16} className="text-ui-text-muted" />
-        </div>
-      )}
+      <MediaImage
+        src={thumb}
+        className="object-cover opacity-65"
+        wrapperClassName="h-11 w-11 rounded-[10px]"
+        fallback={
+          <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-ui-background-light">
+            <Calendar size={16} className="text-ui-text-muted" />
+          </div>
+        }
+      />
 
       <div className="flex-1">
         <p className="font-manrope text-[14px] font-bold text-ui-text-main">
@@ -1279,18 +1283,15 @@ function PlanDetailDrawer({
             </button>
           </div>
 
-          {heroUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={heroUrl}
-              alt=""
-              className="aspect-square w-full rounded-[18px] object-cover"
-            />
-          ) : (
-            <div className="flex aspect-square w-full items-center justify-center rounded-[18px] bg-brandPrimary-50">
-              <Calendar size={40} className="text-brandPrimary-600" />
-            </div>
-          )}
+          <MediaImage
+            src={heroUrl}
+            wrapperClassName="aspect-square w-full rounded-[18px]"
+            fallback={
+              <div className="flex aspect-square w-full items-center justify-center rounded-[18px] bg-brandPrimary-50">
+                <Calendar size={40} className="text-brandPrimary-600" />
+              </div>
+            }
+          />
 
           <h3 className="mt-4 font-jakarta text-[20px] font-bold tracking-tight text-ui-text-main">
             {plan.name}
