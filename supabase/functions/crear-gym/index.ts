@@ -278,6 +278,28 @@ Deno.serve(async (req) => {
       throw membershipError
     }
 
+    // 5. Fila de suscripción SaaS (best-effort: no falla la creación del gym).
+    // El gym queda en status 'pending' hasta que el owner complete el checkout MP.
+    try {
+      const { data: activePlan } = await supabaseAdmin
+        .from('saas_plans')
+        .select('id')
+        .eq('is_active', true)
+        .order('created_at')
+        .limit(1)
+        .maybeSingle()
+
+      if (activePlan) {
+        await supabaseAdmin.from('gym_saas_subscriptions').insert({
+          gym_id: createdGymId,
+          plan_id: activePlan.id,
+          status: 'pending',
+        })
+      }
+    } catch (err: any) {
+      console.warn('[crear-gym] No se pudo crear gym_saas_subscriptions:', err?.message)
+    }
+
     // Mail de bienvenida al owner (best-effort).
     await sendWelcomeOwnerEmail(createdGymId, email, name)
 
