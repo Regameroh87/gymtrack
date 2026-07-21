@@ -121,12 +121,64 @@ async function resolveProfiles(
 // ── Socios ──
 
 async function buildSociosSheets(gymId: string): Promise<SheetData[]> {
+  const supabase = getBrowserSupabase();
   const { memberships, byUserId } = await fetchMembersIndex(gymId);
+
+  // Resumen de inscripciones ACTIVAS por socio (actividad+pase, próximo
+  // vencimiento, último pago). El detalle completo vive en Facturación.
+  const { data: subscriptions, error: subErr } = await supabase
+    .from("activity_subscriptions")
+    .select("user_id, activity_id, activity_plan_id, due_date, last_payment_date")
+    .eq("gym_id", gymId)
+    .eq("status", "active");
+  if (subErr) throw subErr;
+  const subRows = (subscriptions ?? []) as Row[];
+
+  const { data: activities, error: actErr } = await supabase
+    .from("activities")
+    .select("id, name")
+    .eq("gym_id", gymId);
+  if (actErr) throw actErr;
+  const activityNameById = new Map((activities ?? []).map((a: Row) => [a.id, a.name]));
+
+  const activityPlans = await fetchIn(
+    "activity_plans",
+    "id, label",
+    "id",
+    subRows.map((s) => s.activity_plan_id)
+  );
+  const planLabelById = new Map(activityPlans.map((p) => [p.id, p.label]));
+
+  const subsByProfile = new Map<string, Row[]>();
+  for (const s of subRows) {
+    const list = subsByProfile.get(s.user_id) ?? [];
+    list.push(s);
+    subsByProfile.set(s.user_id, list);
+  }
+  const summarize = (profileId: string) => {
+    const subs = subsByProfile.get(profileId) ?? [];
+    const names = subs
+      .map((s) => {
+        const activity = activityNameById.get(s.activity_id) ?? "";
+        const label = planLabelById.get(s.activity_plan_id);
+        return label ? `${activity} (${label})` : activity;
+      })
+      .filter(Boolean);
+    const dueDates = subs.map((s) => s.due_date).filter(Boolean).sort();
+    const payDates = subs.map((s) => s.last_payment_date).filter(Boolean).sort();
+    return {
+      activities: names.join(", ") || null,
+      due_date: dueDates[0] ?? null,
+      last_payment_date: payDates[payDates.length - 1] ?? null,
+    };
+  };
+
   const rows = memberships
     .map((m) => {
       const p = byUserId.get(m.user_id);
       if (!p) return null;
       return {
+        ...summarize(p.id),
         id: p.id,
         name: p.name,
         last_name: p.last_name,
@@ -468,18 +520,35 @@ async function buildRegistrosSheets(gymId: string): Promise<SheetData[]> {
 
 // ── Entry point ──
 
+export type ExportFailure = { group: ExportGroup; message: string };
+export type ExportBuild = { sheets: SheetData[]; failures: ExportFailure[] };
+
+// Cada grupo se arma por separado: si uno falla (RLS, red, esquema), los demás
+// igual se exportan y el error del grupo se reporta con su mensaje real.
+// La hoja Leeme va al final para que el archivo abra en los datos.
 export async function buildExportSheets(
   gymId: string,
   groups: ExportGroup[]
-): Promise<SheetData[]> {
-  const sheets: SheetData[] = [
-    { name: SHEET.leeme, headers: [], rows: [], aoa: LEEME_AOA },
+): Promise<ExportBuild> {
+  const builders: [ExportGroup, (id: string) => Promise<SheetData[]>][] = [
+    ["socios", buildSociosSheets],
+    ["catalogo", buildCatalogoSheets],
+    ["facturacion", buildFacturacionSheets],
+    ["registros", buildRegistrosSheets],
   ];
-  if (groups.includes("socios")) sheets.push(...(await buildSociosSheets(gymId)));
-  if (groups.includes("catalogo")) sheets.push(...(await buildCatalogoSheets(gymId)));
-  if (groups.includes("facturacion")) sheets.push(...(await buildFacturacionSheets(gymId)));
-  if (groups.includes("registros")) sheets.push(...(await buildRegistrosSheets(gymId)));
-  return sheets;
+
+  const sheets: SheetData[] = [];
+  const failures: ExportFailure[] = [];
+  for (const [group, build] of builders) {
+    if (!groups.includes(group)) continue;
+    try {
+      sheets.push(...(await build(gymId)));
+    } catch (err) {
+      failures.push({ group, message: (err as Error).message });
+    }
+  }
+  sheets.push({ name: SHEET.leeme, headers: [], rows: [], aoa: LEEME_AOA });
+  return { sheets, failures };
 }
 
 export const exportFilename = () =>

@@ -43,6 +43,11 @@ export const SOCIOS_COLUMNS: Column[] = [
   { key: "role", header: "Rol" },
   { key: "membership_status", header: "Membresía" },
   { key: "is_active", header: "Activo" },
+  // Resumen de inscripciones/pagos del socio (solo export; el detalle completo
+  // vive en las hojas Inscripciones y Pagos_Socios).
+  { key: "activities", header: "Actividades", infoOnly: true },
+  { key: "due_date", header: "Próximo vencimiento", infoOnly: true },
+  { key: "last_payment_date", header: "Último pago", infoOnly: true },
 ];
 
 export const EQUIPMENT_COLUMNS: Column[] = [
@@ -282,6 +287,7 @@ export const LEEME_AOA: unknown[][] = [
   ["- Para socios nuevos el Email es obligatorio; se crea la cuenta con la contraseña por defecto."],
   ["- El Email de un socio existente no se puede cambiar desde el import."],
   ["- Rol: Socio, Coach o Administrador. Membresía: Activa/Inactiva. Activo: Sí/No."],
+  ["- Actividades, Próximo vencimiento y Último pago son un resumen de las inscripciones activas; el import los ignora."],
   [],
   ["Ejercicios:"],
   ["- Categoría: Fuerza, Cardio, Flexibilidad o Potencia."],
