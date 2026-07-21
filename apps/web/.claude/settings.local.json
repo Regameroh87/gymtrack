@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__mercadopago__get_credentials",
+      "mcp__claude_ai_Supabase__get_project_url",
+      "mcp__mercadopago__save_webhook",
+      "Bash(xargs grep -l '\"@gymtrack/core\"')"
+    ]
+  }
+}
