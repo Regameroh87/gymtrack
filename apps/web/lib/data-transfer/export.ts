@@ -21,9 +21,7 @@ import {
   EQUIPMENT_COLUMNS,
   EXERCISES_COLUMNS,
   SESSIONS_COLUMNS,
-  SESSION_EXERCISES_COLUMNS,
   PLANS_COLUMNS,
-  PLAN_DETAIL_COLUMNS,
   SUBSCRIPTIONS_COLUMNS,
   MEMBER_PAYMENTS_COLUMNS,
   COACH_PAYMENTS_COLUMNS,
@@ -253,28 +251,30 @@ async function buildCatalogoSheets(gymId: string): Promise<SheetData[]> {
     .eq("gym_id", gymId)
     .order("name");
   if (sesErr) throw sesErr;
-  const sessionNameById = new Map((sessions ?? []).map((s: Row) => [s.id, s.name]));
   const exerciseNameById = new Map((exercises ?? []).map((e: Row) => [e.id, e.name]));
 
+  // Ejercicios de cada sesión como nombres en orden, en la misma hoja Sesiones.
   const sessionExercises = await fetchIn(
     "session_exercises",
-    "id, session_id, exercise_id, position",
+    "session_id, exercise_id, position",
     "session_id",
     (sessions ?? []).map((s: Row) => s.id)
   );
-  const sessionExerciseRows = sessionExercises
-    .sort((a, b) =>
-      a.session_id === b.session_id
-        ? a.position - b.position
-        : String(sessionNameById.get(a.session_id)).localeCompare(
-            String(sessionNameById.get(b.session_id))
-          )
-    )
-    .map((se) => ({
-      ...se,
-      session_name: sessionNameById.get(se.session_id) ?? null,
-      exercise_name: exerciseNameById.get(se.exercise_id) ?? null,
-    }));
+  const exercisesBySession = new Map<string, Row[]>();
+  for (const se of sessionExercises) {
+    const list = exercisesBySession.get(se.session_id) ?? [];
+    list.push(se);
+    exercisesBySession.set(se.session_id, list);
+  }
+  const sessionRows = (sessions ?? []).map((s: Row) => ({
+    ...s,
+    level: s.level ? optionLabel(PLAN_LEVELS, s.level) : null,
+    exercise_names: (exercisesBySession.get(s.id) ?? [])
+      .sort((a, b) => a.position - b.position)
+      .map((se) => exerciseNameById.get(se.exercise_id))
+      .filter(Boolean)
+      .join(EQUIPMENT_SEPARATOR),
+  }));
 
   const { data: plans, error: plErr } = await supabase
     .from("training_plans")
@@ -285,54 +285,34 @@ async function buildCatalogoSheets(gymId: string): Promise<SheetData[]> {
     .order("name");
   if (plErr) throw plErr;
 
-  const planRows = (plans ?? []).map((p: Row) => ({
-    ...p,
-    objective: optionLabel(PLAN_OBJECTIVES, p.objective),
-    level: optionLabel(PLAN_LEVELS, p.level),
-    is_published: boolLabel(p.is_published),
-  }));
-
-  // Árbol aplanado: una fila por serie prescripta, vía el fetcher del builder.
-  const planDetailRows: Row[] = [];
-  for (const plan of (plans ?? []) as Row[]) {
-    const detail = await fetchAdminPlanDetail(plan.id);
-    if (!detail) continue;
-    for (const week of detail.weeks) {
-      for (const day of week.days) {
-        for (const ex of day.exercises) {
-          ex.set_configs.forEach((set, i) => {
-            planDetailRows.push({
-              plan_id: plan.id,
-              plan_name: plan.name,
-              week: week.week_number,
-              day: day.day_number,
-              session_name: day.session_name,
-              exercise_name: ex.exercise_name,
-              position: ex.position,
-              set_number: i + 1,
-              reps_min: set.reps_min,
-              reps_max: set.reps_max,
-              weight_kg: set.weight_kg,
-              duration_seconds: set.duration_seconds,
-              rest_seconds: set.rest_seconds,
-              rir: ex.rir,
-              rpe: ex.rpe,
-              tempo: ex.tempo || null,
-              notes: ex.notes || null,
-            });
-          });
-        }
-      }
-    }
+  // Cronograma legible del plan: qué sesión toca cada día de cada semana. El
+  // detalle serie a serie no se exporta (se lee mejor en el builder del panel).
+  const planRows: Row[] = [];
+  for (const p of (plans ?? []) as Row[]) {
+    const detail = await fetchAdminPlanDetail(p.id);
+    const weeks = (detail?.weeks ?? [])
+      .map((week) => {
+        const days = week.days
+          .filter((day) => day.session_name)
+          .map((day) => `D${day.day_number} ${day.session_name}`)
+          .join(", ");
+        return days ? `Semana ${week.week_number}: ${days}` : null;
+      })
+      .filter(Boolean);
+    planRows.push({
+      ...p,
+      objective: optionLabel(PLAN_OBJECTIVES, p.objective),
+      level: optionLabel(PLAN_LEVELS, p.level),
+      is_published: boolLabel(p.is_published),
+      sessions_summary: weeks.join(" | ") || null,
+    });
   }
 
   return [
     sheet(SHEET.equipment, EQUIPMENT_COLUMNS, equipment ?? []),
     sheet(SHEET.exercises, EXERCISES_COLUMNS, exerciseRows),
-    sheet(SHEET.sessions, SESSIONS_COLUMNS, sessions ?? []),
-    sheet(SHEET.sessionExercises, SESSION_EXERCISES_COLUMNS, sessionExerciseRows),
+    sheet(SHEET.sessions, SESSIONS_COLUMNS, sessionRows),
     sheet(SHEET.plans, PLANS_COLUMNS, planRows),
-    sheet(SHEET.planDetail, PLAN_DETAIL_COLUMNS, planDetailRows),
   ];
 }
 
