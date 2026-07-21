@@ -27,6 +27,7 @@ import {
   Menu,
   X,
   UserCog,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,14 +35,17 @@ import {
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymPermissions } from "@/components/auth/use-gym-permissions";
+import { isAdminRole } from "@/lib/auth/roles";
 import { mediaUrl } from "@/lib/media";
 import { MediaImage } from "@/components/ui/media-image";
+import { SaasSubscriptionBanner } from "@/components/admin/saas-subscription-banner";
 
 type NavItem = {
   icon: LucideIcon;
   label: string;
   path: string;
   comingSoon?: boolean;
+  adminOnly?: boolean;
 };
 
 type NavSection = {
@@ -79,6 +83,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Sistema",
     items: [
       { icon: Database, label: "Datos", path: "data" },
+      { icon: CreditCard, label: "Suscripción", path: "suscripcion", adminOnly: true },
       { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
       { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
     ],
@@ -94,7 +99,7 @@ function isActive(pathname: string, itemPath: string): boolean {
 function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-  const { gym, isSuperAdmin, exitGym } = useActiveGym();
+  const { gym, role, isSuperAdmin, exitGym } = useActiveGym();
   const { canAccessModule } = useGymPermissions();
 
   // Dashboard siempre visible; el resto según rol + grants de la membership
@@ -103,7 +108,9 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   const navSections = NAV_SECTIONS.map((section) => ({
     ...section,
     items: section.items.filter(
-      (item) => item.path === "" || canAccessModule(item.path)
+      (item) =>
+        item.path === "" ||
+        (item.adminOnly ? isAdminRole(role) : canAccessModule(item.path)),
     ),
   })).filter((section) => section.items.length > 0);
 
@@ -319,6 +326,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <span className="w-9" />
         </div>
 
+        <SaasSubscriptionBanner />
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
 
