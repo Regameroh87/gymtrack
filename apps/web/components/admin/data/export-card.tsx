@@ -32,9 +32,29 @@ export function ExportCard({ gymId }: { gymId: string | null }) {
     if (!gymId || !selected.length || busy) return;
     setBusy(true);
     try {
-      const sheets = await buildExportSheets(gymId, selected);
+      const { sheets, failures } = await buildExportSheets(gymId, selected);
+
+      for (const failure of failures) {
+        const label =
+          EXPORT_GROUPS.find((g) => g.value === failure.group)?.label ??
+          failure.group;
+        toast.error(`No se pudo exportar ${label}: ${failure.message}`);
+      }
+
+      const dataSheets = sheets.filter((s) => !s.aoa);
+      if (!dataSheets.length) {
+        setBusy(false);
+        return;
+      }
+
       await downloadWorkbook(exportFilename(), sheets);
-      toast.success("Excel generado y descargado.");
+      const total = dataSheets.reduce((n, s) => n + s.rows.length, 0);
+      toast.success(`Excel generado: ${total} filas.`, {
+        description: dataSheets
+          .map((s) => `${s.name}: ${s.rows.length}`)
+          .join(" · "),
+        duration: 8000,
+      });
     } catch (err) {
       toast.error((err as Error)?.message || "No se pudo generar el Excel.");
     } finally {
