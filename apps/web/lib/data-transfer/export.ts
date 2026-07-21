@@ -37,13 +37,15 @@ import {
   EQUIPMENT_SEPARATOR,
 } from "./sheets";
 
-export type ExportGroup = "socios" | "catalogo" | "facturacion" | "registros";
+// Los registros de entrenamiento NO forman parte del export admin (exportar los
+// entrenamientos de todo el gym es demasiado): cada socio exporta los suyos
+// desde Progreso, vía buildMemberWorkoutSheets.
+export type ExportGroup = "socios" | "catalogo" | "facturacion";
 
 export const EXPORT_GROUPS: { value: ExportGroup; label: string; detail: string }[] = [
-  { value: "socios", label: "Socios", detail: "Datos personales, rol y estado de membresía" },
+  { value: "socios", label: "Socios", detail: "Datos personales, actividades, pagos y estado de membresía" },
   { value: "catalogo", label: "Catálogo de entrenamiento", detail: "Máquinas, ejercicios, sesiones y planes" },
   { value: "facturacion", label: "Facturación", detail: "Inscripciones, pagos de socios y pagos a coaches" },
-  { value: "registros", label: "Registros de entrenamiento", detail: "Sesiones completadas y series de los socios" },
 ];
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -434,16 +436,23 @@ async function buildFacturacionSheets(gymId: string): Promise<SheetData[]> {
   ];
 }
 
-// ── Registros de entrenamiento ──
+// ── Registros de entrenamiento del socio logueado ──
+// Se usa desde la sección Progreso del member: exporta SOLO los entrenamientos
+// propios (profileId = profiles.id del socio; la RLS de session_logs ya limita
+// a las filas propias, el filtro explícito lo hace evidente).
 
-async function buildRegistrosSheets(gymId: string): Promise<SheetData[]> {
+export async function buildMemberWorkoutSheets(
+  gymId: string,
+  profileId: string
+): Promise<SheetData[]> {
   const supabase = getBrowserSupabase();
-  const { byProfileId } = await fetchMembersIndex(gymId);
+  const byProfileId = new Map<string, Row>();
 
   const { data: logs, error: logErr } = await supabase
     .from("session_logs")
     .select("*")
     .eq("gym_id", gymId)
+    .eq("user_id", profileId)
     .is("deleted_at", null)
     .order("completed_at", { ascending: false });
   if (logErr) throw logErr;
@@ -534,7 +543,6 @@ export async function buildExportSheets(
     ["socios", buildSociosSheets],
     ["catalogo", buildCatalogoSheets],
     ["facturacion", buildFacturacionSheets],
-    ["registros", buildRegistrosSheets],
   ];
 
   const sheets: SheetData[] = [];
@@ -553,3 +561,6 @@ export async function buildExportSheets(
 
 export const exportFilename = () =>
   `gymtrack-datos-${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+export const memberWorkoutFilename = () =>
+  `gymtrack-mis-entrenamientos-${new Date().toISOString().slice(0, 10)}.xlsx`;

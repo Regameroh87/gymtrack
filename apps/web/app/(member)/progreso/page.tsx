@@ -5,7 +5,9 @@
 // entrenamiento/récords vive en la app móvil.
 
 // Librerías
-import { ChartBar, Flame, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { ChartBar, Download, Flame, Loader2, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
 
 // Hook de datos, contexto y componente
 import { useAttendanceStreak } from "@gymtrack/core/hooks/progress/use-attendance-streak";
@@ -71,6 +73,9 @@ export default function ProgresoPage() {
           )}
         </div>
 
+        {/* Export de los entrenamientos propios */}
+        <ExportWorkoutsCard gymId={gymId} profileId={userId} />
+
         {/* Nota: detalle en la app */}
         <div className="flex items-center gap-4 rounded-[22px] border border-ui-input-border bg-ui-surface-light p-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-[14px]" style={{ backgroundColor: "rgba(48,35,205,0.1)" }}>
@@ -87,6 +92,73 @@ export default function ProgresoPage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Exporta a Excel los entrenamientos PROPIOS del socio (registros + series).
+// Los módulos de export se cargan on-demand para no engordar el bundle del área
+// member: solo pesan al tocar el botón.
+function ExportWorkoutsCard({
+  gymId,
+  profileId,
+}: {
+  gymId: string | null;
+  profileId: string | null;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  const onExport = async () => {
+    if (!gymId || !profileId || busy) return;
+    setBusy(true);
+    try {
+      const [{ buildMemberWorkoutSheets, memberWorkoutFilename }, { downloadWorkbook }] =
+        await Promise.all([
+          import("@/lib/data-transfer/export"),
+          import("@/lib/data-transfer/xlsx"),
+        ]);
+      const sheets = await buildMemberWorkoutSheets(gymId, profileId);
+      const total = sheets[0]?.rows.length ?? 0;
+      if (!total) {
+        toast.info("Todavía no tenés entrenamientos registrados en este gimnasio.");
+        return;
+      }
+      await downloadWorkbook(memberWorkoutFilename(), sheets);
+      toast.success(
+        `Excel generado: ${total} ${total === 1 ? "entrenamiento" : "entrenamientos"}.`
+      );
+    } catch (err) {
+      toast.error((err as Error)?.message || "No se pudo generar el Excel.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mb-5 flex items-center gap-4 rounded-[22px] border border-ui-input-border bg-ui-surface-light p-6">
+      <div
+        className="flex h-12 w-12 items-center justify-center rounded-[14px]"
+        style={{ backgroundColor: "rgba(48,35,205,0.1)" }}
+      >
+        <Download size={22} className="text-brandPrimary-600" />
+      </div>
+      <div className="flex-1">
+        <p className="mb-1 font-jakarta text-sm font-bold tracking-tight text-ui-text-main">
+          Exportar mis entrenamientos
+        </p>
+        <p className="font-manrope text-[13px] leading-5 text-ui-text-muted">
+          Descargá un Excel con tus sesiones completadas y todas sus series.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onExport}
+        disabled={busy || !gymId || !profileId}
+        className="flex items-center gap-2 rounded-xl border border-ui-input-border bg-white px-4 py-2.5 font-manrope text-[13px] font-bold text-ui-text-main transition hover:bg-brandPrimary-50/50 active:scale-[0.97] disabled:opacity-50"
+      >
+        {busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+        {busy ? "Generando..." : "Exportar"}
+      </button>
     </div>
   );
 }
