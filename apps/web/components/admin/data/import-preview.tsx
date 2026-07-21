@@ -50,7 +50,6 @@ export function ImportPreview({ plan }: { plan: ImportPlan }) {
     plan.equipment,
     plan.exercises,
     plan.sessions,
-    plan.sessionExercises,
     plan.socios,
   ].filter((s) => plan.sheetsFound.includes(s.sheet));
 

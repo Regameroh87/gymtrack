@@ -51,7 +51,7 @@ export function ImportCard({ gymId }: { gymId: string | null }) {
       const plan = await buildImportPlan(gymId, file);
       if (!plan.sheetsFound.length) {
         toast.error(
-          "El archivo no tiene ninguna hoja importable (Socios, Equipamiento, Ejercicios, Sesiones o Sesion_Ejercicios)."
+          "El archivo no tiene ninguna hoja importable (Socios, Equipamiento, Ejercicios o Sesiones)."
         );
         setPhase({ step: "idle" });
         return;
@@ -83,7 +83,7 @@ export function ImportCard({ gymId }: { gymId: string | null }) {
   };
 
   const validRows = (plan: ImportPlan) =>
-    [plan.socios, plan.equipment, plan.exercises, plan.sessions, plan.sessionExercises]
+    [plan.socios, plan.equipment, plan.exercises, plan.sessions]
       .filter((s) => plan.sheetsFound.includes(s.sheet))
       .reduce((n, s) => n + s.creates.length + s.updates.length, 0);
 
@@ -95,8 +95,7 @@ export function ImportCard({ gymId }: { gymId: string | null }) {
       <p className="mt-1 font-manrope text-xs text-ui-text-muted">
         Usá un archivo exportado desde acá como plantilla. Filas con ID vacío se
         crean, filas con ID existente se actualizan; nunca se borra nada. Las
-        hojas importables son Socios, Equipamiento, Ejercicios, Sesiones y
-        Sesion_Ejercicios.
+        hojas importables son Socios, Equipamiento, Ejercicios y Sesiones.
       </p>
 
       <input

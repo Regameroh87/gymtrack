@@ -24,11 +24,9 @@ import {
   EQUIPMENT_COLUMNS,
   EXERCISES_COLUMNS,
   SESSIONS_COLUMNS,
-  SESSION_EXERCISES_COLUMNS,
   fromSheetRow,
   normText,
   asText,
-  asInt,
   asBool,
   matchOption,
   splitEquipmentNames,
@@ -66,14 +64,10 @@ type SessionWrite = {
   name: string;
   description: string | null;
   level: string | null;
-};
-
-type SessionExerciseWrite = {
-  row: number;
-  id: string;
-  session_id: string;
-  exercise_id: string;
-  position: number;
+  // Ejercicios de la columna "Ejercicios" en orden. Vacía = no tocar los
+  // vínculos; con nombres = agregar/reordenar (nunca quitar: los planes
+  // referencian session_exercises existentes).
+  exercise_ids: string[];
 };
 
 type SocioCreate = {
@@ -111,7 +105,6 @@ export type ImportPlan = {
   equipment: SheetPlan<EquipmentWrite>;
   exercises: SheetPlan<ExerciseWrite>;
   sessions: SheetPlan<SessionWrite>;
-  sessionExercises: SheetPlan<SessionExerciseWrite>;
   // Hojas importables presentes en el archivo (para avisar si no se encontró ninguna).
   sheetsFound: string[];
 };
@@ -139,10 +132,7 @@ const MEMBERSHIP_STATUS_OPTIONS: Option[] = [
   { label: "Inactiva", value: "inactive" },
 ];
 
-const uuidSchema = z.string().uuid();
 const emailSchema = z.string().email();
-
-const isUuid = (v: unknown) => uuidSchema.safeParse(v).success;
 
 // Busca una hoja por nombre normalizado (tolera mayúsculas/acentos/espacios).
 function findSheet(
@@ -196,14 +186,12 @@ export async function buildImportPlan(
   const equipmentRows = findSheet(workbook, SHEET.equipment);
   const exerciseRows = findSheet(workbook, SHEET.exercises);
   const sessionRows = findSheet(workbook, SHEET.sessions);
-  const sessionExerciseRows = findSheet(workbook, SHEET.sessionExercises);
 
   const sheetsFound: string[] = [];
   if (sociosRows) sheetsFound.push(SHEET.socios);
   if (equipmentRows) sheetsFound.push(SHEET.equipment);
   if (exerciseRows) sheetsFound.push(SHEET.exercises);
   if (sessionRows) sheetsFound.push(SHEET.sessions);
-  if (sessionExerciseRows) sheetsFound.push(SHEET.sessionExercises);
 
   const plan: ImportPlan = {
     gymId,
@@ -211,7 +199,6 @@ export async function buildImportPlan(
     equipment: emptyPlan(SHEET.equipment),
     exercises: emptyPlan(SHEET.exercises),
     sessions: emptyPlan(SHEET.sessions),
-    sessionExercises: emptyPlan(SHEET.sessionExercises),
     sheetsFound,
   };
   if (!sheetsFound.length) return plan;
@@ -232,10 +219,15 @@ export async function buildImportPlan(
 
   const { data: existingExercises, error: exErr } = await supabase
     .from("exercises_base")
-    .select("id")
+    .select("id, name")
     .eq("gym_id", gymId);
   if (exErr) throw exErr;
   const exerciseIds = new Set((existingExercises ?? []).map((e: Row) => e.id));
+  // nombre normalizado → id, para resolver la columna Ejercicios de Sesiones.
+  const exerciseIdByName = new Map<string, string>();
+  for (const e of (existingExercises ?? []) as Row[]) {
+    if (e.name) exerciseIdByName.set(normText(e.name), e.id);
+  }
 
   const { data: existingSessions, error: sesErr } = await supabase
     .from("sessions")
@@ -243,11 +235,6 @@ export async function buildImportPlan(
     .eq("gym_id", gymId);
   if (sesErr) throw sesErr;
   const sessionIds = new Set((existingSessions ?? []).map((s: Row) => s.id));
-
-  const existingSessionExercises = sessionExerciseRows?.length
-    ? await fetchIdsIn("session_exercises", "id", "session_id", [...sessionIds] as string[])
-    : [];
-  const sessionExerciseIds = new Set(existingSessionExercises.map((se) => se.id));
 
   let profileById = new Map<string, Row>();
   if (sociosRows?.length) {
@@ -362,6 +349,8 @@ export async function buildImportPlan(
     };
     if (id) plan.exercises.updates.push(write);
     else plan.exercises.creates.push(write);
+    // Disponible para la columna Ejercicios de Sesiones (incluye los nuevos).
+    exerciseIdByName.set(normText(write.name), write.id);
   }
 
   // ── Sesiones ──
@@ -385,6 +374,14 @@ export async function buildImportPlan(
     else if (id && isDuplicateId(SHEET.sessions, id))
       problems.push(`ID repetido en el archivo: ${id}`);
 
+    // Columna Ejercicios: nombres → ids (existentes o creados en este archivo).
+    const exerciseIdsForRow: string[] = [];
+    for (const exName of splitEquipmentNames(r.exercise_names)) {
+      const exId = exerciseIdByName.get(normText(exName));
+      if (!exId) problems.push(`ejercicio desconocido "${exName}"`);
+      else exerciseIdsForRow.push(exId);
+    }
+
     if (problems.length) {
       plan.sessions.errors.push({ row: rowNum, message: problems.join("; ") + "." });
       continue;
@@ -396,50 +393,11 @@ export async function buildImportPlan(
       name: name as string,
       description: asText(r.description),
       level,
+      exercise_ids: [...new Set(exerciseIdsForRow)],
     };
     if (id) plan.sessions.updates.push(write);
     else plan.sessions.creates.push(write);
   }
-
-  // ── Sesion_Ejercicios ──
-  // Solo referencia sesiones/ejercicios EXISTENTES: las filas nuevas del mismo
-  // archivo aún no tienen ID visible en la planilla (ver hoja Leeme).
-
-  (sessionExerciseRows ?? []).forEach((raw, index) => {
-    const r = fromSheetRow(SESSION_EXERCISES_COLUMNS, raw);
-    const rowNum = raw.__row;
-    const id = asText(r.id);
-    const sessionId = asText(r.session_id);
-    const exerciseId = asText(r.exercise_id);
-
-    const problems: string[] = [];
-    if (!sessionId || !isUuid(sessionId) || !sessionIds.has(sessionId))
-      problems.push(`ID de sesión inválido o desconocido: ${sessionId ?? ""}`);
-    if (!exerciseId || !isUuid(exerciseId) || !exerciseIds.has(exerciseId))
-      problems.push(`ID de ejercicio inválido o desconocido: ${exerciseId ?? ""}`);
-    if (id && !sessionExerciseIds.has(id))
-      problems.push(`ID desconocido para este gimnasio: ${id}`);
-    else if (id && isDuplicateId(SHEET.sessionExercises, id))
-      problems.push(`ID repetido en el archivo: ${id}`);
-
-    if (problems.length) {
-      plan.sessionExercises.errors.push({
-        row: rowNum,
-        message: problems.join("; ") + ".",
-      });
-      return;
-    }
-
-    const write: SessionExerciseWrite = {
-      row: rowNum,
-      id: id ?? crypto.randomUUID(),
-      session_id: sessionId as string,
-      exercise_id: exerciseId as string,
-      position: asInt(r.position) ?? index,
-    };
-    if (id) plan.sessionExercises.updates.push(write);
-    else plan.sessionExercises.creates.push(write);
-  });
 
   // ── Socios ──
 
@@ -686,39 +644,71 @@ export async function applyImportPlan(plan: ImportPlan): Promise<ImportResult> {
         }))
       );
       res.updated = plan.sessions.updates.length;
-    } catch (err) {
-      res.errors.push({ row: 0, message: (err as Error).message });
-    }
-    results.push(res);
-  }
 
-  // ── Sesion_Ejercicios ──
-  {
-    const res: SheetResult = { sheet: SHEET.sessionExercises, created: 0, updated: 0, errors: [] };
-    try {
-      await insertChunks(
-        "session_exercises",
-        plan.sessionExercises.creates.map((se) => ({
-          id: se.id,
-          session_id: se.session_id,
-          exercise_id: se.exercise_id,
-          position: se.position,
-          created_at: now,
-          updated_at: now,
-        }))
-      );
-      res.created = plan.sessionExercises.creates.length;
-      await upsertChunks(
-        "session_exercises",
-        plan.sessionExercises.updates.map((se) => ({
-          id: se.id,
-          session_id: se.session_id,
-          exercise_id: se.exercise_id,
-          position: se.position,
-          updated_at: now,
-        }))
-      );
-      res.updated = plan.sessionExercises.updates.length;
+      // Columna Ejercicios: merge sin borrar. Los listados quedan primero en su
+      // orden; los vínculos existentes no listados se conservan al final (los
+      // planes referencian session_exercises por id, borrarlos rompería planes).
+      const withExercises = [...plan.sessions.creates, ...plan.sessions.updates]
+        .filter((s) => s.exercise_ids.length);
+      if (withExercises.length) {
+        const existingLinks = await fetchIdsIn(
+          "session_exercises",
+          "id, session_id, exercise_id, position",
+          "session_id",
+          withExercises.map((s) => s.id)
+        );
+        const linksBySession = new Map<string, Row[]>();
+        for (const link of existingLinks) {
+          const list = linksBySession.get(link.session_id) ?? [];
+          list.push(link);
+          linksBySession.set(link.session_id, list);
+        }
+
+        const linkUpdates: Row[] = [];
+        const linkInserts: Row[] = [];
+        for (const s of withExercises) {
+          const existing = (linksBySession.get(s.id) ?? []).sort(
+            (a, b) => a.position - b.position
+          );
+          const linkByExercise = new Map(existing.map((l) => [l.exercise_id, l]));
+          const listed = new Set(s.exercise_ids);
+
+          s.exercise_ids.forEach((exerciseId, idx) => {
+            const link = linkByExercise.get(exerciseId);
+            if (link)
+              linkUpdates.push({
+                id: link.id,
+                session_id: s.id,
+                exercise_id: exerciseId,
+                position: idx,
+                updated_at: now,
+              });
+            else
+              linkInserts.push({
+                id: crypto.randomUUID(),
+                session_id: s.id,
+                exercise_id: exerciseId,
+                position: idx,
+                created_at: now,
+                updated_at: now,
+              });
+          });
+
+          existing
+            .filter((l) => !listed.has(l.exercise_id))
+            .forEach((l, i) =>
+              linkUpdates.push({
+                id: l.id,
+                session_id: s.id,
+                exercise_id: l.exercise_id,
+                position: s.exercise_ids.length + i,
+                updated_at: now,
+              })
+            );
+        }
+        await upsertChunks("session_exercises", linkUpdates);
+        await insertChunks("session_exercises", linkInserts);
+      }
     } catch (err) {
       res.errors.push({ row: 0, message: (err as Error).message });
     }

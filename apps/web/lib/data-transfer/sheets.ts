@@ -19,9 +19,7 @@ export const SHEET = {
   equipment: "Equipamiento",
   exercises: "Ejercicios",
   sessions: "Sesiones",
-  sessionExercises: "Sesion_Ejercicios",
   plans: "Planes",
-  planDetail: "Plan_Detalle",
   subscriptions: "Inscripciones",
   memberPayments: "Pagos_Socios",
   coachPayments: "Pagos_Coaches",
@@ -74,16 +72,10 @@ export const SESSIONS_COLUMNS: Column[] = [
   { key: "name", header: "Nombre" },
   { key: "description", header: "Descripción" },
   { key: "level", header: "Nivel" },
+  // Nombres de ejercicios en orden, separados por "|". En import agrega y
+  // reordena; nunca quita (los planes referencian los vínculos existentes).
+  { key: "exercise_names", header: "Ejercicios" },
   { key: "cover_image_uri", header: "Portada", infoOnly: true },
-];
-
-export const SESSION_EXERCISES_COLUMNS: Column[] = [
-  { key: "id", header: "ID" },
-  { key: "session_id", header: "ID sesión" },
-  { key: "session_name", header: "Sesión", infoOnly: true },
-  { key: "exercise_id", header: "ID ejercicio" },
-  { key: "exercise_name", header: "Ejercicio", infoOnly: true },
-  { key: "position", header: "Posición" },
 ];
 
 // ── Hojas solo-export ──
@@ -98,26 +90,8 @@ export const PLANS_COLUMNS: Column[] = [
   { key: "weekly_days", header: "Días por semana" },
   { key: "duration_weeks", header: "Duración (semanas)" },
   { key: "is_published", header: "Publicado" },
-];
-
-export const PLAN_DETAIL_COLUMNS: Column[] = [
-  { key: "plan_id", header: "ID plan" },
-  { key: "plan_name", header: "Plan" },
-  { key: "week", header: "Semana" },
-  { key: "day", header: "Día" },
-  { key: "session_name", header: "Sesión" },
-  { key: "exercise_name", header: "Ejercicio" },
-  { key: "position", header: "Posición" },
-  { key: "set_number", header: "Serie" },
-  { key: "reps_min", header: "Reps mín" },
-  { key: "reps_max", header: "Reps máx" },
-  { key: "weight_kg", header: "Peso (kg)" },
-  { key: "duration_seconds", header: "Duración (seg)" },
-  { key: "rest_seconds", header: "Descanso (seg)" },
-  { key: "rir", header: "RIR" },
-  { key: "rpe", header: "RPE" },
-  { key: "tempo", header: "Tempo" },
-  { key: "notes", header: "Notas" },
+  // Cronograma legible del plan: "Semana 1: D1 Full Body, D2 Piernas | ...".
+  { key: "sessions_summary", header: "Sesiones", infoOnly: true },
 ];
 
 export const SUBSCRIPTIONS_COLUMNS: Column[] = [
@@ -274,7 +248,7 @@ export const splitEquipmentNames = (v: unknown): string[] =>
 export const LEEME_AOA: unknown[][] = [
   ["GymTrack — Export / Import de datos"],
   [],
-  ["Hojas IMPORTABLES: Socios, Equipamiento, Ejercicios, Sesiones y Sesion_Ejercicios."],
+  ["Hojas IMPORTABLES: Socios, Equipamiento, Ejercicios y Sesiones."],
   ["El resto de las hojas son solo informativas (export): el import las ignora."],
   [],
   ["Reglas del import:"],
@@ -294,7 +268,10 @@ export const LEEME_AOA: unknown[][] = [
   ["- Grupo muscular: Pecho, Espalda, Piernas, Hombros, Brazos o Core."],
   ["- Equipamiento: nombres separados por \"|\", deben existir en la hoja Equipamiento o en el gimnasio."],
   [],
-  ["Sesion_Ejercicios:"],
-  ["- Cada fila vincula un ejercicio a una sesión por sus IDs."],
-  ["- Para agregar ejercicios a una sesión nueva: importala primero, exportá de nuevo para obtener su ID y volvé a importar."],
+  ["Sesiones:"],
+  ["- Ejercicios: nombres separados por \"|\", en el orden de la sesión; deben existir en la hoja Ejercicios o en el gimnasio."],
+  ["- El import agrega y reordena los ejercicios listados, pero nunca quita ninguno (para eso está el editor de sesiones)."],
+  [],
+  ["Planes:"],
+  ["- Solo se exportan (con su cronograma en la columna Sesiones); los planes se arman y editan desde el panel."],
 ];
