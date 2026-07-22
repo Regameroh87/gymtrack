@@ -27,6 +27,20 @@ export interface SaasSubscriptionRow {
   } | null;
 }
 
+function formatMoney(price: number | null, currency: string | null): string | null {
+  if (price == null) return null;
+  const cur = currency ?? "ARS";
+  try {
+    return new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: cur,
+      maximumFractionDigits: 0,
+    }).format(Number(price));
+  } catch {
+    return `$${price} ${cur}`;
+  }
+}
+
 const STATUS_BADGES: Record<string, { label: string; className: string }> = {
   pending: { label: "Pendiente", className: "bg-gray-100 text-gray-600" },
   trialing: { label: "En prueba", className: "bg-sky-50 text-sky-700" },
@@ -148,10 +162,11 @@ export function SaasSubscriptionsTable({
                     </td>
                     <td className="px-4 py-3 font-manrope text-[13px] text-gray-600">
                       {r.plan?.name ?? "—"}
-                      {r.plan?.price != null && (
+                      {formatMoney(r.plan?.price ?? null, r.plan?.currency ?? null) && (
                         <span className="text-gray-400">
-                          {" "}
-                          · ${r.plan.price} {r.plan.currency ?? "ARS"}
+                          {" · "}
+                          {formatMoney(r.plan?.price ?? null, r.plan?.currency ?? null)}
+                          <span className="ml-1">/mes</span>
                         </span>
                       )}
                     </td>
