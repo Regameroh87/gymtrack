@@ -8,6 +8,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { canAccessPlatformModule } from "@/lib/auth/roles";
 import { PlatformShell } from "@/components/platform/platform-shell";
 import { SignupToggle } from "@/components/platform/signup-toggle";
+import { PlanConfigForm, type SaasPlan } from "@/components/platform/plan-config-form";
 import {
   SaasSubscriptionsTable,
   type SaasSubscriptionRow,
@@ -19,7 +20,7 @@ export default async function PlatformBillingPage() {
 
   const supabase = await createServerSupabase();
 
-  const [{ data: settings }, { data: subs }] = await Promise.all([
+  const [{ data: settings }, { data: subs }, { data: plan }] = await Promise.all([
     supabase
       .from("platform_settings")
       .select("self_service_signup_enabled")
@@ -30,6 +31,13 @@ export default async function PlatformBillingPage() {
         "id, status, trial_ends_at, current_period_end, payer_email, created_at, gyms ( name, created_via ), saas_plans ( name, price, currency )"
       )
       .order("created_at", { ascending: false }),
+    supabase
+      .from("saas_plans")
+      .select("id, name, price, currency, trial_days")
+      .eq("is_active", true)
+      .order("created_at")
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const rows: SaasSubscriptionRow[] = ((subs as unknown as Array<
@@ -69,6 +77,15 @@ export default async function PlatformBillingPage() {
         <SignupToggle
           initialEnabled={settings?.self_service_signup_enabled === true}
         />
+
+        {plan && (
+          <PlanConfigForm
+            plan={{
+              ...(plan as SaasPlan),
+              price: plan.price != null ? Number(plan.price) : null,
+            }}
+          />
+        )}
 
         <SaasSubscriptionsTable rows={rows} />
       </div>
