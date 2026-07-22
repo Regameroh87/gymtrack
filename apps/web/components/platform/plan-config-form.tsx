@@ -7,6 +7,7 @@
 // quedan con el precio con el que se autorizaron.
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tag } from "lucide-react";
 
 import { getBrowserSupabase } from "@/lib/supabase-browser";
@@ -25,6 +26,14 @@ const CURRENCIES = [
 ] as const;
 
 export function PlanConfigForm({ plan }: { plan: SaasPlan }) {
+  const router = useRouter();
+  // Baseline en estado (no en props): tras guardar lo movemos a los valores
+  // recién guardados, así `dirty` vuelve a false y se ve la confirmación.
+  const [baseline, setBaseline] = useState({
+    price: plan.price,
+    currency: plan.currency,
+    trialDays: plan.trial_days,
+  });
   const [price, setPrice] = useState(plan.price != null ? String(plan.price) : "");
   const [currency, setCurrency] = useState(plan.currency);
   const [trialDays, setTrialDays] = useState(String(plan.trial_days));
@@ -41,9 +50,9 @@ export function PlanConfigForm({ plan }: { plan: SaasPlan }) {
     trialNum <= 365;
 
   const dirty =
-    priceNum !== plan.price ||
-    currency !== plan.currency ||
-    trialNum !== plan.trial_days;
+    priceNum !== baseline.price ||
+    currency !== baseline.currency ||
+    trialNum !== baseline.trialDays;
 
   const canSave = priceValid && trialValid && dirty && !pending;
 
@@ -59,7 +68,9 @@ export function PlanConfigForm({ plan }: { plan: SaasPlan }) {
     if (error) {
       setStatus("error");
     } else {
+      setBaseline({ price: priceNum, currency, trialDays: trialNum });
       setStatus("saved");
+      router.refresh();
     }
     setPending(false);
   };
