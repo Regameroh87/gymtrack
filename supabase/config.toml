@@ -226,6 +226,21 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Plantillas de email con código OTP (no magic link). Incluir {{ .Token }} hace
+# que Supabase envíe el código de 6 dígitos. IMPORTANTE: en producción estas
+# plantillas se configuran en el Dashboard (Authentication > Email Templates);
+# esto sólo aplica en local (supabase start) y como fuente de verdad versionada.
+
+# "Confirm signup": usuario nuevo (registro self-service de gyms en /registro).
+[auth.email.template.confirmation]
+subject = "Tu código de GymTrack"
+content_path = "./supabase/templates/confirmation.html"
+
+# "Magic Link": usuario existente (login por OTP).
+[auth.email.template.magic_link]
+subject = "Tu código de GymTrack"
+content_path = "./supabase/templates/magic-link.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
