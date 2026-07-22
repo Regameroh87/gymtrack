@@ -17,3 +17,18 @@ export async function getSelfServiceSignupEnabled(): Promise<boolean> {
   }
   return data?.self_service_signup_enabled === true;
 }
+
+// Días de prueba del plan activo, para textos públicos (landing). Anon puede
+// leer saas_plans is_active=true por RLS. Ante error, cae al default histórico.
+export async function getPublicTrialDays(): Promise<number> {
+  const { data, error } = await supabase
+    .from("saas_plans")
+    .select("trial_days")
+    .eq("is_active", true)
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+
+  if (error || data?.trial_days == null) return 14;
+  return data.trial_days;
+}

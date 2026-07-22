@@ -4,7 +4,13 @@ import { HERO } from "@/lib/content";
 import Link from "next/link";
 import { MAILTO_HREF } from "@/lib/site";
 
-export default function Hero({ signupEnabled = false }: { signupEnabled?: boolean }) {
+export default function Hero({
+  signupEnabled = false,
+  trialDays = 14,
+}: {
+  signupEnabled?: boolean;
+  trialDays?: number;
+}) {
   return (
     <section id="top" className="w-full overflow-hidden">
       <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:py-24">
@@ -33,7 +39,7 @@ export default function Hero({ signupEnabled = false }: { signupEnabled?: boolea
                   href="/registro"
                   className="flex items-center rounded-2xl border border-white/20 bg-brandPrimary-700 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-brandPrimary-600"
                 >
-                  <span className="mr-2">Probá gratis 14 días</span>
+                  <span className="mr-2">Probá gratis {trialDays} días</span>
                   <ArrowRight size={18} aria-hidden="true" />
                 </Link>
               ) : (

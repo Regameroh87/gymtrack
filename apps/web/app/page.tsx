@@ -6,7 +6,10 @@ import Segments from "@/components/landing/segments";
 import Cta from "@/components/landing/cta";
 import Footer from "@/components/landing/footer";
 import { SITE_URL, BRAND, CONTACT } from "@/lib/site";
-import { getSelfServiceSignupEnabled } from "@/lib/platform-settings";
+import {
+  getSelfServiceSignupEnabled,
+  getPublicTrialDays,
+} from "@/lib/platform-settings";
 
 // ISR: la landing es estática pero relee el kill switch del signup cada 5 min,
 // así el toggle de platform/billing se propaga sin redeploy.
@@ -56,13 +59,16 @@ function JsonLd() {
 }
 
 export default async function HomePage() {
-  const signupEnabled = await getSelfServiceSignupEnabled();
+  const [signupEnabled, trialDays] = await Promise.all([
+    getSelfServiceSignupEnabled(),
+    getPublicTrialDays(),
+  ]);
   return (
     <div className="min-h-screen bg-brandPrimary-950">
       <JsonLd />
       <Navbar />
       <main>
-        <Hero signupEnabled={signupEnabled} />
+        <Hero signupEnabled={signupEnabled} trialDays={trialDays} />
         <Features />
         <Segments />
         <Cta signupEnabled={signupEnabled} />
