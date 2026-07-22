@@ -81,11 +81,14 @@ const STATUS_CONFIG: Record<
 };
 
 function getDescription(sub: GymSaasSubscription): string {
+  const hasCard = !!sub.mp_preapproval_id;
   switch (sub.status) {
     case "pending":
       return "Tu gym fue creado pero aún no tiene una suscripción activa. Activá el plan para empezar a usarlo.";
     case "trialing":
-      return `Estás en el período de prueba gratuita. Tu primer cobro será el ${fmt(sub.trial_ends_at)}.`;
+      return hasCard
+        ? `Estás en el período de prueba gratuita. Ya cargaste tu método de pago: el primer cobro será el ${fmt(sub.trial_ends_at)}.`
+        : `Estás en el período de prueba gratuita hasta el ${fmt(sub.trial_ends_at)}. Agregá tu método de pago ahora para que el servicio no se corte cuando termine la prueba. No se te cobra nada hasta esa fecha.`;
     case "active":
       return `Tu suscripción está activa. Próximo cobro: ${fmt(sub.current_period_end)}.`;
     case "past_due":
@@ -101,6 +104,12 @@ function getDescription(sub: GymSaasSubscription): string {
 
 const canActivate = (s: SaasSubscriptionStatus) =>
   s === "pending" || s === "expired" || s === "canceled";
+
+// Durante el trial se puede cargar la tarjeta de forma anticipada mientras no
+// haya un preapproval de MP asociado (el checkout respeta los días restantes y
+// programa el primer cobro para el fin del trial).
+const canAddCardDuringTrial = (sub: GymSaasSubscription | null | undefined) =>
+  sub?.status === "trialing" && !sub.mp_preapproval_id;
 
 // ── page sub-components ───────────────────────────────────────────────────────
 
@@ -284,7 +293,7 @@ export default function SuscripcionPage() {
             )}
 
             {/* Acción principal */}
-            {canActivate(status) && (
+            {(canActivate(status) || canAddCardDuringTrial(sub)) && (
               <Button
                 variant="primary"
                 size="lg"
@@ -294,17 +303,21 @@ export default function SuscripcionPage() {
               >
                 {status === "canceled"
                   ? "Reactivar suscripción"
-                  : "Activar suscripción"}
+                  : status === "trialing"
+                    ? "Agregar método de pago"
+                    : "Activar suscripción"}
               </Button>
             )}
 
-            {(status === "trialing" || status === "active") && (
+            {/* Gestión: solo cuando ya hay una suscripción cargada en MP */}
+            {(status === "active" ||
+              (status === "trialing" && !!sub?.mp_preapproval_id)) && (
               <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
                 <Info size={14} color="#2563eb" className="mt-0.5 shrink-0" />
                 <p className="font-manrope text-[12px] leading-5 text-blue-800">
-                  Para cancelar o modificar tu suscripción, accedé desde tu
-                  cuenta de MercadoPago en la sección{" "}
-                  <strong>Suscripciones</strong>.
+                  Tu método de pago ya está cargado. Para cambiar la tarjeta o
+                  cancelar la suscripción, entrá a tu cuenta de{" "}
+                  <strong>MercadoPago → Tu perfil → Suscripciones</strong>.
                 </p>
               </div>
             )}

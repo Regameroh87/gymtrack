@@ -17,6 +17,7 @@ export type GymSaasSubscription = {
   trial_ends_at: string | null;
   current_period_end: string | null;
   canceled_at: string | null;
+  mp_preapproval_id: string | null;
   plan: {
     name: string;
     trial_days: number;
@@ -35,7 +36,7 @@ export function useGymSaasSubscription(gymId: string | null | undefined) {
       const { data, error } = await supabase
         .from("gym_saas_subscriptions")
         .select(
-          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, plan:saas_plans(name, trial_days, price, currency)",
+          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, plan:saas_plans(name, trial_days, price, currency)",
         )
         .eq("gym_id", gymId!)
         .maybeSingle();
