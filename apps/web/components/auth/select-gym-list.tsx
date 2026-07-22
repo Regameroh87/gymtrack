@@ -11,7 +11,11 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { isStaffRole, ROLE_LABELS } from "@/lib/auth/roles";
 import { APP_URL } from "@/lib/site";
 
-export function SelectGymList() {
+export function SelectGymList({
+  signupEnabled = false,
+}: {
+  signupEnabled?: boolean;
+}) {
   const { signOut } = useAuth();
   const { gymOptions, isSuperAdmin, switchGym } = useActiveGym();
 
@@ -42,6 +46,18 @@ export function SelectGymList() {
             app mobile
           </a>
           .
+          {signupEnabled && (
+            <p className="mt-3">
+              ¿Tenés tu propio gimnasio o entrenás alumnos?{" "}
+              <a
+                href="/registro"
+                className="font-medium text-brandPrimary-700 underline-offset-2 hover:underline"
+              >
+                Crealo gratis acá
+              </a>
+              .
+            </p>
+          )}
         </div>
       ) : (
         <ul className="flex flex-col gap-2">

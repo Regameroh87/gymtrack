@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { Mail, Phone, ArrowRight } from "lucide-react";
 import { CTA } from "@/lib/content";
 import { CONTACT, MAILTO_HREF, WHATSAPP_HREF } from "@/lib/site";
 
-export default function Cta() {
+export default function Cta({ signupEnabled = false }: { signupEnabled?: boolean }) {
   return (
     <section id="contact" className="w-full">
       <div className="mx-auto w-full max-w-[1100px] px-6 py-16">
@@ -22,13 +23,26 @@ export default function Cta() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              {signupEnabled && (
+                <Link
+                  href="/registro"
+                  className="flex items-center rounded-2xl bg-white px-6 py-4 font-manrope text-base font-bold text-brandPrimary-600 transition hover:scale-[1.02]"
+                >
+                  <span className="mr-2">Creá tu gimnasio gratis</span>
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              )}
               <a
                 href={MAILTO_HREF}
-                className="flex items-center rounded-2xl bg-white px-6 py-4 font-manrope text-base font-bold text-brandPrimary-600 transition hover:scale-[1.02]"
+                className={
+                  signupEnabled
+                    ? "flex items-center rounded-2xl border border-white/30 bg-white/10 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-white/20"
+                    : "flex items-center rounded-2xl bg-white px-6 py-4 font-manrope text-base font-bold text-brandPrimary-600 transition hover:scale-[1.02]"
+                }
               >
                 <Mail size={18} aria-hidden="true" />
                 <span className="mx-2">{CTA.primary}</span>
-                <ArrowRight size={18} aria-hidden="true" />
+                {!signupEnabled && <ArrowRight size={18} aria-hidden="true" />}
               </a>
               <a
                 href={WHATSAPP_HREF}

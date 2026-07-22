@@ -17,13 +17,16 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 // Componentes
 import { AuthSplit, AuthCompactBrand } from "@/components/auth/auth-split";
-
-const EMPTY_CODE = ["", "", "", "", "", ""];
+import {
+  OtpCodeInput,
+  EMPTY_OTP_CODE,
+  type OtpCodeInputHandle,
+} from "@/components/auth/otp-code-input";
 
 export function VerifyForm({ email, next }: { email: string; next?: string }) {
   const router = useRouter();
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [code, setCode] = useState<string[]>(EMPTY_CODE);
+  const otpRef = useRef<OtpCodeInputHandle | null>(null);
+  const [code, setCode] = useState<string[]>(EMPTY_OTP_CODE);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -55,8 +58,8 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
 
   const handleResend = async () => {
     setError(null);
-    setCode(EMPTY_CODE);
-    inputRefs.current[0]?.focus();
+    setCode(EMPTY_OTP_CODE);
+    otpRef.current?.focusFirst();
     try {
       const supabase = getBrowserSupabase();
       await supabase.auth.signInWithOtp({
@@ -66,35 +69,6 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
     } catch {
       // Reenvío best-effort; el usuario puede reintentar.
     }
-  };
-
-  const setDigit = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
-    setCode((prev) => {
-      const newCode = [...prev];
-      newCode[index] = digit;
-      return newCode;
-    });
-    if (digit && index < 5) inputRefs.current[index + 1]?.focus();
-  };
-
-  const handleKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === "Backspace" && code[index] === "" && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-    e.preventDefault();
-    const newCode = [...EMPTY_CODE];
-    for (let i = 0; i < 6; i++) newCode[i] = pasted[i] || "";
-    setCode(newCode);
-    inputRefs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
   return (
@@ -118,24 +92,7 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
       </div>
 
       <form onSubmit={handleVerify}>
-        <div className="mb-2 flex w-full flex-row justify-center gap-3">
-          {code.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el;
-              }}
-              inputMode="numeric"
-              autoComplete={index === 0 ? "one-time-code" : "off"}
-              maxLength={1}
-              value={digit}
-              onChange={(e) => setDigit(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              onPaste={handlePaste}
-              className="h-14 w-12 rounded-xl border border-[#4a44e4]/40 bg-[#0c006a]/40 text-center font-manrope text-2xl font-bold text-white outline-none focus:border-[#c2c1ff]"
-            />
-          ))}
-        </div>
+        <OtpCodeInput ref={otpRef} code={code} onChange={setCode} />
 
         <div className="mb-2 min-h-[50px] w-full justify-center pt-2">
           {error ? (

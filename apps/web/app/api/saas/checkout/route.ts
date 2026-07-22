@@ -80,11 +80,37 @@ export async function POST(req: Request) {
       );
     }
 
-    // Fecha de inicio del primer cobro = hoy + trial_days
+    const svcClient = getServiceClient();
+
+    const { data: existingSub } = await svcClient
+      .from("gym_saas_subscriptions")
+      .select("id, status, trial_ends_at")
+      .eq("gym_id", gym_id)
+      .maybeSingle();
+
+    // Fecha del primer cobro:
+    //  - trialing con trial vigente (self-service sin tarjeta): respeta el trial
+    //    restante — el webhook al autorizar setea trial_ends_at = start_date,
+    //    que así coincide y no resetea el trial.
+    //  - expired/canceled/past_due: cobro inmediato; un trial nuevo acá sería
+    //    el vector de trial infinito re-suscribiendo el mismo gym.
+    //  - pending (alta de plataforma, sin trial corrido): trial completo.
     const trialDays = plan.trial_days ?? 14;
-    const startDate = new Date(
-      Date.now() + trialDays * 86_400_000,
-    ).toISOString();
+    let startDate: string;
+    if (
+      existingSub?.status === "trialing" &&
+      existingSub.trial_ends_at &&
+      new Date(existingSub.trial_ends_at) > new Date()
+    ) {
+      startDate = existingSub.trial_ends_at;
+    } else if (
+      existingSub &&
+      ["expired", "canceled", "past_due"].includes(existingSub.status)
+    ) {
+      startDate = new Date(Date.now() + 10 * 60_000).toISOString();
+    } else {
+      startDate = new Date(Date.now() + trialDays * 86_400_000).toISOString();
+    }
 
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL ?? "https://gymtrack.app";
@@ -132,20 +158,27 @@ export async function POST(req: Request) {
       );
     }
 
-    // Guardar el mp_preapproval_id en la suscripción del gym
-    const svcClient = getServiceClient();
-    await svcClient
-      .from("gym_saas_subscriptions")
-      .upsert(
-        {
-          gym_id,
+    // Guardar el mp_preapproval_id en la suscripción del gym. Si la fila ya
+    // existe NO se toca status: pisarlo a 'pending' degradaría a un gym en
+    // trialing a read-only (políticas RESTRICTIVE) hasta que llegue el webhook.
+    if (existingSub) {
+      await svcClient
+        .from("gym_saas_subscriptions")
+        .update({
           plan_id: plan.id,
-          status: "pending",
           mp_preapproval_id: mpPreapprovalId,
           payer_email: user.email,
-        },
-        { onConflict: "gym_id" },
-      );
+        })
+        .eq("id", existingSub.id);
+    } else {
+      await svcClient.from("gym_saas_subscriptions").insert({
+        gym_id,
+        plan_id: plan.id,
+        status: "pending",
+        mp_preapproval_id: mpPreapprovalId,
+        payer_email: user.email,
+      });
+    }
 
     return NextResponse.json({ init_point });
   } catch (err: unknown) {

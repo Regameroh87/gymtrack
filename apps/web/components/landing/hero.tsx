@@ -4,7 +4,7 @@ import { HERO } from "@/lib/content";
 import Link from "next/link";
 import { MAILTO_HREF } from "@/lib/site";
 
-export default function Hero() {
+export default function Hero({ signupEnabled = false }: { signupEnabled?: boolean }) {
   return (
     <section id="top" className="w-full overflow-hidden">
       <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:py-24">
@@ -28,13 +28,23 @@ export default function Hero() {
             </p>
 
             <div className="mt-9 flex flex-wrap justify-center gap-3 lg:justify-start">
-              <a
-                href={MAILTO_HREF}
-                className="flex items-center rounded-2xl border border-white/20 bg-brandPrimary-700 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-brandPrimary-600"
-              >
-                <span className="mr-2">{HERO.primaryCta}</span>
-                <ArrowRight size={18} aria-hidden="true" />
-              </a>
+              {signupEnabled ? (
+                <Link
+                  href="/registro"
+                  className="flex items-center rounded-2xl border border-white/20 bg-brandPrimary-700 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-brandPrimary-600"
+                >
+                  <span className="mr-2">Probá gratis 14 días</span>
+                  <ArrowRight size={18} aria-hidden="true" />
+                </Link>
+              ) : (
+                <a
+                  href={MAILTO_HREF}
+                  className="flex items-center rounded-2xl border border-white/20 bg-brandPrimary-700 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-brandPrimary-600"
+                >
+                  <span className="mr-2">{HERO.primaryCta}</span>
+                  <ArrowRight size={18} aria-hidden="true" />
+                </a>
+              )}
               <Link
                 href="/login"
                 className="rounded-2xl border border-white/20 bg-white/5 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-white/10"

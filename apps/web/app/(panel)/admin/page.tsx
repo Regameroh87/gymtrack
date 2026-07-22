@@ -5,7 +5,7 @@
 // (filtrados por rol) + acciones rápidas + próximamente. Navegación con Link.
 
 // Next
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 
 // Iconos
@@ -27,6 +27,7 @@ import { ui } from "@gymtrack/core/colors";
 import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { StatCard } from "@/components/ui/stat-card";
+import { WelcomeTrialDialog } from "@/components/admin/welcome-trial-dialog";
 
 type Stat = {
   label: string;
@@ -114,6 +115,11 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-4 pb-14 md:p-9">
+      {/* Bienvenida post-signup self-service (?bienvenida=1) */}
+      <Suspense fallback={null}>
+        <WelcomeTrialDialog />
+      </Suspense>
+
       {/* Top bar */}
       <div className="mb-7 flex flex-col items-stretch justify-between gap-3 md:flex-row md:items-end md:gap-0">
         <div>
