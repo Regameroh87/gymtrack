@@ -44,9 +44,11 @@ function getOtpErrorMessage(err: unknown): string {
 export function SignupForm({
   isLoggedIn,
   sessionEmail,
+  trialDays = 14,
 }: {
   isLoggedIn: boolean;
   sessionEmail?: string | null;
+  trialDays?: number;
 }) {
   const router = useRouter();
   const [gymName, setGymName] = useState("");
@@ -107,7 +109,7 @@ export function SignupForm({
   return (
     <AuthSplit
       heading={"Tu gimnasio,\nonline en minutos."}
-      subtitle="Creá tu cuenta, sumá a tus socios y gestioná actividades, pagos y asistencia desde el primer día. 14 días gratis, sin tarjeta."
+      subtitle={`Creá tu cuenta, sumá a tus socios y gestioná actividades, pagos y asistencia desde el primer día. ${trialDays} días gratis, sin tarjeta.`}
     >
       <AuthCompactBrand />
 
@@ -116,7 +118,7 @@ export function SignupForm({
           Creá tu gimnasio
         </h1>
         <p className="mt-2 font-manrope text-base text-[#c2c1ff]">
-          Probalo gratis 14 días. No te pedimos tarjeta.
+          Probalo gratis {trialDays} días. No te pedimos tarjeta.
         </p>
       </div>
 

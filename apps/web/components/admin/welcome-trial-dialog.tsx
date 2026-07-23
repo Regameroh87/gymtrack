@@ -4,17 +4,30 @@
 // el dashboard se abre con ?bienvenida=1 (redirect de /registro tras crear el
 // gym); al cerrarlo se limpia el query param para que un refresh no lo repita.
 
+// Next
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+
+// Librerías
 import { PartyPopper, X } from "lucide-react";
+
+// Contextos y hooks
+import { useActiveGym } from "@/components/auth/active-gym-provider";
+import { useGymSaasSubscription } from "@/lib/hooks/use-saas-subscription";
 
 export function WelcomeTrialDialog() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { gymId } = useActiveGym();
+  const { data: subscription } = useGymSaasSubscription(gymId);
   const open = searchParams.get("bienvenida") === "1";
 
   if (!open) return null;
 
+  // trial_days del plan real del gym (mismo dato que la landing/registro). La
+  // query ya viene cacheada del banner del shell; el fallback cubre el instante
+  // de carga.
+  const trialDays = subscription?.plan?.trial_days ?? 14;
   const dismiss = () => router.replace("/admin", { scroll: false });
 
   return (
@@ -37,7 +50,7 @@ export function WelcomeTrialDialog() {
           ¡Tu gimnasio ya está online!
         </h2>
         <p className="mt-3 font-manrope text-sm leading-relaxed text-gray-500">
-          Tu prueba gratis de 14 días empezó. Sumá a tus socios, cargá tus
+          Tu prueba gratis de {trialDays} días empezó. Sumá a tus socios, cargá tus
           actividades y explorá el panel. Cuando quieras, activá tu suscripción
           para seguir después del trial.
         </p>

@@ -1,11 +1,14 @@
-// Signup self-service: el dueño crea su propio gimnasio con 14 días de trial
+// Signup self-service: el dueño crea su propio gimnasio con el trial vigente
 // sin tarjeta. Ruta pública (con o sin sesión: un usuario logueado puede crear
 // otro gym — multi-gym). Gateada por el kill switch de platform_settings; el
 // enforcement real está en la edge function, acá solo se elige qué mostrar.
 
 import { Mail } from "lucide-react";
 
-import { getSelfServiceSignupEnabled } from "@/lib/platform-settings";
+import {
+  getSelfServiceSignupEnabled,
+  getPublicTrialDays,
+} from "@/lib/platform-settings";
 import { getSessionContext } from "@/lib/auth/session";
 import { MAILTO_HREF, CONTACT } from "@/lib/site";
 import { AuthSplit, AuthCompactBrand } from "@/components/auth/auth-split";
@@ -15,11 +18,13 @@ import { SignupForm } from "@/components/auth/signup-form";
 // congelado en el HTML estático). El kill switch debe leerse por request.
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Creá tu gimnasio",
-  description:
-    "Registrá tu gimnasio en GymTrack y probalo gratis 14 días, sin tarjeta.",
-};
+export async function generateMetadata() {
+  const trialDays = await getPublicTrialDays();
+  return {
+    title: "Creá tu gimnasio",
+    description: `Registrá tu gimnasio en GymTrack y probalo gratis ${trialDays} días, sin tarjeta.`,
+  };
+}
 
 function SignupClosedNotice() {
   return (
@@ -55,7 +60,10 @@ function SignupClosedNotice() {
 }
 
 export default async function RegistroPage() {
-  const enabled = await getSelfServiceSignupEnabled();
+  const [enabled, trialDays] = await Promise.all([
+    getSelfServiceSignupEnabled(),
+    getPublicTrialDays(),
+  ]);
   if (!enabled) return <SignupClosedNotice />;
 
   const ctx = await getSessionContext();
@@ -63,6 +71,7 @@ export default async function RegistroPage() {
     <SignupForm
       isLoggedIn={!!ctx.authUser}
       sessionEmail={ctx.authUser?.email ?? null}
+      trialDays={trialDays}
     />
   );
 }
