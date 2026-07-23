@@ -20,7 +20,7 @@ import {
 } from "@/lib/hooks/use-saas-subscription";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import { isAdminRole } from "@/lib/auth/roles";
+import { isOwnerRole } from "@/lib/auth/roles";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -152,9 +152,9 @@ export default function SuscripcionPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const isAdmin = isAdminRole(role);
+  const isOwner = isOwnerRole(role);
 
-  if (!isAdmin) {
+  if (!isOwner) {
     return (
       <div className="p-4 md:p-9">
         <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white py-24 shadow-card-brand">
@@ -165,7 +165,7 @@ export default function SuscripcionPage() {
             Sin permiso
           </p>
           <p className="font-manrope text-xs text-ui-text-muted">
-            Esta sección es solo para administradores del gimnasio.
+            Esta sección es solo para el dueño del gimnasio.
           </p>
         </div>
       </div>

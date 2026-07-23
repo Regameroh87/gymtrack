@@ -4,6 +4,7 @@ import { AlertCircle, AlertTriangle, XCircle, Info } from "lucide-react";
 
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useSubscriptionBanner } from "@/lib/hooks/use-saas-subscription";
+import { isOwnerRole } from "@/lib/auth/roles";
 
 const BANNER_CONFIG = {
   trial_ending_soon: {
@@ -39,9 +40,12 @@ const BANNER_CONFIG = {
 } as const;
 
 export function SaasSubscriptionBanner() {
-  const { gymId } = useActiveGym();
+  const { gymId, role } = useActiveGym();
   const { kind, daysLeft } = useSubscriptionBanner(gymId);
 
+  // El billing del gym es del owner: ni admin/coach ni super_admin ven el banner
+  // (su CTA lleva a /admin/suscripcion, que solo el owner puede gestionar).
+  if (!isOwnerRole(role)) return null;
   if (kind === "none") return null;
 
   const cfg = BANNER_CONFIG[kind];

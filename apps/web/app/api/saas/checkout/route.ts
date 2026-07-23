@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       .eq("gym_id", gym_id)
       .eq("user_id", user.id)
       .eq("status", "active")
-      .in("role", ["owner", "admin"])
+      .eq("role", "owner")
       .maybeSingle();
 
     if (!membership) {

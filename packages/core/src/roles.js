@@ -37,6 +37,9 @@ export const DEFAULT_ROLE = ROLES.MEMBER;
 
 export const isStaffRole = (role) => STAFF_ROLES.includes(role);
 export const isAdminRole = (role) => ADMIN_ROLES.includes(role);
+// Solo el dueño del gym (no admin ni super_admin). Se usa para acciones que son
+// del titular de la cuenta, como la suscripción/billing SaaS del gym.
+export const isOwnerRole = (role) => role === ROLES.OWNER;
 export const isSuperAdminRole = (role) => role === ROLES.SUPER_ADMIN;
 
 // Permisos por módulo del panel (clave = `path` de la ruta /admin/<path>).

@@ -35,7 +35,7 @@ import {
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymPermissions } from "@/components/auth/use-gym-permissions";
-import { isAdminRole } from "@/lib/auth/roles";
+import { isOwnerRole } from "@/lib/auth/roles";
 import { mediaUrl } from "@/lib/media";
 import { MediaImage } from "@/components/ui/media-image";
 import { SaasSubscriptionBanner } from "@/components/admin/saas-subscription-banner";
@@ -45,7 +45,7 @@ type NavItem = {
   label: string;
   path: string;
   comingSoon?: boolean;
-  adminOnly?: boolean;
+  ownerOnly?: boolean;
 };
 
 type NavSection = {
@@ -83,7 +83,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Sistema",
     items: [
       { icon: Database, label: "Datos", path: "data" },
-      { icon: CreditCard, label: "Suscripción", path: "suscripcion", adminOnly: true },
+      { icon: CreditCard, label: "Suscripción", path: "suscripcion", ownerOnly: true },
       { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
       { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
     ],
@@ -110,7 +110,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
     items: section.items.filter(
       (item) =>
         item.path === "" ||
-        (item.adminOnly ? isAdminRole(role) : canAccessModule(item.path)),
+        (item.ownerOnly ? isOwnerRole(role) : canAccessModule(item.path)),
     ),
   })).filter((section) => section.items.length > 0);
 

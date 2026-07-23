@@ -17,6 +17,7 @@ export {
   unlocksModule,
   isStaffRole,
   isAdminRole,
+  isOwnerRole,
   isSuperAdminRole,
 } from "@gymtrack/core/roles";
 

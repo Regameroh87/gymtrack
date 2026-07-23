@@ -138,6 +138,7 @@ declare module "@gymtrack/core/roles" {
   export const ROLE_LABELS: Record<string, string>;
   export function isStaffRole(role: string | null | undefined): boolean;
   export function isAdminRole(role: string | null | undefined): boolean;
+  export function isOwnerRole(role: string | null | undefined): boolean;
   export function isSuperAdminRole(role: string | null | undefined): boolean;
   export function unlocksModule(
     role: string | null | undefined,

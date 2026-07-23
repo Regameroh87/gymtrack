@@ -14,15 +14,18 @@ import { PartyPopper, X } from "lucide-react";
 // Contextos y hooks
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymSaasSubscription } from "@/lib/hooks/use-saas-subscription";
+import { isOwnerRole } from "@/lib/auth/roles";
 
 export function WelcomeTrialDialog() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { gymId } = useActiveGym();
+  const { gymId, role } = useActiveGym();
   const { data: subscription } = useGymSaasSubscription(gymId);
   const open = searchParams.get("bienvenida") === "1";
 
   if (!open) return null;
+  // La activación de la suscripción es del owner; para el resto no hay CTA.
+  if (!isOwnerRole(role)) return null;
 
   // trial_days del plan real del gym (mismo dato que la landing/registro). La
   // query ya viene cacheada del banner del shell; el fallback cubre el instante
