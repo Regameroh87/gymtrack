@@ -25,7 +25,15 @@ export default function Verify() {
     },
     onError: (error) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      console.log("Error result:", error.message, error.status);
+      // En errores no-expirados (inválido/genérico) limpiamos las cajas y
+      // devolvemos el foco a la primera; el mensaje de error se mantiene visible.
+      const isExpired =
+        error?.status === 400 &&
+        (error.message ?? "").toLowerCase().includes("expired");
+      if (!isExpired) {
+        form.reset();
+        inputRefs.current[0]?.focus();
+      }
     },
   });
   //console.log("VERIFY", email);
@@ -43,7 +51,6 @@ export default function Verify() {
             <Pressable
               className="p-2 rounded-xl"
               onPress={() => {
-                //DEBO BORRAR EL ESTADO DEL INPUT, LOS ERRORES DE LA PETICION Y REENVIAR CODIGO
                 reset();
                 form.reset();
                 sendCodeVerify(email);
@@ -73,7 +80,6 @@ export default function Verify() {
         <Pressable
           className="p-2 rounded-xl"
           onPress={() => {
-            //DEBO BORRAR EL ESTADO DEL INPUT, LOS ERRORES DE LA PETICION Y REENVIAR CODIGO
             reset();
             form.reset();
             sendCodeVerify(email);
@@ -93,7 +99,6 @@ export default function Verify() {
       code: ["", "", "", "", "", ""],
     },
     onSubmit: async ({ value }) => {
-      console.log("Código ingresado:", value.code.join(""));
       mutate(value.code.join(""));
     },
   });
@@ -151,9 +156,17 @@ export default function Verify() {
                         newCode[index] = text;
                         field.setValue(newCode);
 
+                        // Al reescribir, limpiar el error de la verificación anterior
+                        if (error) reset();
+
                         // Si escribió algo, saltar al siguiente
                         if (text.length > 0 && index < 5) {
                           inputRefs.current[index + 1]?.focus();
+                        }
+
+                        // Auto-submit al completar los 6 dígitos
+                        if (newCode.every((d) => d !== "") && !isPending) {
+                          form.handleSubmit();
                         }
                       }}
                       onKeyPress={({ nativeEvent }) => {

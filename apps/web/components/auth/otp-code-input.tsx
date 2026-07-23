@@ -13,8 +13,12 @@ export interface OtpCodeInputHandle {
 
 export const OtpCodeInput = forwardRef<
   OtpCodeInputHandle,
-  { code: string[]; onChange: (code: string[]) => void }
->(function OtpCodeInput({ code, onChange }, ref) {
+  {
+    code: string[];
+    onChange: (code: string[]) => void;
+    onComplete?: (code: string) => void;
+  }
+>(function OtpCodeInput({ code, onChange, onComplete }, ref) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useImperativeHandle(ref, () => ({
@@ -27,6 +31,7 @@ export const OtpCodeInput = forwardRef<
     newCode[index] = digit;
     onChange(newCode);
     if (digit && index < 5) inputRefs.current[index + 1]?.focus();
+    if (newCode.every((d) => d !== "")) onComplete?.(newCode.join(""));
   };
 
   const handleKeyDown = (
@@ -46,6 +51,7 @@ export const OtpCodeInput = forwardRef<
     for (let i = 0; i < 6; i++) newCode[i] = pasted[i] || "";
     onChange(newCode);
     inputRefs.current[Math.min(pasted.length, 5)]?.focus();
+    if (newCode.every((d) => d !== "")) onComplete?.(newCode.join(""));
   };
 
   return (

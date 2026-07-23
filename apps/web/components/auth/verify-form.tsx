@@ -32,9 +32,8 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
 
   const canSubmit = code.every((d) => d !== "");
 
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit || pending) return;
+  const submitCode = async (token: string) => {
+    if (pending) return;
 
     setError(null);
     setPending(true);
@@ -42,7 +41,7 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
       const supabase = getBrowserSupabase();
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
-        token: code.join("").trim(),
+        token: token.trim(),
         type: "email",
       });
       if (verifyError) throw verifyError;
@@ -53,7 +52,19 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
     } catch (err) {
       setError(getVerifyError(err));
       setPending(false);
+      // En errores no-expirados (inválido/genérico) limpiamos las cajas y
+      // devolvemos el foco a la primera; el mensaje de error se mantiene visible.
+      if (!isExpiredError(err)) {
+        setCode(EMPTY_OTP_CODE);
+        otpRef.current?.focusFirst();
+      }
     }
+  };
+
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    submitCode(code.join(""));
   };
 
   const handleResend = async () => {
@@ -92,7 +103,17 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
       </div>
 
       <form onSubmit={handleVerify}>
-        <OtpCodeInput ref={otpRef} code={code} onChange={setCode} />
+        <OtpCodeInput
+          ref={otpRef}
+          code={code}
+          onChange={(c) => {
+            setCode(c);
+            if (error) setError(null);
+          }}
+          onComplete={(token) => {
+            if (!pending) submitCode(token);
+          }}
+        />
 
         <div className="mb-2 min-h-[50px] w-full justify-center pt-2">
           {error ? (
@@ -148,6 +169,13 @@ export function VerifyForm({ email, next }: { email: string; next?: string }) {
       </p>
     </AuthSplit>
   );
+}
+
+// Un código expirado conserva su flujo de "Reenviar" (no tiene sentido limpiar
+// las cajas si el código ya venció); el resto de errores sí auto-limpia.
+function isExpiredError(err: unknown): boolean {
+  const e = err as { status?: number; message?: string };
+  return e?.status === 400 && (e.message ?? "").toLowerCase().includes("expired");
 }
 
 // Errores de verifyOtp mapeados como en Expo verify.web.jsx.
