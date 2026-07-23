@@ -11,6 +11,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { createServerSupabase } from "@/lib/supabase-server";
 import { SUPABASE_URL } from "@/lib/supabase-config";
+import { APP_URL } from "@/lib/site";
 
 const MP_API = "https://api.mercadopago.com";
 
@@ -112,9 +113,9 @@ export async function POST(req: Request) {
       startDate = new Date(Date.now() + trialDays * 86_400_000).toISOString();
     }
 
-    const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL ?? "https://gymtrack.app";
-    const backUrl = `${appUrl}/api/saas/checkout/callback`;
+    // APP_URL (lib/site) resuelve NEXT_PUBLIC_APP_URL con el dominio real de la
+    // app como default; evita que el back_url caiga a un dominio equivocado.
+    const backUrl = `${APP_URL}/api/saas/checkout/callback`;
 
     // Crear preapproval en MP (status=pending → MP devuelve init_point)
     const mpRes = await fetch(`${MP_API}/preapproval`, {
