@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { Tag } from "lucide-react";
 
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { revalidateLanding } from "@/lib/platform-actions";
 
 export type SaasPlan = {
   id: string;
@@ -71,6 +72,9 @@ export function PlanConfigForm({ plan }: { plan: SaasPlan }) {
       setBaseline({ price: priceNum, currency, trialDays: trialNum });
       setStatus("saved");
       router.refresh();
+      // Los días de trial alimentan la landing (ISR): revalidar para que el
+      // número nuevo se vea sin esperar los 5 min del revalidate.
+      await revalidateLanding();
     }
     setPending(false);
   };

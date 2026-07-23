@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Globe, Lock } from "lucide-react";
 
 import { getBrowserSupabase } from "@/lib/supabase-browser";
+import { revalidateLanding } from "@/lib/platform-actions";
 
 export function SignupToggle({ initialEnabled }: { initialEnabled: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled);
@@ -28,6 +29,9 @@ export function SignupToggle({ initialEnabled }: { initialEnabled: boolean }) {
       setError("No se pudo actualizar el estado. Intentá de nuevo.");
     } else {
       setEnabled(next);
+      // Invalida el cache ISR de la landing para que el botón refleje el toggle
+      // en el acto (sin esperar los 5 min del revalidate).
+      await revalidateLanding();
     }
     setPending(false);
   };
