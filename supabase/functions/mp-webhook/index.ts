@@ -229,6 +229,27 @@ async function handleAuthorizedPaymentEvent(paymentId: string, mpEventId: string
     return
   }
 
+  // MP notifica el authorized_payment tanto si el cobro salió como si lo
+  // rechazaron (status 'recycling' mientras reintenta). Activar sin mirar el
+  // resultado regala un período: pasó con el cobro rechazado por
+  // cc_rejected_high_risk, que igual dejó current_period_end a 30 días.
+  const paymentStatus = (payment.payment as { status?: string } | undefined)?.status
+
+  if (paymentStatus !== 'approved') {
+    // past_due: MP sigue reintentando; si termina cobrando llega otro evento
+    // con approved y ahí sí se extiende el período.
+    await supabaseAdmin
+      .from('gym_saas_subscriptions')
+      .update({ status: 'past_due' })
+      .eq('id', gymSub.id)
+
+    await logEvent(gymSub.id, mpEventId, 'subscription_authorized_payment', rawBody)
+    console.log(
+      `[mp-webhook] gym ${gymSub.gym_id} → past_due (pago ${paymentId} no aprobado: ${paymentStatus ?? 'sin status'})`,
+    )
+    return
+  }
+
   // Calcular el fin del período actual (próximos 30 días)
   const currentPeriodEnd = new Date(Date.now() + 30 * 86400_000).toISOString()
 

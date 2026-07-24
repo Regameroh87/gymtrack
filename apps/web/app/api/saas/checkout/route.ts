@@ -5,7 +5,7 @@
 // Variables de entorno requeridas (server-side):
 //   MP_ACCESS_TOKEN          – access token de la app MP de GymTrack
 //   SUPABASE_SERVICE_ROLE_KEY – para escribir en gym_saas_subscriptions sin RLS
-// Opcional (solo pruebas, requiere MP_ACCESS_TOKEN de un vendedor de prueba):
+// Solo pruebas (requiere MP_ACCESS_TOKEN de un vendedor de prueba):
 //   MP_TEST_PAYER_EMAIL      – email del comprador de prueba de MP; reemplaza al
 //                              del owner como payer_email. Se ignora cuando
 //                              NODE_ENV es "production".
@@ -157,6 +157,10 @@ export async function POST(req: Request) {
           transaction_amount: plan.price,
           currency_id: plan.currency ?? "ARS",
         },
+        // OJO: /preapproval NO acepta notification_url (MP lo ignora y ni
+        // siquiera lo devuelve en el objeto). Los webhooks de suscripciones se
+        // configuran por APLICACIÓN en el panel de MP: si cambia la app
+        // cobradora, hay que cargar la URL allá o no llega ninguna notificación.
         back_url: backUrl,
         status: "pending",
       }),
