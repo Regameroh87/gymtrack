@@ -4,8 +4,12 @@
 //   subscription_authorized_payment → pago exitoso (→ active, actualiza period_end)
 //
 // Variables de entorno requeridas:
-//   MP_ACCESS_TOKEN     – access token de la app MP de GymTrack
-//   MP_WEBHOOK_SECRET   – clave secreta configurada en Tus integraciones > Webhooks
+//   MP_ACCESS_TOKEN     – access token de la app MP real de GymTrack
+//   MP_WEBHOOK_SECRET   – clave secreta de esa app (Tus integraciones > Webhooks)
+// Opcionales, para poder probar sin pisar producción:
+//   MP_TEST_APPLICATION_ID – id de la aplicación del vendedor de prueba
+//   MP_ACCESS_TOKEN_TEST   – access token de esa aplicación
+//   MP_WEBHOOK_SECRET_TEST – clave secreta de esa aplicación
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -16,17 +20,53 @@ const supabaseAdmin = createClient(
 
 const MP_API = 'https://api.mercadopago.com'
 
+// ── Selección de credenciales según la app que notifica ──────────────────────
+// El proyecto de Supabase es uno solo: esta función está deployada una única vez
+// y atiende tanto los avisos de la app real como los del vendedor de prueba. No
+// sirve una env var "de entorno" porque acá no hay dos entornos, hay un solo
+// deploy — la única señal disponible es de qué aplicación viene cada aviso.
+//
+// application_id llega en TODA notificación de MP, pero a veces como string y a
+// veces como number (verificado sobre saas_subscription_events), así que se
+// compara normalizado.
+interface MpCreds {
+  token: string | undefined
+  secret: string | undefined
+  isTest: boolean
+}
+
+function resolveMpCreds(applicationId: unknown): MpCreds {
+  const testAppId = Deno.env.get('MP_TEST_APPLICATION_ID')
+  const isTest = !!testAppId && String(applicationId ?? '') === testAppId
+
+  if (isTest) {
+    return {
+      token: Deno.env.get('MP_ACCESS_TOKEN_TEST'),
+      secret: Deno.env.get('MP_WEBHOOK_SECRET_TEST'),
+      isTest: true,
+    }
+  }
+  return {
+    token: Deno.env.get('MP_ACCESS_TOKEN'),
+    secret: Deno.env.get('MP_WEBHOOK_SECRET'),
+    isTest: false,
+  }
+}
+
 // ── Validación de firma HMAC-SHA256 ─────────────────────────────────────────
 // Formato del header x-signature: ts={timestamp},v1={hex_hash}
 // Manifest: id:{data_id};request-id:{x_request_id};ts:{ts};
 // (se omite cualquier campo ausente)
+//
+// El secret entra por parámetro porque cada aplicación de MP tiene el suyo. Que
+// el body elija con qué clave se valida no debilita nada: quien manda el aviso
+// igual tiene que firmar con esa clave, y no la tiene.
 async function validateMpSignature(
   req: Request,
-  rawBody: string,
+  secret: string | undefined,
 ): Promise<boolean> {
-  const secret = Deno.env.get('MP_WEBHOOK_SECRET')
   if (!secret) {
-    console.warn('[mp-webhook] MP_WEBHOOK_SECRET no configurado; saltando validación.')
+    console.warn('[mp-webhook] Sin secret para esta app; saltando validación de firma.')
     return true
   }
 
@@ -76,8 +116,7 @@ class MpApiError extends Error {
   }
 }
 
-async function mpGet(path: string) {
-  const token = Deno.env.get('MP_ACCESS_TOKEN')
+async function mpGet(path: string, token: string) {
   const res = await fetch(`${MP_API}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -107,17 +146,27 @@ Deno.serve(async (req) => {
 
   const rawBody = await req.text()
 
-  const valid = await validateMpSignature(req, rawBody)
-  if (!valid) {
-    console.error('[mp-webhook] Firma inválida.')
-    return new Response('Unauthorized', { status: 401 })
+  // El parseo va ANTES de validar la firma porque application_id (que sale del
+  // body) es lo que decide con qué credenciales trabajar, secret incluido.
+  let body: {
+    type?: string
+    action?: string
+    data?: { id?: string }
+    id?: number
+    application_id?: string | number
   }
-
-  let body: { type?: string; action?: string; data?: { id?: string }; id?: number }
   try {
     body = JSON.parse(rawBody)
   } catch {
     return new Response('Bad Request', { status: 400 })
+  }
+
+  const creds = resolveMpCreds(body.application_id)
+
+  const valid = await validateMpSignature(req, creds.secret)
+  if (!valid) {
+    console.error('[mp-webhook] Firma inválida.')
+    return new Response('Unauthorized', { status: 401 })
   }
 
   const eventType = body.type ?? ''
@@ -135,13 +184,26 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 })
   }
 
-  console.log(`[mp-webhook] Evento ${eventType} id=${resourceId}`)
+  console.log(
+    `[mp-webhook] Evento ${eventType} id=${resourceId} (${creds.isTest ? 'prueba' : 'producción'})`,
+  )
+
+  if (!creds.token) {
+    // Sin token no se puede leer el recurso en MP. Pasa si llega un aviso de la
+    // app de prueba y MP_ACCESS_TOKEN_TEST no está cargado. 200 igual: reintentar
+    // no lo va a arreglar, es config faltante de nuestro lado.
+    console.error(
+      `[mp-webhook] Sin access token para application_id=${body.application_id}; evento descartado.`,
+    )
+    await logEvent(null, mpEventId, eventType, rawBody)
+    return new Response(JSON.stringify({ ok: true, skipped: true }), { status: 200 })
+  }
 
   try {
     if (eventType === 'subscription_preapproval') {
-      await handlePreapprovalEvent(resourceId, mpEventId, rawBody)
+      await handlePreapprovalEvent(resourceId, mpEventId, rawBody, creds.token)
     } else if (eventType === 'subscription_authorized_payment') {
-      await handleAuthorizedPaymentEvent(resourceId, mpEventId, rawBody)
+      await handleAuthorizedPaymentEvent(resourceId, mpEventId, rawBody, creds.token)
     } else {
       // Evento no manejado; logueamos pero respondemos 200 para que MP no reintente
       console.log(`[mp-webhook] Tipo de evento ignorado: ${eventType}`)
@@ -155,10 +217,15 @@ Deno.serve(async (req) => {
 })
 
 // ── Preapproval: authorized | cancelled | paused ──────────────────────────────
-async function handlePreapprovalEvent(preapprovalId: string, mpEventId: string, rawBody: string) {
+async function handlePreapprovalEvent(
+  preapprovalId: string,
+  mpEventId: string,
+  rawBody: string,
+  token: string,
+) {
   let preapproval: Record<string, string>
   try {
-    preapproval = await mpGet(`/preapproval/${preapprovalId}`)
+    preapproval = await mpGet(`/preapproval/${preapprovalId}`, token)
   } catch (err) {
     if (!esDefinitivo(err)) throw err
     console.warn(
@@ -230,11 +297,16 @@ async function handlePreapprovalEvent(preapprovalId: string, mpEventId: string, 
 }
 
 // ── Authorized payment: pago exitoso del período ──────────────────────────────
-async function handleAuthorizedPaymentEvent(paymentId: string, mpEventId: string, rawBody: string) {
+async function handleAuthorizedPaymentEvent(
+  paymentId: string,
+  mpEventId: string,
+  rawBody: string,
+  token: string,
+) {
   // Obtener detalles del pago autorizado
   let payment: Record<string, unknown>
   try {
-    payment = await mpGet(`/authorized_payments/${paymentId}`)
+    payment = await mpGet(`/authorized_payments/${paymentId}`, token)
   } catch (err) {
     // Solo se descarta si el recurso es inaccesible de forma definitiva; ante
     // una caída de MP se propaga para responder 500 y que reintente.

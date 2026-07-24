@@ -3,12 +3,15 @@
 // y devuelve el init_point (URL de checkout de MP).
 //
 // Variables de entorno requeridas (server-side):
-//   MP_ACCESS_TOKEN          – access token de la app MP de GymTrack
+//   MP_ACCESS_TOKEN          – access token de la app MP cobradora. En local y en
+//                              previews se carga el del vendedor de PRUEBA; en
+//                              Vercel producción, el productivo. Es la misma
+//                              variable con distinto valor por entorno.
 //   SUPABASE_SERVICE_ROLE_KEY – para escribir en gym_saas_subscriptions sin RLS
 // Solo pruebas (requiere MP_ACCESS_TOKEN de un vendedor de prueba):
 //   MP_TEST_PAYER_EMAIL      – email del comprador de prueba de MP; reemplaza al
-//                              del owner como payer_email. Se ignora cuando
-//                              NODE_ENV es "production".
+//                              del owner como payer_email. Se ignora en el
+//                              entorno de producción.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -126,15 +129,21 @@ export async function POST(req: Request) {
     // de prueba). Para probar en sandbox hay que apuntarlo a un comprador de
     // prueba, con MP_ACCESS_TOKEN de un vendedor de prueba.
     //
-    // La guarda es NODE_ENV y no el prefijo del token: el token de un vendedor
-    // de prueba empieza con APP_USR-, igual que uno productivo, así que el
-    // prefijo no distingue nada. En el build de Vercel NODE_ENV es "production"
-    // y la variable queda inerte pase lo que pase.
+    // La guarda NO puede ser el prefijo del token: el de un vendedor de prueba
+    // empieza con APP_USR-, igual que uno productivo. Se mira el entorno.
+    //
+    // Vercel pone NODE_ENV="production" en todos sus builds, previews incluidos,
+    // así que NODE_ENV solo dejaría afuera a los previews — donde sí queremos
+    // poder probar el flujo desplegado. VERCEL_ENV distingue production de
+    // preview; en producción real la variable queda inerte pase lo que pase.
+    const vercelEnv = process.env.VERCEL_ENV;
     const testPayerEmail = process.env.MP_TEST_PAYER_EMAIL;
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd =
+      process.env.NODE_ENV === "production" &&
+      (!vercelEnv || vercelEnv === "production");
     if (testPayerEmail && isProd) {
       console.warn(
-        "[saas/checkout] MP_TEST_PAYER_EMAIL ignorado: NODE_ENV es production",
+        "[saas/checkout] MP_TEST_PAYER_EMAIL ignorado: es el entorno de producción",
       );
     }
     const payerEmail = !isProd && testPayerEmail ? testPayerEmail : user.email;
