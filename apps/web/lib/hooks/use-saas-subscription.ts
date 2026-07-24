@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 
@@ -18,6 +18,10 @@ export type GymSaasSubscription = {
   current_period_end: string | null;
   canceled_at: string | null;
   mp_preapproval_id: string | null;
+  cancel_at_period_end: boolean;
+  cancel_requested_at: string | null;
+  cancel_reason: string | null;
+  access_until: string | null;
   plan: {
     name: string;
     trial_days: number;
@@ -36,7 +40,7 @@ export function useGymSaasSubscription(gymId: string | null | undefined) {
       const { data, error } = await supabase
         .from("gym_saas_subscriptions")
         .select(
-          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, plan:saas_plans(name, trial_days, price, currency)",
+          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, cancel_at_period_end, cancel_requested_at, cancel_reason, access_until, plan:saas_plans(name, trial_days, price, currency)",
         )
         .eq("gym_id", gymId!)
         .maybeSingle();
@@ -46,14 +50,49 @@ export function useGymSaasSubscription(gymId: string | null | undefined) {
   });
 }
 
+/**
+ * Baja programada todavía vigente: el owner canceló pero sigue teniendo acceso
+ * hasta access_until. En DB el status sigue siendo active/trialing; esto es un
+ * estado derivado que solo existe en la UI.
+ */
+export function hasPendingCancellation(
+  sub: GymSaasSubscription | null | undefined,
+): boolean {
+  return (
+    !!sub?.cancel_at_period_end &&
+    !!sub.access_until &&
+    new Date(sub.access_until) > new Date()
+  );
+}
+
+/** ¿Se puede pedir la baja? Requiere una suscripción viva y sin baja ya pedida. */
+export function canCancelSubscription(
+  sub: GymSaasSubscription | null | undefined,
+): boolean {
+  if (!sub || sub.cancel_at_period_end) return false;
+  if (sub.status === "active" || sub.status === "past_due") return true;
+  // En trial solo tiene sentido si hay algo que cancelar en MP.
+  return sub.status === "trialing" && !!sub.mp_preapproval_id;
+}
+
 /** true = el gym puede escribir datos; false = modo lectura (suscripción vencida o pendiente) */
 export function useIsGymWritable(gymId: string | null | undefined): boolean {
   const { data } = useGymSaasSubscription(gymId);
   if (!data) return true; // sin fila → gym pre-existente, acceso total
+  // Espeja el corte por fecha de is_saas_subscription_active: con la baja ya
+  // vencida el status puede seguir en active/trialing hasta que corra el cron.
+  if (
+    data.cancel_at_period_end &&
+    data.access_until &&
+    new Date(data.access_until) <= new Date()
+  ) {
+    return false;
+  }
   return data.status === "trialing" || data.status === "active";
 }
 
 export type SubscriptionBannerKind =
+  | "cancel_scheduled"
   | "trial_ending_soon"
   | "trial_expired"
   | "payment_failed"
@@ -64,30 +103,78 @@ export type SubscriptionBannerKind =
 export function useSubscriptionBanner(gymId: string | null | undefined): {
   kind: SubscriptionBannerKind;
   daysLeft: number | null;
+  until: string | null;
 } {
   const { data } = useGymSaasSubscription(gymId);
 
-  if (!data) return { kind: "none", daysLeft: null };
+  if (!data) return { kind: "none", daysLeft: null, until: null };
 
   const { status, trial_ends_at } = data;
 
+  const daysUntil = (iso: string) =>
+    Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+  // Va primero: durante una baja programada el status sigue siendo
+  // active/trialing, así que si no, ganaría el banner de trial por vencer.
+  if (hasPendingCancellation(data)) {
+    return {
+      kind: "cancel_scheduled",
+      daysLeft: daysUntil(data.access_until!),
+      until: data.access_until,
+    };
+  }
+
   if (status === "trialing" && trial_ends_at) {
-    const ms = new Date(trial_ends_at).getTime() - Date.now();
-    const daysLeft = Math.ceil(ms / (1000 * 60 * 60 * 24));
-    if (daysLeft <= 3) return { kind: "trial_ending_soon", daysLeft };
+    const daysLeft = daysUntil(trial_ends_at);
+    if (daysLeft <= 3)
+      return { kind: "trial_ending_soon", daysLeft, until: trial_ends_at };
+  }
+
+  // Baja ya vencida cuyo status todavía no normalizó el cron: el gate ya cortó,
+  // así que corresponde el banner de cancelada y no el silencio de "active".
+  if (data.cancel_at_period_end) {
+    return { kind: "canceled", daysLeft: null, until: null };
   }
 
   if (status === "expired" || status === "pending") {
-    return { kind: "trial_expired", daysLeft: 0 };
+    return { kind: "trial_expired", daysLeft: 0, until: null };
   }
 
   if (status === "past_due") {
-    return { kind: "payment_failed", daysLeft: null };
+    return { kind: "payment_failed", daysLeft: null, until: null };
   }
 
   if (status === "canceled") {
-    return { kind: "canceled", daysLeft: null };
+    return { kind: "canceled", daysLeft: null, until: null };
   }
 
-  return { kind: "none", daysLeft: null };
+  return { kind: "none", daysLeft: null, until: null };
+}
+
+/** Pide la baja de la suscripción. El acceso sigue hasta access_until. */
+export function useCancelSaasSubscription(gymId: string | null | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (vars: { reason?: string; feedback?: string }) => {
+      const res = await fetch("/api/saas/subscription/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gym_id: gymId, ...vars }),
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        access_until?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(body.error ?? "No se pudo dar de baja la suscripción.");
+      }
+      return body as { access_until: string };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["gym_saas_subscription", gymId],
+      });
+    },
+  });
 }

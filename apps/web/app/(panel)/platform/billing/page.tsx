@@ -28,7 +28,7 @@ export default async function PlatformBillingPage() {
     supabase
       .from("gym_saas_subscriptions")
       .select(
-        "id, status, trial_ends_at, current_period_end, payer_email, created_at, gyms ( name, created_via ), saas_plans ( name, price, currency )"
+        "id, status, trial_ends_at, current_period_end, payer_email, created_at, cancel_at_period_end, access_until, cancel_reason, gyms ( name, created_via ), saas_plans ( name, price, currency )"
       )
       .order("created_at", { ascending: false }),
     supabase

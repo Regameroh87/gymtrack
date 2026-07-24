@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 
 import { formatGymDate } from "@/lib/gyms";
+import { cancelReasonLabel } from "@/lib/saas/cancel-reasons";
 
 export interface SaasSubscriptionRow {
   id: string;
@@ -16,6 +17,9 @@ export interface SaasSubscriptionRow {
   current_period_end: string | null;
   payer_email: string | null;
   created_at: string | null;
+  cancel_at_period_end: boolean | null;
+  access_until: string | null;
+  cancel_reason: string | null;
   gym: {
     name: string | null;
     created_via: string | null;
@@ -50,15 +54,27 @@ const STATUS_BADGES: Record<string, { label: string; className: string }> = {
   expired: { label: "Vencida", className: "bg-red-50 text-red-700" },
 };
 
+const CANCEL_SCHEDULED = "cancel_scheduled";
+
 const STATUS_FILTERS = [
   { value: "", label: "Todas" },
   { value: "trialing", label: "En prueba" },
   { value: "active", label: "Activas" },
+  { value: CANCEL_SCHEDULED, label: "Baja programada" },
   { value: "past_due", label: "Pago fallido" },
   { value: "pending", label: "Pendientes" },
   { value: "expired", label: "Vencidas" },
   { value: "canceled", label: "Canceladas" },
 ];
+
+/**
+ * Baja pedida pero todavía con acceso: en DB el status sigue siendo
+ * active/trialing, así que sin esto un gym que se está yendo se ve como sano.
+ */
+const isCancelScheduled = (r: SaasSubscriptionRow) =>
+  !!r.cancel_at_period_end &&
+  !!r.access_until &&
+  new Date(r.access_until) > new Date();
 
 export function SaasSubscriptionsTable({
   rows,
@@ -71,7 +87,11 @@ export function SaasSubscriptionsTable({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (statusFilter && r.status !== statusFilter) return false;
+      if (statusFilter === CANCEL_SCHEDULED) {
+        if (!isCancelScheduled(r)) return false;
+      } else if (statusFilter && r.status !== statusFilter) {
+        return false;
+      }
       if (!q) return true;
       return (
         r.gym?.name?.toLowerCase().includes(q) ||
@@ -130,11 +150,21 @@ export function SaasSubscriptionsTable({
             </thead>
             <tbody>
               {filtered.map((r) => {
-                const badge =
-                  STATUS_BADGES[r.status] ?? {
-                    label: r.status,
-                    className: "bg-gray-100 text-gray-600",
-                  };
+                const cancelScheduled = isCancelScheduled(r);
+                // Baja vencida cuyo status todavía no normalizó el cron: el gate
+                // ya la cortó, así que mostrarla "Activa" es engañoso.
+                const cancelDone = !!r.cancel_at_period_end && !cancelScheduled;
+                const badge = cancelScheduled
+                  ? {
+                      label: "Baja programada",
+                      className: "bg-amber-50 text-amber-700",
+                    }
+                  : cancelDone
+                    ? STATUS_BADGES.canceled
+                    : (STATUS_BADGES[r.status] ?? {
+                        label: r.status,
+                        className: "bg-gray-100 text-gray-600",
+                      });
                 return (
                   <tr key={r.id} className="border-b border-gray-50 last:border-0">
                     <td className="px-4 py-3 font-manrope text-[13px] font-semibold text-gray-900">
@@ -159,6 +189,16 @@ export function SaasSubscriptionsTable({
                       >
                         {badge.label}
                       </span>
+                      {cancelScheduled && (
+                        <span className="mt-1 block font-manrope text-[11px] text-gray-400">
+                          Hasta {formatGymDate(r.access_until)}
+                        </span>
+                      )}
+                      {r.cancel_reason && (
+                        <span className="mt-0.5 block font-manrope text-[11px] text-gray-400">
+                          {cancelReasonLabel(r.cancel_reason)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 font-manrope text-[13px] text-gray-600">
                       {r.plan?.name ?? "—"}

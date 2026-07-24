@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import {
   CheckCircle2,
   Clock,
@@ -10,16 +11,21 @@ import {
   CreditCard,
   Info,
   ShieldAlert,
+  CalendarClock,
 } from "lucide-react";
 
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import {
   useGymSaasSubscription,
+  useCancelSaasSubscription,
+  hasPendingCancellation,
+  canCancelSubscription,
   type GymSaasSubscription,
   type SaasSubscriptionStatus,
 } from "@/lib/hooks/use-saas-subscription";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
+import { CancelSubscriptionDialog } from "@/components/admin/cancel-subscription-dialog";
 import { isOwnerRole } from "@/lib/auth/roles";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -33,8 +39,13 @@ function fmt(iso: string | null): string {
   });
 }
 
+// Estado que se muestra. "cancel_scheduled" no existe en DB: mientras la baja no
+// llega a access_until el status sigue siendo active/trialing, pero mostrarlo así
+// haría creer que no pasó nada.
+type DisplayStatus = SaasSubscriptionStatus | "cancel_scheduled";
+
 const STATUS_CONFIG: Record<
-  SaasSubscriptionStatus,
+  DisplayStatus,
   {
     label: string;
     badgeClass: string;
@@ -78,11 +89,22 @@ const STATUS_CONFIG: Record<
     icon: XCircle,
     iconColor: "#ef4444",
   },
+  cancel_scheduled: {
+    label: "Baja programada",
+    badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+    icon: CalendarClock,
+    iconColor: "#d97706",
+  },
 };
 
-function getDescription(sub: GymSaasSubscription): string {
+function getDescription(sub: GymSaasSubscription, display: DisplayStatus): string {
   const hasCard = !!sub.mp_preapproval_id;
-  switch (sub.status) {
+
+  if (display === "cancel_scheduled") {
+    return `Diste de baja tu suscripción y no se te va a cobrar de nuevo. Podés seguir usando GymTrack con normalidad hasta el ${fmt(sub.access_until)}; a partir de esa fecha el gimnasio queda en modo solo lectura. Tus datos no se borran.`;
+  }
+
+  switch (display) {
     case "pending":
       return "Tu gym fue creado pero aún no tiene una suscripción activa. Activá el plan para empezar a usarlo.";
     case "trialing":
@@ -94,7 +116,9 @@ function getDescription(sub: GymSaasSubscription): string {
     case "past_due":
       return "Hubo un problema con tu último pago. MercadoPago reintentará el cobro automáticamente en los próximos días.";
     case "canceled":
-      return `Tu suscripción fue cancelada el ${fmt(sub.canceled_at)}. Podés reactivarla en cualquier momento.`;
+      // canceled_at lo escribe el webhook/cron; en la ventana en que el gate ya
+      // cortó pero el cron no corrió, access_until es la fecha correcta.
+      return `Tu suscripción fue cancelada el ${fmt(sub.canceled_at ?? sub.access_until)}. Podés reactivarla en cualquier momento.`;
     case "expired":
       return "Tu suscripción venció. El gym está en modo solo lectura. Activá el plan para recuperar el acceso completo.";
     default:
@@ -102,7 +126,7 @@ function getDescription(sub: GymSaasSubscription): string {
   }
 }
 
-const canActivate = (s: SaasSubscriptionStatus) =>
+const canActivate = (s: DisplayStatus) =>
   s === "pending" || s === "expired" || s === "canceled";
 
 // Durante el trial se puede cargar la tarjeta de forma anticipada mientras no
@@ -151,6 +175,9 @@ export default function SuscripcionPage() {
   const { data: sub, isLoading } = useGymSaasSubscription(gymId);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+
+  const cancelMutation = useCancelSaasSubscription(gymId);
 
   const isOwner = isOwnerRole(role);
 
@@ -198,6 +225,18 @@ export default function SuscripcionPage() {
     }
   }
 
+  function handleCancel(vars: { reason?: string; feedback?: string }) {
+    cancelMutation.mutate(vars, {
+      onSuccess: ({ access_until }) => {
+        setCancelOpen(false);
+        cancelMutation.reset();
+        toast.success(
+          `Baja registrada. Podés seguir usando GymTrack hasta el ${fmt(access_until)}.`,
+        );
+      },
+    });
+  }
+
   if (isLoading) {
     return (
       <div className="p-4 pb-14 md:p-9">
@@ -208,7 +247,19 @@ export default function SuscripcionPage() {
   }
 
   const status: SaasSubscriptionStatus = sub?.status ?? "pending";
-  const cfg = STATUS_CONFIG[status];
+  const cancelPending = hasPendingCancellation(sub);
+
+  // Entre que vence access_until y corre el cron que normaliza el status pasa
+  // hasta una hora. El gate ya cortó la escritura, así que mostrar "Activo" en
+  // esa ventana sería mentirle al owner sobre por qué no puede guardar nada.
+  const cancelDone = !!sub?.cancel_at_period_end && !cancelPending;
+
+  const display: DisplayStatus = cancelPending
+    ? "cancel_scheduled"
+    : cancelDone
+      ? "canceled"
+      : status;
+  const cfg = STATUS_CONFIG[display];
   const StatusIcon = cfg.icon;
 
   return (
@@ -246,7 +297,7 @@ export default function SuscripcionPage() {
           <div className="px-5 py-4">
             <p className="mb-4 font-manrope text-[13px] leading-5 text-ui-text-muted">
               {sub
-                ? getDescription(sub)
+                ? getDescription(sub, display)
                 : "Activá tu suscripción para empezar a usar GymTrack Pro."}
             </p>
 
@@ -293,7 +344,9 @@ export default function SuscripcionPage() {
             )}
 
             {/* Acción principal */}
-            {(canActivate(status) || canAddCardDuringTrial(sub)) && (
+            {(cancelPending ||
+              canActivate(display) ||
+              canAddCardDuringTrial(sub)) && (
               <Button
                 variant="primary"
                 size="lg"
@@ -301,26 +354,36 @@ export default function SuscripcionPage() {
                 icon={<CreditCard size={16} />}
                 onClick={handleActivate}
               >
-                {status === "canceled"
-                  ? "Reactivar suscripción"
+                {cancelPending || display === "canceled"
+                  ? "Reanudar suscripción"
                   : status === "trialing"
                     ? "Agregar método de pago"
                     : "Activar suscripción"}
               </Button>
             )}
 
-            {/* Gestión: solo cuando ya hay una suscripción cargada en MP */}
-            {(status === "active" ||
-              (status === "trialing" && !!sub?.mp_preapproval_id)) && (
-              <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                <Info size={14} color="#2563eb" className="mt-0.5 shrink-0" />
-                <p className="font-manrope text-[12px] leading-5 text-blue-800">
-                  Tu método de pago ya está cargado. Para cambiar la tarjeta o
-                  cancelar la suscripción, entrá a tu cuenta de{" "}
-                  <strong>MercadoPago → Tu perfil → Suscripciones</strong>.
-                </p>
-              </div>
+            {/* Reanudar exige un preapproval nuevo: MP no revive uno cancelado. */}
+            {cancelPending && (
+              <p className="mt-2.5 font-manrope text-[12px] leading-5 text-ui-text-muted">
+                Al reanudar vas a tener que volver a autorizar el pago en
+                MercadoPago. El cobro arranca el {fmt(sub?.access_until ?? null)}
+                , así que no pagás dos veces el mismo período.
+              </p>
             )}
+
+            {/* Gestión: solo cuando ya hay una suscripción cargada en MP */}
+            {!cancelPending &&
+              (status === "active" ||
+                (status === "trialing" && !!sub?.mp_preapproval_id)) && (
+                <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                  <Info size={14} color="#2563eb" className="mt-0.5 shrink-0" />
+                  <p className="font-manrope text-[12px] leading-5 text-blue-800">
+                    Tu método de pago ya está cargado. Para cambiar la tarjeta,
+                    entrá a tu cuenta de{" "}
+                    <strong>MercadoPago → Tu perfil → Suscripciones</strong>.
+                  </p>
+                </div>
+              )}
 
             {status === "past_due" && (
               <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
@@ -337,8 +400,40 @@ export default function SuscripcionPage() {
               </div>
             )}
           </div>
+
+          {/* Baja. Al pie y en tono neutro: es una salida, no una acción del flujo. */}
+          {canCancelSubscription(sub) && (
+            <div className="flex flex-col gap-2 border-t border-ui-input-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="font-manrope text-[12px] leading-5 text-ui-text-muted">
+                ¿No querés seguir? Podés dar de baja cuando quieras y usás el
+                servicio hasta el final del período que ya pagaste.
+              </p>
+              <button
+                type="button"
+                onClick={() => setCancelOpen(true)}
+                className="shrink-0 self-start rounded-[11px] border border-red-200 bg-white px-3.5 py-2 font-manrope text-[12px] font-bold text-red-600 transition hover:bg-red-50 sm:self-auto"
+              >
+                Dar de baja
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {cancelOpen && sub && (
+        <CancelSubscriptionDialog
+          accessUntil={
+            sub.status === "trialing" ? sub.trial_ends_at : sub.current_period_end
+          }
+          isPending={cancelMutation.isPending}
+          error={cancelMutation.error?.message ?? null}
+          onCancel={() => {
+            setCancelOpen(false);
+            cancelMutation.reset();
+          }}
+          onConfirm={handleCancel}
+        />
+      )}
     </div>
   );
 }

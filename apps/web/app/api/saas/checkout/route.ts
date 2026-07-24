@@ -92,11 +92,14 @@ export async function POST(req: Request) {
 
     const { data: existingSub } = await svcClient
       .from("gym_saas_subscriptions")
-      .select("id, status, trial_ends_at")
+      .select("id, status, trial_ends_at, cancel_at_period_end, access_until")
       .eq("gym_id", gym_id)
       .maybeSingle();
 
     // Fecha del primer cobro:
+    //  - baja programada con acceso vigente ("reanudar"): el cobro arranca donde
+    //    termina el período ya pagado. Sin esta rama, un gym 'active' que se dio
+    //    de baja caería en el else y se llevaría un trial completo de regalo.
     //  - trialing con trial vigente (self-service sin tarjeta): respeta el trial
     //    restante — el webhook al autorizar setea trial_ends_at = start_date,
     //    que así coincide y no resetea el trial.
@@ -106,6 +109,12 @@ export async function POST(req: Request) {
     const trialDays = plan.trial_days ?? 14;
     let startDate: string;
     if (
+      existingSub?.cancel_at_period_end &&
+      existingSub.access_until &&
+      new Date(existingSub.access_until) > new Date()
+    ) {
+      startDate = existingSub.access_until;
+    } else if (
       existingSub?.status === "trialing" &&
       existingSub.trial_ends_at &&
       new Date(existingSub.trial_ends_at) > new Date()
@@ -197,6 +206,12 @@ export async function POST(req: Request) {
     // Guardar el mp_preapproval_id en la suscripción del gym. Si la fila ya
     // existe NO se toca status: pisarlo a 'pending' degradaría a un gym en
     // trialing a read-only (políticas RESTRICTIVE) hasta que llegue el webhook.
+    //
+    // Tampoco se limpian los campos de baja: acá el preapproval todavía está
+    // 'pending' y el owner puede abandonar el checkout. Si se limpiaran ahora,
+    // una baja abandonada a mitad de camino dejaría el gym con acceso indefinido
+    // (sin access_until, ningún cron lo cierra). Los limpia el webhook al recibir
+    // 'authorized', que es cuando la reactivación es real.
     if (existingSub) {
       await svcClient
         .from("gym_saas_subscriptions")

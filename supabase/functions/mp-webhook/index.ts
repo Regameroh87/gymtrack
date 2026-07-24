@@ -1,7 +1,10 @@
 // Webhook de MercadoPago para suscripciones SaaS de GymTrack.
 // Eventos manejados:
-//   subscription_preapproval       → authorized (→ trialing) | cancelled (→ canceled) | paused (→ past_due)
+//   subscription_preapproval       → authorized (→ trialing) | cancelled (baja) | paused (→ past_due)
 //   subscription_authorized_payment → pago exitoso (→ active, actualiza period_end)
+//
+// Sobre 'cancelled': NO pasa el gym a solo-lectura en el acto. La baja respeta
+// el período ya pagado (access_until); ver el bloque en handlePreapprovalEvent.
 //
 // Variables de entorno requeridas:
 //   MP_ACCESS_TOKEN     – access token de la app MP real de GymTrack
@@ -138,6 +141,31 @@ const STATUS_MAP: Record<string, string> = {
   paused: 'past_due',
 }
 
+// Columnas que necesita el manejo de bajas: sin cancel_at_period_end no se puede
+// distinguir el eco de nuestra propia cancelación de una baja hecha en MP.
+const GYM_SUB_COLUMNS =
+  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at'
+
+interface GymSubRow {
+  id: string
+  gym_id: string
+  cancel_at_period_end: boolean | null
+  access_until: string | null
+  current_period_end: string | null
+  trial_ends_at: string | null
+}
+
+const esFuturo = (iso: string | null) => !!iso && new Date(iso) > new Date()
+
+// Hasta cuándo tiene acceso pago una fila. Se toma la más lejana de las dos
+// fechas en vez de mirar el status: en trial la que vale es trial_ends_at y en
+// active current_period_end, y la otra suele venir nula.
+function accesoPagoHasta(sub: GymSubRow): string | null {
+  const fechas = [sub.current_period_end, sub.trial_ends_at].filter(esFuturo)
+  if (!fechas.length) return null
+  return fechas.reduce((a, b) => (new Date(a!) > new Date(b!) ? a : b))!
+}
+
 // ── Handler principal ─────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -239,11 +267,11 @@ async function handlePreapprovalEvent(
   const externalRef: string = preapproval.external_reference ?? ''
 
   // Buscar la suscripción del gym: primero por mp_preapproval_id, luego por external_reference
-  let gymSub: { id: string; gym_id: string } | null = null
+  let gymSub: GymSubRow | null = null
 
   const { data: byId } = await supabaseAdmin
     .from('gym_saas_subscriptions')
-    .select('id, gym_id')
+    .select(GYM_SUB_COLUMNS)
     .eq('mp_preapproval_id', preapprovalId)
     .maybeSingle()
 
@@ -252,7 +280,7 @@ async function handlePreapprovalEvent(
   } else if (externalRef) {
     const { data: byRef } = await supabaseAdmin
       .from('gym_saas_subscriptions')
-      .select('id, gym_id')
+      .select(GYM_SUB_COLUMNS)
       .eq('gym_id', externalRef)
       .maybeSingle()
     gymSub = byRef ?? null
@@ -281,10 +309,43 @@ async function handlePreapprovalEvent(
     const startDate: string = preapproval.auto_recurring?.start_date
     updates.trial_ends_at = startDate ?? new Date(Date.now() + 14 * 86400_000).toISOString()
     updates.payer_email = preapproval.payer_email ?? null
+
+    // Reactivación: el owner volvió a autorizar un preapproval, así que la baja
+    // pendiente queda sin efecto. Si no se limpiara, el cron finalize seguiría
+    // viendo la baja vieja y apagaría un gym que acaba de pagar.
+    updates.cancel_at_period_end = false
+    updates.cancel_requested_at = null
+    updates.cancel_reason = null
+    updates.cancel_feedback = null
+    updates.access_until = null
+    updates.canceled_at = null
   }
 
   if (newStatus === 'canceled') {
+    // Baja ya programada desde el panel: este aviso es el eco de nuestro propio
+    // PUT /preapproval. Pisar el status acá cortaría la escritura hoy mismo,
+    // que es exactamente lo que el período de gracia viene a evitar.
+    if (gymSub.cancel_at_period_end && esFuturo(gymSub.access_until)) {
+      await logEvent(gymSub.id, mpEventId, 'subscription_preapproval', rawBody)
+      console.log(
+        `[mp-webhook] gym ${gymSub.gym_id}: baja ya programada hasta ${gymSub.access_until}; status sin cambios`,
+      )
+      return
+    }
+
+    // Cancelación hecha por fuera de GymTrack (app de MP). Se le da el mismo
+    // período de gracia que a la baja del panel: si no, cancelar afuera
+    // castigaría más que cancelar acá, y el owner igual pagó el mes.
+    const accessUntil = accesoPagoHasta(gymSub) ?? new Date().toISOString()
+
+    updates.cancel_at_period_end = true
+    updates.cancel_requested_at = new Date().toISOString()
+    updates.access_until = accessUntil
     updates.canceled_at = new Date().toISOString()
+
+    // El status se toca solo si el acceso ya venció; si queda período pagado, la
+    // fila sigue active/trialing y el cron finalize la cierra a su hora.
+    if (esFuturo(accessUntil)) delete updates.status
   }
 
   await supabaseAdmin
@@ -293,7 +354,9 @@ async function handlePreapprovalEvent(
     .eq('id', gymSub.id)
 
   await logEvent(gymSub.id, mpEventId, 'subscription_preapproval', rawBody)
-  console.log(`[mp-webhook] gym ${gymSub.gym_id} → ${newStatus}`)
+  console.log(
+    `[mp-webhook] gym ${gymSub.gym_id} → ${updates.status ?? 'status sin cambios'}`,
+  )
 }
 
 // ── Authorized payment: pago exitoso del período ──────────────────────────────

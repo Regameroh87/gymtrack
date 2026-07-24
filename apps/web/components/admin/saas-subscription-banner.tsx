@@ -1,17 +1,39 @@
 "use client";
 
-import { AlertCircle, AlertTriangle, XCircle, Info } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  XCircle,
+  Info,
+  CalendarClock,
+} from "lucide-react";
 
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useSubscriptionBanner } from "@/lib/hooks/use-saas-subscription";
 import { isOwnerRole } from "@/lib/auth/roles";
 
+const fmtDay = (iso: string | null) =>
+  iso
+    ? new Date(iso).toLocaleDateString("es-AR", {
+        day: "numeric",
+        month: "long",
+      })
+    : "";
+
 const BANNER_CONFIG = {
+  cancel_scheduled: {
+    wrapperClass: "bg-amber-50 border-amber-200",
+    icon: CalendarClock,
+    iconColor: "#d97706",
+    getText: (_days: number | null, until: string | null) =>
+      `Tu suscripción se da de baja el ${fmtDay(until)}. Hasta esa fecha podés usar todo con normalidad.`,
+    cta: "Reanudar",
+  },
   trial_ending_soon: {
     wrapperClass: "bg-amber-50 border-amber-200",
     icon: AlertTriangle,
     iconColor: "#d97706",
-    getText: (days: number | null) =>
+    getText: (days: number | null, _until: string | null) =>
       `Tu período de prueba vence en ${days ?? 0} día${days === 1 ? "" : "s"}.`,
     cta: "Activar plan",
   },
@@ -41,7 +63,7 @@ const BANNER_CONFIG = {
 
 export function SaasSubscriptionBanner() {
   const { gymId, role } = useActiveGym();
-  const { kind, daysLeft } = useSubscriptionBanner(gymId);
+  const { kind, daysLeft, until } = useSubscriptionBanner(gymId);
 
   // El billing del gym es del owner: ni admin/coach ni super_admin ven el banner
   // (su CTA lleva a /admin/suscripcion, que solo el owner puede gestionar).
@@ -57,7 +79,7 @@ export function SaasSubscriptionBanner() {
     >
       <Icon size={15} color={cfg.iconColor} className="shrink-0" />
       <p className="flex-1 font-manrope text-[12px] font-semibold text-ui-text-main">
-        {cfg.getText(daysLeft)}
+        {cfg.getText(daysLeft, until)}
       </p>
       <a
         href="/admin/suscripcion"
