@@ -5,10 +5,10 @@
 // Variables de entorno requeridas (server-side):
 //   MP_ACCESS_TOKEN          – access token de la app MP de GymTrack
 //   SUPABASE_SERVICE_ROLE_KEY – para escribir en gym_saas_subscriptions sin RLS
-// Opcional (solo pruebas):
+// Opcional (solo pruebas, requiere MP_ACCESS_TOKEN de un vendedor de prueba):
 //   MP_TEST_PAYER_EMAIL      – email del comprador de prueba de MP; reemplaza al
-//                              del owner como payer_email. Se ignora si el token
-//                              no es de prueba.
+//                              del owner como payer_email. Se ignora cuando
+//                              NODE_ENV es "production".
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -121,19 +121,23 @@ export async function POST(req: Request) {
     // app como default; evita que el back_url caiga a un dominio equivocado.
     const backUrl = `${APP_URL}/api/saas/checkout/callback`;
 
-    // El checkout de preapproval queda atado a payer_email y MP pide verificar
-    // ESA casilla. Con el email real del owner, el código de la cuenta de prueba
-    // nunca valida. MP_TEST_PAYER_EMAIL apunta el checkout al comprador de
-    // prueba; solo se respeta con token TEST para que no pueda desviar un cobro
-    // real si la variable queda seteada por error en producción.
+    // El checkout de preapproval queda atado a payer_email: MP exige que el
+    // pagador use ese mismo mail y que ambas partes sean del mismo tipo (real o
+    // de prueba). Para probar en sandbox hay que apuntarlo a un comprador de
+    // prueba, con MP_ACCESS_TOKEN de un vendedor de prueba.
+    //
+    // La guarda es NODE_ENV y no el prefijo del token: el token de un vendedor
+    // de prueba empieza con APP_USR-, igual que uno productivo, así que el
+    // prefijo no distingue nada. En el build de Vercel NODE_ENV es "production"
+    // y la variable queda inerte pase lo que pase.
     const testPayerEmail = process.env.MP_TEST_PAYER_EMAIL;
-    const isTestToken = mpToken.startsWith("TEST-");
-    if (testPayerEmail && !isTestToken) {
+    const isProd = process.env.NODE_ENV === "production";
+    if (testPayerEmail && isProd) {
       console.warn(
-        "[saas/checkout] MP_TEST_PAYER_EMAIL ignorado: MP_ACCESS_TOKEN es productivo",
+        "[saas/checkout] MP_TEST_PAYER_EMAIL ignorado: NODE_ENV es production",
       );
     }
-    const payerEmail = isTestToken && testPayerEmail ? testPayerEmail : user.email;
+    const payerEmail = !isProd && testPayerEmail ? testPayerEmail : user.email;
 
     // Crear preapproval en MP (status=pending → MP devuelve init_point)
     const mpRes = await fetch(`${MP_API}/preapproval`, {
