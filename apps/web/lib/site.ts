@@ -7,8 +7,12 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://gymtrack.ar"
 ).replace(/\/$/, "");
 
+// OJO: el subdominio app.gymtrack.ar NO existe (no tiene DNS). La app vive en
+// www.gymtrack.ar, que sirve tanto la landing como el panel. Apuntar acá a
+// app.* dejaba el back_url del checkout de MP —y los links de los mails— en un
+// dominio muerto: el pago se cobraba y el usuario caía en la nada.
 export const APP_URL = (
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://app.gymtrack.ar"
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://www.gymtrack.ar"
 ).replace(/\/$/, "");
 
 export const BRAND = {

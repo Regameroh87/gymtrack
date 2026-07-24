@@ -19,7 +19,10 @@ const FROM_LOCAL = "noreply";
 // Tokens del design system (fallback cuando el gym no tiene theme propio).
 const DEFAULT_PRIMARY = "#4A44E4";
 const DEFAULT_ACCENT = "#2DD4BF";
-const APP_URL = Deno.env.get("APP_URL") ?? "https://app.gymtrack.ar";
+// app.gymtrack.ar NO existe (sin DNS); la app vive en www.gymtrack.ar. Con el
+// default viejo, los links de todos los mails transaccionales apuntaban a un
+// dominio muerto.
+const APP_URL = Deno.env.get("APP_URL") ?? "https://www.gymtrack.ar";
 
 // logo_url guarda la URL pública completa (Supabase Storage); solo es imagen
 // servible si es una URL http(s). Si no, null → fallback a wordmark.
