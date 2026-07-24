@@ -67,14 +67,30 @@ async function validateMpSignature(
 }
 
 // ── MP API helpers ────────────────────────────────────────────────────────────
+// Lleva el status para poder distinguir "este recurso no es mío / no existe"
+// (4xx, reintentar no sirve) de una caída de MP (5xx, sí conviene reintentar).
+class MpApiError extends Error {
+  constructor(readonly status: number, path: string) {
+    super(`MP API error ${status} on GET ${path}`)
+    this.name = 'MpApiError'
+  }
+}
+
 async function mpGet(path: string) {
   const token = Deno.env.get('MP_ACCESS_TOKEN')
   const res = await fetch(`${MP_API}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  if (!res.ok) throw new Error(`MP API error ${res.status} on GET ${path}`)
+  if (!res.ok) throw new MpApiError(res.status, path)
   return res.json()
 }
+
+// ¿El recurso es inaccesible de forma definitiva? Pasa con la simulación del
+// panel de MP (manda data.id 123456) y con recursos de otra cuenta. Devolver
+// 500 en esos casos hace que MP reintente en loop un evento que nunca va a
+// poder procesarse, y encima marca la URL como caída al validarla.
+const esDefinitivo = (err: unknown) =>
+  err instanceof MpApiError && err.status >= 400 && err.status < 500
 
 // ── Mapeo de status MP → nuestro status ──────────────────────────────────────
 const STATUS_MAP: Record<string, string> = {
@@ -140,7 +156,18 @@ Deno.serve(async (req) => {
 
 // ── Preapproval: authorized | cancelled | paused ──────────────────────────────
 async function handlePreapprovalEvent(preapprovalId: string, mpEventId: string, rawBody: string) {
-  const preapproval = await mpGet(`/preapproval/${preapprovalId}`)
+  let preapproval: Record<string, string>
+  try {
+    preapproval = await mpGet(`/preapproval/${preapprovalId}`)
+  } catch (err) {
+    if (!esDefinitivo(err)) throw err
+    console.warn(
+      `[mp-webhook] preapproval ${preapprovalId} inaccesible; se descarta el evento`,
+    )
+    await logEvent(null, mpEventId, 'subscription_preapproval', rawBody)
+    return
+  }
+
   const mpStatus: string = preapproval.status ?? ''
   const externalRef: string = preapproval.external_reference ?? ''
 
@@ -208,8 +235,10 @@ async function handleAuthorizedPaymentEvent(paymentId: string, mpEventId: string
   let payment: Record<string, unknown>
   try {
     payment = await mpGet(`/authorized_payments/${paymentId}`)
-  } catch {
-    // fallback: algunos endpoints usan /preapproval/{id}/authorized_payments
+  } catch (err) {
+    // Solo se descarta si el recurso es inaccesible de forma definitiva; ante
+    // una caída de MP se propaga para responder 500 y que reintente.
+    if (!esDefinitivo(err)) throw err
     console.warn(`[mp-webhook] No se pudo obtener authorized_payment ${paymentId}`)
     await logEvent(null, mpEventId, 'subscription_authorized_payment', rawBody)
     return
