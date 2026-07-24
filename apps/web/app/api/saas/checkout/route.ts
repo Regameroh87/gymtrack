@@ -5,6 +5,10 @@
 // Variables de entorno requeridas (server-side):
 //   MP_ACCESS_TOKEN          – access token de la app MP de GymTrack
 //   SUPABASE_SERVICE_ROLE_KEY – para escribir en gym_saas_subscriptions sin RLS
+// Opcional (solo pruebas):
+//   MP_TEST_PAYER_EMAIL      – email del comprador de prueba de MP; reemplaza al
+//                              del owner como payer_email. Se ignora si el token
+//                              no es de prueba.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -117,6 +121,20 @@ export async function POST(req: Request) {
     // app como default; evita que el back_url caiga a un dominio equivocado.
     const backUrl = `${APP_URL}/api/saas/checkout/callback`;
 
+    // El checkout de preapproval queda atado a payer_email y MP pide verificar
+    // ESA casilla. Con el email real del owner, el código de la cuenta de prueba
+    // nunca valida. MP_TEST_PAYER_EMAIL apunta el checkout al comprador de
+    // prueba; solo se respeta con token TEST para que no pueda desviar un cobro
+    // real si la variable queda seteada por error en producción.
+    const testPayerEmail = process.env.MP_TEST_PAYER_EMAIL;
+    const isTestToken = mpToken.startsWith("TEST-");
+    if (testPayerEmail && !isTestToken) {
+      console.warn(
+        "[saas/checkout] MP_TEST_PAYER_EMAIL ignorado: MP_ACCESS_TOKEN es productivo",
+      );
+    }
+    const payerEmail = isTestToken && testPayerEmail ? testPayerEmail : user.email;
+
     // Crear preapproval en MP (status=pending → MP devuelve init_point)
     const mpRes = await fetch(`${MP_API}/preapproval`, {
       method: "POST",
@@ -127,7 +145,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         reason: `GymTrack Pro${gym?.name ? ` - ${gym.name}` : ""}`,
         external_reference: gym_id,
-        payer_email: user.email,
+        payer_email: payerEmail,
         auto_recurring: {
           frequency: 1,
           frequency_type: "months",
@@ -168,7 +186,7 @@ export async function POST(req: Request) {
         .update({
           plan_id: plan.id,
           mp_preapproval_id: mpPreapprovalId,
-          payer_email: user.email,
+          payer_email: payerEmail,
         })
         .eq("id", existingSub.id);
     } else {
@@ -177,7 +195,7 @@ export async function POST(req: Request) {
         plan_id: plan.id,
         status: "pending",
         mp_preapproval_id: mpPreapprovalId,
-        payer_email: user.email,
+        payer_email: payerEmail,
       });
     }
 
