@@ -143,8 +143,9 @@ const STATUS_MAP: Record<string, string> = {
 
 // Columnas que necesita el manejo de bajas: sin cancel_at_period_end no se puede
 // distinguir el eco de nuestra propia cancelación de una baja hecha en MP.
+// mp_preapproval_id se lee para descartar avisos de preapprovals superados.
 const GYM_SUB_COLUMNS =
-  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at'
+  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at, mp_preapproval_id'
 
 interface GymSubRow {
   id: string
@@ -153,6 +154,7 @@ interface GymSubRow {
   access_until: string | null
   current_period_end: string | null
   trial_ends_at: string | null
+  mp_preapproval_id: string | null
 }
 
 const esFuturo = (iso: string | null) => !!iso && new Date(iso) > new Date()
@@ -164,6 +166,60 @@ function accesoPagoHasta(sub: GymSubRow): string | null {
   const fechas = [sub.current_period_end, sub.trial_ends_at].filter(esFuturo)
   if (!fechas.length) return null
   return fechas.reduce((a, b) => (new Date(a!) > new Date(b!) ? a : b))!
+}
+
+// ── Limpieza de preapprovals huérfanos ────────────────────────────────────────
+// Cada checkout crea un preapproval NUEVO en MP y el anterior queda vivo. Si dos
+// llegan a 'authorized' para el mismo gym, MP le cobra dos veces por mes.
+//
+// Por qué acá y no en el checkout: cancelar el viejo cuando el owner *arranca* un
+// checkout deja al gym sin cobro si abandona el pago a mitad de camino. Recién
+// cuando el reemplazo está 'authorized' es seguro dar de baja al resto.
+//
+// external_reference es el gym_id, así que la búsqueda encuentra también los
+// preapprovals que la fila ya no recuerda — que son justamente los peligrosos.
+//
+// Nunca tira: la fila ya quedó bien y propagar el error haría que MP reintente el
+// evento entero para rehacer trabajo ya hecho.
+async function cancelarPreapprovalsHuerfanos(
+  gymId: string,
+  vigenteId: string,
+  token: string,
+) {
+  try {
+    const encontrados = await mpGet(
+      `/preapproval/search?external_reference=${encodeURIComponent(gymId)}&limit=50`,
+      token,
+    )
+
+    const results: Array<{ id?: string; status?: string }> = encontrados.results ?? []
+    const huerfanos = results.filter(
+      (p) =>
+        p.id &&
+        p.id !== vigenteId &&
+        (p.status === 'authorized' || p.status === 'pending'),
+    )
+
+    if (!huerfanos.length) return
+
+    for (const p of huerfanos) {
+      const res = await fetch(`${MP_API}/preapproval/${p.id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'cancelled' }),
+      })
+      console.log(
+        `[mp-webhook] gym ${gymId}: preapproval huérfano ${p.id} (${p.status}) → cancelado=${res.ok}`,
+      )
+    }
+  } catch (err) {
+    // Queda un huérfano vivo, pero el gym tiene su suscripción bien. Se ve en el
+    // log y el próximo 'authorized' vuelve a intentar la limpieza.
+    console.error(`[mp-webhook] gym ${gymId}: falló la limpieza de huérfanos:`, err)
+  }
 }
 
 // ── Handler principal ─────────────────────────────────────────────────────────
@@ -283,6 +339,24 @@ async function handlePreapprovalEvent(
       .select(GYM_SUB_COLUMNS)
       .eq('gym_id', externalRef)
       .maybeSingle()
+
+    // El fallback por external_reference existe solo para la ventana en que el
+    // checkout ya creó el preapproval en MP pero todavía no escribió su id en la
+    // fila. Si la fila guarda OTRO id, este aviso es de un preapproval superado
+    // y aplicarlo pisa la suscripción vigente: MP reintenta avisos con horas de
+    // atraso, y el 2026-07-24 tres avisos de las 14:45 llegaron 21:46 y
+    // devolvieron a 'trialing' una fila que ya tenía un pago hasta el 23/08.
+    //
+    // Descartar es recuperable y corromper no: si el preapproval fuera de verdad
+    // el nuevo, el checkout ya guardó su id y el reintento de MP entra por byId.
+    if (byRef?.mp_preapproval_id && byRef.mp_preapproval_id !== preapprovalId) {
+      console.warn(
+        `[mp-webhook] preapproval ${preapprovalId} no es el vigente del gym ${byRef.gym_id} (${byRef.mp_preapproval_id}); aviso descartado`,
+      )
+      await logEvent(byRef.id, mpEventId, 'subscription_preapproval', rawBody)
+      return
+    }
+
     gymSub = byRef ?? null
   }
 
@@ -305,11 +379,28 @@ async function handlePreapprovalEvent(
   }
 
   if (newStatus === 'trialing') {
-    // trial_ends_at = fecha de inicio del primer cobro
-    const startDate: string = preapproval.auto_recurring?.start_date
-    updates.trial_ends_at = startDate ?? new Date(Date.now() + 14 * 86400_000).toISOString()
+    // Un 'authorized' no puede degradar una suscripción con período pagado
+    // vigente. Si lo hiciera, la fila quedaría en 'trialing' con trial_ends_at =
+    // start_date (una fecha pasada), y todo lo que mire el trial la vería
+    // vencida aunque el mes esté pagado.
+    if (esFuturo(gymSub.current_period_end)) {
+      delete updates.status
+      console.log(
+        `[mp-webhook] gym ${gymSub.gym_id}: pago vigente hasta ${gymSub.current_period_end}; no se degrada a trialing`,
+      )
+    } else {
+      // trial_ends_at = fecha de inicio del primer cobro
+      const startDate: string = preapproval.auto_recurring?.start_date
+      updates.trial_ends_at = startDate ?? new Date(Date.now() + 14 * 86400_000).toISOString()
+    }
+
     updates.payer_email = preapproval.payer_email ?? null
 
+    // La limpieza de la baja va afuera del if: reanudar mientras todavía queda
+    // período pagado es justamente el caso normal, y ahí hay que borrar
+    // access_until igual (si no, el cron finalize apaga un gym que acaba de
+    // reautorizar el pago).
+    //
     // Reactivación: el owner volvió a autorizar un preapproval, así que la baja
     // pendiente queda sin efecto. Si no se limpiara, el cron finalize seguiría
     // viendo la baja vieja y apagaría un gym que acaba de pagar.
@@ -357,6 +448,12 @@ async function handlePreapprovalEvent(
   console.log(
     `[mp-webhook] gym ${gymSub.gym_id} → ${updates.status ?? 'status sin cambios'}`,
   )
+
+  // Con el reemplazo ya confirmado, dar de baja cualquier otro preapproval del
+  // gym: a partir de acá hay a lo sumo uno vivo por gym.
+  if (newStatus === 'trialing') {
+    await cancelarPreapprovalsHuerfanos(gymSub.gym_id, preapprovalId, token)
+  }
 }
 
 // ── Authorized payment: pago exitoso del período ──────────────────────────────

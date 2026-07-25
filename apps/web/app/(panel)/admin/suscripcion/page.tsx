@@ -23,6 +23,7 @@ import {
   type GymSaasSubscription,
   type SaasSubscriptionStatus,
 } from "@/lib/hooks/use-saas-subscription";
+import { paidAccessUntil } from "@/lib/saas/access-period";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { CancelSubscriptionDialog } from "@/components/admin/cancel-subscription-dialog";
@@ -422,9 +423,9 @@ export default function SuscripcionPage() {
 
       {cancelOpen && sub && (
         <CancelSubscriptionDialog
-          accessUntil={
-            sub.status === "trialing" ? sub.trial_ends_at : sub.current_period_end
-          }
+          // Misma función que usa el endpoint, para que la fecha del modal sea
+          // exactamente la que se va a congelar y no una aproximación.
+          accessUntil={paidAccessUntil(sub)}
           isPending={cancelMutation.isPending}
           error={cancelMutation.error?.message ?? null}
           onCancel={() => {

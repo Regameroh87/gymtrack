@@ -19,6 +19,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { SUPABASE_URL } from "@/lib/supabase-config";
 import { isCancelReason } from "@/lib/saas/cancel-reasons";
+import { paidAccessUntil } from "@/lib/saas/access-period";
 
 const MP_API = "https://api.mercadopago.com";
 
@@ -31,9 +32,6 @@ function getServiceClient() {
   if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY no configurado");
   return createClient(SUPABASE_URL!, key, { auth: { persistSession: false } });
 }
-
-const esFuturo = (iso: string | null | undefined) =>
-  !!iso && new Date(iso) > new Date();
 
 export async function POST(req: Request) {
   try {
@@ -142,19 +140,12 @@ export async function POST(req: Request) {
     }
 
     // ── Congelar hasta cuándo tiene acceso ────────────────────────────────────
-    // active   → hasta el fin del período que ya pagó
-    // trialing → hasta el fin del trial (no pagó nada, se respeta entero)
-    // past_due → el período vigente si todavía corre; si no, corte inmediato
-    let accessUntil: string;
-    if (sub.status === "trialing") {
-      accessUntil = esFuturo(sub.trial_ends_at)
-        ? sub.trial_ends_at!
-        : new Date().toISOString();
-    } else {
-      accessUntil = esFuturo(sub.current_period_end)
-        ? sub.current_period_end!
-        : new Date().toISOString();
-    }
+    // La fecha más lejana entre el fin del trial y el fin del período pagado; si
+    // ninguna de las dos sigue vigente, corte inmediato.
+    //
+    // No se elige la fecha según el status a propósito: un status desactualizado
+    // hacía ignorar un mes ya pagado. Ver el comentario de paidAccessUntil.
+    const accessUntil = paidAccessUntil(sub) ?? new Date().toISOString();
 
     const now = new Date().toISOString();
 
