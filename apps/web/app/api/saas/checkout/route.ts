@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     // Datos del gym y del plan activo
     const { data: gym } = await supabase
       .from("gyms")
-      .select("name")
+      .select("name, is_test")
       .eq("id", gym_id)
       .single();
 
@@ -195,6 +195,40 @@ export async function POST(req: Request) {
 
     const mpData = await mpRes.json();
     const { id: mpPreapprovalId, init_point } = mpData;
+    // La app que efectivamente creó el preapproval, según MP. Se guarda en la
+    // fila para que el webhook pueda descartar avisos de otra app.
+    const mpApplicationId =
+      mpData.application_id != null ? String(mpData.application_id) : null;
+
+    // El vendedor de prueba no puede estrenar suscripciones sobre gyms reales.
+    // Se chequea recién acá porque hasta que MP no responde no sabemos con qué
+    // app quedó creado el preapproval — el token no lo dice (un token de prueba
+    // también empieza con APP_USR-).
+    //
+    // Se cancela el preapproval antes de salir: si se dejara colgado quedaría
+    // justo el huérfano que el webhook viene a evitar.
+    const testAppId = process.env.MP_TEST_APPLICATION_ID;
+    if (testAppId && mpApplicationId === testAppId && !gym?.is_test) {
+      console.error(
+        `[saas/checkout] app de prueba ${testAppId} contra el gym real ${gym_id}; preapproval ${mpPreapprovalId} cancelado`,
+      );
+      await fetch(`${MP_API}/preapproval/${mpPreapprovalId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${mpToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "cancelled" }),
+      }).catch(() => {});
+
+      return NextResponse.json(
+        {
+          error:
+            "Estás usando las credenciales de prueba de MercadoPago sobre un gimnasio real. Marcá el gym como de prueba o cargá el token productivo.",
+        },
+        { status: 422 },
+      );
+    }
 
     if (!init_point) {
       return NextResponse.json(
@@ -218,6 +252,7 @@ export async function POST(req: Request) {
         .update({
           plan_id: plan.id,
           mp_preapproval_id: mpPreapprovalId,
+          mp_application_id: mpApplicationId,
           payer_email: payerEmail,
         })
         .eq("id", existingSub.id);
@@ -227,6 +262,7 @@ export async function POST(req: Request) {
         plan_id: plan.id,
         status: "pending",
         mp_preapproval_id: mpPreapprovalId,
+        mp_application_id: mpApplicationId,
         payer_email: payerEmail,
       });
     }

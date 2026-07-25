@@ -36,23 +36,28 @@ interface MpCreds {
   token: string | undefined
   secret: string | undefined
   isTest: boolean
+  /** application_id del aviso, normalizado. Identifica de qué app viene. */
+  appId: string
 }
 
 function resolveMpCreds(applicationId: unknown): MpCreds {
   const testAppId = Deno.env.get('MP_TEST_APPLICATION_ID')
-  const isTest = !!testAppId && String(applicationId ?? '') === testAppId
+  const appId = String(applicationId ?? '')
+  const isTest = !!testAppId && appId === testAppId
 
   if (isTest) {
     return {
       token: Deno.env.get('MP_ACCESS_TOKEN_TEST'),
       secret: Deno.env.get('MP_WEBHOOK_SECRET_TEST'),
       isTest: true,
+      appId,
     }
   }
   return {
     token: Deno.env.get('MP_ACCESS_TOKEN'),
     secret: Deno.env.get('MP_WEBHOOK_SECRET'),
     isTest: false,
+    appId,
   }
 }
 
@@ -145,7 +150,7 @@ const STATUS_MAP: Record<string, string> = {
 // distinguir el eco de nuestra propia cancelación de una baja hecha en MP.
 // mp_preapproval_id se lee para descartar avisos de preapprovals superados.
 const GYM_SUB_COLUMNS =
-  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at, mp_preapproval_id'
+  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at, mp_preapproval_id, mp_application_id'
 
 interface GymSubRow {
   id: string
@@ -155,6 +160,48 @@ interface GymSubRow {
   current_period_end: string | null
   trial_ends_at: string | null
   mp_preapproval_id: string | null
+  mp_application_id: string | null
+}
+
+// ── Aislamiento del vendedor de prueba ───────────────────────────────────────
+// Las dos apps de MP (la real y la de prueba) pegan al MISMO webhook y escriben
+// en la MISMA base. Sin estas guardas un aviso del sandbox muta la suscripción
+// de un gym real: pasó el 2026-07-24.
+//
+// Asimetría deliberada: se bloquea prueba → gym real, pero NO real → gym de
+// prueba. En ese sentido el cobro en MP ya ocurrió, y descartar el aviso solo
+// lograría que la plata se mueva sin quedar registrada.
+//
+// Devuelve el motivo del descarte, o null si el aviso puede aplicarse.
+async function motivoDeDescarte(
+  gymSub: GymSubRow,
+  creds: MpCreds,
+): Promise<string | null> {
+  // Integridad: la fila pertenece a la app que la creó. Si no tiene app guardada
+  // es anterior a la columna y la reclama el primer aviso que llegue.
+  if (
+    gymSub.mp_application_id &&
+    creds.appId &&
+    gymSub.mp_application_id !== creds.appId
+  ) {
+    return `la suscripción es de la app ${gymSub.mp_application_id} y el aviso vino de ${creds.appId}`
+  }
+
+  // Alcance: el sandbox solo puede tocar gyms de prueba. La consulta corre solo
+  // cuando el aviso es de prueba, así que en producción no cuesta nada.
+  if (creds.isTest) {
+    const { data: gym } = await supabaseAdmin
+      .from('gyms')
+      .select('is_test')
+      .eq('id', gymSub.gym_id)
+      .maybeSingle()
+
+    if (!gym?.is_test) {
+      return 'es un aviso del vendedor de prueba y el gym no está marcado como de prueba'
+    }
+  }
+
+  return null
 }
 
 const esFuturo = (iso: string | null) => !!iso && new Date(iso) > new Date()
@@ -285,9 +332,9 @@ Deno.serve(async (req) => {
 
   try {
     if (eventType === 'subscription_preapproval') {
-      await handlePreapprovalEvent(resourceId, mpEventId, rawBody, creds.token)
+      await handlePreapprovalEvent(resourceId, mpEventId, rawBody, creds.token, creds)
     } else if (eventType === 'subscription_authorized_payment') {
-      await handleAuthorizedPaymentEvent(resourceId, mpEventId, rawBody, creds.token)
+      await handleAuthorizedPaymentEvent(resourceId, mpEventId, rawBody, creds.token, creds)
     } else {
       // Evento no manejado; logueamos pero respondemos 200 para que MP no reintente
       console.log(`[mp-webhook] Tipo de evento ignorado: ${eventType}`)
@@ -306,6 +353,7 @@ async function handlePreapprovalEvent(
   mpEventId: string,
   rawBody: string,
   token: string,
+  creds: MpCreds,
 ) {
   let preapproval: Record<string, string>
   try {
@@ -366,6 +414,15 @@ async function handlePreapprovalEvent(
     return
   }
 
+  const descarte = await motivoDeDescarte(gymSub, creds)
+  if (descarte) {
+    console.warn(
+      `[mp-webhook] gym ${gymSub.gym_id}: aviso descartado porque ${descarte}`,
+    )
+    await logEvent(gymSub.id, mpEventId, 'subscription_preapproval', rawBody)
+    return
+  }
+
   const newStatus = STATUS_MAP[mpStatus]
   if (!newStatus) {
     console.log(`[mp-webhook] Status de preapproval no mapeado: ${mpStatus}`)
@@ -376,6 +433,9 @@ async function handlePreapprovalEvent(
   const updates: Record<string, unknown> = {
     status: newStatus,
     mp_preapproval_id: preapprovalId,
+    // Deja constancia de qué app maneja esta suscripción. En filas anteriores a
+    // la columna, este es el aviso que la reclama.
+    mp_application_id: creds.appId || null,
   }
 
   if (newStatus === 'trialing') {
@@ -462,6 +522,7 @@ async function handleAuthorizedPaymentEvent(
   mpEventId: string,
   rawBody: string,
   token: string,
+  creds: MpCreds,
 ) {
   // Obtener detalles del pago autorizado
   let payment: Record<string, unknown>
@@ -480,13 +541,22 @@ async function handleAuthorizedPaymentEvent(
 
   const { data: gymSub } = await supabaseAdmin
     .from('gym_saas_subscriptions')
-    .select('id, gym_id')
+    .select(GYM_SUB_COLUMNS)
     .eq('mp_preapproval_id', preapprovalId)
     .maybeSingle()
 
   if (!gymSub) {
     console.warn(`[mp-webhook] No se encontró gym para preapproval ${preapprovalId}`)
     await logEvent(null, mpEventId, 'subscription_authorized_payment', rawBody)
+    return
+  }
+
+  const descarte = await motivoDeDescarte(gymSub, creds)
+  if (descarte) {
+    console.warn(
+      `[mp-webhook] gym ${gymSub.gym_id}: cobro descartado porque ${descarte}`,
+    )
+    await logEvent(gymSub.id, mpEventId, 'subscription_authorized_payment', rawBody)
     return
   }
 
