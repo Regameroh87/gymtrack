@@ -482,6 +482,12 @@ async function handlePreapprovalEvent(
   }
 
   if (newStatus === 'trialing') {
+    // MP dijo 'authorized': el owner adhirió la tarjeta y hay débito programado.
+    // Es el único momento en que eso se sabe con certeza, y va afuera del if de
+    // abajo a propósito — la autorización es un hecho aunque el status no se
+    // toque por haber período pagado vigente.
+    updates.mp_authorized_at = new Date().toISOString()
+
     // Un 'authorized' no puede degradar una suscripción con período pagado
     // vigente. Si lo hiciera, la fila quedaría en 'trialing' con trial_ends_at =
     // start_date (una fecha pasada), y todo lo que mire el trial la vería
@@ -536,6 +542,10 @@ async function handlePreapprovalEvent(
     updates.cancel_requested_at = new Date().toISOString()
     updates.access_until = accessUntil
     updates.canceled_at = new Date().toISOString()
+    // El preapproval vigente quedó muerto: MP no revive un cancelado. Dejar la
+    // marca de autorizado haría que el checkout crea que todavía cobra y le
+    // bloquee al owner la reactivación.
+    updates.mp_authorized_at = null
 
     // El status se toca solo si el acceso ya venció; si queda período pagado, la
     // fila sigue active/trialing y el cron finalize la cierra a su hora.

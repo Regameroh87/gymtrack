@@ -99,7 +99,7 @@ const STATUS_CONFIG: Record<
 };
 
 function getDescription(sub: GymSaasSubscription, display: DisplayStatus): string {
-  const hasCard = !!sub.mp_preapproval_id;
+  const hasCard = !!sub.mp_authorized_at;
 
   if (display === "cancel_scheduled") {
     return `Diste de baja tu suscripción y no se te va a cobrar de nuevo. Podés seguir usando GymTrack con normalidad hasta el ${fmt(sub.access_until)}; a partir de esa fecha el gimnasio queda en modo solo lectura. Tus datos no se borran.`;
@@ -130,11 +130,17 @@ function getDescription(sub: GymSaasSubscription, display: DisplayStatus): strin
 const canActivate = (s: DisplayStatus) =>
   s === "pending" || s === "expired" || s === "canceled";
 
-// Durante el trial se puede cargar la tarjeta de forma anticipada mientras no
-// haya un preapproval de MP asociado (el checkout respeta los días restantes y
-// programa el primer cobro para el fin del trial).
+// Durante el trial se puede cargar la tarjeta de forma anticipada mientras MP no
+// haya autorizado ninguna (el checkout respeta los días restantes y programa el
+// primer cobro para el fin del trial).
+//
+// La condición mira mp_authorized_at y NO mp_preapproval_id: el id se escribe al
+// crear el preapproval, o sea al apretar este mismo botón, así que un checkout
+// abandonado lo dejaba seteado y el botón desaparecía para siempre. Si la marca
+// quedó desactualizada porque el webhook se perdió, el checkout le pregunta a MP
+// y responde 409 en vez de crear un segundo débito.
 const canAddCardDuringTrial = (sub: GymSaasSubscription | null | undefined) =>
-  sub?.status === "trialing" && !sub.mp_preapproval_id;
+  sub?.status === "trialing" && !sub.mp_authorized_at;
 
 // ── page sub-components ───────────────────────────────────────────────────────
 
@@ -375,7 +381,7 @@ export default function SuscripcionPage() {
             {/* Gestión: solo cuando ya hay una suscripción cargada en MP */}
             {!cancelPending &&
               (status === "active" ||
-                (status === "trialing" && !!sub?.mp_preapproval_id)) && (
+                (status === "trialing" && !!sub?.mp_authorized_at)) && (
                 <div className="flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
                   <Info size={14} color="#2563eb" className="mt-0.5 shrink-0" />
                   <p className="font-manrope text-[12px] leading-5 text-blue-800">

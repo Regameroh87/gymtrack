@@ -18,6 +18,12 @@ export type GymSaasSubscription = {
   current_period_end: string | null;
   canceled_at: string | null;
   mp_preapproval_id: string | null;
+  /**
+   * Cuándo MP confirmó 'authorized' el preapproval vigente. Es la señal de "ya
+   * cargó la tarjeta"; mp_preapproval_id NO lo es, porque el checkout lo escribe
+   * al crear el preapproval y un checkout abandonado lo deja seteado igual.
+   */
+  mp_authorized_at: string | null;
   cancel_at_period_end: boolean;
   cancel_requested_at: string | null;
   cancel_reason: string | null;
@@ -40,7 +46,7 @@ export function useGymSaasSubscription(gymId: string | null | undefined) {
       const { data, error } = await supabase
         .from("gym_saas_subscriptions")
         .select(
-          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, cancel_at_period_end, cancel_requested_at, cancel_reason, access_until, plan:saas_plans(name, trial_days, price, currency)",
+          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, mp_authorized_at, cancel_at_period_end, cancel_requested_at, cancel_reason, access_until, plan:saas_plans(name, trial_days, price, currency)",
         )
         .eq("gym_id", gymId!)
         .maybeSingle();

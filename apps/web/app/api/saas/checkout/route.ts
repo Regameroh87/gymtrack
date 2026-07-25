@@ -27,6 +27,7 @@ import {
   MP_API,
   cancelPreapproval,
   cancelPendingPreapprovals,
+  getPreapprovalState,
   trackPreapproval,
 } from "@/lib/saas/mp-preapprovals";
 
@@ -101,7 +102,7 @@ export async function POST(req: Request) {
     const { data: existingSub } = await svcClient
       .from("gym_saas_subscriptions")
       .select(
-        "id, status, trial_ends_at, cancel_at_period_end, access_until, mp_preapproval_id",
+        "id, status, trial_ends_at, cancel_at_period_end, access_until, mp_preapproval_id, mp_authorized_at",
       )
       .eq("gym_id", gym_id)
       .maybeSingle();
@@ -120,35 +121,83 @@ export async function POST(req: Request) {
     // Con baja programada NO se bloquea: es "reanudar", y ahí el preapproval
     // viejo ya quedó 'cancelled' en MP (/subscription/cancel) — MP no revive
     // cancelados, hace falta uno nuevo sí o sí.
-    const cobrandoAhora =
-      !!existingSub &&
-      !existingSub.cancel_at_period_end &&
-      (["active", "past_due"].includes(existingSub.status) ||
-        // trialing SIN preapproval es el trial self-service sin tarjeta: ese es
-        // justamente el caso legítimo de "agregar método de pago".
-        (existingSub.status === "trialing" && !!existingSub.mp_preapproval_id));
+    //
+    // La señal de "ya tiene tarjeta" es mp_authorized_at y NO mp_preapproval_id:
+    // el id se escribe unas líneas más abajo, al crear el preapproval, así que
+    // un checkout abandonado lo deja seteado sin que exista ninguna
+    // autorización. Usarlo acá dejaba al gym en trial sin poder cargar la
+    // tarjeta hasta que venciera la prueba.
+    if (existingSub && !existingSub.cancel_at_period_end) {
+      let cobrandoAhora =
+        ["active", "past_due"].includes(existingSub.status) ||
+        (existingSub.status === "trialing" && !!existingSub.mp_authorized_at);
 
-    if (cobrandoAhora) {
-      // Se deja rastro: si esto aparece seguido, hay owners llegando acá con la
-      // suscripción viva, o sea que la fila local y MP se están desincronizando.
-      await svcClient.from("saas_subscription_events").insert({
-        gym_subscription_id: existingSub.id,
-        mp_event_id: `checkout_blocked_${existingSub.id}_${Date.now()}`,
-        event_type: "checkout_blocked",
-        payload: {
-          requested_by: user.id,
-          status: existingSub.status,
-          mp_preapproval_id: existingSub.mp_preapproval_id,
-        },
-      });
+      // trialing con preapproval sin confirmar es el único caso ambiguo: puede
+      // ser el checkout abandonado (hay que dejarlo reintentar) o una
+      // autorización real cuyo aviso se perdió (bloquear, o se duplica el
+      // débito). La fila no los distingue porque la diferencia depende
+      // justamente del aviso que pudo no llegar, así que se le pregunta a MP,
+      // que es la única fuente que no depende de eso.
+      if (
+        !cobrandoAhora &&
+        existingSub.status === "trialing" &&
+        existingSub.mp_preapproval_id
+      ) {
+        const { status: mpStatus, httpStatus } = await getPreapprovalState(
+          existingSub.mp_preapproval_id,
+          mpToken,
+        );
 
-      return NextResponse.json(
-        {
-          error:
-            "Este gimnasio ya tiene una suscripción activa en MercadoPago. Si querés cambiar la tarjeta, entrá a tu cuenta de MercadoPago.",
-        },
-        { status: 409 },
-      );
+        if (mpStatus === "authorized") {
+          // El webhook nunca llegó o se descartó. Se repara la fila acá mismo:
+          // si no, cada visita a esta pantalla vuelve a preguntarle lo mismo a
+          // MP y la UI le sigue ofreciendo cargar una tarjeta que ya está.
+          cobrandoAhora = true;
+          await svcClient
+            .from("gym_saas_subscriptions")
+            .update({ mp_authorized_at: new Date().toISOString() })
+            .eq("id", existingSub.id);
+          console.warn(
+            `[saas/checkout] gym ${gym_id}: el preapproval ${existingSub.mp_preapproval_id} estaba authorized en MP y la fila no lo sabía; fila reparada`,
+          );
+        } else if (httpStatus >= 500) {
+          // MP no contesta. Ante la duda se frena: crear un segundo preapproval
+          // sobre una suscripción que quizás está cobrando es doble débito, y
+          // reintentar en unos minutos no le cuesta nada a nadie.
+          return NextResponse.json(
+            {
+              error:
+                "MercadoPago no está respondiendo. Probá de nuevo en unos minutos.",
+            },
+            { status: 502 },
+          );
+        }
+        // pending / cancelled / 4xx → checkout abandonado o preapproval muerto:
+        // se deja pasar, que es lo que este chequeo viene a habilitar.
+      }
+
+      if (cobrandoAhora) {
+        // Se deja rastro: si esto aparece seguido, hay owners llegando acá con
+        // la suscripción viva, o sea que la fila local y MP se desincronizan.
+        await svcClient.from("saas_subscription_events").insert({
+          gym_subscription_id: existingSub.id,
+          mp_event_id: `checkout_blocked_${existingSub.id}_${Date.now()}`,
+          event_type: "checkout_blocked",
+          payload: {
+            requested_by: user.id,
+            status: existingSub.status,
+            mp_preapproval_id: existingSub.mp_preapproval_id,
+          },
+        });
+
+        return NextResponse.json(
+          {
+            error:
+              "Este gimnasio ya tiene una suscripción activa en MercadoPago. Si querés cambiar la tarjeta, entrá a tu cuenta de MercadoPago.",
+          },
+          { status: 409 },
+        );
+      }
     }
 
     // Fecha del primer cobro:
@@ -339,6 +388,11 @@ export async function POST(req: Request) {
     // una baja abandonada a mitad de camino dejaría el gym con acceso indefinido
     // (sin access_until, ningún cron lo cierra). Los limpia el webhook al recibir
     // 'authorized', que es cuando la reactivación es real.
+    //
+    // mp_authorized_at sí se limpia, y no es opcional: la marca es del
+    // preapproval vigente, y el vigente pasa a ser este, que todavía está
+    // 'pending'. Arrastrar la del anterior diría "ya tiene tarjeta" sobre un
+    // preapproval que nunca fue autorizado.
     if (existingSub) {
       await svcClient
         .from("gym_saas_subscriptions")
@@ -347,6 +401,7 @@ export async function POST(req: Request) {
           mp_preapproval_id: mpPreapprovalId,
           mp_application_id: mpApplicationId,
           payer_email: payerEmail,
+          mp_authorized_at: null,
         })
         .eq("id", existingSub.id);
     } else {

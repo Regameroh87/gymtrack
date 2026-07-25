@@ -160,6 +160,10 @@ export async function POST(req: Request) {
             ? feedback.trim().slice(0, 1000)
             : null,
         access_until: accessUntil,
+        // El preapproval quedó cancelado en MP unas líneas arriba y MP no revive
+        // cancelados. La marca vale para el preapproval vigente, así que dejarla
+        // puesta sostendría que hay un débito vivo cuando ya no lo hay.
+        mp_authorized_at: null,
       })
       .eq("id", sub.id);
 
