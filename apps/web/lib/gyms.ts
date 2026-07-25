@@ -30,6 +30,8 @@ export interface Gym {
   instagram: string | null;
   default_catalog: boolean | null;
   is_active: boolean | null;
+  /** Gym de prueba: el único que los avisos del vendedor de prueba de MP pueden tocar. */
+  is_test: boolean | null;
   owner_id: string | null;
   created_at: string | null;
 }

@@ -23,6 +23,7 @@ export interface SaasSubscriptionRow {
   gym: {
     name: string | null;
     created_via: string | null;
+    is_test: boolean | null;
   } | null;
   plan: {
     name: string | null;
@@ -169,6 +170,13 @@ export function SaasSubscriptionsTable({
                   <tr key={r.id} className="border-b border-gray-50 last:border-0">
                     <td className="px-4 py-3 font-manrope text-[13px] font-semibold text-gray-900">
                       {r.gym?.name ?? "—"}
+                      {/* Un gym de prueba cobra por el sandbox de MP: sin esto,
+                          su suscripción se lee como facturación real. */}
+                      {r.gym?.is_test && (
+                        <span className="ml-1.5 rounded-md border border-violet-200 bg-violet-100 px-1.5 py-0.5 font-manrope text-[9px] font-bold uppercase tracking-wide text-violet-700">
+                          Prueba
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span

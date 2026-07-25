@@ -25,6 +25,18 @@ proyecto. Ir tachando antes de invitar al primer gimnasio pagando.
       permisos ni módulos de salud (verificado con `expo config`); dev/preview
       los conservan. Para activar en prod: `EXPO_PUBLIC_HEALTH=1` + build.
 - [x] **Páginas legales**: `/legal/privacidad` y `/legal/terminos` en la web.
+- [x] **Aislamiento del vendedor de prueba de MP**
+      (`20260725120000_saas_test_isolation.sql`): `gym_saas_subscriptions.mp_application_id`
+      (una fila solo la escribe la app que la creó) + `gyms.is_test` (el sandbox
+      solo puede tocar gyms marcados como de prueba, toggle en
+      `/platform/gyms/[id]`). El checkout además cancela y rechaza con 422 si un
+      token de prueba apuntó a un gym real.
+- [x] **Suscripciones huérfanas** (`20260725130000_saas_pending_orphans.sql`):
+      cron `expire-saas-pending` cierra las filas de checkouts abandonados, y el
+      Vercel Cron `/api/cron/saas-reap-preapprovals` cancela en MP los
+      preapprovals `pending` que nadie autorizó (si no, reabrir un `init_point`
+      viejo cobra la tarjeta y el webhook descarta el aviso). `eliminar-gym`
+      cancela el preapproval antes del borrado en cascada.
 
 ## 🔲 Pendiente — cuentas y configuración (dueño del proyecto)
 
@@ -37,6 +49,31 @@ proyecto. Ir tachando antes de invitar al primer gimnasio pagando.
 - [ ] **Bajar los rate limits de Auth**: Dashboard → Authentication → Rate
       Limits. Sugerido: OTP por hora ≤ 10 por IP (default es generoso). Evita
       spam de emails de login que consume cuota de Resend.
+
+### MercadoPago
+Referencia completa de las variables: `apps/web/.env.example`.
+
+- [ ] **Vercel** (Settings → Environment Variables): `MP_ACCESS_TOKEN` con el
+      token productivo **solo en Production**, y el de un vendedor de prueba en
+      Preview/Development. `MP_TEST_APPLICATION_ID` en **los tres** entornos: es
+      lo único que frena que un token de prueba estrene una suscripción sobre un
+      gimnasio real. `MP_TEST_PAYER_EMAIL` solo en Preview/Development.
+- [ ] **Supabase** (Edge Functions → Secrets, los usan `mp-webhook` y
+      `eliminar-gym`): `MP_ACCESS_TOKEN` + `MP_WEBHOOK_SECRET` de la app real y
+      `MP_ACCESS_TOKEN_TEST` + `MP_WEBHOOK_SECRET_TEST` + `MP_TEST_APPLICATION_ID`
+      de la de prueba. El proyecto es uno solo: la función está deployada una vez
+      y atiende las dos apps, eligiendo credenciales por `application_id`.
+- [ ] **Registrar la URL del webhook en el panel de MP, por aplicación**
+      (`https://<ref>.supabase.co/functions/v1/mp-webhook`). `/preapproval` NO
+      acepta `notification_url`: si la app cobradora cambia y nadie carga la URL
+      allá, no llega ninguna notificación y las suscripciones nunca se activan.
+- [ ] **Verificar el cron de huérfanos**: tras el primer deploy, Vercel →
+      Settings → Cron Jobs muestra `/api/cron/saas-reap-preapprovals` y genera
+      `CRON_SECRET`. En plan Hobby los crons corren una vez por día.
+- [ ] **Probar el flujo en un gym marcado como de prueba** (nunca en prod):
+      `/platform/gyms/[id]` → "Gimnasio de prueba" → checkout con
+      `MP_TEST_PAYER_EMAIL` y tarjeta de prueba. Los test users de MP no sirven
+      (colector real vs. pagador de prueba).
 
 ### Sentry
 - [ ] Crear cuenta gratis en sentry.io con 2 proyectos: `gymtrack-mobile`

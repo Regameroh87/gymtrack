@@ -12,6 +12,10 @@
 //   MP_TEST_PAYER_EMAIL      – email del comprador de prueba de MP; reemplaza al
 //                              del owner como payer_email. Se ignora en el
 //                              entorno de producción.
+//   MP_TEST_APPLICATION_ID   – id de la app de MP del vendedor de prueba. Sin
+//                              ella, un token de prueba puede crear un
+//                              preapproval sobre un gym real sin que nadie lo
+//                              frene: cargarla en TODOS los entornos.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -19,8 +23,12 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { SUPABASE_URL } from "@/lib/supabase-config";
 import { APP_URL } from "@/lib/site";
-
-const MP_API = "https://api.mercadopago.com";
+import {
+  MP_API,
+  cancelPreapproval,
+  cancelPendingPreapprovals,
+  trackPreapproval,
+} from "@/lib/saas/mp-preapprovals";
 
 // Cliente con service role para escribir en gym_saas_subscriptions (bypass RLS).
 function getServiceClient() {
@@ -92,7 +100,9 @@ export async function POST(req: Request) {
 
     const { data: existingSub } = await svcClient
       .from("gym_saas_subscriptions")
-      .select("id, status, trial_ends_at, cancel_at_period_end, access_until")
+      .select(
+        "id, status, trial_ends_at, cancel_at_period_end, access_until, mp_preapproval_id",
+      )
       .eq("gym_id", gym_id)
       .maybeSingle();
 
@@ -103,8 +113,13 @@ export async function POST(req: Request) {
     //  - trialing con trial vigente (self-service sin tarjeta): respeta el trial
     //    restante — el webhook al autorizar setea trial_ends_at = start_date,
     //    que así coincide y no resetea el trial.
-    //  - expired/canceled/past_due: cobro inmediato; un trial nuevo acá sería
-    //    el vector de trial infinito re-suscribiendo el mismo gym.
+    //  - expired/canceled/past_due CON trial_ends_at: cobro inmediato; un trial
+    //    nuevo acá sería el vector de trial infinito re-suscribiendo el mismo gym.
+    //  - expired/canceled/past_due SIN trial_ends_at: nunca consumió el trial.
+    //    Es el gym de alta de plataforma que abandonó un checkout y al que el
+    //    cron expire-saas-pending le puso 'expired' — cae en el else y estrena
+    //    su trial. No abre la puerta al trial infinito: trial_ends_at lo escribe
+    //    el webhook al autorizar y nunca vuelve a NULL.
     //  - pending (alta de plataforma, sin trial corrido): trial completo.
     const trialDays = plan.trial_days ?? 14;
     let startDate: string;
@@ -122,6 +137,7 @@ export async function POST(req: Request) {
       startDate = existingSub.trial_ends_at;
     } else if (
       existingSub &&
+      existingSub.trial_ends_at &&
       ["expired", "canceled", "past_due"].includes(existingSub.status)
     ) {
       startDate = new Date(Date.now() + 10 * 60_000).toISOString();
@@ -200,6 +216,18 @@ export async function POST(req: Request) {
     const mpApplicationId =
       mpData.application_id != null ? String(mpData.application_id) : null;
 
+    // Anotar el preapproval en el registro propio, ANTES de cualquier salida por
+    // error: es lo único que después permite saber que este id pertenece a este
+    // gym (MP no deja buscar por external_reference, ver el encabezado de
+    // lib/saas/mp-preapprovals). Un id que no se registró es un huérfano que
+    // nadie va a poder encontrar.
+    await trackPreapproval(svcClient, {
+      mp_preapproval_id: mpPreapprovalId,
+      gym_id,
+      mp_application_id: mpApplicationId,
+      payer_email: payerEmail ?? null,
+    });
+
     // El vendedor de prueba no puede estrenar suscripciones sobre gyms reales.
     // Se chequea recién acá porque hasta que MP no responde no sabemos con qué
     // app quedó creado el preapproval — el token no lo dice (un token de prueba
@@ -212,14 +240,15 @@ export async function POST(req: Request) {
       console.error(
         `[saas/checkout] app de prueba ${testAppId} contra el gym real ${gym_id}; preapproval ${mpPreapprovalId} cancelado`,
       );
-      await fetch(`${MP_API}/preapproval/${mpPreapprovalId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${mpToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: "cancelled" }),
-      }).catch(() => {});
+      const { ok } = await cancelPreapproval(mpPreapprovalId, mpToken).catch(
+        () => ({ ok: false }),
+      );
+      if (ok) {
+        await svcClient
+          .from("saas_preapprovals")
+          .update({ canceled_at: new Date().toISOString() })
+          .eq("mp_preapproval_id", mpPreapprovalId);
+      }
 
       return NextResponse.json(
         {
@@ -266,6 +295,16 @@ export async function POST(req: Request) {
         payer_email: payerEmail,
       });
     }
+
+    // Con el nuevo preapproval ya guardado, dar de baja los 'pending' que dejó
+    // cualquier intento anterior. Recién acá para no quedarse sin ninguno si algo
+    // de arriba falló, y solo los 'pending': cancelar un 'authorized' antes de
+    // que el reemplazo se confirme dejaría al gym sin cobro (eso lo hace el
+    // webhook cuando ya sabe que el nuevo quedó autorizado).
+    //
+    // A partir de acá el init_point viejo no puede cobrar nada, que es el
+    // huérfano que MP dejaba vivo indefinidamente.
+    await cancelPendingPreapprovals(svcClient, gym_id, mpPreapprovalId, mpToken);
 
     return NextResponse.json({ init_point });
   } catch (err: unknown) {

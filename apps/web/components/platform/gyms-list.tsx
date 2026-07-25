@@ -183,6 +183,13 @@ function GymCard({ gym }: { gym: GymWithOwner }) {
                 Suspendido
               </span>
             )}
+            {/* Los cobros de un gym de prueba pueden venir del sandbox de MP:
+                tiene que verse de un vistazo cuál es sin abrir el detalle. */}
+            {gym.is_test && (
+              <span className="shrink-0 rounded-md border border-violet-200 bg-violet-100 px-1.5 py-0.5 font-manrope text-[9px] font-bold uppercase tracking-wide text-violet-700">
+                Prueba
+              </span>
+            )}
           </div>
           <p className="truncate font-manrope text-[11px] text-gray-400">
             /{gym.slug}

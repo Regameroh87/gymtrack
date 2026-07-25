@@ -221,10 +221,17 @@ function accesoPagoHasta(sub: GymSubRow): string | null {
 //
 // Por qué acá y no en el checkout: cancelar el viejo cuando el owner *arranca* un
 // checkout deja al gym sin cobro si abandona el pago a mitad de camino. Recién
-// cuando el reemplazo está 'authorized' es seguro dar de baja al resto.
+// cuando el reemplazo está 'authorized' es seguro dar de baja al resto —
+// incluidos los 'authorized', que es lo que distingue esta limpieza de la del
+// checkout (esa solo toca 'pending').
 //
-// external_reference es el gym_id, así que la búsqueda encuentra también los
-// preapprovals que la fila ya no recuerda — que son justamente los peligrosos.
+// Los candidatos salen de saas_preapprovals, el registro propio. La versión
+// anterior usaba /preapproval/search?external_reference={gym_id} creyendo que
+// filtraba por gym, pero MP IGNORA ese parámetro: verificado el 2026-07-25, con
+// y sin filtro devuelve los mismos resultados. Recorría todos los preapprovals
+// del colector, así que con más de un gym el primer 'authorized' de cualquiera
+// daba de baja las suscripciones vivas de los demás. Paginar tampoco arregla
+// nada: offset=0 y offset=5 devuelven ids repetidos entre sí.
 //
 // Nunca tira: la fila ya quedó bien y propagar el error haría que MP reintente el
 // evento entero para rehacer trabajo ya hecho.
@@ -232,25 +239,58 @@ async function cancelarPreapprovalsHuerfanos(
   gymId: string,
   vigenteId: string,
   token: string,
+  appId: string,
 ) {
+  const sellarCancelado = (id: string) =>
+    supabaseAdmin
+      .from('saas_preapprovals')
+      .update({ canceled_at: new Date().toISOString() })
+      .eq('mp_preapproval_id', id)
+
   try {
-    const encontrados = await mpGet(
-      `/preapproval/search?external_reference=${encodeURIComponent(gymId)}&limit=50`,
-      token,
+    // El vigente se registra por si el checkout no llegó a anotarlo (o la fila
+    // viene de antes del registro): si no, quedaría fuera del reaper para siempre.
+    await supabaseAdmin.from('saas_preapprovals').upsert(
+      {
+        mp_preapproval_id: vigenteId,
+        gym_id: gymId,
+        mp_application_id: appId || null,
+      },
+      { onConflict: 'mp_preapproval_id' },
     )
 
-    const results: Array<{ id?: string; status?: string }> = encontrados.results ?? []
-    const huerfanos = results.filter(
-      (p) =>
-        p.id &&
-        p.id !== vigenteId &&
-        (p.status === 'authorized' || p.status === 'pending'),
-    )
+    const { data: registrados, error } = await supabaseAdmin
+      .from('saas_preapprovals')
+      .select('mp_preapproval_id')
+      .eq('gym_id', gymId)
+      .is('canceled_at', null)
+      .neq('mp_preapproval_id', vigenteId)
 
-    if (!huerfanos.length) return
+    if (error) throw error
+    if (!registrados?.length) return
 
-    for (const p of huerfanos) {
-      const res = await fetch(`${MP_API}/preapproval/${p.id}`, {
+    for (const { mp_preapproval_id: id } of registrados) {
+      // Se consulta el estado real antes de tocar nada: GET /preapproval/{id} sí
+      // es exacto, y así no se manda un PUT contra algo ya cancelado.
+      let estado: string | null = null
+      try {
+        const preapproval = await mpGet(`/preapproval/${id}`, token)
+        estado = preapproval.status ?? null
+      } catch (err) {
+        // 4xx = no existe o es de otra app; 5xx = MP caído. En los dos casos se
+        // deja para la próxima corrida del reaper.
+        console.warn(`[mp-webhook] gym ${gymId}: no se pudo leer ${id}:`, err)
+        continue
+      }
+
+      if (estado === 'cancelled') {
+        await sellarCancelado(id)
+        continue
+      }
+
+      if (estado !== 'authorized' && estado !== 'pending') continue
+
+      const res = await fetch(`${MP_API}/preapproval/${id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -258,13 +298,16 @@ async function cancelarPreapprovalsHuerfanos(
         },
         body: JSON.stringify({ status: 'cancelled' }),
       })
+
+      if (res.ok || res.status < 500) await sellarCancelado(id)
+
       console.log(
-        `[mp-webhook] gym ${gymId}: preapproval huérfano ${p.id} (${p.status}) → cancelado=${res.ok}`,
+        `[mp-webhook] gym ${gymId}: preapproval huérfano ${id} (${estado}) → cancelado=${res.ok}`,
       )
     }
   } catch (err) {
     // Queda un huérfano vivo, pero el gym tiene su suscripción bien. Se ve en el
-    // log y el próximo 'authorized' vuelve a intentar la limpieza.
+    // log y el próximo 'authorized' (o el reaper diario) reintenta la limpieza.
     console.error(`[mp-webhook] gym ${gymId}: falló la limpieza de huérfanos:`, err)
   }
 }
@@ -512,7 +555,12 @@ async function handlePreapprovalEvent(
   // Con el reemplazo ya confirmado, dar de baja cualquier otro preapproval del
   // gym: a partir de acá hay a lo sumo uno vivo por gym.
   if (newStatus === 'trialing') {
-    await cancelarPreapprovalsHuerfanos(gymSub.gym_id, preapprovalId, token)
+    await cancelarPreapprovalsHuerfanos(
+      gymSub.gym_id,
+      preapprovalId,
+      token,
+      creds.appId,
+    )
   }
 }
 

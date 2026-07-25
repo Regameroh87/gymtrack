@@ -4,7 +4,9 @@
 // Réplica de apps/mobile platform/gyms/[id].web.jsx. Mutaciones:
 //  - Guardar: update directo a gyms (RLS gyms_update, gated a super_admin).
 //  - Suspender/reactivar: update de is_active (mismo policy).
-//  - Eliminar: edge function eliminar-gym (borrado atómico en cascada + cuentas).
+//  - Eliminar: edge function eliminar-gym (borrado atómico en cascada + cuentas
+//    + cancelación del preapproval en MP; si eso último falla devuelve
+//    mp_warning y acá se muestra en vez de navegar).
 //  - Transferir dueño: edge function transferir-owner. NO va con el guardado del
 //    form: mover el dueño toca gyms.owner_id y dos memberships a la vez, y eso
 //    solo es atómico dentro del RPC transfer_gym_owner.
@@ -129,6 +131,12 @@ export function EditGymForm({
   const [defaultCatalog, setDefaultCatalog] = useState(
     gym.default_catalog ?? false
   );
+  const [isTest, setIsTest] = useState(gym.is_test ?? false);
+
+  // Aviso de que el preapproval del gym borrado quedó vivo en MP. No se puede
+  // mostrar con notify(): el borrado navega a la lista y el aviso se perdería,
+  // justo el que obliga a entrar al panel de MP a cancelar a mano.
+  const [mpWarning, setMpWarning] = useState<string | null>(null);
 
   const notify = (type: "success" | "error", message: string) => {
     setNotification({ type, message });
@@ -231,6 +239,7 @@ export function EditGymForm({
           header_logo_position: headerPosition,
           header_content: headerContent,
           default_catalog: defaultCatalog,
+          is_test: isTest,
         })
         .eq("id", gym.id);
 
@@ -313,7 +322,7 @@ export function EditGymForm({
     setDeleting(true);
     try {
       const supabase = getBrowserSupabase();
-      const { error } = await supabase.functions.invoke("eliminar-gym", {
+      const { data, error } = await supabase.functions.invoke("eliminar-gym", {
         body: { gym_id: gym.id },
       });
       if (error) {
@@ -321,6 +330,18 @@ export function EditGymForm({
           await readFunctionError(error, "Error al eliminar el gimnasio.")
         );
       }
+
+      // El gym se borró, pero su cobro recurrente en MP puede haber quedado
+      // vivo. No se navega: hay que leer el aviso y cancelar a mano en MP, o le
+      // sigue llegando la factura a un dueño que ya no existe en el sistema.
+      const warning = (data as { mp_warning?: string | null } | null)?.mp_warning;
+      if (warning) {
+        setConfirmOpen(false);
+        setDeleting(false);
+        setMpWarning(warning);
+        return;
+      }
+
       router.replace("/platform/gyms");
       router.refresh();
     } catch (err) {
@@ -621,6 +642,27 @@ export function EditGymForm({
           onChange={setDefaultCatalog}
         />
 
+        <div className="my-7 h-px w-full bg-gray-100" />
+
+        {/* ── Sección 5 · Pruebas de cobro ── */}
+        <SectionTitle
+          step="5"
+          title="Gimnasio de prueba"
+          subtitle="Para probar el checkout de MercadoPago sin tocar cobros reales"
+        />
+        <Toggle
+          label="Marcar como gimnasio de prueba"
+          hint="Habilita al vendedor de prueba de MercadoPago a operar sobre este gym. Los avisos del sandbox se descartan en cualquier gym que no tenga esto activo. No lo actives en un gimnasio real: le abrís la puerta a que un pago de prueba le cambie la suscripción."
+          value={isTest}
+          onChange={setIsTest}
+        />
+        {isTest && (
+          <p className="mt-2 font-manrope text-[11px] font-bold text-amber-600">
+            Los cobros de este gimnasio pueden venir del sandbox de MercadoPago:
+            su suscripción no representa plata real.
+          </p>
+        )}
+
         {/* Submit */}
         <div className="mt-8">
           <button
@@ -706,6 +748,29 @@ export function EditGymForm({
             </span>
           </button>
         </div>
+
+        {/* El gym ya se borró pero su cobro en MP sigue vivo: acción manual. */}
+        {mpWarning && (
+          <div className="mt-5 rounded-[14px] border border-red-300 bg-white p-4">
+            <p className="font-manrope text-[13px] font-bold text-red-700">
+              El gimnasio se eliminó, pero la suscripción sigue activa en
+              MercadoPago
+            </p>
+            <p className="mt-1 font-manrope text-[12px] text-red-600/90">
+              {mpWarning}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                router.replace("/platform/gyms");
+                router.refresh();
+              }}
+              className="mt-3 inline-flex items-center gap-2 rounded-[11px] bg-red-600 px-4 py-2 font-manrope text-[13px] font-bold text-white transition hover:bg-red-700"
+            >
+              Entendido, volver a la lista
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal de transferencia de dueño */}
