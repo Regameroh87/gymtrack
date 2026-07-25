@@ -77,8 +77,15 @@ export function canCancelSubscription(
 ): boolean {
   if (!sub || sub.cancel_at_period_end) return false;
   if (sub.status === "active" || sub.status === "past_due") return true;
-  // En trial solo tiene sentido si hay algo que cancelar en MP.
-  return sub.status === "trialing" && !!sub.mp_preapproval_id;
+  // En trial solo tiene sentido si hay una autorización viva que cancelar en MP.
+  // La señal es mp_authorized_at y NO mp_preapproval_id: el id lo escribe el
+  // checkout al crear el preapproval, así que un checkout abandonado lo deja
+  // seteado sin que exista ninguna autorización. Con el id, el botón aparecía
+  // para un gym en trial sin tarjeta y le escribía una baja completa
+  // (cancel_at_period_end, cancel_reason, banner 'cancel_scheduled') sobre una
+  // suscripción que nunca cobró. Ese pending lo limpia el próximo checkout o el
+  // reaper, no el owner.
+  return sub.status === "trialing" && !!sub.mp_authorized_at;
 }
 
 /** true = el gym puede escribir datos; false = modo lectura (suscripción vencida o pendiente) */
