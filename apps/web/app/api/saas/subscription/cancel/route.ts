@@ -20,8 +20,7 @@ import { createServerSupabase } from "@/lib/supabase-server";
 import { SUPABASE_URL } from "@/lib/supabase-config";
 import { isCancelReason } from "@/lib/saas/cancel-reasons";
 import { paidAccessUntil } from "@/lib/saas/access-period";
-
-const MP_API = "https://api.mercadopago.com";
+import { MP_API, getPreapprovalState } from "@/lib/saas/mp-preapprovals";
 
 // Estados desde los que tiene sentido darse de baja. 'pending' queda afuera
 // (nunca activó nada) y 'canceled'/'expired' ya no cobran.
@@ -67,7 +66,7 @@ export async function POST(req: Request) {
     const { data: sub } = await svcClient
       .from("gym_saas_subscriptions")
       .select(
-        "id, status, mp_preapproval_id, trial_ends_at, current_period_end, cancel_at_period_end",
+        "id, status, mp_preapproval_id, mp_authorized_at, trial_ends_at, current_period_end, cancel_at_period_end",
       )
       .eq("gym_id", gym_id)
       .maybeSingle();
@@ -93,12 +92,75 @@ export async function POST(req: Request) {
       );
     }
 
+    const mpToken = process.env.MP_ACCESS_TOKEN;
+
+    // ── Un trial sin autorización no tiene nada que dar de baja ────────────────
+    // Espejo de canCancelSubscription (lib/hooks/use-saas-subscription): la UI
+    // decide qué botón mostrar, esto decide qué se permite. Sin la guarda el
+    // endpoint queda alcanzable con la sesión del owner y un curl, y le escribe
+    // una baja completa (cancel_at_period_end, cancel_reason, banner
+    // 'cancel_scheduled') a una suscripción que nunca cobró: churn inventado.
+    //
+    // El pending de un checkout abandonado no es del owner: lo limpia el próximo
+    // checkout o el reaper agendado.
+    //
+    // Igual que en /api/saas/checkout, trialing sin mp_authorized_at es ambiguo —
+    // puede ser el checkout abandonado o una autorización real cuyo aviso se
+    // perdió — y la fila no los distingue, así que se le pregunta a MP. Acá el
+    // sesgo ante la duda es el OPUESTO al del checkout: allá se frena para no
+    // duplicar un débito, y acá se deja pasar, porque bloquear la baja de un
+    // cobro vivo le sigue sacando plata al owner sin forma de detenerlo.
+    if (sub.status === "trialing" && !sub.mp_authorized_at) {
+      const sinNadaQueCancelar = NextResponse.json(
+        {
+          error:
+            "Todavía no autorizaste un método de pago, así que no hay ningún cobro que dar de baja. Tu prueba gratis sigue hasta la fecha de siempre.",
+        },
+        { status: 409 },
+      );
+
+      if (!sub.mp_preapproval_id) return sinNadaQueCancelar;
+
+      if (!mpToken) {
+        return NextResponse.json(
+          { error: "MP_ACCESS_TOKEN no configurado" },
+          { status: 500 },
+        );
+      }
+
+      const { status: mpStatus, httpStatus } = await getPreapprovalState(
+        sub.mp_preapproval_id,
+        mpToken,
+      );
+
+      if (httpStatus >= 500) {
+        // Sin respuesta de MP no se sabe si hay un débito vivo. Se pide
+        // reintentar en vez de rechazar: un "no tenés nada que cancelar" falso
+        // deja al owner creyendo que no le van a cobrar.
+        return NextResponse.json(
+          {
+            error:
+              "MercadoPago no está respondiendo. Probá de nuevo en unos minutos.",
+          },
+          { status: 502 },
+        );
+      }
+
+      if (mpStatus !== "authorized") return sinNadaQueCancelar;
+
+      // El aviso de MP nunca llegó o se descartó. La baja sigue adelante: hay un
+      // débito real que dar de baja. No se repara mp_authorized_at porque unas
+      // líneas más abajo la baja lo deja en null igual.
+      console.warn(
+        `[saas/cancel] gym ${gym_id}: el preapproval ${sub.mp_preapproval_id} estaba authorized en MP y la fila no lo sabía; se procede con la baja`,
+      );
+    }
+
     // ── Cancelar en MP ────────────────────────────────────────────────────────
     // Va primero: si falla, no se marca nada. Marcar la baja con el cobro vivo
     // sería lo peor de los dos mundos (el owner cree que se dio de baja y le
     // sigue llegando la factura).
     if (sub.mp_preapproval_id) {
-      const mpToken = process.env.MP_ACCESS_TOKEN;
       if (!mpToken) {
         return NextResponse.json(
           { error: "MP_ACCESS_TOKEN no configurado" },
