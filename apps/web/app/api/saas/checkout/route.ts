@@ -106,6 +106,51 @@ export async function POST(req: Request) {
       .eq("gym_id", gym_id)
       .maybeSingle();
 
+    // ── Nada de checkouts sobre una suscripción que ya cobra ─────────────────
+    // Es el espejo de canActivate / canAddCardDuringTrial (admin/suscripcion):
+    // la UI decide qué mostrar, esto decide qué se permite. Sin la guarda, el
+    // endpoint queda alcanzable con la sesión del owner y un curl, y cada
+    // llamada crea un preapproval MÁS en MP — que no tiene el concepto de "una
+    // suscripción por cliente": los dos debitan la misma tarjeta hasta que el
+    // webhook del nuevo cancele al viejo, y si ese aviso no llega, nunca.
+    //
+    // De paso cierra el trial renovable: un gym 'active' llegaba al else del
+    // cálculo de startDate y estrenaba otros trialDays gratis.
+    //
+    // Con baja programada NO se bloquea: es "reanudar", y ahí el preapproval
+    // viejo ya quedó 'cancelled' en MP (/subscription/cancel) — MP no revive
+    // cancelados, hace falta uno nuevo sí o sí.
+    const cobrandoAhora =
+      !!existingSub &&
+      !existingSub.cancel_at_period_end &&
+      (["active", "past_due"].includes(existingSub.status) ||
+        // trialing SIN preapproval es el trial self-service sin tarjeta: ese es
+        // justamente el caso legítimo de "agregar método de pago".
+        (existingSub.status === "trialing" && !!existingSub.mp_preapproval_id));
+
+    if (cobrandoAhora) {
+      // Se deja rastro: si esto aparece seguido, hay owners llegando acá con la
+      // suscripción viva, o sea que la fila local y MP se están desincronizando.
+      await svcClient.from("saas_subscription_events").insert({
+        gym_subscription_id: existingSub.id,
+        mp_event_id: `checkout_blocked_${existingSub.id}_${Date.now()}`,
+        event_type: "checkout_blocked",
+        payload: {
+          requested_by: user.id,
+          status: existingSub.status,
+          mp_preapproval_id: existingSub.mp_preapproval_id,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          error:
+            "Este gimnasio ya tiene una suscripción activa en MercadoPago. Si querés cambiar la tarjeta, entrá a tu cuenta de MercadoPago.",
+        },
+        { status: 409 },
+      );
+    }
+
     // Fecha del primer cobro:
     //  - baja programada con acceso vigente ("reanudar"): el cobro arranca donde
     //    termina el período ya pagado. Sin esta rama, un gym 'active' que se dio
@@ -221,12 +266,31 @@ export async function POST(req: Request) {
     // gym (MP no deja buscar por external_reference, ver el encabezado de
     // lib/saas/mp-preapprovals). Un id que no se registró es un huérfano que
     // nadie va a poder encontrar.
-    await trackPreapproval(svcClient, {
+    const registrado = await trackPreapproval(svcClient, {
       mp_preapproval_id: mpPreapprovalId,
       gym_id,
       mp_application_id: mpApplicationId,
       payer_email: payerEmail ?? null,
     });
+
+    // Si no se pudo anotar, se cancela y se aborta. Seguir dejaría en MP un
+    // preapproval autorizable que no está en ningún índice: ni el reaper ni la
+    // reconciliación lo encontrarían jamás, porque el registro propio es la
+    // única forma de saber qué preapprovals son de este gym. Devolver un error
+    // hace que el owner reintente, que es barato; el huérfano no se arregla más.
+    if (!registrado) {
+      const { ok } = await cancelPreapproval(mpPreapprovalId, mpToken).catch(
+        () => ({ ok: false }),
+      );
+      console.error(
+        `[saas/checkout] preapproval ${mpPreapprovalId} del gym ${gym_id} no se pudo registrar; cancelado=${ok}`,
+      );
+
+      return NextResponse.json(
+        { error: "No se pudo iniciar el pago. Probá de nuevo en unos minutos." },
+        { status: 500 },
+      );
+    }
 
     // El vendedor de prueba no puede estrenar suscripciones sobre gyms reales.
     // Se chequea recién acá porque hasta que MP no responde no sabemos con qué

@@ -3,6 +3,13 @@
 // Da de baja en MercadoPago los preapprovals 'pending' que quedaron colgados:
 // checkouts que el owner arrancó y nunca autorizó.
 //
+// Y de paso reconcilia: como para decidir si cancelar ya consulta el estado real
+// de cada id, aprovecha para reportar los 'authorized' que la fila local no
+// declara vigentes (ver el bloque de reconciliación abajo). Es el único lugar
+// donde se compara lo que dice MP contra lo que dice nuestra base: el webhook
+// escribe el estado local, pero si un aviso se pierde nadie lo nota. Solo
+// reporta, nunca cancela un cobro vivo.
+//
 // Por qué existe, y por qué no es un cron de Postgres como los demás: el
 // huérfano peligroso no es la fila (esa la expira expire-saas-pending), es el
 // preapproval vivo en MP. Si meses después alguien reabre el init_point viejo,
@@ -17,7 +24,7 @@
 // Va como Vercel Cron (apps/web/vercel.json). Cada entorno barre con SU token, y
 // un token solo puede tocar preapprovals de su propia app de MP: el deploy
 // productivo nunca cancela los del vendedor de prueba, y el local/preview nunca
-// toca los reales (los deja en `skipped`).
+// toca los reales (los deja en `unknown`).
 //
 // Variables de entorno requeridas (server-side):
 //   MP_ACCESS_TOKEN           – token de la app cobradora de este entorno
@@ -118,7 +125,17 @@ export async function GET(req: Request) {
     const results: Array<{
       gym_id: string;
       canceled: string[];
-      skipped: string[];
+      unknown: string[];
+    }> = [];
+
+    // Desincronizaciones detectadas: preapprovals con débito vivo en MP que la
+    // fila local no declara como vigentes. Ver el bloque que las arma abajo.
+    const mismatches: Array<{
+      gym_id: string;
+      kind: "double_charge" | "desync";
+      status: string | null;
+      vigente: string | null;
+      authorized: string[];
     }> = [];
 
     for (const gymId of gymIds) {
@@ -134,16 +151,54 @@ export async function GET(req: Request) {
           ? sub.mp_preapproval_id
           : null;
 
-      const { canceled, skipped } = await cancelPendingPreapprovals(
+      const { canceled, authorized, unknown } = await cancelPendingPreapprovals(
         svcClient,
         gymId,
         keepId,
         mpToken,
       );
 
+      // ── Reconciliación ──────────────────────────────────────────────────────
+      // `authorized` son preapprovals que MP está cobrando y que NO son el
+      // vigente de la fila. Cualquiera de los dos casos es plata mal cobrada:
+      //
+      //  - double_charge: la fila declara un preapproval vigente y además hay
+      //    otro con débito vivo. La tarjeta se debita dos veces por mes. Pasa
+      //    cuando el 'authorized' del reemplazo nunca llegó al webhook, que es
+      //    el único que da de baja huérfanos autorizados.
+      //  - desync: la fila NO declara nada cobrando (expired/canceled/sin fila)
+      //    pero MP sí cobra. Es el peor: el panel muestra el gym en solo lectura
+      //    mientras el owner paga todos los meses.
+      //
+      // Solo se reporta, no se cancela: dar de baja un cobro vivo a partir de
+      // una fila que puede estar desactualizada arriesga dejar sin servicio a un
+      // gym que pagó. La corrección la hace una persona con los datos a la vista.
+      if (authorized.length) {
+        const kind = keepId ? "double_charge" : "desync";
+        const mismatch = {
+          gym_id: gymId,
+          kind: kind as "double_charge" | "desync",
+          status: sub?.status ?? null,
+          vigente: keepId,
+          authorized,
+        };
+        mismatches.push(mismatch);
+
+        console.error(
+          `[cron/reap-preapprovals] gym ${gymId}: ${kind} — fila '${sub?.status ?? "sin fila"}' (vigente ${keepId ?? "ninguno"}), authorized en MP: ${authorized.join(", ")}`,
+        );
+
+        await svcClient.from("saas_subscription_events").insert({
+          gym_subscription_id: sub?.id ?? null,
+          mp_event_id: `mismatch_${gymId}_${Date.now()}`,
+          event_type: "preapproval_mismatch",
+          payload: mismatch,
+        });
+      }
+
       if (!canceled.length) continue;
 
-      results.push({ gym_id: gymId, canceled, skipped });
+      results.push({ gym_id: gymId, canceled, unknown });
 
       // Auditoría. gym_subscription_id es nullable: si el gym no tiene fila, el
       // evento queda igual registrado (mismo criterio que logEvent del webhook).
@@ -152,18 +207,19 @@ export async function GET(req: Request) {
         gym_subscription_id: sub?.id ?? null,
         mp_event_id: `reap_${gymId}_${Date.now()}`,
         event_type: "orphan_preapprovals_reaped",
-        payload: { status: sub?.status ?? null, kept: keepId, canceled, skipped },
+        payload: { status: sub?.status ?? null, kept: keepId, canceled, unknown },
       });
     }
 
     const totalCanceled = results.reduce((n, r) => n + r.canceled.length, 0);
     console.log(
-      `[cron/reap-preapprovals] ${gymIds.length} gym(s) revisado(s), ${totalCanceled} preapproval(s) cancelado(s)`,
+      `[cron/reap-preapprovals] ${gymIds.length} gym(s) revisado(s), ${totalCanceled} preapproval(s) cancelado(s), ${mismatches.length} desincronización(es)`,
     );
 
     return NextResponse.json({
       reviewed: gymIds.length,
       canceled: totalCanceled,
+      mismatches,
       results,
     });
   } catch (err: unknown) {
