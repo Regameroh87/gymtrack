@@ -107,21 +107,49 @@ select cron.schedule('purge-archived-catalog-plans', '0 4 * * *',
 select cron.schedule('purge-soft-deleted', '30 6 * * *',
   $cronjob$ select public.purge_soft_deleted(); $cronjob$);
 
--- ── 4. cleanup-media: REQUIERE EDICIÓN MANUAL ────────────────────────────────
+-- ── 4. cleanup-media: REQUIERE DOS PASOS MANUALES ────────────────────────────
 -- Este job invoca una edge function por HTTP, así que necesita la URL del
--- proyecto y un service_role key. En prod ambos están hardcodeados dentro del
--- comando, o sea que el key vive en texto plano en cron.job.command.
+-- proyecto y un service_role key.
 --
--- NO se replican acá a propósito: copiar los de prod haría que el cron de dev
--- borre medios de producción, y pegar un service_role key en un archivo del
--- repo lo filtraría a git.
+-- pg_cron corre DENTRO de Postgres y no tiene acceso a los secrets de las edge
+-- functions (esos viven en el runtime de Deno). Por eso el key tiene que estar
+-- disponible desde la base. La forma correcta es Vault, NO hardcodearlo en el
+-- comando: cron.job.command es texto plano legible por cualquiera que pueda
+-- consultar esa tabla. Prod arrancó con el key incrustado y se migró a Vault el
+-- 2026-07-25.
 --
--- Reemplazá los dos placeholders con los valores del proyecto nuevo y corré
--- este bloque aparte. El key sale de: Project Settings → API → service_role.
+-- El key NO se replica en este archivo a propósito: pegarlo acá lo filtraría a
+-- git, y copiar el de prod haría que el cron de dev borre medios de producción.
+
+-- 4.a — Guardar el service_role key DEL PROYECTO NUEVO en Vault.
+--       Sale de: Project Settings → API → service_role.
+--       Correr esto aparte, reemplazando el placeholder:
+--
+-- select vault.create_secret(
+--   '<SERVICE_ROLE_KEY_DEL_PROYECTO_NUEVO>',
+--   'service_role_key',
+--   'service_role JWT que usa el cron cleanup-media'
+-- );
+
+-- 4.b — Agendar el job leyendo el key de Vault en cada ejecución.
+--       Reemplazar <PROJECT_REF> por el ref del proyecto nuevo.
 --
 -- select cron.schedule('cleanup-media', '0 6 * * *', $cronjob$select
 --   net.http_post(
 --       url:='https://<PROJECT_REF>.supabase.co/functions/v1/cleanUp-media',
---       headers:=jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE_KEY>'),
+--       headers:=jsonb_build_object(
+--         'Authorization',
+--         'Bearer ' || (select decrypted_secret
+--                         from vault.decrypted_secrets
+--                        where name = 'service_role_key')
+--       ),
 --       timeout_milliseconds:=4996
 --   );$cronjob$);
+--
+-- Verificación: el job corre como el rol `postgres`, así que confirmá que ese
+-- rol puede leer el secret antes de dar por bueno el cambio —si no, falla en
+-- silencio a la hora agendada:
+--
+--   set local role postgres;
+--   select length((select decrypted_secret from vault.decrypted_secrets
+--                   where name = 'service_role_key'));
