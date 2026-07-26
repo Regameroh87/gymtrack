@@ -503,7 +503,13 @@ async function handlePreapprovalEvent(
       updates.trial_ends_at = startDate ?? new Date(Date.now() + 14 * 86400_000).toISOString()
     }
 
-    updates.payer_email = preapproval.payer_email ?? null
+    // Solo se pisa si MP realmente trae un mail. Verificado el 2026-07-26: una
+    // vez autorizado el preapproval, GET /preapproval/{id} devuelve payer_email
+    // como string VACÍO, no como null — y `?? null` no atrapa '', así que la
+    // versión anterior borraba en cada aviso el mail que el checkout había
+    // guardado bien. El valor bueno sigue en saas_preapprovals, que la escribe
+    // el checkout y no el webhook.
+    if (preapproval.payer_email) updates.payer_email = preapproval.payer_email
 
     // La limpieza de la baja va afuera del if: reanudar mientras todavía queda
     // período pagado es justamente el caso normal, y ahí hay que borrar
