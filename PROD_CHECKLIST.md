@@ -75,6 +75,29 @@ Referencia completa de las variables: `apps/web/.env.example`.
       `MP_TEST_PAYER_EMAIL` y tarjeta de prueba. Los test users de MP no sirven
       (colector real vs. pagador de prueba).
 
+### MercadoPago — cobros del gym a sus socios (OAuth / marketplace)
+Flujo distinto al de arriba: acá el gimnasio le cobra al socio y la plata cae en
+la cuenta **del gym**, no en la nuestra. Cada gym autoriza por OAuth y guardamos
+un token delegado por gimnasio.
+
+- [ ] **Habilitar OAuth en la aplicación de MP** y registrar el redirect URI
+      exacto `https://www.gymtrack.ar/api/gym-mp/callback`. MP rechaza el canje
+      si no coincide carácter por carácter con el que manda `/connect`.
+- [ ] **Vercel**: `MP_OAUTH_CLIENT_ID` y `MP_OAUTH_CLIENT_SECRET` de esa
+      aplicación. Sin las dos, `/api/gym-mp/connect` responde 500.
+- [ ] **Verificar el cron de renovación**: Vercel → Cron Jobs debe mostrar
+      `/api/cron/refresh-mp-tokens`. **No es opcional**: los tokens de OAuth
+      caducan (~180 días) y uno vencido no avisa — el panel sigue diciendo
+      "habilitado" y el socio descubre el problema al intentar pagar.
+- [ ] **Confirmar que los tokens no son legibles desde el cliente**: con la key
+      anon, `select * from gym_mp_accounts` tiene que fallar con permiso
+      denegado (hay grants por columna, no solo RLS), y
+      `select gym_mp_get_credentials(...)` también.
+- [ ] **Probar con un test user de MP** conectado desde un gym de prueba. La
+      página `/admin/cobros` avisa con un cartel ámbar cuando la cuenta
+      conectada no es productiva (`live_mode = false`): si ese cartel aparece en
+      un gym real, hay un error de configuración.
+
 ### Sentry
 - [ ] Crear cuenta gratis en sentry.io con 2 proyectos: `gymtrack-mobile`
       (React Native) y `gymtrack-web` (Next.js).
