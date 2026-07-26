@@ -9,6 +9,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // ── Auth / Theme ──
 import { useAuth } from "../../../../src/auth/lib/getSession.jsx";
 import { useTheme } from "../../../../src/theme/theme.jsx";
+import { useActiveGym } from "../../../../src/contexts/active-gym-context.jsx";
+import { useGymOnlinePayments } from "../../../../src/hooks/activities/use-member-payment.js";
 
 // ── Design Tokens ──
 import { brandPrimary, brandSecondary, ui } from "@gymtrack/core/colors";
@@ -23,6 +25,7 @@ import {
   ClipboardList,
   Plus,
   QrCode,
+  Receipt,
 } from "../../../../assets/icons.jsx";
 
 // ── Components ──
@@ -73,6 +76,8 @@ export default function Home() {
   const insets = useSafeAreaInsets();
   const { user, profileLoading } = useAuth();
   const { isDark } = useTheme();
+  const { gymId } = useActiveGym();
+  const { data: onlinePaymentsEnabled } = useGymOnlinePayments(gymId);
 
   const now = new Date();
   const dateLine = formatDateLine(now);
@@ -210,6 +215,22 @@ export default function Home() {
               }}
               variant="ghost"
             />
+            {/* Solo si el dueño del gym habilitó los cobros online. Sin eso, la
+                pantalla de pago no tendría con qué cobrar y el socio se
+                encontraría con un error en vez de un botón que no existe. */}
+            {onlinePaymentsEnabled && (
+              <QuickAction
+                kicker="Cuota"
+                title="Pagar mi cuota"
+                description="Pagá con MercadoPago desde la app."
+                icon={<Receipt size={18} color={iconMint} />}
+                onPress={async () => {
+                  await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push("/pagar");
+                }}
+                variant="ghost"
+              />
+            )}
           </View>
         </View>
       </ScrollView>

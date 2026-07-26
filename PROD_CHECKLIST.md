@@ -97,6 +97,21 @@ un token delegado por gimnasio.
       página `/admin/cobros` avisa con un cartel ámbar cuando la cuenta
       conectada no es productiva (`live_mode = false`): si ese cartel aparece en
       un gym real, hay un error de configuración.
+- [ ] **Supabase** (Edge Functions → Secrets, los usan `crear-cobro-socio` y
+      `mp-gym-webhook`):
+      `MP_GYM_WEBHOOK_URL` = `https://<ref>.supabase.co/functions/v1/mp-gym-webhook`
+      y `MP_GYM_WEBHOOK_SECRET` = clave de la app de marketplace.
+      **Sin la primera la función se niega a cobrar** (a propósito: un pago sin
+      webhook se cobra y nunca se registra). Sin la segunda no se valida la
+      firma de los avisos. `APP_DEEP_LINK` es opcional y por defecto vale
+      `gymtrack://`.
+- [ ] **Nuevo build de la app** (no alcanza un OTA): `expo-web-browser` es un
+      módulo nativo. Con `expo-updates` solo, la pantalla de pago crashea en los
+      clientes viejos.
+- [ ] **Probar el pago con un socio de DOS actividades** de precios distintos:
+      el desglose tiene que mostrar las dos, el total ser la suma, y al pagar
+      tienen que quedar **dos** filas en `subscription_payments` con los dos
+      vencimientos movidos. Es el caso que el flujo viene a resolver.
 
 ### Sentry
 - [ ] Crear cuenta gratis en sentry.io con 2 proyectos: `gymtrack-mobile`
