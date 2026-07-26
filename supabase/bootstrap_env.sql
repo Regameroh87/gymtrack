@@ -33,9 +33,16 @@ create policy media_images_insert_authenticated
 
 -- ── 2. Seed: plan de suscripción SaaS ────────────────────────────────────────
 -- Sin una fila is_active, POST /api/saas/checkout corta con 422.
+--
+-- El guard es `where not exists` y NO `on conflict do nothing`: saas_plans no
+-- tiene constraint única sobre la que hacer conflict, así que el on conflict no
+-- hacía nada y cada corrida insertaba un plan más. Con dos planes activos el
+-- checkout no explota (toma el primero por created_at) pero cuál cobra pasa a
+-- depender del orden de inserción, que es exactamente lo que no querés en una
+-- tabla de precios.
 insert into public.saas_plans (name, price, currency, trial_days, is_active)
-values ('Pro', 60000.00, 'ARS', 14, true)
-on conflict do nothing;
+select 'Pro', 60000.00, 'ARS', 14, true
+ where not exists (select 1 from public.saas_plans where is_active);
 
 -- ── 3. Cron jobs ─────────────────────────────────────────────────────────────
 -- Los 9 jobs de pg_cron de prod. cron.schedule es upsert por jobname, así que
