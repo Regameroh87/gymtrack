@@ -75,6 +75,60 @@ Referencia completa de las variables: `apps/web/.env.example`.
       `MP_TEST_PAYER_EMAIL` y tarjeta de prueba. Los test users de MP no sirven
       (colector real vs. pagador de prueba).
 
+### MercadoPago — cobros del gym a sus socios (OAuth / marketplace)
+Flujo distinto al de arriba: acá el gimnasio le cobra al socio y la plata cae en
+la cuenta **del gym**, no en la nuestra. Cada gym autoriza por OAuth y guardamos
+un token delegado por gimnasio.
+
+- [ ] **Habilitar OAuth en la aplicación de MP** y registrar el redirect URI
+      exacto `https://www.gymtrack.ar/api/gym-mp/callback`. MP rechaza el canje
+      si no coincide carácter por carácter con el que manda `/connect`.
+- [ ] **Vercel**: `MP_OAUTH_CLIENT_ID` y `MP_OAUTH_CLIENT_SECRET` de esa
+      aplicación. Sin las dos, `/api/gym-mp/connect` responde 500.
+- [ ] **Verificar el cron de renovación**: Vercel → Cron Jobs debe mostrar
+      `/api/cron/refresh-mp-tokens`. **No es opcional**: los tokens de OAuth
+      caducan (~180 días) y uno vencido no avisa — el panel sigue diciendo
+      "habilitado" y el socio descubre el problema al intentar pagar.
+- [x] **Confirmar que los tokens no son legibles desde el cliente** (verificado
+      contra la base el 2026-07-27, con las migraciones ya aplicadas). Los
+      cuatro casos dan permiso denegado: `select *` como `anon`,
+      `select token_secret_id` como `authenticated`, y `gym_mp_get_credentials()`
+      con los dos roles. Los wrappers de Vault quedaron `SECURITY DEFINER` con
+      EXECUTE solo para `service_role`; `authenticated` ve siete columnas de
+      `gym_mp_accounts` y ninguna es un secreto. `member_pending_charges` sí es
+      invocable por `authenticated`, a propósito: es `SECURITY INVOKER` y RLS
+      decide qué devuelve.
+- [ ] **Probar con un test user de MP** conectado desde un gym de prueba. La
+      página `/admin/cobros` avisa con un cartel ámbar cuando la cuenta
+      conectada no es productiva (`live_mode = false`): si ese cartel aparece en
+      un gym real, hay un error de configuración.
+- [ ] **Supabase** (Edge Functions → Secrets, los usan `crear-cobro-socio` y
+      `mp-gym-webhook`):
+      `MP_GYM_WEBHOOK_URL` = `https://<ref>.supabase.co/functions/v1/mp-gym-webhook`
+      y `MP_GYM_WEBHOOK_SECRET` = clave de la app de marketplace.
+      **Sin la primera la función se niega a cobrar** (a propósito: un pago sin
+      webhook se cobra y nunca se registra). Sin la segunda no se valida la
+      firma de los avisos. `APP_DEEP_LINK` es opcional y por defecto vale
+      `gymtrack://`.
+- [ ] **Nuevo build de la app** (no alcanza un OTA): `expo-web-browser` es un
+      módulo nativo. Con `expo-updates` solo, la pantalla de pago crashea en los
+      clientes viejos.
+- [ ] **Homologación de la app de marketplace**: MP la exige para operar en
+      producción y la mide sobre un pago **real**, no de prueba. La preferencia
+      ya manda todo lo que el quality checklist evalúa y podemos controlar
+      (`items.description`, `category_id`, `payer` con documento / teléfono /
+      dirección cuando el socio los tiene cargados, `external_reference`,
+      `notification_url`, `statement_descriptor`). Quedan dos ítems fuera de
+      alcance a propósito: el **backend SDK** (las edge functions usan `fetch`,
+      igual que el flujo SaaS — no hay SDK oficial para Deno) y los de
+      **Checkout API** (`device_id`, `issuer_id`, `secure_form`), que no aplican
+      porque el socio paga en el checkout hosteado de MP y los datos de la
+      tarjeta nunca tocan nuestros servidores.
+- [ ] **Probar el pago con un socio de DOS actividades** de precios distintos:
+      el desglose tiene que mostrar las dos, el total ser la suma, y al pagar
+      tienen que quedar **dos** filas en `subscription_payments` con los dos
+      vencimientos movidos. Es el caso que el flujo viene a resolver.
+
 ### Sentry
 - [ ] Crear cuenta gratis en sentry.io con 2 proyectos: `gymtrack-mobile`
       (React Native) y `gymtrack-web` (Next.js).

@@ -435,3 +435,19 @@ entrypoint = "./functions/resend-webhook/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/mp-webhook/index.ts"
+
+# Cobro de la cuota del socio. La llama la app con el JWT del socio: verify_jwt
+# on, y adentro se chequea además la membresía en ESE gym.
+[functions.crear-cobro-socio]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/crear-cobro-socio/index.ts"
+
+# Webhook de MercadoPago para los pagos de los SOCIOS al gimnasio. Distinto de
+# mp-webhook: allá cobra la plataforma con su token, acá cobra el gym con el suyo
+# y el external_reference es un member_payment_intents.id, no un gym_id.
+# Externo: MP no manda JWT, la firma se valida adentro.
+[functions.mp-gym-webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/mp-gym-webhook/index.ts"

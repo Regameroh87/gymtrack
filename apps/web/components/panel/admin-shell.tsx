@@ -28,6 +28,7 @@ import {
   X,
   UserCog,
   CreditCard,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -84,6 +85,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { icon: Database, label: "Datos", path: "data" },
       { icon: CreditCard, label: "Suscripción", path: "suscripcion", ownerOnly: true },
+      { icon: Wallet, label: "Cobros online", path: "cobros", ownerOnly: true },
       { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
       { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
     ],

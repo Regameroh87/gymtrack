@@ -5,7 +5,18 @@ import { updateSession } from "@/lib/supabase-middleware";
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "gymtrack.ar";
 
 // Subdominios reservados que NO son gyms (sirven la landing de marca o el panel).
-const RESERVED = new Set(["www", "app", "api", ""]);
+//
+// `dev` y `dev-work` son los hostnames de los túneles de Cloudflare que exponen
+// el server local con un dominio público y estable — MP exige que el redirect_uri
+// del OAuth esté registrado de antemano y coincida carácter por carácter, así que
+// no sirve una URL que cambie en cada arranque. Sin reservarlos, `getSubdomain`
+// los toma por slug de gimnasio y reescribe TODO el sitio a /s/dev: la landing y
+// el panel dan 404 porque no existe ningún gym con ese slug.
+//
+// El costo es que ningún gimnasio va a poder llamarse `dev` ni `dev-work`, que es
+// justamente lo que queremos: un gym con ese slug secuestraría el entorno de
+// desarrollo.
+const RESERVED = new Set(["www", "app", "api", "dev", "dev-work", ""]);
 
 // Rutas del panel autenticado (sirven en el host `app.`). Sin sesión → /login.
 const PROTECTED_PREFIXES = [
