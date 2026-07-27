@@ -89,10 +89,15 @@ un token delegado por gimnasio.
       `/api/cron/refresh-mp-tokens`. **No es opcional**: los tokens de OAuth
       caducan (~180 días) y uno vencido no avisa — el panel sigue diciendo
       "habilitado" y el socio descubre el problema al intentar pagar.
-- [ ] **Confirmar que los tokens no son legibles desde el cliente**: con la key
-      anon, `select * from gym_mp_accounts` tiene que fallar con permiso
-      denegado (hay grants por columna, no solo RLS), y
-      `select gym_mp_get_credentials(...)` también.
+- [x] **Confirmar que los tokens no son legibles desde el cliente** (verificado
+      contra la base el 2026-07-27, con las migraciones ya aplicadas). Los
+      cuatro casos dan permiso denegado: `select *` como `anon`,
+      `select token_secret_id` como `authenticated`, y `gym_mp_get_credentials()`
+      con los dos roles. Los wrappers de Vault quedaron `SECURITY DEFINER` con
+      EXECUTE solo para `service_role`; `authenticated` ve siete columnas de
+      `gym_mp_accounts` y ninguna es un secreto. `member_pending_charges` sí es
+      invocable por `authenticated`, a propósito: es `SECURITY INVOKER` y RLS
+      decide qué devuelve.
 - [ ] **Probar con un test user de MP** conectado desde un gym de prueba. La
       página `/admin/cobros` avisa con un cartel ámbar cuando la cuenta
       conectada no es productiva (`live_mode = false`): si ese cartel aparece en
