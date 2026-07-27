@@ -108,6 +108,17 @@ un token delegado por gimnasio.
 - [ ] **Nuevo build de la app** (no alcanza un OTA): `expo-web-browser` es un
       módulo nativo. Con `expo-updates` solo, la pantalla de pago crashea en los
       clientes viejos.
+- [ ] **Homologación de la app de marketplace**: MP la exige para operar en
+      producción y la mide sobre un pago **real**, no de prueba. La preferencia
+      ya manda todo lo que el quality checklist evalúa y podemos controlar
+      (`items.description`, `category_id`, `payer` con documento / teléfono /
+      dirección cuando el socio los tiene cargados, `external_reference`,
+      `notification_url`, `statement_descriptor`). Quedan dos ítems fuera de
+      alcance a propósito: el **backend SDK** (las edge functions usan `fetch`,
+      igual que el flujo SaaS — no hay SDK oficial para Deno) y los de
+      **Checkout API** (`device_id`, `issuer_id`, `secure_form`), que no aplican
+      porque el socio paga en el checkout hosteado de MP y los datos de la
+      tarjeta nunca tocan nuestros servidores.
 - [ ] **Probar el pago con un socio de DOS actividades** de precios distintos:
       el desglose tiene que mostrar las dos, el total ser la suma, y al pagar
       tienen que quedar **dos** filas en `subscription_payments` con los dos

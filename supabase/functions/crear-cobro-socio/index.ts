@@ -59,6 +59,79 @@ interface PendingCharge {
   period_end: string
 }
 
+// ── Datos del pagador ────────────────────────────────────────────────────────
+// Todo lo que sigue existe para el motor antifraude de MercadoPago: cuanto más
+// completo va el objeto `payer`, menos pagos legítimos rechaza (está en su
+// checklist de calidad, como buena práctica).
+//
+// La regla común a los tres helpers: ante la duda, NO mandar el campo. Los tres
+// leen columnas de texto libre que carga el staff a mano, y un dato mal armado
+// es peor que la ausencia del dato — el motor lo cruza contra el titular de la
+// tarjeta y una discrepancia cuenta en contra.
+
+const MONTHS_ES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+]
+
+/** "julio 2026" a partir de un date ISO (YYYY-MM-DD). */
+function monthLabel(iso: string | null): string {
+  const [y, m] = (iso ?? '').split('-')
+  const name = MONTHS_ES[Number(m) - 1]
+  return name ? `${name} ${y}` : ''
+}
+
+const onlyDigits = (s: string) => s.replace(/\D/g, '')
+
+/**
+ * Documento del socio. Se manda solo cuando la longitud es inequívoca: 7-8
+ * dígitos es DNI, 11 es CUIL. Cualquier otra cosa queda afuera.
+ */
+function buildIdentification(raw: string | null) {
+  const n = onlyDigits(raw ?? '')
+  if (n.length === 7 || n.length === 8) return { type: 'DNI', number: n }
+  if (n.length === 11) return { type: 'CUIL', number: n }
+  return undefined
+}
+
+/**
+ * Teléfono normalizado. Se sacan el prefijo de país, el 9 de celular y el 0 de
+ * larga distancia (ningún número argentino de 10 dígitos empieza con 9 ni 0,
+ * así que sacarlos no puede comerse un dígito válido), y el 15 viejo de los
+ * celulares del AMBA, que aparece seguido en datos cargados a mano.
+ *
+ * Después queda un solo criterio: un número argentino normalizado tiene
+ * exactamente 10 dígitos (área + abonado). Si no da 10, es que no entendimos lo
+ * que el staff escribió y no se manda nada — un teléfono con un 15 de más no es
+ * un teléfono, y mandarlo le resta al perfil en vez de sumarle.
+ *
+ * El área se separa SOLO en el caso inequívoco: AMBA, 11 + 8 dígitos. Los demás
+ * códigos de área argentinos son de 2, 3 o 4 dígitos y no se distinguen mirando
+ * el número, así que en vez de partirlo mal van los 10 juntos en `number`. MP
+ * acepta el objeto sin `area_code`.
+ */
+function buildPhone(raw: string | null) {
+  let n = onlyDigits(raw ?? '')
+  if (n.startsWith('54')) n = n.slice(2)
+  if (n.startsWith('9')) n = n.slice(1)
+  if (n.startsWith('0')) n = n.slice(1)
+  if (n.startsWith('1115') && n.length === 12) n = '11' + n.slice(4)
+  if (n.length !== 10) return undefined
+  if (n.startsWith('11')) return { area_code: '11', number: n.slice(2) }
+  return { number: n }
+}
+
+/**
+ * profiles.address es una línea suelta, no está desagregada en calle / número /
+ * CP. Va entera como street_name y los otros dos campos quedan sin completar:
+ * MP acepta la dirección parcial, e inventar un número o un código postal sería
+ * exactamente el tipo de dato falso que conviene no mandar.
+ */
+function buildAddress(raw: string | null) {
+  const street = (raw ?? '').trim()
+  return street ? { street_name: street.slice(0, 255) } : undefined
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -86,7 +159,7 @@ Deno.serve(async (req: Request) => {
     // ningún error, que es el peor tipo de bug.
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('id, name, last_name, email')
+      .select('id, name, last_name, email, phone, document_number, address')
       .eq('user_id', callerAuth.user.id)
       .maybeSingle()
 
@@ -233,14 +306,29 @@ Deno.serve(async (req: Request) => {
         items: pending.map((c) => ({
           id: c.subscription_id,
           title: c.plan_label ? `${c.activity_name} · ${c.plan_label}` : c.activity_name,
+          description: [
+            `Cuota de ${c.activity_name}`,
+            monthLabel(c.period_start),
+            gym.name,
+          ].filter(Boolean).join(' · '),
+          // El listado de categorías está en
+          // https://api.mercadopago.com/item_categories. Una cuota de gimnasio
+          // es un servicio, no un producto físico.
+          category_id: 'services',
           quantity: 1,
           unit_price: Number(c.amount),
           currency_id: 'ARS',
         })),
+        // Los campos que devuelven undefined los descarta JSON.stringify, así
+        // que un socio sin teléfono ni documento cargado manda el payer mínimo
+        // y el cobro sale igual.
         payer: {
           email: profile.email,
           name: profile.name ?? undefined,
           surname: profile.last_name ?? undefined,
+          identification: buildIdentification(profile.document_number),
+          phone: buildPhone(profile.phone),
+          address: buildAddress(profile.address),
         },
         // El intent es lo que ata el pago de MP a nuestras filas. El webhook no
         // tiene otra forma de saber qué cuotas saldar.
