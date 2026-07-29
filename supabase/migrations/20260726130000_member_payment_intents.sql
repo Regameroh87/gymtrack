@@ -182,9 +182,9 @@ create policy member_payment_intent_items_select on public.member_payment_intent
 --
 -- NO chequea is_saas_subscription_active, y es deliberado: la plata del socio ya
 -- se movió en MP. Si el gym dejó de pagarnos el abono, lo correcto es dejar de
--- dejarle CREAR cobros nuevos —eso lo hace /api/gym-mp/cobro— y no negarse a
--- registrar uno que ya ocurrió. Negarlo dejaría al socio pagando sin que el
--- sistema lo sepa, que es el peor resultado posible.
+-- dejarle CREAR cobros nuevos —eso lo hace la edge function crear-cobro-socio— y
+-- no negarse a registrar uno que ya ocurrió. Negarlo dejaría al socio pagando sin
+-- que el sistema lo sepa, que es el peor resultado posible.
 create or replace function public.register_member_online_payment(
   p_intent_id     uuid,
   p_mp_payment_id text
