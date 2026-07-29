@@ -24,10 +24,17 @@
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY – los wrappers de Vault son service_role
 //   MP_GYM_WEBHOOK_URL  – URL pública de la función mp-gym-webhook. Sin esto el
 //                         pago se cobra y nadie lo registra.
-// Opcional:
+// Opcionales:
+//   MP_OAUTH_CLIENT_ID / MP_OAUTH_CLIENT_SECRET – credenciales de la app de
+//                         marketplace, los mismos valores que van en Vercel.
+//                         Habilitan renovar el token del gym acá mismo si está
+//                         por vencer. Sin ellas se cobra igual con el token que
+//                         haya: el único respaldo pasa a ser el cron diario.
 //   APP_DEEP_LINK       – a dónde vuelve el socio al terminar (default gymtrack://).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+import { hasOAuthApp, needsRefresh, refreshGymToken } from '../_shared/mp-oauth.ts'
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -294,10 +301,64 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: 'No se pudo iniciar el pago.' }, 500)
     }
 
+    // ── Renovar el token si está por vencer ─────────────────────────────────
+    // El cron /api/cron/refresh-mp-tokens es la red que evita que un gym se
+    // quede sin cobrar mientras nadie mira, pero corre una vez por día: si una
+    // corrida falló, o el gym estuvo meses inactivo, el token puede llegar
+    // vencido justo cuando un socio va a pagar. MP contesta 401 y el socio ve
+    // "MercadoPago no pudo generar el pago", que no le dice nada y no se arregla
+    // solo hasta la corrida siguiente. Renovar en el momento del uso es lo que
+    // hace que ese caso no se note.
+    //
+    // Va acá y no junto a la lectura de credenciales para no gastar una
+    // renovación en los caminos que ni siquiera llegan a cobrar (socio al día,
+    // cuotas en cero, webhook sin configurar).
+    //
+    // Nada de esto puede impedir un cobro: si la renovación falla se sigue con
+    // el token viejo, que dentro del margen de un día probablemente todavía
+    // sirva. Fallar acá dejaría al socio sin pagar por un problema que quizás no
+    // lo afecta todavía — mismo criterio que getUsableAccessToken en la web.
+    let accessToken: string = creds.access_token
+
+    if (needsRefresh(creds.expires_at) && creds.refresh_token && hasOAuthApp()) {
+      try {
+        const renewed = await refreshGymToken(creds.refresh_token)
+
+        const { error: storeError } = await supabaseAdmin.rpc('gym_mp_store_credentials', {
+          p_gym_id: gymId,
+          p_mp_user_id: renewed.mpUserId,
+          p_access_token: renewed.accessToken,
+          p_refresh_token: renewed.refreshToken,
+          p_public_key: renewed.publicKey,
+          p_expires_at: renewed.expiresAt,
+          p_live_mode: renewed.liveMode,
+          p_connected_by: null,
+        })
+
+        // Si no se pudo guardar, el token nuevo igual sirve para ESTE cobro: no
+        // hay razón para descartarlo y usar uno más viejo. Lo que se pierde es
+        // la renovación, que vuelve a intentarse en el cobro o el cron siguiente.
+        if (storeError) {
+          console.error(
+            `[crear-cobro-socio] gym ${gymId}: token renovado pero no guardado: ${storeError.message}`,
+          )
+        } else {
+          console.log(`[crear-cobro-socio] gym ${gymId}: token de MP renovado`)
+        }
+
+        accessToken = renewed.accessToken
+      } catch (err) {
+        console.error(
+          `[crear-cobro-socio] gym ${gymId}: no se pudo renovar el token:`,
+          err instanceof Error ? err.message : err,
+        )
+      }
+    }
+
     const mpRes = await fetch(`${MP_API}/checkout/preferences`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${creds.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
