@@ -95,14 +95,20 @@ export function CatalogExercisesSection() {
       await deleteExercise.mutateAsync(confirmDelete.id);
       setConfirmDelete(null);
     } catch (err) {
-      // 23503 = foreign_key_violation: el ejercicio está referenciado por sesiones o
-      // registros del catálogo (FKs ON DELETE NO ACTION).
+      // El historial de series lo barre delete_catalog_exercise, así que lo único
+      // que queda bloqueando es session_exercises: el ejercicio sigue armado
+      // dentro de la sesión de algún gimnasio. El RPC aborta con P0001 y el
+      // conteo en el mensaje; lo extraemos para decir cuántas son.
       const e = err as { code?: string; message?: string };
-      const inUse = e?.code === "23503";
+      const sessions = e?.message?.match(/en uso en (\d+) sesion/)?.[1];
       setDeleteError(
-        inUse
-          ? "No se puede eliminar: el ejercicio está en uso en sesiones o registros del catálogo. Quitalo de esas sesiones primero."
-          : e?.message || "No se pudo eliminar."
+        sessions
+          ? `No se puede eliminar: el ejercicio todavía forma parte de ${sessions} ${
+              sessions === "1" ? "sesión" : "sesiones"
+            } de gimnasios. Quitalo de esas sesiones primero.`
+          : e?.message?.includes("forbidden")
+            ? "No tenés permisos para eliminar ejercicios del catálogo."
+            : e?.message || "No se pudo eliminar."
       );
     }
   };
@@ -223,7 +229,7 @@ export function CatalogExercisesSection() {
       <DeleteConfirmModal
         visible={!!confirmDelete}
         title="Eliminar del catálogo"
-        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los gimnasios dejarán de verlo. Los forks a custom que ya lo referencian podrían quedar sin resolver.`}
+        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los gimnasios dejarán de verlo y se borrará el historial de series que los socios hayan registrado con este ejercicio. Los planes custom que lo copiaron quedarán con el ejercicio sin resolver.`}
         error={deleteError}
         isPending={deleteExercise.isPending}
         onCancel={() => {

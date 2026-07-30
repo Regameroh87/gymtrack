@@ -79,11 +79,14 @@ export const useDeleteCatalogExercise = () => {
 
   return useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase
-        .from("exercises_base")
-        .delete()
-        .eq("id", id)
-        .eq("is_catalog", true);
+      // Va por RPC y no por delete directo porque hay que barrer antes el
+      // historial de series (session_set_logs referencia exercises_base con
+      // ON DELETE NO ACTION), y eso son filas de otros usuarios que la RLS
+      // esconde. La función es SECURITY DEFINER y aborta sola si el ejercicio
+      // sigue formando parte de alguna sesión.
+      const { error } = await supabase.rpc("delete_catalog_exercise", {
+        p_exercise_id: id,
+      });
       if (error) throw error;
       return id;
     },
