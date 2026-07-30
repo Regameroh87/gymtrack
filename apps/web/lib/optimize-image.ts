@@ -1,13 +1,12 @@
-// Optimización de imágenes en el browser antes de subir a Supabase Storage
-// para Supabase Storage: Storage no procesa nada server-side, así que
-// el resize/compresión ocurre acá con canvas antes de subir.
+// Optimización de imágenes en el browser antes de subir a Supabase Storage:
+// el resize/compresión y conversión a WebP ocurre acá con canvas antes de subir.
+// WebP soporta canal alfa (transparencia) y reduce el peso un 30-70% frente a JPEG/PNG.
 
 const MAX_WIDTH = 1600;
 const QUALITY = 0.8;
 
-// Redimensiona a MAX_WIDTH y comprime. PNG conserva formato (alpha de logos);
-// el resto sale JPEG. Ante cualquier fallo (formato no decodificable, canvas
-// bloqueado) devuelve el archivo original: mejor pesado que roto.
+// Redimensiona a MAX_WIDTH y comprime a WebP. Ante cualquier fallo (formato no decodificable,
+// canvas bloqueado) devuelve el archivo original: mejor pesado que roto.
 export async function optimizeImageFile(file: File): Promise<File> {
   try {
     const bitmap = await createImageBitmap(file);
@@ -21,19 +20,21 @@ export async function optimizeImageFile(file: File): Promise<File> {
     const ctx = canvas.getContext("2d");
     if (!ctx) return file;
     ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close(); // ya está pintado en el canvas: liberar el bitmap decodificado.
 
-    const keepAlpha = file.type === "image/png";
-    const type = keepAlpha ? "image/png" : "image/jpeg";
+    const type = "image/webp";
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, type, QUALITY)
     );
-    // Sin ganancia real (ya era chica/optimizada) → conservar el original.
-    if (!blob || blob.size >= file.size) return file;
+    // blob.type !== type: si el browser no encodea WebP, toBlob cae a PNG por
+    // spec; etiquetarlo igual subiría un PNG servido como WebP.
+    // blob.size >= file.size: sin ganancia real (ya era chica/optimizada).
+    if (!blob || blob.type !== type || blob.size >= file.size) return file;
 
-    const ext = keepAlpha ? "png" : "jpg";
     const baseName = file.name.replace(/\.[^.]+$/, "");
-    return new File([blob], `${baseName}.${ext}`, { type });
+    return new File([blob], `${baseName}.webp`, { type });
   } catch {
     return file;
   }
 }
+
