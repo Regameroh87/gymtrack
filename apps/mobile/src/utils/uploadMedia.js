@@ -1,6 +1,3 @@
-// React Native
-import { Image } from "react-native";
-
 // Librerías externas
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 
@@ -22,11 +19,6 @@ const MAX_VIDEO_SIZE = 1280;
 // Nombre aleatorio no adivinable (el bucket es público): timestamp + random.
 const uniqueName = (extension) =>
   `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
-
-const getImageSize = (uri) =>
-  new Promise((resolve, reject) =>
-    Image.getSize(uri, (width, height) => resolve({ width, height }), reject)
-  );
 
 // react-native-compressor es un módulo nativo sin soporte web: se requiere
 // lazy para no romper el bundle de Expo web (que sube videos por otro camino).
@@ -59,14 +51,17 @@ const uploadToStorage = async ({ uri, path, mime }) => {
 // se sube el original: mejor una imagen pesada que un upload roto.
 const prepareImage = async (fileUri, rawExtension) => {
   try {
-    const { width } = await getImageSize(fileUri);
-
-    const context = ImageManipulator.manipulate(fileUri);
-    if (width > MAX_IMAGE_WIDTH) {
-      context.resize({ width: MAX_IMAGE_WIDTH });
+    // El ancho sale del ImageRef y no de Image.getSize: en Android getSize
+    // devuelve dp (escalado por densidad) para archivos locales, así que el
+    // guard nunca se disparaba y las imágenes subían a resolución completa.
+    // El segundo manipulate() reusa el ref ya decodificado, no relee del disco.
+    let image = await ImageManipulator.manipulate(fileUri).renderAsync();
+    if (image.width > MAX_IMAGE_WIDTH) {
+      image = await ImageManipulator.manipulate(image)
+        .resize({ width: MAX_IMAGE_WIDTH })
+        .renderAsync();
     }
-    const rendered = await context.renderAsync();
-    const saved = await rendered.saveAsync({
+    const saved = await image.saveAsync({
       compress: IMAGE_QUALITY,
       format: SaveFormat.WEBP,
     });
