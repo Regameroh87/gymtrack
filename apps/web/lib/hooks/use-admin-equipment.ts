@@ -79,3 +79,34 @@ export function useSaveAdminEquipment(gymId: string | null) {
     },
   });
 }
+
+// Borrado de una máquina/equipo del gym. Quita primero los links exercise_equipment
+// y luego la fila de equipment.
+export function useDeleteAdminEquipment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const supabase = getBrowserSupabase();
+
+      const { error: linkErr } = await supabase
+        .from("exercise_equipment")
+        .delete()
+        .eq("equipment_id", id);
+      if (linkErr) throw linkErr;
+
+      const { error } = await supabase
+        .from("equipment")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+
+      return id;
+    },
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ["admin_equipments_web"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_equipment_picker"] });
+      queryClient.invalidateQueries({ queryKey: ["admin_equipment", id] });
+    },
+  });
+}

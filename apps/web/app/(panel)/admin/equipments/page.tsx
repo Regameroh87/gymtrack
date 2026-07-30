@@ -29,6 +29,9 @@ import { mediaUrl } from "@/lib/media";
 import { MediaImage } from "@/components/ui/media-image";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { CardActionsMenu } from "@/components/admin/card-actions-menu";
+import { DeleteConfirmModal } from "@/components/platform/catalog/catalog-ui";
+import { useDeleteAdminEquipment } from "@/lib/hooks/use-admin-equipment";
 
 const PAGE_SIZE = 18;
 
@@ -57,6 +60,10 @@ export default function EquipmentsListPage() {
   const { brandPrimary } = useGymTheme();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [pendingDelete, setPendingDelete] = useState<Equipment | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const deleteEquipment = useDeleteAdminEquipment();
 
   const { data: equipments, isLoading } = useQuery({
     queryKey: ["admin_equipments_web", gymId],
@@ -72,6 +79,19 @@ export default function EquipmentsListPage() {
       return data as Equipment[];
     },
   });
+
+  const handleConfirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleteError(null);
+    try {
+      await deleteEquipment.mutateAsync(pendingDelete.id);
+      setPendingDelete(null);
+    } catch (err) {
+      setDeleteError(
+        (err as Error)?.message || "No se pudo eliminar la máquina."
+      );
+    }
+  };
 
   const stats = useMemo(() => {
     if (!equipments) return { total: 0, withImage: 0, withoutImage: 0 };
@@ -156,7 +176,11 @@ export default function EquipmentsListPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 lg:grid-cols-3">
           {pageRows.map((eq) => (
-            <EquipmentCard key={eq.id} equipment={eq} />
+            <EquipmentCard
+              key={eq.id}
+              equipment={eq}
+              onDelete={() => setPendingDelete(eq)}
+            />
           ))}
         </div>
       )}
@@ -179,6 +203,19 @@ export default function EquipmentsListPage() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmModal
+        visible={!!pendingDelete}
+        title="Eliminar máquina"
+        message={`Vas a eliminar "${pendingDelete?.name ?? ""}". Esta acción no se puede deshacer.`}
+        error={deleteError}
+        isPending={deleteEquipment.isPending}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
@@ -213,14 +250,30 @@ function StatCard({
   );
 }
 
-function EquipmentCard({ equipment }: { equipment: Equipment }) {
+function EquipmentCard({
+  equipment,
+  onDelete,
+}: {
+  equipment: Equipment;
+  onDelete: () => void;
+}) {
   const imageUrl = mediaUrl(equipment.image_uri);
 
   return (
-    <Link
-      href={`/admin/equipments/edit/${equipment.id}`}
-      className="overflow-hidden rounded-card-sm border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30 active:scale-[0.99]"
-    >
+    <div className="relative overflow-hidden rounded-card-sm border border-ui-input-border bg-white shadow-card-brand transition-lift hover:border-brandPrimary-600/30">
+      <Link
+        href={`/admin/equipments/edit/${equipment.id}`}
+        aria-label={equipment.name ?? "Máquina"}
+        className="absolute inset-0 z-0"
+      />
+
+      <div className="absolute right-2.5 top-2.5 z-10">
+        <CardActionsMenu
+          editHref={`/admin/equipments/edit/${equipment.id}`}
+          onDelete={onDelete}
+        />
+      </div>
+
       <div className="w-full overflow-hidden bg-ui-background-light" style={{ aspectRatio: "16 / 10" }}>
         <MediaImage
           src={imageUrl}
@@ -233,7 +286,7 @@ function EquipmentCard({ equipment }: { equipment: Equipment }) {
       </div>
 
       <div className="p-3.5">
-        <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="mb-2 flex items-start justify-between gap-2 pr-8">
           <span className="flex-1 truncate font-jakarta text-[14px] font-bold tracking-tight text-ui-text-main">
             {equipment.name}
           </span>
@@ -244,7 +297,7 @@ function EquipmentCard({ equipment }: { equipment: Equipment }) {
           Agregada {formatDate(equipment.created_at)}
         </span>
       </div>
-    </Link>
+    </div>
   );
 }
 

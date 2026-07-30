@@ -5,14 +5,20 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Check } from "lucide-react";
+import { ArrowLeft, Plus, Check, Trash2 } from "lucide-react";
 
-import { Field, Input, ErrorBanner } from "@/components/platform/catalog/catalog-ui";
+import {
+  Field,
+  Input,
+  ErrorBanner,
+  DeleteConfirmModal,
+} from "@/components/platform/catalog/catalog-ui";
 import { uploadImageWeb } from "@/lib/gyms";
 import { mediaUrl } from "@/lib/media";
 import { MediaImage } from "@/components/ui/media-image";
 import {
   useSaveAdminEquipment,
+  useDeleteAdminEquipment,
   type AdminEquipment,
 } from "@/lib/hooks/use-admin-equipment";
 
@@ -25,6 +31,7 @@ export function AdminEquipmentForm({
 }) {
   const router = useRouter();
   const saveEquipment = useSaveAdminEquipment(gymId);
+  const deleteEquipment = useDeleteAdminEquipment();
 
   const [name, setName] = useState(initial?.name ?? "");
   const [imageUri, setImageUri] = useState<string | null>(initial?.image_uri ?? null);
@@ -32,6 +39,8 @@ export function AdminEquipmentForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +73,18 @@ export function AdminEquipmentForm({
     } catch (err) {
       setError((err as Error)?.message || "No se pudo guardar el equipo.");
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!initial) return;
+    setDeleteError(null);
+    try {
+      await deleteEquipment.mutateAsync(initial.id);
+      router.push("/admin/equipments");
+      router.refresh();
+    } catch (err) {
+      setDeleteError((err as Error)?.message || "No se pudo eliminar la máquina.");
     }
   };
 
@@ -144,7 +165,7 @@ export function AdminEquipmentForm({
             type="button"
             onClick={handleSubmit}
             disabled={pending}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white transition active:scale-[0.97] disabled:opacity-60 ${
               pending
                 ? "bg-brandPrimary-400"
                 : "bg-brandPrimary-600 hover:bg-brandPrimary-700"
@@ -154,7 +175,31 @@ export function AdminEquipmentForm({
             {pending ? "Guardando..." : initial ? "Guardar cambios" : "Agregar máquina"}
           </button>
         </div>
+
+        {initial && (
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-[11px] border border-red-200 bg-white py-2.5 font-manrope text-[13px] font-bold text-red-600 transition hover:bg-red-50"
+          >
+            <Trash2 size={14} color="#dc2626" />
+            Eliminar máquina
+          </button>
+        )}
       </div>
+
+      <DeleteConfirmModal
+        visible={confirmDelete}
+        title="Eliminar máquina"
+        message={`Vas a eliminar "${name}". Esta acción no se puede deshacer.`}
+        error={deleteError}
+        isPending={deleteEquipment.isPending}
+        onCancel={() => {
+          setConfirmDelete(false);
+          setDeleteError(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

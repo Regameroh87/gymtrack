@@ -54,13 +54,12 @@ const uploadToStorage = async ({ uri, path, mime }) => {
   return { url: publicUrl, public_id: publicUrl, result: { path } };
 };
 
-// Redimensiona a MAX_IMAGE_WIDTH y comprime. PNG conserva formato (alpha de
-// logos); el resto sale JPEG (incluye HEIC de iPhone). Si la manipulación
-// falla, se sube el original: mejor una imagen pesada que un upload roto.
+// Redimensiona a MAX_IMAGE_WIDTH y comprime a WebP. WebP soporta alpha (transparencia)
+// y reduce el peso drásticamente frente a JPEG/PNG. Si la manipulación falla,
+// se sube el original: mejor una imagen pesada que un upload roto.
 const prepareImage = async (fileUri, rawExtension) => {
   try {
     const { width } = await getImageSize(fileUri);
-    const keepAlpha = rawExtension === "png";
 
     const context = ImageManipulator.manipulate(fileUri);
     if (width > MAX_IMAGE_WIDTH) {
@@ -69,13 +68,13 @@ const prepareImage = async (fileUri, rawExtension) => {
     const rendered = await context.renderAsync();
     const saved = await rendered.saveAsync({
       compress: IMAGE_QUALITY,
-      format: keepAlpha ? SaveFormat.PNG : SaveFormat.JPEG,
+      format: SaveFormat.WEBP,
     });
 
     return {
       uri: saved.uri,
-      extension: keepAlpha ? "png" : "jpg",
-      mime: keepAlpha ? "image/png" : "image/jpeg",
+      extension: "webp",
+      mime: "image/webp",
     };
   } catch (error) {
     console.warn("[upload] No se pudo optimizar la imagen:", error.message);
