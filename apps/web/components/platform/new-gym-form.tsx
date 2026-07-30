@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   CheckCircle,
   ShieldHalf,
+  RotateCcw,
   X,
 } from "lucide-react";
 
@@ -412,6 +413,26 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
               />
             </div>
           </div>
+
+          {/* Restablecer tema por defecto */}
+          <button
+            type="button"
+            onClick={() => {
+              setThemePrimary(DEFAULT_PRIMARY);
+              setThemeAccent(DEFAULT_ACCENT);
+              setHeaderSize("md");
+              setHeaderPosition("left");
+              setHeaderContent("logo");
+              setSelectedFile(null);
+              setPreviewUrl(null);
+              setSelectedFileDark(null);
+              setPreviewUrlDark(null);
+            }}
+            className="flex items-center gap-1.5 self-start rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-manrope text-[12px] font-semibold text-gray-500 transition hover:border-brandPrimary-200 hover:bg-brandPrimary-50 hover:text-brandPrimary-700"
+          >
+            <RotateCcw size={13} />
+            Restablecer tema por defecto
+          </button>
 
           <HeaderConfigFields
             logoUri={previewUrl}
