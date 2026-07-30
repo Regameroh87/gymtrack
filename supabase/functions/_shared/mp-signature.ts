@@ -11,15 +11,28 @@
 // El secret entra por parámetro porque cada aplicación de MP tiene el suyo. Que
 // el body elija con qué clave se valida no debilita nada: quien manda el aviso
 // igual tiene que firmar con esa clave, y no la tiene.
+//
+// ── Sin secret se rechaza ───────────────────────────────────────────────────
+// Antes esta función devolvía true cuando el secret no estaba configurado, con
+// un warning en los logs. En los hechos eso dejaba los dos webhooks abiertos a
+// cualquiera que supiera la URL —uno muta suscripciones, el otro salda cuotas—
+// y justo en el estado más fácil de pasar por alto: el de "todavía no cargué los
+// secrets". Un aviso que no se puede validar no se procesa.
 
 export async function validateMpSignature(
   req: Request,
   secret: string | undefined,
   logPrefix = 'mp-signature',
 ): Promise<boolean> {
+  // Se distingue del "no coincide" de abajo a propósito: son dos problemas
+  // distintos y el log tiene que decir cuál es. Este se arregla cargando el
+  // secret en Edge Functions → Secrets, el otro no.
   if (!secret) {
-    console.warn(`[${logPrefix}] Sin secret para esta app; saltando validación de firma.`)
-    return true
+    console.error(
+      `[${logPrefix}] Sin secret configurado para esta app; aviso rechazado. ` +
+        `Cargar el secret en Supabase → Edge Functions → Secrets.`,
+    )
+    return false
   }
 
   const xSignature = req.headers.get('x-signature') ?? ''

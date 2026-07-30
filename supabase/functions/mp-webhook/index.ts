@@ -8,13 +8,24 @@
 //
 // Variables de entorno requeridas:
 //   MP_ACCESS_TOKEN     – access token de la app MP real de GymTrack
-//   MP_WEBHOOK_SECRET   – clave secreta de esa app (Tus integraciones > Webhooks)
-// Opcionales, para poder probar sin pisar producción:
+//   MP_WEBHOOK_SECRET   – clave secreta de esa app (Tus integraciones > Webhooks).
+//                         Sin ella los avisos de la app real se rechazan con 401
+//                         y ninguna suscripción se activa: cargarla ANTES de
+//                         deployar, no después.
+// Opcionales, para poder probar sin pisar producción. Las tres van juntas: con
+// MP_TEST_APPLICATION_ID cargada y sin las otras dos, los avisos del vendedor de
+// prueba se rechazan (que es lo correcto, pero conviene saberlo antes de probar).
 //   MP_TEST_APPLICATION_ID – id de la aplicación del vendedor de prueba
 //   MP_ACCESS_TOKEN_TEST   – access token de esa aplicación
 //   MP_WEBHOOK_SECRET_TEST – clave secreta de esa aplicación
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+import {
+  esDefinitivo,
+  mpGet as mpApiGet,
+  validateMpSignature,
+} from '../_shared/mp-signature.ts'
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
@@ -61,83 +72,15 @@ function resolveMpCreds(applicationId: unknown): MpCreds {
   }
 }
 
-// ── Validación de firma HMAC-SHA256 ─────────────────────────────────────────
-// Formato del header x-signature: ts={timestamp},v1={hex_hash}
-// Manifest: id:{data_id};request-id:{x_request_id};ts:{ts};
-// (se omite cualquier campo ausente)
+// ── Helpers de MP ────────────────────────────────────────────────────────────
+// validateMpSignature, mpGet y esDefinitivo viven en _shared/mp-signature.ts:
+// mp-gym-webhook necesita los mismos y MP firma igual los dos flujos. Esta
+// función tenía su propia copia palabra por palabra, que es la clase de duplicado
+// que se descubre cuando uno de los dos se arregla y el otro no.
 //
-// El secret entra por parámetro porque cada aplicación de MP tiene el suyo. Que
-// el body elija con qué clave se valida no debilita nada: quien manda el aviso
-// igual tiene que firmar con esa clave, y no la tiene.
-async function validateMpSignature(
-  req: Request,
-  secret: string | undefined,
-): Promise<boolean> {
-  if (!secret) {
-    console.warn('[mp-webhook] Sin secret para esta app; saltando validación de firma.')
-    return true
-  }
-
-  const xSignature = req.headers.get('x-signature') ?? ''
-  const xRequestId = req.headers.get('x-request-id') ?? ''
-  const url = new URL(req.url)
-  const dataId = url.searchParams.get('data.id') ?? ''
-
-  // Parsear ts y v1 del header
-  const parts = Object.fromEntries(
-    xSignature.split(',').map((p) => p.split('=')),
-  )
-  const ts = parts['ts'] ?? ''
-  const v1 = parts['v1'] ?? ''
-  if (!ts || !v1) return false
-
-  // Construir manifest incluyendo solo los valores presentes
-  const segments: string[] = []
-  if (dataId) segments.push(`id:${dataId.toLowerCase()}`)
-  if (xRequestId) segments.push(`request-id:${xRequestId}`)
-  segments.push(`ts:${ts}`)
-  const manifest = segments.join(';') + ';'
-
-  const encoder = new TextEncoder()
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  )
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(manifest))
-  const computed = Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-
-  return computed === v1
-}
-
-// ── MP API helpers ────────────────────────────────────────────────────────────
-// Lleva el status para poder distinguir "este recurso no es mío / no existe"
-// (4xx, reintentar no sirve) de una caída de MP (5xx, sí conviene reintentar).
-class MpApiError extends Error {
-  constructor(readonly status: number, path: string) {
-    super(`MP API error ${status} on GET ${path}`)
-    this.name = 'MpApiError'
-  }
-}
-
-async function mpGet(path: string, token: string) {
-  const res = await fetch(`${MP_API}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  if (!res.ok) throw new MpApiError(res.status, path)
-  return res.json()
-}
-
-// ¿El recurso es inaccesible de forma definitiva? Pasa con la simulación del
-// panel de MP (manda data.id 123456) y con recursos de otra cuenta. Devolver
-// 500 en esos casos hace que MP reintente en loop un evento que nunca va a
-// poder procesarse, y encima marca la URL como caída al validarla.
-const esDefinitivo = (err: unknown) =>
-  err instanceof MpApiError && err.status >= 400 && err.status < 500
+// Lo único que queda acá es fijar el apiBase, que el helper recibe por parámetro
+// para no atarse a una constante de ningún flujo.
+const mpGet = (path: string, token: string) => mpApiGet(MP_API, path, token)
 
 // ── Mapeo de status MP → nuestro status ──────────────────────────────────────
 const STATUS_MAP: Record<string, string> = {
@@ -337,9 +280,9 @@ Deno.serve(async (req) => {
 
   const creds = resolveMpCreds(body.application_id)
 
-  const valid = await validateMpSignature(req, creds.secret)
+  const valid = await validateMpSignature(req, creds.secret, 'mp-webhook')
   if (!valid) {
-    console.error('[mp-webhook] Firma inválida.')
+    console.error('[mp-webhook] Firma inválida; aviso descartado.')
     return new Response('Unauthorized', { status: 401 })
   }
 
@@ -398,7 +341,12 @@ async function handlePreapprovalEvent(
   token: string,
   creds: MpCreds,
 ) {
-  let preapproval: Record<string, string>
+  // La respuesta de MP no es plana: auto_recurring es un objeto anidado y se lee
+  // más abajo. Anotarla como Record<string, string> hacía que `deno check`
+  // fallara sobre auto_recurring?.start_date — en runtime nunca molestó porque
+  // nada type-cheque estas funciones, pero la anotación era falsa.
+  // deno-lint-ignore no-explicit-any
+  let preapproval: Record<string, any>
   try {
     preapproval = await mpGet(`/preapproval/${preapprovalId}`, token)
   } catch (err) {

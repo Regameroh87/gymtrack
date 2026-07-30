@@ -63,6 +63,9 @@ Referencia completa de las variables: `apps/web/.env.example`.
       `MP_ACCESS_TOKEN_TEST` + `MP_WEBHOOK_SECRET_TEST` + `MP_TEST_APPLICATION_ID`
       de la de prueba. El proyecto es uno solo: la función está deployada una vez
       y atiende las dos apps, eligiendo credenciales por `application_id`.
+      **Los `*_WEBHOOK_SECRET` van antes del deploy, no después**: sin secret
+      cargado la firma no se puede validar y el aviso se rechaza con 401, así que
+      un deploy adelantado deja las suscripciones sin activarse hasta que estén.
 - [ ] **Registrar la URL del webhook en el panel de MP, por aplicación**
       (`https://<ref>.supabase.co/functions/v1/mp-webhook`). `/preapproval` NO
       acepta `notification_url`: si la app cobradora cambia y nadie carga la URL
@@ -107,9 +110,16 @@ un token delegado por gimnasio.
       `MP_GYM_WEBHOOK_URL` = `https://<ref>.supabase.co/functions/v1/mp-gym-webhook`
       y `MP_GYM_WEBHOOK_SECRET` = clave de la app de marketplace.
       **Sin la primera la función se niega a cobrar** (a propósito: un pago sin
-      webhook se cobra y nunca se registra). Sin la segunda no se valida la
-      firma de los avisos. `APP_DEEP_LINK` es opcional y por defecto vale
-      `gymtrack://`.
+      webhook se cobra y nunca se registra). **Sin la segunda `mp-gym-webhook`
+      rechaza todos los avisos con 401** y ningún pago de socio queda
+      registrado: va cargada antes del deploy. `APP_DEEP_LINK` es opcional y por
+      defecto vale `gymtrack://`.
+- [ ] **Supabase**: `MP_OAUTH_CLIENT_ID` y `MP_OAUTH_CLIENT_SECRET` (los mismos
+      valores que en Vercel). Con ellas `crear-cobro-socio` renueva el token del
+      gym si está por vencer, en el momento del cobro. Sin ellas el cobro sale
+      igual, pero el único respaldo vuelve a ser el cron diario: si una corrida
+      falla, el socio se encuentra con un token vencido y un error que no le dice
+      nada.
 - [ ] **Nuevo build de la app** (no alcanza un OTA): `expo-web-browser` es un
       módulo nativo. Con `expo-updates` solo, la pantalla de pago crashea en los
       clientes viejos.

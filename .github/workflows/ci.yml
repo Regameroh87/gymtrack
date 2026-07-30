@@ -23,6 +23,29 @@ jobs:
       - run: npx tsc --noEmit
       - run: npx next lint
 
+  edge-functions:
+    name: Edge functions de pago (check + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # Los tests de firma no importan nada de la red: corren solos.
+      - name: Tests de la firma de MercadoPago
+        run: deno test supabase/functions/_shared/mp-signature.test.ts
+      # El check acotado a las funciones de pago a propósito: son las que tocan
+      # plata y las únicas verificadas contra `deno check`. Sumar el resto es
+      # bienvenido, pero cada una que entre tiene que pasar primero.
+      - name: Type-check de las funciones de pago
+        run: |
+          deno check \
+            supabase/functions/_shared/mp-signature.ts \
+            supabase/functions/_shared/mp-oauth.ts \
+            supabase/functions/mp-webhook/index.ts \
+            supabase/functions/mp-gym-webhook/index.ts \
+            supabase/functions/crear-cobro-socio/index.ts
+
   mobile:
     name: Mobile (sintaxis + tests)
     runs-on: ubuntu-latest
