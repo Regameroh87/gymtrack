@@ -20,12 +20,12 @@ import {
 import {
   Field,
   Input,
-  Textarea,
   Toggle,
   WebSelect,
   ErrorBanner,
   DeleteConfirmModal,
 } from "@/components/platform/catalog/catalog-ui";
+import { RichTextEditor } from "@/components/platform/catalog/rich-text-editor";
 import { EXERCISE_CATEGORIES, MUSCLE_GROUPS } from "@/lib/catalog-options";
 import { uploadImageWeb, uploadVideoWeb } from "@/lib/gyms";
 import { mediaUrl } from "@/lib/media";
@@ -394,9 +394,9 @@ export function AdminExerciseForm({
           </Field>
 
           <Field label="INSTRUCCIONES">
-            <Textarea
+            <RichTextEditor
               value={values.instructions}
-              onChange={(e) => set("instructions")(e.target.value)}
+              onChange={set("instructions")}
               placeholder="Describí la ejecución..."
               rows={4}
             />
@@ -422,7 +422,7 @@ export function AdminExerciseForm({
             type="button"
             onClick={handleSubmit}
             disabled={pending}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white ${
+            className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 font-manrope text-[13px] font-bold text-white transition active:scale-[0.97] disabled:opacity-60 ${
               pending
                 ? "bg-brandPrimary-400"
                 : "bg-brandPrimary-600 hover:bg-brandPrimary-700"
@@ -448,7 +448,7 @@ export function AdminExerciseForm({
       <DeleteConfirmModal
         visible={confirmDelete}
         title="Eliminar ejercicio"
-        message={`Vas a eliminar “${values.name}”. Esta acción no se puede deshacer.`}
+        message={`Vas a eliminar "${values.name}". Esta acción no se puede deshacer.`}
         error={deleteError}
         isPending={deleteExercise.isPending}
         onCancel={() => {
