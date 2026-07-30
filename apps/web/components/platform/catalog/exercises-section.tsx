@@ -37,7 +37,6 @@ import {
 import {
   Field,
   Input,
-  Textarea,
   Toggle,
   WebSelect,
   ErrorBanner,
@@ -45,6 +44,8 @@ import {
   DeleteConfirmModal,
   ModalShell,
 } from "./catalog-ui";
+import { RichTextEditor } from "./rich-text-editor";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 
 // Límite alineado con el picker mobile (use-media-picker 50MB).
 const MAX_VIDEO_MB = 50;
@@ -481,9 +482,9 @@ function ExerciseFormModal({
         </Field>
 
         <Field label="INSTRUCCIONES">
-          <Textarea
+          <RichTextEditor
             value={values.instructions}
-            onChange={(e) => set("instructions")(e.target.value)}
+            onChange={set("instructions")}
             placeholder="Describí la ejecución..."
             rows={4}
           />
@@ -603,9 +604,7 @@ function ExerciseDetailDrawer({
               <p className="mb-2 font-manrope text-[11px] font-bold text-ui-text-muted">
                 INSTRUCCIONES
               </p>
-              <p className="font-manrope text-[13px] leading-5 text-ui-text-main">
-                {exercise.instructions}
-              </p>
+              <MarkdownRenderer content={exercise.instructions} />
             </div>
           ) : null}
 
