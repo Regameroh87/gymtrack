@@ -74,8 +74,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Entrenamiento",
     items: [
-      { icon: Dumbbell, label: "Ejercicios", path: "exercises" },
       { icon: Dumbbell, label: "Máquinas", path: "equipments" },
+      { icon: Dumbbell, label: "Ejercicios", path: "exercises" },
       { icon: ClipboardList, label: "Sesiones", path: "sessions" },
       { icon: ClipboardList, label: "Planes", path: "plans" },
     ],
