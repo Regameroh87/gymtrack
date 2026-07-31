@@ -67,6 +67,11 @@ function KeepAwake() {
   return null;
 }
 
+// Piso de tiempo entre syncs disparados por volver al foreground. Solo aplica a
+// ese disparador: los syncs post-guardado (registrar una serie, publicar un
+// plan) y el pull-to-refresh siguen siendo inmediatos.
+const FOREGROUND_SYNC_MIN_INTERVAL_MS = 30 * 1000;
+
 function RootLayout() {
   const { colorScheme } = useColorScheme();
 
@@ -101,13 +106,23 @@ function RootLayout() {
   // Sincroniza al traer la app al frente (background → active). El sync de
   // arranque corre una sola vez por proceso, así que sin esto un dispositivo ya
   // abierto no se entera de cambios hechos en otro device hasta un cold start.
+  //
+  // Con un piso de tiempo entre syncs: salir y volver en segundos (atender una
+  // notificación, copiar algo de otra app) es el caso más frecuente y no puede
+  // haber novedades relevantes en ese lapso. Sin el piso, cada ida y vuelta
+  // dispara un ciclo completo sobre ~20 tablas.
   const appState = useRef(AppState.currentState);
+  const lastForegroundSyncRef = useRef(0);
   useEffect(() => {
     const sub = AppState.addEventListener("change", (nextState) => {
+      const cameToForeground =
+        appState.current.match(/inactive|background/) && nextState === "active";
+      const now = Date.now();
       if (
-        appState.current.match(/inactive|background/) &&
-        nextState === "active"
+        cameToForeground &&
+        now - lastForegroundSyncRef.current >= FOREGROUND_SYNC_MIN_INTERVAL_MS
       ) {
+        lastForegroundSyncRef.current = now;
         checkNetInfoAndSync().catch((e) => console.error("Sync failed", e));
         // Refresca las memberships (única fuente de gyms.is_active): si el gym
         // activo fue suspendido mientras la app estaba en background, el contexto

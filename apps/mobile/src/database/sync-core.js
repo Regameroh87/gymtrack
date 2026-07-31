@@ -67,6 +67,36 @@ export function planPullApplication({
   return { tombstoneIds, upserts, skipped };
 }
 
+// Columnas que no se comparan al decidir si una fila remota trae novedades:
+// sync_status es estado local puro (el upsert siempre lo fuerza a "synced"),
+// así que nunca refleja un cambio del servidor.
+const LOCAL_ONLY_COLUMNS = new Set(["sync_status"]);
+
+/**
+ * ¿El upsert dejaría la fila local exactamente como está?
+ *
+ * El watermark del pull filtra con `>=` (no `>`) para no perder filas escritas
+ * en el mismo timestamp que el corte, así que CADA pull vuelve a traer al menos
+ * la última fila ya conocida. Sin esta comprobación, esa fila se contaría como
+ * cambio y dispararía una invalidación de queries —y el refresco visible de la
+ * UI— en cada sync, aunque el servidor no tenga nada nuevo.
+ *
+ * Se compara contra una fila local que en un sync previo se escribió DESDE una
+ * fila remota de la misma forma, así que las representaciones coinciden por
+ * construcción y alcanza con comparación estricta. Ante cualquier duda (columna
+ * ausente, tipos distintos) devuelve false: un falso "cambió" solo provoca una
+ * invalidación de más —el comportamiento histórico—, mientras que un falso "no
+ * cambió" dejaría la UI desactualizada hasta el sync siguiente.
+ */
+export function isUnchangedRow(upsertRow, localRow) {
+  if (!localRow) return false;
+  for (const column of Object.keys(localRow)) {
+    if (LOCAL_ONLY_COLUMNS.has(column)) continue;
+    if (!Object.is(upsertRow[column], localRow[column])) return false;
+  }
+  return true;
+}
+
 // Reconciliación de borrados remotos: de las filas locales "synced", cuáles
 // ya no existen en el servidor (borradas desde otro dispositivo) y hay que
 // eliminar localmente. Nunca toca filas con cambios locales: el caller solo
