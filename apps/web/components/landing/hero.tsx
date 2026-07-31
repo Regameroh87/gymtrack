@@ -7,9 +7,11 @@ import { MAILTO_HREF } from "@/lib/site";
 export default function Hero({
   signupEnabled = false,
   trialDays = 14,
+  isLoggedIn = false,
 }: {
   signupEnabled?: boolean;
   trialDays?: number;
+  isLoggedIn?: boolean;
 }) {
   return (
     <section id="top" className="w-full overflow-hidden">
@@ -52,10 +54,10 @@ export default function Hero({
                 </a>
               )}
               <Link
-                href="/login"
+                href={isLoggedIn ? "/dashboard" : "/login"}
                 className="rounded-2xl border border-white/20 bg-white/5 px-6 py-4 font-manrope text-base font-bold text-white transition hover:bg-white/10"
               >
-                {HERO.secondaryCta}
+                {isLoggedIn ? "Ir al panel" : HERO.secondaryCta}
               </Link>
             </div>
           </div>

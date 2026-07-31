@@ -10,10 +10,11 @@ import {
   getSelfServiceSignupEnabled,
   getPublicTrialDays,
 } from "@/lib/platform-settings";
+import { createServerSupabase } from "@/lib/supabase-server";
 
-// ISR: la landing es estática pero relee el kill switch del signup cada 5 min,
-// así el toggle de platform/billing se propaga sin redeploy.
-export const revalidate = 300;
+// La landing lee cookies de sesión para mostrar "Ir al panel" vs "Iniciar
+// sesión", por lo que se renderiza dinámicamente por request.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -59,16 +60,20 @@ function JsonLd() {
 }
 
 export default async function HomePage() {
-  const [signupEnabled, trialDays] = await Promise.all([
+  const [signupEnabled, trialDays, supabase] = await Promise.all([
     getSelfServiceSignupEnabled(),
     getPublicTrialDays(),
+    createServerSupabase(),
   ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return (
     <div className="min-h-screen bg-brandPrimary-950">
       <JsonLd />
       <Navbar />
       <main>
-        <Hero signupEnabled={signupEnabled} trialDays={trialDays} />
+        <Hero signupEnabled={signupEnabled} trialDays={trialDays} isLoggedIn={!!user} />
         <Features />
         <Segments />
         <Cta signupEnabled={signupEnabled} />

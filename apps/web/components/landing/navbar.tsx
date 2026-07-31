@@ -2,8 +2,14 @@ import Link from "next/link";
 import { Dumbbell, ArrowRight } from "lucide-react";
 import { NAV_LINKS } from "@/lib/content";
 import { BRAND, MAILTO_HREF } from "@/lib/site";
+import { createServerSupabase } from "@/lib/supabase-server";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const supabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-brandPrimary-950/80 backdrop-blur">
       <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between px-6 py-4">
@@ -30,10 +36,10 @@ export default function Navbar() {
 
         <div className="flex items-center gap-2 md:gap-3">
           <Link
-            href="/login"
+            href={user ? "/dashboard" : "/login"}
             className="rounded-xl px-3 py-2 font-manrope text-sm font-bold text-white transition hover:bg-white/10 md:px-4 md:py-2.5"
           >
-            Iniciar sesión
+            {user ? "Ir al panel" : "Iniciar sesión"}
           </Link>
           <a
             href={MAILTO_HREF}
