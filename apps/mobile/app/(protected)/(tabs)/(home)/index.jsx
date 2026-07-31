@@ -11,6 +11,7 @@ import { useAuth } from "../../../../src/auth/lib/getSession.jsx";
 import { useTheme } from "../../../../src/theme/theme.jsx";
 import { useActiveGym } from "../../../../src/contexts/active-gym-context.jsx";
 import { useGymOnlinePayments } from "../../../../src/hooks/activities/use-member-payment.js";
+import { useTrainingGate } from "../../../../src/components/training-gate.jsx";
 
 // ── Design Tokens ──
 import { brandPrimary, brandSecondary, ui } from "@gymtrack/core/colors";
@@ -78,6 +79,9 @@ export default function Home() {
   const { isDark } = useTheme();
   const { gymId } = useActiveGym();
   const { data: onlinePaymentsEnabled } = useGymOnlinePayments(gymId);
+  // Sin acceso al entrenamiento, el Home no ofrece atajos que terminan en el
+  // cartel de bloqueo: la sesión de hoy y los accesos a rutinas se esconden.
+  const { allowed: canTrain } = useTrainingGate();
 
   const now = new Date();
   const dateLine = formatDateLine(now);
@@ -157,7 +161,7 @@ export default function Home() {
         </View>
 
         {/* ── HERO: sesión de hoy ── */}
-        <HeroeCardHome />
+        {canTrain && <HeroeCardHome />}
 
         {/* ── ACCESO RÁPIDO ── */}
         <View style={{ paddingHorizontal: 20 }}>
@@ -182,28 +186,32 @@ export default function Home() {
           </View>
 
           <View style={{ gap: 10 }}>
-            <QuickAction
-              kicker="Catálogo"
-              title="Explorar rutinas"
-              description="Planes y sesiones publicados por el gym."
-              icon={<ClipboardList size={18} color="white" />}
-              onPress={async () => {
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/planes");
-              }}
-              variant="primary"
-            />
-            <QuickAction
-              kicker="Personalizado"
-              title="Crear mi rutina"
-              description="Armá una rutina propia eligiendo ejercicios."
-              icon={<Plus size={18} color={iconMint} />}
-              onPress={async () => {
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/planes/builder/custom-plan");
-              }}
-              variant="ghost"
-            />
+            {canTrain && (
+              <>
+                <QuickAction
+                  kicker="Catálogo"
+                  title="Explorar rutinas"
+                  description="Planes y sesiones publicados por el gym."
+                  icon={<ClipboardList size={18} color="white" />}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push("/planes");
+                  }}
+                  variant="primary"
+                />
+                <QuickAction
+                  kicker="Personalizado"
+                  title="Crear mi rutina"
+                  description="Armá una rutina propia eligiendo ejercicios."
+                  icon={<Plus size={18} color={iconMint} />}
+                  onPress={async () => {
+                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push("/planes/builder/custom-plan");
+                  }}
+                  variant="ghost"
+                />
+              </>
+            )}
             <QuickAction
               kicker="Asistencia"
               title="Check-in en el gym"

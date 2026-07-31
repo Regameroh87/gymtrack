@@ -239,6 +239,7 @@ declare module "@gymtrack/core/hooks/activities/use-activities" {
     name: string | null;
     description: string | null;
     color: string | null;
+    kind: "training" | "class" | null;
     is_active: boolean | null;
     activity_coaches: ActivityCoach[];
     activity_plans: ActivityPlan[];
@@ -351,6 +352,7 @@ declare module "@gymtrack/core/hooks/activities/use-activity-mutations" {
     name: string;
     description?: string | null;
     color?: string | null;
+    kind?: "training" | "class";
     is_active?: boolean;
   }
   export interface ActivityRow {
@@ -363,6 +365,45 @@ declare module "@gymtrack/core/hooks/activities/use-activity-mutations" {
     update: UseMutationResult<ActivityRow, Error, ActivityInput & { id: string }>;
     remove: UseMutationResult<string, Error, string>;
   };
+}
+
+declare module "@gymtrack/core/hooks/activities/use-training-access" {
+  export interface TrainingAccess {
+    allowed: boolean;
+    reason:
+      | "resolving"
+      | "not_gated"
+      | "staff"
+      | "not_member"
+      | "no_training_activity"
+      | "active"
+      | "overdue"
+      | "not_subscribed"
+      | "unknown";
+    activityName: string | null;
+    dueDate: string | null;
+    isResolving: boolean;
+    refetch: () => void;
+  }
+  export function useTrainingAccess(gymId: string | null): TrainingAccess;
+}
+
+declare module "@gymtrack/core/hooks/activities/use-training-access-settings" {
+  import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
+  export interface TrainingAccessSettings {
+    gated: boolean;
+    graceDays: number;
+  }
+  export function useTrainingAccessSettings(
+    gymId: string | null
+  ): UseQueryResult<TrainingAccessSettings>;
+  export function useSetTrainingAccess(
+    gymId: string | null
+  ): UseMutationResult<
+    void,
+    Error,
+    { gated: boolean; graceDays?: number | null }
+  >;
 }
 
 declare module "@gymtrack/core/hooks/activities/use-activity-coaches" {

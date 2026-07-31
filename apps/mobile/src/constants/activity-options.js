@@ -15,6 +15,24 @@ export const ACTIVITY_COLORS = [
 
 export const DEFAULT_ACTIVITY_COLOR = ACTIVITY_COLORS[0];
 
+// Qué habilita la actividad en la app del socio (columna activities.kind). Es lo
+// que mira el gate del módulo de entrenamiento: por eso la capability es un dato
+// de la actividad y no el nombre "Musculación", que el gym puede cambiar.
+export const ACTIVITY_KIND_OPTIONS = [
+  {
+    value: "training",
+    label: "Entrenamiento",
+    hint: "Da acceso a rutinas, registros y progreso en la app del socio.",
+  },
+  {
+    value: "class",
+    label: "Clase",
+    hint: "Se dicta en horarios. No abre el módulo de entrenamiento.",
+  },
+];
+
+export const DEFAULT_ACTIVITY_KIND = "class";
+
 // Nombres frecuentes, solo como sugerencia rápida en el form.
 export const ACTIVITY_SUGGESTIONS = [
   "Musculación",

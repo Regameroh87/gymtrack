@@ -91,6 +91,9 @@ export const usePayDues = (gymId) => {
     queryClient.invalidateQueries({ queryKey: ["member_pending_charges"] });
     queryClient.invalidateQueries({ queryKey: ["member_subscriptions"] });
     queryClient.invalidateQueries({ queryKey: ["subscription_payments"] });
+    // Si estaba bloqueado por cuota vencida, pagar tiene que devolverle el
+    // acceso al entrenamiento sin reiniciar la app.
+    queryClient.invalidateQueries({ queryKey: ["training_access"] });
   }, [queryClient]);
 
   const mutation = useMutation({

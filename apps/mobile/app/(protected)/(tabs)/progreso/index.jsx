@@ -16,6 +16,7 @@ import { usePlanAdherence } from "../../../../src/hooks/progress/use-plan-adhere
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
+import TrainingGate from "../../../../src/components/training-gate";
 import SectionCard from "../../../../src/components/progress/section-card";
 import StatTile from "../../../../src/components/progress/stat-tile";
 import SectionEmpty from "../../../../src/components/progress/section-empty";
@@ -50,7 +51,17 @@ const monthAxisLabels = (weeks) =>
     return month !== prev ? MONTHS_ES[month - 1] : "";
   });
 
+// El gate va afuera del contenido a propósito: si el socio no tiene acceso, la
+// pantalla ni se monta y no dispara sus queries.
 export default function ProgresoTab() {
+  return (
+    <TrainingGate>
+      <ProgresoTabContent />
+    </TrainingGate>
+  );
+}
+
+function ProgresoTabContent() {
   const insets = useSafeAreaInsets();
   const { brandPrimary, brandSecondary } = useGymTheme();
   const { gymId } = useActiveGym();

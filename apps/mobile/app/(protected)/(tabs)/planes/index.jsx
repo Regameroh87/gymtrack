@@ -43,6 +43,7 @@ import { makeShadow } from "../../../../src/utils/box-shadow";
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
+import TrainingGate from "../../../../src/components/training-gate";
 
 // Tema / assets
 import { ui } from "@gymtrack/core/colors";
@@ -79,7 +80,17 @@ const MAIN_TABS = [
 
 let _lastTab = "mi_plan";
 
+// El gate va afuera del contenido a propósito: si el socio no tiene acceso, la
+// pantalla ni se monta y no dispara sus queries.
 export default function RutinasTab() {
+  return (
+    <TrainingGate>
+      <RutinasTabContent />
+    </TrainingGate>
+  );
+}
+
+function RutinasTabContent() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { brandPrimary } = useGymTheme();

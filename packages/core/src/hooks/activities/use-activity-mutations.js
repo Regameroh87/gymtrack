@@ -13,10 +13,18 @@ const DUPLICATE_NAME_MSG = "Ya existe una actividad con ese nombre en este gimna
 
 // Normaliza el payload del form: trimea el nombre, vacíos → null. El precio vive
 // en cada pase (activity_plans) y los coaches en activity_coaches.
+//
+// kind define QUÉ habilita la actividad en la app del socio ('training' abre el
+// módulo de entrenamiento, 'class' es una clase con agenda). Se cae a 'class'
+// ante un valor inesperado: el CHECK de la DB solo acepta esos dos, y un update
+// que rebota por un typo del form sería peor que guardar el default.
+const KINDS = ["training", "class"];
+
 const normalize = (value) => ({
   name: (value.name || "").trim(),
   description: (value.description || "").trim() || null,
   color: value.color || null,
+  kind: KINDS.includes(value.kind) ? value.kind : "class",
   is_active: value.is_active ?? true,
 });
 

@@ -17,6 +17,8 @@ import {
   Receipt,
   CheckCircle,
   Loader2,
+  Lock,
+  TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
 
@@ -26,6 +28,10 @@ import {
   type Activity,
   type ActivityPlan,
 } from "@gymtrack/core/hooks/activities/use-activities";
+import {
+  useSetTrainingAccess,
+  useTrainingAccessSettings,
+} from "@gymtrack/core/hooks/activities/use-training-access-settings";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
@@ -69,6 +75,12 @@ export default function ActivitiesListPage() {
     return { total: activities.length, active: active.length, activePlans };
   }, [activities]);
 
+  // El gate se apoya en que exista al menos una actividad de entrenamiento
+  // activa: sin eso no bloquea a nadie (ver member_training_access).
+  const hasTrainingActivity = (activities ?? []).some(
+    (a) => a.kind === "training" && a.is_active
+  );
+
   const filtered = useMemo(() => {
     if (!activities) return [];
     const q = search.trim().toLowerCase();
@@ -102,6 +114,12 @@ export default function ActivitiesListPage() {
         <StatCard icon={CheckCircle} label="Activas" value={stats.active} iconColor="#10b981" bubble="bg-emerald-50" />
         <StatCard icon={Receipt} label="Pases activos" value={stats.activePlans} iconColor={brandPrimary[600]} bubble="bg-brandPrimary-50" />
       </div>
+
+      <TrainingAccessCard
+        gymId={gymId}
+        hasTrainingActivity={hasTrainingActivity}
+        activitiesLoaded={!isLoading}
+      />
 
       {/* Toolbar */}
       <div className="mb-5 flex items-center gap-3">
@@ -171,6 +189,116 @@ export default function ActivitiesListPage() {
 
 // ── Subcomponents ──
 
+// Gate del módulo de entrenamiento del socio (planes, registros, progreso).
+// Vive acá y no en una pantalla de ajustes porque lo que decide quién entra son
+// las actividades y sus inscripciones, que es exactamente esta pantalla.
+function TrainingAccessCard({
+  gymId,
+  hasTrainingActivity,
+  activitiesLoaded,
+}: {
+  gymId: string | null;
+  hasTrainingActivity: boolean;
+  activitiesLoaded: boolean;
+}) {
+  const { data: settings, isLoading } = useTrainingAccessSettings(gymId);
+  const { mutate: save, isPending, error } = useSetTrainingAccess(gymId);
+
+  const [grace, setGrace] = useState<string | null>(null);
+  const graceValue = grace ?? String(settings?.graceDays ?? 10);
+  const gated = settings?.gated === true;
+
+  if (isLoading || !settings) return null;
+
+  const commitGrace = () => {
+    const parsed = Number(graceValue);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 90) {
+      setGrace(String(settings.graceDays));
+      return;
+    }
+    if (parsed === settings.graceDays) return;
+    save({ gated, graceDays: parsed });
+  };
+
+  return (
+    <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
+      <div className="flex items-start gap-3.5">
+        <div
+          className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
+            gated ? "bg-brandPrimary-50" : "bg-ui-background-light"
+          }`}
+        >
+          <Lock size={18} color={gated ? "#4A44E4" : ui.text.muted} />
+        </div>
+
+        <div className="flex-1">
+          <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
+            Acceso al entrenamiento
+          </p>
+          <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
+            Con esto activado, el socio necesita una inscripción vigente a una
+            actividad de tipo <strong>Entrenamiento</strong> para ver rutinas,
+            registrar entrenamientos y seguir su progreso en la app.
+          </p>
+
+          {gated && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="font-manrope text-[12px] text-ui-text-muted">
+                Sigue entrando hasta
+              </span>
+              <input
+                value={graceValue}
+                onChange={(e) => setGrace(e.target.value)}
+                onBlur={commitGrace}
+                inputMode="numeric"
+                className="w-14 rounded-lg border border-ui-input-border bg-white px-2 py-1 text-center font-manrope text-[13px] font-bold text-ui-text-main outline-none focus:border-brandPrimary-600"
+              />
+              <span className="font-manrope text-[12px] text-ui-text-muted">
+                días después del vencimiento (el pago en efectivo se carga tarde).
+              </span>
+            </div>
+          )}
+
+          {/* Prender el gate sin una actividad de entrenamiento no hace nada:
+              el RPC deja pasar a todos antes que cerrarle la app al gym entero. */}
+          {gated && activitiesLoaded && !hasTrainingActivity && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
+              <TriangleAlert size={14} color="#d97706" className="mt-0.5 shrink-0" />
+              <span className="font-manrope text-[11px] leading-4 text-amber-700">
+                No tenés ninguna actividad de tipo Entrenamiento activa, así que
+                el gate no está bloqueando a nadie. Marcá una actividad como
+                Entrenamiento para que empiece a aplicarse.
+              </span>
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-3 font-manrope text-[11px] text-red-600">
+              {(error as Error).message}
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => save({ gated: !gated })}
+          aria-label="Activar el acceso por inscripción"
+          className={`mt-1 flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition disabled:opacity-50 ${
+            gated ? "bg-brandPrimary-600" : "bg-ui-input-border"
+          }`}
+        >
+          <span
+            className={`h-5 w-5 rounded-full bg-white transition-transform ${
+              gated ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function StatCard({
   icon: Icon,
   label,
@@ -223,9 +351,16 @@ function ActivityCard({
             <div className="flex h-9 w-9 items-center justify-center rounded-[10px]" style={{ backgroundColor: `${color}1A` }}>
               <Flame size={17} color={color} />
             </div>
-            <span className="flex-1 truncate font-jakarta text-[14px] font-bold tracking-tight text-ui-text-main">
-              {activity.name}
-            </span>
+            <div className="flex-1 overflow-hidden">
+              <span className="block truncate font-jakarta text-[14px] font-bold tracking-tight text-ui-text-main">
+                {activity.name}
+              </span>
+              {/* Qué es lo que la actividad habilita: sin esto el owner no
+                  tiene cómo saber cuál abre el módulo de entrenamiento. */}
+              <span className="font-manrope text-[10px] font-bold uppercase tracking-wider text-ui-text-muted">
+                {activity.kind === "training" ? "Entrenamiento" : "Clase"}
+              </span>
+            </div>
           </div>
           <ChevronRight size={14} color={ui.text.muted} />
         </div>

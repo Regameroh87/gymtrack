@@ -7,14 +7,17 @@ import * as Haptics from "expo-haptics";
 import StyledTextInput from "./StyledTextInput";
 
 // Constantes / Icons / Theme
-import { ACTIVITY_COLORS } from "../../constants/activity-options";
+import {
+  ACTIVITY_COLORS,
+  ACTIVITY_KIND_OPTIONS,
+} from "../../constants/activity-options";
 import { Flame, ListDetails, CheckCircle } from "../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
 
 // Form de alta/edición de actividad. Recibe un form de @tanstack/react-form con
-// los campos { name, description, color, is_active }. Los coaches se gestionan
-// aparte (ActivityCoachesManager, tabla activity_coaches). Sin imágenes ni sync
-// local: el submit lo resuelve el caller con las mutaciones online.
+// los campos { name, kind, description, color, is_active }. Los coaches se
+// gestionan aparte (ActivityCoachesManager, tabla activity_coaches). Sin imágenes
+// ni sync local: el submit lo resuelve el caller con las mutaciones online.
 export default function FormActivity({ form, submitLabel = "GUARDAR ACTIVIDAD" }) {
   return (
     <View className="gap-5">
@@ -52,6 +55,48 @@ export default function FormActivity({ form, submitLabel = "GUARDAR ACTIVIDAD" }
                 {field.state.meta.errors[0]}
               </Text>
             )}
+          </View>
+        )}
+      </form.Field>
+
+      {/* Tipo: capability, no cosmética. Define si la actividad abre el módulo
+          de entrenamiento en la app del socio (es lo que mira el gate). */}
+      <form.Field name="kind">
+        {(field) => (
+          <View className="gap-2">
+            <Text className="text-xs font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark uppercase tracking-widest">
+              Tipo de actividad
+            </Text>
+            {ACTIVITY_KIND_OPTIONS.map((opt) => {
+              const selected = field.state.value === opt.value;
+              return (
+                <Pressable
+                  key={opt.value}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    field.handleChange(opt.value);
+                  }}
+                  className={`rounded-xl border p-4 active:opacity-80 ${
+                    selected
+                      ? "border-brandPrimary-600 bg-brandPrimary-600/10"
+                      : "border-ui-input-border bg-ui-input-light dark:bg-ui-input-dark"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-manrope-semi ${
+                      selected
+                        ? "text-brandPrimary-600"
+                        : "text-ui-text-main dark:text-ui-text-mainDark"
+                    }`}
+                  >
+                    {opt.label}
+                  </Text>
+                  <Text className="text-xs font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+                    {opt.hint}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         )}
       </form.Field>

@@ -9,7 +9,10 @@ import Toast from "react-native-toast-message";
 import FormActivity from "../../../../../../src/components/forms/FormActivity";
 import { useActivityMutations } from "@gymtrack/core/hooks/activities/use-activity-mutations";
 import { useActiveGym } from "../../../../../../src/contexts/active-gym-context";
-import { DEFAULT_ACTIVITY_COLOR } from "../../../../../../src/constants/activity-options";
+import {
+  DEFAULT_ACTIVITY_COLOR,
+  DEFAULT_ACTIVITY_KIND,
+} from "../../../../../../src/constants/activity-options";
 
 export default function AddActivityScreen() {
   const router = useRouter();
@@ -20,6 +23,7 @@ export default function AddActivityScreen() {
   const form = useForm({
     defaultValues: {
       name: "",
+      kind: DEFAULT_ACTIVITY_KIND,
       description: "",
       color: DEFAULT_ACTIVITY_COLOR,
       is_active: true,

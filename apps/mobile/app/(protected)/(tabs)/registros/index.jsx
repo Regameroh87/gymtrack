@@ -29,6 +29,7 @@ import {
 
 // Componentes
 import Screen from "../../../../src/components/Screen";
+import TrainingGate from "../../../../src/components/training-gate";
 
 // Tema / assets
 import { useGymTheme } from "../../../../src/contexts/gym-theme-context";
@@ -61,7 +62,17 @@ function resolveLogLabels(log) {
   return { title: "Entrenamiento libre", kicker: "Registro manual" };
 }
 
+// El gate va afuera del contenido a propósito: si el socio no tiene acceso, la
+// pantalla ni se monta y no dispara sus queries.
 export default function RegistrosTab() {
+  return (
+    <TrainingGate>
+      <RegistrosTabContent />
+    </TrainingGate>
+  );
+}
+
+function RegistrosTabContent() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { brandPrimary, brandSecondary } = useGymTheme();

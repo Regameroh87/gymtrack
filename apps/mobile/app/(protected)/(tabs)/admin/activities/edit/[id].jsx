@@ -55,6 +55,7 @@ function EditActivityForm({ item }) {
   const form = useForm({
     defaultValues: {
       name: item.name ?? "",
+      kind: item.kind ?? "class",
       description: item.description ?? "",
       color: item.color ?? null,
       is_active: item.is_active ?? true,

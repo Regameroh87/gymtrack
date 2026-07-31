@@ -34,7 +34,9 @@ import {
 } from "@gymtrack/core/hooks/users/use-gym-staff";
 import {
   ACTIVITY_COLORS,
+  ACTIVITY_KIND_OPTIONS,
   DEFAULT_ACTIVITY_COLOR,
+  DEFAULT_ACTIVITY_KIND,
   FREQUENCY_OPTIONS,
 } from "@/lib/activity-options";
 import {
@@ -48,11 +50,14 @@ import {
   ConfirmDialog,
 } from "@/components/platform/catalog/catalog-ui";
 
+export type ActivityKind = "training" | "class";
+
 export type ActivityInitial = {
   id: string;
   name: string | null;
   description: string | null;
   color: string | null;
+  kind: ActivityKind | null;
   is_active: boolean | null;
 };
 
@@ -91,6 +96,9 @@ export function AdminActivityForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [color, setColor] = useState(initial?.color ?? DEFAULT_ACTIVITY_COLOR);
+  const [kind, setKind] = useState<ActivityKind>(
+    initial?.kind ?? (DEFAULT_ACTIVITY_KIND as ActivityKind)
+  );
   const [isActive, setIsActive] = useState(initial?.is_active !== false);
   // En alta los pases se cargan en memoria y se persisten al crear la actividad.
   const [localPasses, setLocalPasses] = useState<LocalPass[]>([]);
@@ -115,6 +123,7 @@ export function AdminActivityForm({
       name,
       description,
       color,
+      kind,
       is_active: isActive,
     };
     try {
@@ -192,6 +201,39 @@ export function AdminActivityForm({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
+          </Field>
+
+          {/* Capability: define si la actividad abre el módulo de entrenamiento
+              en la app del socio. No es cosmético — es lo que mira el gate. */}
+          <Field label="TIPO DE ACTIVIDAD">
+            <div className="flex flex-col gap-2">
+              {ACTIVITY_KIND_OPTIONS.map((opt) => {
+                const selected = kind === opt.value;
+                return (
+                  <button
+                    type="button"
+                    key={opt.value}
+                    onClick={() => setKind(opt.value)}
+                    className={`rounded-xl border px-3.5 py-3 text-left transition ${
+                      selected
+                        ? "border-brandPrimary-600 bg-brandPrimary-50"
+                        : "border-ui-input-border bg-white hover:bg-ui-background-light/60"
+                    }`}
+                  >
+                    <span
+                      className={`block font-manrope text-[13px] font-bold ${
+                        selected ? "text-brandPrimary-600" : "text-ui-text-main"
+                      }`}
+                    >
+                      {opt.label}
+                    </span>
+                    <span className="mt-0.5 block font-manrope text-[11px] text-ui-text-muted">
+                      {opt.hint}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </Field>
 
           <Field label="DESCRIPCIÓN (OPCIONAL)">

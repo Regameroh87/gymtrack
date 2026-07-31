@@ -82,6 +82,11 @@ export default function ActivitiesList() {
             </View>
           )}
         </View>
+        {/* Qué habilita la actividad: sin esto no hay forma de ver cuál abre el
+            módulo de entrenamiento del socio. */}
+        <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
+          {item.kind === "training" ? "Entrenamiento" : "Clase"}
+        </Text>
         <Text className="text-[12px] font-manrope-semi text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
           {planSummary(item.activity_plans)}
         </Text>
