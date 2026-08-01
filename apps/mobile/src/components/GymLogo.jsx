@@ -7,6 +7,9 @@ import { Image } from "expo-image";
 // ── Contexts / Theme ──
 import { useGymTheme } from "../contexts/gym-theme-context";
 
+// ── Components ──
+import { Skeleton } from "./ui/skeleton";
+
 // ── Utils ──
 import { getMediaUrl } from "@gymtrack/core/media";
 
@@ -23,7 +26,7 @@ export default function GymLogo({
   content = "logo",
   align = "left",
 }) {
-  const { logoUrl, logoUrlDark, gymName, isDark } = useGymTheme();
+  const { logoUrl, logoUrlDark, gymName, isDark, gymLoading } = useGymTheme();
   // En dark mode usa el logo dark si el gym lo cargó; si no, cae al principal.
   const activeLogo = isDark && logoUrlDark ? logoUrlDark : logoUrl;
   const resolvedLogo = getMediaUrl(activeLogo);
@@ -50,6 +53,13 @@ export default function GymLogo({
   // fallback es red de seguridad: si falta el logo se cae al nombre; si falta
   // el nombre, "GYMTRACK".
   if (variant === "wordmark") {
+    // Mientras el gym carga, mostrar skeleton en vez del fallback "GYMTRACK".
+    if (gymLoading) {
+      const skeletonHeight = Math.round(size * 0.5);
+      const skeletonWidth = Math.min(Math.round(size * 3.5), 140);
+      return <Skeleton width={skeletonWidth} height={skeletonHeight} radius={6} />;
+    }
+
     const titleText = (
       <Text
         className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark"

@@ -68,7 +68,7 @@ export function GymThemeProvider({ children }) {
   const isDark = colorScheme === "dark";
 
   const { gymId } = useActiveGym();
-  const { data: gym } = useGym(gymId);
+  const { data: gym, isLoading: gymLoading } = useGym(gymId);
   const [theme, setTheme] = useState(DEFAULT_THEME);
 
   // 1) Hidratación temprana: theme del gym ACTIVO persistido (multi-gym),
@@ -130,6 +130,9 @@ export function GymThemeProvider({ children }) {
       logoUrl: gym?.logo_url ?? null,
       logoUrlDark: gym?.logo_url_dark ?? null,
       gymName: gym?.name ?? null,
+      // true mientras useGym no resolvió (ni data ni error): útil para mostrar
+      // skeletons en el header sin que aparezca el fallback "GYMTRACK".
+      gymLoading: gymLoading && !gym,
       // Config del header del home, editable por el superAdmin. Defaults
       // seguros mientras el gym resuelve (= comportamiento actual).
       headerConfig: {
@@ -140,7 +143,7 @@ export function GymThemeProvider({ children }) {
       source: theme.source,
       isDark,
     }),
-    [theme, gym, isDark]
+    [theme, gym, gymLoading, isDark]
   );
 
   return (

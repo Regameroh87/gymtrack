@@ -1,4 +1,4 @@
-﻿// ── React Native ──
+// ── React Native ──
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
 // ── Expo ──
@@ -75,7 +75,7 @@ function greetingFor(date) {
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { user, profileLoading } = useAuth();
+  const { user, profileLoading, loading } = useAuth();
   const { isDark } = useTheme();
   const { gymId } = useActiveGym();
   const { data: onlinePaymentsEnabled } = useGymOnlinePayments(gymId);
@@ -124,8 +124,10 @@ export default function Home() {
               </Text>
               {/* El saludo y la fecha no dependen del perfil: se muestran ya. El
                   nombre sí, así que mientras carga va un skeleton del mismo alto
-                  que la línea (text-3xl/leading-10 ≈ 40px) para no mover nada. */}
-              {profileLoading ? (
+                  que la línea (text-3xl/leading-10 ≈40px) para no mover nada.
+                  También cubrimos el estado `loading` inicial (antes de que
+                  AsyncStorage devuelva la sesión) para no mostrar "Atleta". */}
+              {loading || profileLoading ? (
                 <View className="h-10 justify-center">
                   <Skeleton width={180} height={26} radius={8} />
                 </View>
@@ -139,7 +141,7 @@ export default function Home() {
               )}
             </View>
 
-            {profileLoading ? (
+            {loading || profileLoading ? (
               <Skeleton width={44} height={44} radius={18} />
             ) : (
               <Pressable
