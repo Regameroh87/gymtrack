@@ -29,6 +29,7 @@ import {
   UserCog,
   CreditCard,
   Wallet,
+  MailWarning,
   type LucideIcon,
 } from "lucide-react";
 
@@ -86,6 +87,7 @@ const NAV_SECTIONS: NavSection[] = [
       { icon: Database, label: "Datos", path: "data" },
       { icon: CreditCard, label: "Suscripción", path: "suscripcion", ownerOnly: true },
       { icon: Wallet, label: "Cobros online", path: "cobros", ownerOnly: true },
+      { icon: MailWarning, label: "Cobranza", path: "cobranza" },
       { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
       { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
     ],
