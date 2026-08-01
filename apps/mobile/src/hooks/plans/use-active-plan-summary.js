@@ -21,7 +21,7 @@ import {
 
 // Hooks
 import { useAuth } from "../../auth/lib/getSession";
-import { useIsSyncing } from "../../database/sync";
+import { useHasEverSynced, useIsSyncing } from "../../database/sync";
 
 // Resuelve solo lo que el home necesita: el plan activo + el día que toca
 // según el progreso registrado en session_logs. Soporta tanto planes del gym
@@ -350,6 +350,7 @@ export const fetchActivePlanSummary = async (userId) => {
 export const useActivePlanSummary = () => {
   const { userId } = useAuth();
   const isSyncing = useIsSyncing();
+  const hasEverSynced = useHasEverSynced();
 
   const query = useQuery({
     // Comparte prefijo con ["plan_assignments"]: assign/drop/follow lo invalidan.
@@ -366,8 +367,15 @@ export const useActivePlanSummary = () => {
   // "sin plan" por un instante y recién se autocorregiría cuando el sync
   // invalide la query. Si ya hay un plan cacheado de una sesión previa, no
   // se espera al sync (se muestra al instante, offline-first).
+  //
+  // hasEverSynced acota esa espera al caso que la justifica. Sin él, la espera
+  // aplicaba a TODO sync: quien no tiene plan asignado veía el skeleton durante
+  // el sync entero en cada arranque en frío —el más caro, porque reconcilia—
+  // mientras el resto de la home (nombre, foto) ya había pintado. Una vez que
+  // la instalación completó un sync, `null` es una respuesta confiable.
   return {
     ...query,
-    isPending: query.isPending || (isSyncing && query.data === null),
+    isPending:
+      query.isPending || (isSyncing && query.data === null && !hasEverSynced),
   };
 };

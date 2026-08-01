@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { database } from "./index";
@@ -95,6 +95,75 @@ function getSyncingSnapshot() {
 }
 export function useIsSyncing() {
   return useSyncExternalStore(subscribeSyncing, getSyncingSnapshot, () => false);
+}
+
+// ¿Esta instalación completó alguna vez un sync con la base en su estado actual?
+//
+// Mientras la respuesta sea NO, una lectura local vacía es ambigua: puede ser
+// "no hay nada" o "todavía no bajó" (primer login, o justo después de una purga
+// por cambio de gym/cuenta). Ahí sí conviene que la UI espere. Una vez que hubo
+// un sync completo, un resultado vacío es la verdad y no hay razón para seguir
+// esperando: sin esta señal, la hero card del home se queda en skeleton durante
+// TODO el sync en cada arranque para quien simplemente no tiene plan asignado.
+//
+// Se persiste en sync_meta (sobrevive al cierre de la app) y se borra en
+// purgeSyncedTables, que es por donde pasan los tres casos que dejan la base
+// vacía: cambio de gym, cambio de cuenta y logout.
+const FIRST_SYNC_META_KEY = "first_sync_completed_at";
+let hasEverSynced = false;
+let hasEverSyncedLoaded = false;
+const everSyncedListeners = new Set();
+function setHasEverSynced(value) {
+  if (hasEverSynced === value) return;
+  hasEverSynced = value;
+  everSyncedListeners.forEach((listener) => listener());
+}
+function subscribeEverSynced(listener) {
+  everSyncedListeners.add(listener);
+  return () => everSyncedListeners.delete(listener);
+}
+function getEverSyncedSnapshot() {
+  return hasEverSynced;
+}
+
+// Lee el marcador una vez por proceso. Arranca en false, así que hasta que esta
+// lectura (local, milisegundos) resuelva, la UI se comporta como antes.
+async function loadHasEverSynced() {
+  if (hasEverSyncedLoaded) return;
+  hasEverSyncedLoaded = true;
+  try {
+    const [marker] = await database
+      .select()
+      .from(sync_meta)
+      .where(eq(sync_meta.key, FIRST_SYNC_META_KEY));
+    setHasEverSynced(!!marker);
+  } catch {
+    // La base todavía no está lista. Reintentamos en el próximo montaje; y si
+    // no, el primer sync que complete setea el flag igual.
+    hasEverSyncedLoaded = false;
+  }
+}
+
+export function useHasEverSynced() {
+  useEffect(() => {
+    loadHasEverSynced();
+  }, []);
+  return useSyncExternalStore(
+    subscribeEverSynced,
+    getEverSyncedSnapshot,
+    () => false
+  );
+}
+
+// Marca que la base local ya pasó por un sync completo. Idempotente.
+async function markFirstSyncCompleted() {
+  if (hasEverSynced) return;
+  await database
+    .insert(sync_meta)
+    .values({ key: FIRST_SYNC_META_KEY, value: new Date().toISOString() })
+    .onConflictDoNothing();
+  hasEverSyncedLoaded = true;
+  setHasEverSynced(true);
 }
 
 // Acota una promesa a un techo de tiempo. El cliente Supabase espera el auth
@@ -231,6 +300,13 @@ async function purgeSyncedTables() {
   if (staleKeys.length > 0) {
     await AsyncStorage.multiRemove(staleKeys);
   }
+
+  // La base vuelve a estar vacía: hasta que un sync la repueble, una lectura
+  // local vacía significa "todavía no bajó", no "no hay nada".
+  await database
+    .delete(sync_meta)
+    .where(eq(sync_meta.key, FIRST_SYNC_META_KEY));
+  setHasEverSynced(false);
 }
 
 // Limpieza total de la base local (logout / cuenta sin gimnasio). Purga las
@@ -3038,6 +3114,10 @@ export async function syncWithSupabase(
     if (tablesToSync.includes("custom_plan_week_day_exercise_sets")) {
       await pushCustomPlanWeekDayExerciseSetsChanges();
     }
+    // A partir de acá la base local refleja el servidor: una lectura vacía ya
+    // es una respuesta, no un "todavía no llegó". Ver useHasEverSynced.
+    await markFirstSyncCompleted();
+
     console.log(`✅ [SYNC] Sincronización completada`);
     return { success: true };
   } catch (error) {
