@@ -136,7 +136,29 @@ async function loadHasEverSynced() {
       .select()
       .from(sync_meta)
       .where(eq(sync_meta.key, FIRST_SYNC_META_KEY));
-    setHasEverSynced(!!marker);
+    if (marker) {
+      setHasEverSynced(true);
+      return;
+    }
+
+    // Sin marcador propio, caemos al de época de la base (DB_EPOCH_KEY), que
+    // existe desde mucho antes que esta señal: lo escribe el primer sync que
+    // corre sobre una base recién creada. Sin este fallback, toda instalación
+    // que ya venía funcionando arrancaría el bundle nuevo con la señal apagada
+    // y seguiría esperando al sync hasta que uno termine bien — justo lo que
+    // este cambio busca evitar. Se persiste para no repetir la deducción.
+    //
+    // DB_EPOCH se escribe al INICIO del sync, así que en teoría podría estar
+    // presente sin que ningún sync haya completado nunca. El costo de ese caso
+    // límite es mostrar "sin plan" un instante en vez del skeleton, y se
+    // corrige solo en cuanto el sync trae datos.
+    const [epoch] = await database
+      .select()
+      .from(sync_meta)
+      .where(eq(sync_meta.key, DB_EPOCH_KEY));
+    if (epoch) {
+      await markFirstSyncCompleted();
+    }
   } catch {
     // La base todavía no está lista. Reintentamos en el próximo montaje; y si
     // no, el primer sync que complete setea el flag igual.
