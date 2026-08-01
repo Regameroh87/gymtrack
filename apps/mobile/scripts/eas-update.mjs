@@ -43,14 +43,35 @@ const hasPlatform = extraArgs.some(
 );
 const platformArgs = hasPlatform ? [] : ["--platform", "android"];
 
+// spawnSync con shell:true NO entrecomilla los argumentos: los junta en una sola
+// línea de comando y deja que el shell la vuelva a partir por espacios. Un
+// argumento con espacios —el caso típico, `--message "texto de varias palabras"`—
+// le llega a eas partido en N argumentos sueltos y el comando muere con
+// "Unexpected arguments: ...". En POSIX se evita no usando shell: el array va tal
+// cual al proceso hijo. En Windows el shell es inevitable (Node no puede spawnear
+// un .cmd sin él desde el fix de CVE-2024-27980), así que ahí entrecomillamos a
+// mano lo que lo necesite.
+const isWindows = process.platform === "win32";
+const quoteForShell = (arg) =>
+  /\s/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg;
+
 // El canal es también el branch y el APP_ENV: los tres coinciden por diseño
 // (ver variants en app.config.js). Si en el futuro divergen, mapear acá.
+const commandArgs = [
+  "eas-cli",
+  "update",
+  "--branch",
+  channel,
+  ...platformArgs,
+  ...extraArgs,
+];
+
 const result = spawnSync(
-  "npx",
-  ["eas-cli", "update", "--branch", channel, ...platformArgs, ...extraArgs],
+  isWindows ? "npx.cmd" : "npx",
+  isWindows ? commandArgs.map(quoteForShell) : commandArgs,
   {
     stdio: "inherit",
-    shell: true,
+    shell: isWindows,
     cwd: mobileDir,
     env: { ...process.env, APP_ENV: channel },
   }
