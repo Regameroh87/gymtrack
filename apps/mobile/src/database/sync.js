@@ -29,6 +29,7 @@ import {
 import { supabase } from "../database/supabase";
 import {
   buildLockedCompositeKeys,
+  isUnchangedRow,
   planPullApplication,
   reconcileDeletedIds,
 } from "./sync-core";
@@ -60,6 +61,19 @@ const CATALOG_PARENT_TABLES = new Set([
   "sessions",
   "training_plans",
 ]);
+// La reconciliación de borrados pide TODOS los ids de cada tabla sincronizada,
+// sin watermark: es el tramo dominante del costo de un sync y crece con el
+// tamaño de la base, no con la cantidad de cambios. Detecta borrados hechos en
+// otro dispositivo en las tablas sin soft-delete — algo que no urge al segundo,
+// porque el pull incremental ya trae altas y modificaciones. Se corre en el
+// primer sync del proceso (arranque en frío) y después, como mucho, cada
+// RECONCILE_INTERVAL_MS; los flujos que necesitan certeza inmediata la fuerzan
+// con { forceReconcile: true }.
+const RECONCILE_INTERVAL_MS = 5 * 60 * 1000;
+// 0 → el primer sync del proceso siempre reconcilia. Vive en memoria a propósito:
+// un arranque en frío debe volver a reconciliar aunque el anterior sea reciente.
+let lastReconcileAt = 0;
+
 let isSyncing = false;
 // Store mínimo para exponer isSyncing a React (useSyncExternalStore). El sync
 // se dispara desde tres lugares independientes (selección de gym, reconexión
@@ -442,7 +456,14 @@ async function pullTableChanges(
   //   mapeando gym_id → sentinel local y reconciliando dentro del set de catálogo.
   // excludeCatalog: en el pull gym-scopeado de una tabla padre, NO borrar las filas
   //   de catálogo en la reconciliación (no matchean el gym y se borrarían).
-  const { catalogMode = false, excludeCatalog = false } = options;
+  // reconcile: correr la reconciliación de borrados remotos. Es el tramo caro del
+  //   pull (pide TODOS los ids de la tabla, sin watermark), así que el caller la
+  //   programa cada tantos minutos en vez de en cada sync — ver syncWithSupabase.
+  const {
+    catalogMode = false,
+    excludeCatalog = false,
+    reconcile = true,
+  } = options;
 
   let query = supabase
     .from(tableName)
@@ -475,20 +496,23 @@ async function pullTableChanges(
   let newLastSync = null;
 
   if (data && data.length > 0) {
+    // Copia local de las filas que trajo el pull. Sirve para dos cosas: saber
+    // cuáles están bloqueadas por cambios locales (no pisarlas) y comparar el
+    // resto contra lo que ya está guardado para no reportar como "cambio" una
+    // fila idéntica — ver isUnchangedRow.
+    const remoteIds = data.map((r) => r.id);
+    const localRows = await database
+      .select()
+      .from(schemaTable)
+      .where(inArray(schemaTable.id, remoteIds));
+    const localById = new Map(localRows.map((r) => [r.id, r]));
+
     // No pisar filas locales con cambios pendientes (pending/dirty/deleted).
     // Esas las resuelve el PUSH de este mismo sync; el PULL siguiente ya
     // las traerá en su estado canónico.
-    const remoteIds = data.map((r) => r.id);
-    const lockedLocal = await database
-      .select({ id: schemaTable.id })
-      .from(schemaTable)
-      .where(
-        and(
-          inArray(schemaTable.id, remoteIds),
-          ne(schemaTable.sync_status, "synced")
-        )
-      );
-    const lockedIds = new Set(lockedLocal.map((r) => r.id));
+    const lockedIds = new Set(
+      localRows.filter((r) => r.sync_status !== "synced").map((r) => r.id)
+    );
 
     let lockedCompositeKeys = null;
     if (compositeUniqueColumns) {
@@ -516,12 +540,25 @@ async function pullTableChanges(
 
     // Tombstones: el borrado remoto gana sea cual sea el estado local. Como el
     // PULL corre antes que el PUSH, la copia local se borra antes de poder
-    // re-subirse → evita la resurrección.
+    // re-subirse → evita la resurrección. Solo cuenta como cambio si la fila
+    // realmente estaba local: un tombstone ya aplicado vuelve a bajar en cada
+    // pull mientras sea la fila más reciente de la tabla.
+    let applied = 0;
     for (const id of tombstoneIds) {
+      if (!localById.has(id)) continue;
       await database.delete(schemaTable).where(eq(schemaTable.id, id));
+      applied += 1;
     }
 
     for (const remoteRow of upserts) {
+      // El watermark usa `>=`, así que la última fila conocida vuelve a bajar en
+      // cada pull. Si es idéntica a la copia local, el upsert no cambiaría nada:
+      // se saltea para no reportar un cambio inexistente (que invalidaría las
+      // queries y refrescaría la UI sin motivo). El borrado por unique compuesta
+      // de más abajo tampoco haría nada: el slot lo ocupa esta misma fila.
+      if (isUnchangedRow(remoteRow, localById.get(remoteRow.id))) continue;
+      applied += 1;
+
       // Antes de insertar, eliminar cualquier fila local con el mismo composite
       // key pero distinto id. Pasa cuando un día/semana del plan cambia de UUID
       // en el servidor (p. ej. un slot vacío re-llenado con makeEmptyDay) y la
@@ -546,16 +583,24 @@ async function pullTableChanges(
         set: remoteRow,
       });
     }
-    changed = data.length - skipped > 0;
+    changed = applied > 0;
+    // El watermark avanza siempre que el server haya devuelto filas, cambien o
+    // no el estado local: marca hasta dónde se leyó, no qué se aplicó.
     newLastSync = data[data.length - 1].updated_at;
-    console.log(
-      `⬇️  [PULL] "${tableName}": ${data.length - skipped} aplicado(s)` +
-        (skipped > 0 ? `, ${skipped} omitido(s) por cambios locales` : "")
-    );
+    if (applied > 0 || skipped > 0) {
+      console.log(
+        `⬇️  [PULL] "${tableName}": ${applied} aplicado(s)` +
+          (skipped > 0 ? `, ${skipped} omitido(s) por cambios locales` : "")
+      );
+    }
   }
 
   // Reconciliar borrados remotos: detectar registros locales "synced" que ya
-  // no existen en Supabase (fueron borrados desde otro dispositivo)
+  // no existen en Supabase (fueron borrados desde otro dispositivo). Es el
+  // tramo caro —pide la tabla de ids entera—, así que el caller lo programa
+  // cada tantos minutos en lugar de en cada sync.
+  if (!reconcile) return { success: true, changed, newLastSync };
+
   let idsQuery = supabase.from(tableName).select("id");
   if (catalogMode) idsQuery = idsQuery.eq("is_catalog", true);
   else if (gymId) idsQuery = idsQuery.eq("gym_id", gymId);
@@ -2690,7 +2735,8 @@ export async function syncWithSupabase(
     "custom_plan_week_days",
     "custom_plan_week_day_exercises",
     "custom_plan_week_day_exercise_sets",
-  ]
+  ],
+  { forceReconcile = false } = {}
 ) {
   if (isSyncing) {
     console.log(
@@ -2713,8 +2759,12 @@ export async function syncWithSupabase(
   }, GLOBAL_TIMEOUT_MS);
   try {
     const syncTime = new Date().toISOString();
+    const reconcile =
+      forceReconcile || Date.now() - lastReconcileAt >= RECONCILE_INTERVAL_MS;
     console.log(
-      `🔄 [SYNC] Iniciando — tablas: [${tablesToSync.join(", ")}] — ${syncTime}`
+      `🔄 [SYNC] Iniciando — tablas: [${tablesToSync.join(", ")}]` +
+        (reconcile ? " — con reconciliación" : "") +
+        ` — ${syncTime}`
     );
 
     await resetWatermarksIfDbWasRecreated();
@@ -2865,7 +2915,7 @@ export async function syncWithSupabase(
           softDelete,
           // En las tablas padre con catálogo, no borrar las filas is_catalog en la
           // reconciliación gym-scopeada: las trae/limpia su propio pase de catálogo.
-          { excludeCatalog: CATALOG_PARENT_TABLES.has(table) }
+          { excludeCatalog: CATALOG_PARENT_TABLES.has(table), reconcile }
         );
         if (success) {
           // Solo avanzamos el watermark si el servidor devolvió filas nuevas.
@@ -2905,7 +2955,7 @@ export async function syncWithSupabase(
           COMPOSITE_UNIQUE_COLUMNS[table] ?? null,
           null,
           false,
-          { catalogMode: true }
+          { catalogMode: true, reconcile }
         );
         if (success) {
           if (newLastSync) await AsyncStorage.setItem(syncKey, newLastSync);
@@ -2913,6 +2963,10 @@ export async function syncWithSupabase(
         }
       }
     }
+
+    // Recién acá: si el pase se cortó antes (excepción), el próximo sync vuelve
+    // a intentar la reconciliación en vez de darla por hecha.
+    if (reconcile) lastReconcileAt = Date.now();
 
     // --- ORPHAN CLEANUP ---
     // Borra hijos locales cuyo padre ya no existe (cualquier sync_status).
@@ -3013,10 +3067,10 @@ export function startSyncListener() {
   });
 }
 
-export async function checkNetInfoAndSync() {
+export async function checkNetInfoAndSync(options = {}) {
   const netInfo = await NetInfo.fetch();
   if (netInfo.isConnected) {
-    const { success, error } = await syncWithSupabase();
+    const { success, error } = await syncWithSupabase(undefined, options);
     return { success, error };
   }
 }

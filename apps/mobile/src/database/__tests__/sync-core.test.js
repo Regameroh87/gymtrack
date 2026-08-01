@@ -8,6 +8,7 @@ import { describe, it, expect } from "vitest";
 import {
   compositeKey,
   buildLockedCompositeKeys,
+  isUnchangedRow,
   planPullApplication,
   reconcileDeletedIds,
 } from "../sync-core";
@@ -151,6 +152,64 @@ describe("planPullApplication", () => {
     // changed = remoteRows.length - skipped: el tombstone debe contar como cambio.
     expect(skipped).toBe(1);
     expect(tombstoneIds).toHaveLength(1);
+  });
+});
+
+describe("isUnchangedRow", () => {
+  // El caso que motiva la función: el watermark filtra con >=, así que la última
+  // fila conocida vuelve a bajar en CADA pull. Detectarla evita invalidar las
+  // queries (y refrescar la UI) cuando el server no trajo nada nuevo.
+  it("reconoce la fila del watermark que vuelve a bajar sin cambios", () => {
+    const local = { ...remote("a"), sync_status: "synced" };
+    const upsert = { ...remote("a"), sync_status: "synced" };
+    expect(isUnchangedRow(upsert, local)).toBe(true);
+  });
+
+  it("ignora sync_status: es estado local, no un cambio del server", () => {
+    const local = { ...remote("a"), sync_status: "synced" };
+    const upsert = { ...remote("a"), sync_status: "pending" };
+    expect(isUnchangedRow(upsert, local)).toBe(true);
+  });
+
+  it("detecta un cambio real en cualquier columna", () => {
+    const local = { ...remote("a"), sync_status: "synced" };
+    expect(isUnchangedRow({ ...local, name: "otro" }, local)).toBe(false);
+    expect(
+      isUnchangedRow({ ...local, updated_at: "2026-07-02T00:00:00Z" }, local)
+    ).toBe(false);
+  });
+
+  it("una fila que no existe local siempre es cambio", () => {
+    expect(isUnchangedRow(remote("nueva"), undefined)).toBe(false);
+    expect(isUnchangedRow(remote("nueva"), null)).toBe(false);
+  });
+
+  // Ante la duda debe decir "cambió": una invalidación de más es inocua, una de
+  // menos deja la UI desactualizada hasta el sync siguiente.
+  it("es conservador ante tipos distintos o columnas ausentes", () => {
+    const local = { id: "a", is_unilateral: false, reps: 10, note: null };
+    // booleano vs entero (representaciones distintas del mismo valor)
+    expect(isUnchangedRow({ ...local, is_unilateral: 0 }, local)).toBe(false);
+    // número vs string
+    expect(isUnchangedRow({ ...local, reps: "10" }, local)).toBe(false);
+    // columna ausente en el remoto (undefined) frente a NULL local
+    expect(isUnchangedRow({ id: "a", is_unilateral: false, reps: 10 }, local)).toBe(
+      false
+    );
+  });
+
+  it("null a ambos lados no cuenta como cambio", () => {
+    const local = { id: "a", image_uri: null, sync_status: "synced" };
+    expect(isUnchangedRow({ id: "a", image_uri: null }, local)).toBe(true);
+  });
+
+  // En catalogMode el gym_id remoto (NULL) ya viene mapeado al sentinel local
+  // antes de comparar, así que una fila de catálogo estable no debe dar cambio.
+  it("la fila de catálogo ya mapeada al sentinel no cuenta como cambio", () => {
+    const local = { id: "c", gym_id: CATALOG_GYM_ID, is_catalog: true };
+    expect(
+      isUnchangedRow({ id: "c", gym_id: CATALOG_GYM_ID, is_catalog: true }, local)
+    ).toBe(true);
   });
 });
 

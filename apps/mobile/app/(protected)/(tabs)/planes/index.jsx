@@ -538,7 +538,12 @@ function ExplorarContent({ router, insets }) {
     setRefreshing(true);
     try {
       if (Platform.OS !== "web") {
-        await require("../../../../src/database/sync").checkNetInfoAndSync();
+        // forceReconcile: el pull-to-refresh es un pedido explícito de estado
+        // fresco, así que también se re-chequean los borrados hechos en otro
+        // dispositivo (el sync de rutina los difiere para no pagar ese costo).
+        await require("../../../../src/database/sync").checkNetInfoAndSync({
+          forceReconcile: true,
+        });
       }
       queryClient.invalidateQueries({ queryKey: ["catalog_plans"] });
       queryClient.invalidateQueries({ queryKey: ["training_plans"] });
