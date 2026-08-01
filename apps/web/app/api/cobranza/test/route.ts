@@ -67,9 +67,18 @@ export async function POST(req: Request) {
         heading: resolveDunningVars(heading ?? "", vars),
         body: resolveDunningVars(bodyText ?? "", vars),
         ctaLabel: resolveDunningVars(ctaLabel || "Pagar mi cuota", vars),
-        // "#" a propósito: la prueba no crea un cobro real (no hay un socio
-        // detrás), solo confirma si el mail queda con o sin botón.
-        payUrl: showPaymentButton ? "#" : null,
+        // Sin link, y no clickeable: la prueba no crea un cobro real (no hay un
+        // socio detrás), solo confirma si el mail queda con o sin botón. Antes
+        // iba con href="#", que según el cliente de correo terminaba llevando
+        // al login — parecía un bug cuando en realidad no había ningún checkout
+        // detrás.
+        //
+        // Un checkout real acá es imposible, no solo indeseable:
+        // member_payment_intent_items tiene FK contra activity_subscriptions,
+        // y la prueba usa datos de ejemplo sin ninguna cuota detrás. El link
+        // verdadero lo genera el job, por socio, contra su deuda real.
+        payUrl: null,
+        ctaInert: showPaymentButton,
         items: [{ label: "Musculación · julio 2026", amount: vars.monto }],
         total: vars.monto,
         dueDate: vars.vencimiento,

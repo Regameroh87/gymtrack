@@ -66,9 +66,17 @@ export async function POST(req: Request) {
         heading: resolveDunningVars(heading ?? "", vars),
         body: resolveDunningVars(bodyText ?? "", vars),
         ctaLabel: resolveDunningVars(ctaLabel || "Pagar mi cuota", vars),
-        // "#" a propósito: el preview no crea ningún cobro real, solo muestra
-        // si el botón queda o no según el toggle "Incluir botón de pago".
-        payUrl: showPaymentButton ? "#" : null,
+        // Sin link, y no clickeable: el preview no crea ningún cobro real, solo
+        // muestra si el botón queda o no según el toggle "Incluir botón de
+        // pago". Antes iba con href="#", que según el cliente terminaba
+        // llevando al login — parecía un bug cuando en realidad no había
+        // ningún checkout detrás.
+        //
+        // Un checkout real acá es imposible, no solo indeseable:
+        // member_payment_intent_items tiene FK contra activity_subscriptions,
+        // y la vista previa usa datos de ejemplo sin ninguna cuota detrás.
+        payUrl: null,
+        ctaInert: showPaymentButton,
         items: [{ label: "Musculación · julio 2026", amount: vars.monto }],
         total: vars.monto,
         dueDate: vars.vencimiento,

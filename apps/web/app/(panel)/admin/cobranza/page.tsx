@@ -731,6 +731,15 @@ export default function CobranzaPage() {
                     </div>
                   )}
                 </div>
+                {/* El botón de pago acá no lleva a ningún lado, y sin este aviso
+                    la única forma de enterarse es clickeándolo. */}
+                {draft.showPaymentButton && (
+                  <p className="mt-2 font-manrope text-[11px] leading-relaxed text-ui-text-muted">
+                    En la vista previa y en el mail de prueba el botón de pago no
+                    funciona: el link de MercadoPago se genera al enviar, uno por
+                    socio y contra su deuda real.
+                  </p>
+                )}
               </div>
             </div>
           </Card>

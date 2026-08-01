@@ -24,6 +24,17 @@ export type EmailContext = {
      *  hace condicional el link de pago (sin cuenta de MP conectada, o con el
      *  toggle apagado, el mail sale igual pero sin botón). */
     payUrl?: string | null;
+    /**
+     * Botón visible pero SIN link: lo usan la vista previa y el mail de prueba
+     * de /admin/cobranza, donde no hay socio ni deuda real y por lo tanto no
+     * existe un checkout al que mandar a nadie.
+     *
+     * Se renderiza como <span>, no como <a> con el link anulado: `pointer-events`
+     * no sirve acá porque Outlook (motor de Word) lo ignora, así que el botón
+     * seguiría siendo clickeable justo en uno de los clientes más usados. Sin
+     * <a> no hay nada que clickear en ningún cliente.
+     */
+    ctaInert?: boolean;
     items?: { label: string; amount: string }[];
     total?: string;
     dueDate?: string;
@@ -61,7 +72,15 @@ function escapeHtml(s: string): string {
 // apuntan ahí.
 function baseLayout(
   ctx: EmailContext,
-  opts: { heading: string; bodyHtml: string; ctaLabel?: string; ctaHref?: string; extraHtml?: string },
+  opts: {
+    heading: string;
+    bodyHtml: string;
+    ctaLabel?: string;
+    ctaHref?: string;
+    extraHtml?: string;
+    /** Renderiza el botón como <span> en vez de <a>. Ver data.ctaInert. */
+    ctaInert?: boolean;
+  },
 ): string {
   const { gymName, primary, accent, logoUrl, appUrl } = ctx;
   const safeName = escapeHtml(gymName);
@@ -72,11 +91,22 @@ function baseLayout(
        </div>`
     : `<span style="color:#ffffff;font-size:20px;font-weight:800;letter-spacing:-0.3px;">${safeName}</span>`;
 
-  const ctaHtml = opts.ctaLabel
-    ? `<a href="${opts.ctaHref ?? appUrl}" style="display:inline-block;background:${primary};color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:700;font-size:15px;">
-         ${opts.ctaLabel}
-       </a>`
-    : "";
+  // Un solo string de estilos para las dos variantes: el botón inerte tiene que
+  // verse EXACTAMENTE igual que el real (es una vista previa), y si los estilos
+  // estuvieran duplicados se despegarían la primera vez que alguien toque uno.
+  const ctaStyles =
+    `display:inline-block;background:${primary};color:#ffffff;text-decoration:none;` +
+    `padding:12px 24px;border-radius:12px;font-weight:700;font-size:15px;`;
+
+  const ctaHtml = !opts.ctaLabel
+    ? ""
+    : opts.ctaInert
+      // <span>, no <a> con el href anulado: sin elemento de link no hay nada
+      // que clickear en NINGÚN cliente de correo. Ver data.ctaInert.
+      ? `<span style="${ctaStyles}">${opts.ctaLabel}</span>`
+      : `<a href="${opts.ctaHref ?? appUrl}" style="${ctaStyles}">
+           ${opts.ctaLabel}
+         </a>`;
 
   return `<!doctype html>
 <html lang="es"><body style="margin:0;background:#f4f4f7;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1c1c24;">
@@ -142,8 +172,17 @@ const TEMPLATES: Record<string, (ctx: EmailContext) => RenderedEmail> = {
   // owner haya prendido "incluir botón de pago" en el step — es lo que decide
   // si en verdad hay una preferencia de MP creada (gym con cuenta conectada y
   // cobros habilitados) o no.
+  //
+  // La excepción es `ctaInert`, que muestra el botón sin link para la vista
+  // previa y el mail de prueba: ahí no hay socio ni deuda real, así que no
+  // existe ninguna preferencia de MP a la que mandar a nadie.
   dunning_reminder: (ctx) => {
     const d = ctx.data ?? {};
+    // Inerte gana sobre payUrl si por algún motivo llegaran los dos: entre
+    // mostrar un botón de más y mandar a alguien a un cobro que no le
+    // corresponde, el default seguro es no linkear.
+    const inert = !!d.ctaInert;
+    const showCta = inert || !!d.payUrl;
     const heading = d.heading ? escapeHtml(d.heading) : `Tu cuota de ${escapeHtml(ctx.gymName)} está vencida`;
     const bodyText = escapeHtml(d.body ?? "").replace(/\n/g, "<br>");
 
@@ -168,8 +207,9 @@ const TEMPLATES: Record<string, (ctx: EmailContext) => RenderedEmail> = {
         heading,
         bodyHtml: `<p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#44444f;">${bodyText}</p>`,
         extraHtml: detailHtml,
-        ctaLabel: d.payUrl ? (d.ctaLabel || "Pagar mi cuota") : undefined,
-        ctaHref: d.payUrl ?? undefined,
+        ctaLabel: showCta ? (d.ctaLabel || "Pagar mi cuota") : undefined,
+        ctaHref: inert ? undefined : (d.payUrl ?? undefined),
+        ctaInert: inert,
       }),
     };
   },
