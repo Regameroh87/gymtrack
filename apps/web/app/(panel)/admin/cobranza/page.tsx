@@ -103,7 +103,7 @@ function StatusPill({ enabled }: { enabled: boolean }) {
 
 export default function CobranzaPage() {
   const { gymId, role } = useActiveGym();
-  const { data, isLoading } = useDunningSettings(gymId);
+  const { data, isLoading, isError, error, refetch } = useDunningSettings(gymId);
   const { data: onlinePayments } = useGymOnlinePayments(gymId);
 
   const saveSettings = useSaveDunningSettings(gymId);
@@ -186,6 +186,34 @@ export default function CobranzaPage() {
           <p className="font-manrope text-xs text-ui-text-muted">
             La cobranza automática la administra el dueño o un administrador del gimnasio.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // El error va ANTES del skeleton y con su mensaje real. Colapsar los dos
+  // estados en `isLoading || !data` deja la pantalla pulsando para siempre
+  // cuando la query falla (react-query pone isLoading en false y data en
+  // undefined), que es exactamente cómo se veía esta pantalla mientras faltaba
+  // aplicar la migración: en blanco, sin decir qué pasaba. En una pantalla que
+  // solo ve el owner, el mensaje de Postgres es la información útil.
+  if (isError) {
+    return (
+      <div className="p-4 pb-14 md:p-9">
+        <PageHeader section="Cobranza" title="Cobranza automática" />
+        <div className="flex flex-col items-center rounded-card border border-ui-input-border bg-white px-6 py-24 shadow-card-brand">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-amber-50">
+            <ShieldAlert size={20} color="#d97706" />
+          </div>
+          <p className="mb-1 font-manrope text-sm font-bold text-ui-text-main">
+            No se pudo cargar la cobranza
+          </p>
+          <p className="mb-5 max-w-prose text-center font-manrope text-xs text-ui-text-muted">
+            {error instanceof Error ? error.message : "Error desconocido"}
+          </p>
+          <Button variant="secondary" icon={<RotateCcw size={15} />} onClick={() => refetch()}>
+            Reintentar
+          </Button>
         </div>
       </div>
     );
