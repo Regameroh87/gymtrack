@@ -114,6 +114,17 @@ select cron.schedule('purge-archived-catalog-plans', '0 4 * * *',
 select cron.schedule('purge-soft-deleted', '30 6 * * *',
   $cronjob$ select public.purge_soft_deleted(); $cronjob$);
 
+-- Intents de cobro que nadie terminó de pagar. Sin este job, cada corrida de
+-- cobranza-recordatorios (o cada socio que abre el checkout y se arrepiente)
+-- deja un intent 'pending' acumulándose para siempre — no está mal que exista,
+-- pero después de una semana ya no representa una intención real de pago.
+select cron.schedule('expire-member-payment-intents', '0 5 * * *', $cronjob$
+    update public.member_payment_intents
+       set status = 'expired', updated_at = now()
+     where status = 'pending'
+       and created_at < now() - interval '7 days';
+  $cronjob$);
+
 -- ── 4. cleanup-media: REQUIERE DOS PASOS MANUALES ────────────────────────────
 -- Este job invoca una edge function por HTTP, así que necesita la URL del
 -- proyecto y un service_role key.
@@ -160,3 +171,44 @@ select cron.schedule('purge-soft-deleted', '30 6 * * *',
 --   set local role postgres;
 --   select length((select decrypted_secret from vault.decrypted_secrets
 --                   where name = 'service_role_key'));
+
+-- ── 5. cobranza-recordatorios: MISMO PATRÓN, UN SECRET MÁS ──────────────────
+-- Recordatorios diarios de cuota vencida (dashboard de cobranza, /admin/cobranza).
+-- Mismo mecanismo que cleanup-media (pg_cron → net.http_post con el
+-- service_role key de Vault), pero esta función además exige el secreto
+-- interno x-internal-secret (mismo canal que send-email): sin los dos headers
+-- responde 401 y no manda un solo mail.
+--
+-- 5.a — Guardar INTERNAL_FUNCTION_SECRET (el MISMO valor que ya está cargado
+--       como secret de las edge functions) en Vault, además del
+--       service_role_key del paso 4.a:
+--
+-- select vault.create_secret(
+--   '<INTERNAL_FUNCTION_SECRET_DEL_PROYECTO>',
+--   'internal_function_secret',
+--   'Secreto interno compartido entre edge functions, para llamarlas desde pg_cron'
+-- );
+
+-- 5.b — Agendar el job. 09:00 de Argentina (UTC-3) es las 12:00 UTC.
+--       Reemplazar <PROJECT_REF> por el ref del proyecto.
+--
+-- select cron.schedule('cobranza-recordatorios', '0 12 * * *', $cronjob$select
+--   net.http_post(
+--       url:='https://<PROJECT_REF>.supabase.co/functions/v1/cobranza-recordatorios',
+--       headers:=jsonb_build_object(
+--         'Authorization',
+--         'Bearer ' || (select decrypted_secret
+--                         from vault.decrypted_secrets
+--                        where name = 'service_role_key'),
+--         'x-internal-secret',
+--         (select decrypted_secret from vault.decrypted_secrets
+--                        where name = 'internal_function_secret'),
+--         'Content-Type', 'application/json'
+--       ),
+--       timeout_milliseconds:=25000
+--   );$cronjob$);
+--
+-- El timeout es más alto que el de cleanup-media (25s vs. 5s) a propósito: este
+-- job recorre TODOS los gyms con cobranza activa y por cada uno crea
+-- preferencias de MercadoPago (una request HTTP externa por deudor con botón de
+-- pago), así que puede tardar bastante más que un sweep de Storage.
