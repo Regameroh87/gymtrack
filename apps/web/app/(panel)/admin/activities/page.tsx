@@ -189,9 +189,46 @@ export default function ActivitiesListPage() {
 
 // ── Subcomponents ──
 
+function Toggle({
+  on,
+  disabled,
+  onClick,
+  label,
+}: {
+  on: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition disabled:opacity-50 ${
+        on ? "bg-brandPrimary-600" : "bg-ui-input-border"
+      }`}
+    >
+      <span
+        className={`h-5 w-5 rounded-full bg-white transition-transform ${
+          on ? "translate-x-5" : "translate-x-0"
+        }`}
+      />
+    </button>
+  );
+}
+
 // Gate del módulo de entrenamiento del socio (planes, registros, progreso).
 // Vive acá y no en una pantalla de ajustes porque lo que decide quién entra son
 // las actividades y sus inscripciones, que es exactamente esta pantalla.
+//
+// Son dos reglas distintas y se prenden por separado, porque responden a
+// decisiones distintas: la primera es de producto (el de zumba no tiene nada que
+// hacer en las rutinas) y la segunda es comercial (cortarle a quien debe). Un
+// gym que cobra en efectivo suele querer la primera sin la segunda.
 function TrainingAccessCard({
   gymId,
   hasTrainingActivity,
@@ -207,6 +244,7 @@ function TrainingAccessCard({
   const [grace, setGrace] = useState<string | null>(null);
   const graceValue = grace ?? String(settings?.graceDays ?? 10);
   const gated = settings?.gated === true;
+  const requirePaid = settings?.requirePaid === true;
 
   if (isLoading || !settings) return null;
 
@@ -222,6 +260,7 @@ function TrainingAccessCard({
 
   return (
     <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
+      {/* Nivel 1 — quién ve el módulo */}
       <div className="flex items-start gap-3.5">
         <div
           className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
@@ -233,31 +272,14 @@ function TrainingAccessCard({
 
         <div className="flex-1">
           <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
-            Acceso al entrenamiento
+            Solo para inscriptos a Entrenamiento
           </p>
           <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
-            Con esto activado, el socio necesita una inscripción vigente a una
-            actividad de tipo <strong>Entrenamiento</strong> para ver rutinas,
-            registrar entrenamientos y seguir su progreso en la app.
+            Con esto activado, ver rutinas, registrar entrenamientos y seguir el
+            progreso queda reservado a los socios inscriptos a una actividad de
+            tipo <strong>Entrenamiento</strong>. Quien solo hace clases (zumba,
+            spinning, funcional) no ve el módulo.
           </p>
-
-          {gated && (
-            <div className="mt-3 flex items-center gap-2">
-              <span className="font-manrope text-[12px] text-ui-text-muted">
-                Sigue entrando hasta
-              </span>
-              <input
-                value={graceValue}
-                onChange={(e) => setGrace(e.target.value)}
-                onBlur={commitGrace}
-                inputMode="numeric"
-                className="w-14 rounded-lg border border-ui-input-border bg-white px-2 py-1 text-center font-manrope text-[13px] font-bold text-ui-text-main outline-none focus:border-brandPrimary-600"
-              />
-              <span className="font-manrope text-[12px] text-ui-text-muted">
-                días después del vencimiento (el pago en efectivo se carga tarde).
-              </span>
-            </div>
-          )}
 
           {/* Prender el gate sin una actividad de entrenamiento no hace nada:
               el RPC deja pasar a todos antes que cerrarle la app al gym entero. */}
@@ -279,22 +301,57 @@ function TrainingAccessCard({
           )}
         </div>
 
-        <button
-          type="button"
+        <Toggle
+          on={gated}
           disabled={isPending}
           onClick={() => save({ gated: !gated })}
-          aria-label="Activar el acceso por inscripción"
-          className={`mt-1 flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition disabled:opacity-50 ${
-            gated ? "bg-brandPrimary-600" : "bg-ui-input-border"
-          }`}
-        >
-          <span
-            className={`h-5 w-5 rounded-full bg-white transition-transform ${
-              gated ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
-        </button>
+          label="Reservar el entrenamiento a los inscriptos"
+        />
       </div>
+
+      {/* Nivel 2 — hasta cuándo lo ve. Cuelga del nivel 1: sin él no aplica. */}
+      {gated && (
+        <div className="mt-4 flex items-start gap-3.5 border-t border-ui-input-border pt-4">
+          <div className="w-[42px] shrink-0" aria-hidden />
+
+          <div className="flex-1">
+            <p className="font-jakarta text-[13px] font-bold text-ui-text-main">
+              Exigir además la cuota al día
+            </p>
+            <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
+              {requirePaid
+                ? "El inscripto pierde el acceso si se atrasa con el pago."
+                : "Alcanza con estar inscripto: nadie pierde el acceso por atrasarse con el pago."}
+            </p>
+
+            {requirePaid && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="font-manrope text-[12px] text-ui-text-muted">
+                  Sigue entrando hasta
+                </span>
+                <input
+                  value={graceValue}
+                  onChange={(e) => setGrace(e.target.value)}
+                  onBlur={commitGrace}
+                  inputMode="numeric"
+                  aria-label="Días de gracia después del vencimiento"
+                  className="w-14 rounded-lg border border-ui-input-border bg-white px-2 py-1 text-center font-manrope text-[13px] font-bold text-ui-text-main outline-none focus:border-brandPrimary-600"
+                />
+                <span className="font-manrope text-[12px] text-ui-text-muted">
+                  días después del vencimiento (el pago en efectivo se carga tarde).
+                </span>
+              </div>
+            )}
+          </div>
+
+          <Toggle
+            on={requirePaid}
+            disabled={isPending}
+            onClick={() => save({ gated, requirePaid: !requirePaid })}
+            label="Exigir la cuota al día"
+          />
+        </div>
+      )}
     </div>
   );
 }
