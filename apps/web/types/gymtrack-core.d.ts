@@ -392,6 +392,7 @@ declare module "@gymtrack/core/hooks/activities/use-training-access-settings" {
   import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
   export interface TrainingAccessSettings {
     gated: boolean;
+    requirePaid: boolean;
     graceDays: number;
   }
   export function useTrainingAccessSettings(
@@ -402,7 +403,7 @@ declare module "@gymtrack/core/hooks/activities/use-training-access-settings" {
   ): UseMutationResult<
     void,
     Error,
-    { gated: boolean; graceDays?: number | null }
+    { gated: boolean; graceDays?: number | null; requirePaid?: boolean | null }
   >;
 }
 
