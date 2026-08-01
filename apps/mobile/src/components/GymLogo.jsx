@@ -49,31 +49,32 @@ export default function GymLogo({
 
   // ── Variante wordmark: el logo funciona como título vectorizado ──
   // El superAdmin elige el contenido por gym: "logo" (solo imagen),
-  // "logo_title" (imagen + nombre) o "title" (solo nombre). La cascada de
-  // fallback es red de seguridad: si falta el logo se cae al nombre; si falta
-  // el nombre, "GYMTRACK".
+  // "logo_title" (imagen + nombre) o "title" (solo nombre).
   if (variant === "wordmark") {
-    // Mientras el gym carga, mostrar skeleton en vez del fallback "GYMTRACK".
+    // Mientras el gym carga, mostrar skeleton.
     if (gymLoading) {
       const skeletonHeight = Math.round(size * 0.5);
       const skeletonWidth = Math.min(Math.round(size * 3.5), 140);
       return <Skeleton width={skeletonWidth} height={skeletonHeight} radius={6} />;
     }
 
-    const titleText = (
+    // Gym cargado pero sin logo ni nombre → header vacío (no mostrar "GYMTRACK").
+    if (!resolvedLogo && !gymName) return null;
+
+    const titleText = gymName ? (
       <Text
         className="font-jakarta-bold tracking-tight text-ui-text-main dark:text-ui-text-mainDark"
         style={{ fontSize: size * 0.5, maxWidth: maxWordmarkWidth }}
         numberOfLines={1}
       >
-        {gymName ?? "GYMTRACK"}
+        {gymName}
       </Text>
-    );
+    ) : null;
 
-    // Modo "title": solo el nombre, ignora la imagen aunque exista.
+    // Modo "title": solo el nombre. Sin nombre → nada.
     if (content === "title") return titleText;
 
-    // Sin logo cargado: cualquier modo cae al nombre.
+    // Sin logo: cae al nombre (o null si tampoco hay nombre).
     if (!resolvedLogo) return titleText;
 
     // En "logo_title" el logo es el elemento ancla: caja cuadrada un poco más
