@@ -85,6 +85,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ subject: result.body.subject, html: result.body.html });
   } catch (err: unknown) {
     console.error("[cobranza/preview] Error interno:", err);
+    // Un error de configuración se devuelve tal cual: nombra una variable de
+    // entorno que falta (nunca su valor), la ruta ya está detrás de
+    // requireGymAdmin, y es la diferencia entre que el owner lea "Error
+    // interno" y que sepa exactamente qué le falta cargar. El resto sigue
+    // saliendo genérico.
+    const message = err instanceof Error ? err.message : "";
+    if (message.endsWith("no configurado")) {
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }

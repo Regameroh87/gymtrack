@@ -116,6 +116,7 @@ export default function CobranzaPage() {
   const [draft, setDraft] = useState<DraftStep | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [newStepDays, setNewStepDays] = useState<string>("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
@@ -165,9 +166,19 @@ export default function CobranzaPage() {
           }),
         });
         const json = await res.json().catch(() => ({}));
-        if (res.ok) setPreviewHtml(json.html ?? null);
-      } catch {
-        // El preview es una ayuda visual: si falla, no bloquea el resto de la pantalla.
+        if (res.ok) {
+          setPreviewHtml(json.html ?? null);
+          setPreviewError(null);
+        } else {
+          // Antes esto se descartaba: sin html el canvas quedaba con el spinner
+          // puesto para siempre y el owner no tenía forma de saber que había
+          // fallado. El mensaje del backend es el que dice qué configurar.
+          setPreviewError(json.error ?? `La vista previa falló (${res.status}).`);
+        }
+      } catch (err) {
+        // El preview es una ayuda visual: si falla, no bloquea el resto de la
+        // pantalla — pero sí tiene que decir que falló.
+        setPreviewError(err instanceof Error ? err.message : "No se pudo generar la vista previa.");
       } finally {
         setPreviewLoading(false);
       }
@@ -691,7 +702,23 @@ export default function CobranzaPage() {
                   {previewLoading && <Loader2 size={12} className="animate-spin text-ui-text-muted" />}
                 </div>
                 <div className="min-h-[420px] flex-1 overflow-hidden rounded-xl border border-ui-input-border bg-gray-50">
-                  {previewHtml ? (
+                  {/* El error va PRIMERO, incluso si quedó un html viejo: si la
+                      última vista previa falló, lo que se ve en pantalla ya no
+                      corresponde a lo que el owner está editando, y mostrarlo
+                      como si nada sería peor que decir que falló. */}
+                  {previewError ? (
+                    <div className="flex h-full min-h-[420px] flex-col items-center justify-center px-6">
+                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-amber-50">
+                        <MailWarning size={20} color="#d97706" />
+                      </div>
+                      <p className="mb-1 font-manrope text-sm font-bold text-ui-text-main">
+                        No se pudo generar la vista previa
+                      </p>
+                      <p className="max-w-prose text-center font-manrope text-xs text-ui-text-muted">
+                        {previewError}
+                      </p>
+                    </div>
+                  ) : previewHtml ? (
                     <iframe
                       title="Vista previa del mail"
                       srcDoc={previewHtml}
