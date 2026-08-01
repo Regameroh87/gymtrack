@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { renderEmail } from "./templates.ts";
+import { renderEmail, type EmailContext } from "./templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,33 +61,25 @@ Deno.serve(async (req) => {
     // falta, podemos dejar una fila 'failed' en email_log con to/type/gym_id
     // (en vez de un error invisible).
     const body = await req.json();
-    const { gym_id, to, type, data, subject: subjectOverride } = body as {
+    const { gym_id, to, type, data, subject: subjectOverride, preview, reply_to } = body as {
       gym_id?: string | null;
       to?: string;
       type?: string;
-      data?: { name?: string | null };
+      data?: EmailContext["data"];
       subject?: string;
+      /** true = renderiza y devuelve { subject, html } sin mandar nada ni loguear. */
+      preview?: boolean;
+      /** Opcional. Hoy solo lo manda cobranza-recordatorios (gym_dunning_settings.reply_to). */
+      reply_to?: string | null;
     };
     toEmail = to;
     emailType = type;
     gymId = gym_id;
 
-    if (!to || !type) {
+    // En preview no hace falta destinatario: es el canvas de /admin/cobranza
+    // pidiendo "mostrame el HTML", no un envío real.
+    if (!type || (!preview && !to)) {
       return jsonResponse({ error: "to y type son requeridos." }, 400);
-    }
-
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      const errMsg = "Falta RESEND_API_KEY";
-      console.error("[send-email]", errMsg);
-      await supabaseAdmin.from("email_log").insert({
-        gym_id: gym_id ?? null,
-        to_email: to,
-        type,
-        status: "failed",
-        error: errMsg,
-      });
-      return jsonResponse({ error: errMsg }, 500);
     }
 
     // Branding del gym: nombre + seeds de theme + logo. Sin gym (plataforma) o sin
@@ -113,6 +105,30 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: `Tipo de mail desconocido: ${type}` }, 400);
     }
     const subject = subjectOverride ?? rendered.subject;
+
+    // El preview es el mail de verdad, no una segunda implementación: mismo
+    // renderEmail() de arriba, solo que acá se corta antes de Resend y de
+    // email_log. Así el canvas del panel siempre muestra el HTML real
+    // (logo/colores del gym incluidos) y no puede desincronizarse del que
+    // efectivamente sale.
+    if (preview) {
+      return jsonResponse({ subject, html: rendered.html }, 200);
+    }
+
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      const errMsg = "Falta RESEND_API_KEY";
+      console.error("[send-email]", errMsg);
+      const { data: logRow } = await supabaseAdmin.from("email_log").insert({
+        gym_id: gym_id ?? null,
+        to_email: to,
+        type,
+        status: "failed",
+        error: errMsg,
+      }).select("id").single();
+      return jsonResponse({ error: errMsg, log_id: logRow?.id ?? null }, 500);
+    }
+
     const from = `${gymName} <${FROM_LOCAL}@${FROM_DOMAIN}>`;
 
     // Enviar vía API de Resend.
@@ -122,39 +138,42 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, html: rendered.html }),
+      body: JSON.stringify({ from, to, subject, html: rendered.html, reply_to: reply_to || undefined }),
     });
     const resendResult = await resendRes.json();
 
     if (!resendRes.ok) {
       const errMsg = resendResult?.message ?? `Resend respondió ${resendRes.status}`;
       console.error("[send-email] Error de Resend:", errMsg);
-      await supabaseAdmin.from("email_log").insert({
+      const { data: logRow } = await supabaseAdmin.from("email_log").insert({
         gym_id: gym_id ?? null,
         to_email: to,
         type,
         subject,
         status: "failed",
         error: String(errMsg),
-      });
-      return jsonResponse({ error: errMsg }, 502);
+      }).select("id").single();
+      return jsonResponse({ error: errMsg, log_id: logRow?.id ?? null }, 502);
     }
 
     const resendId: string | null = resendResult?.id ?? null;
-    const { error: logError } = await supabaseAdmin.from("email_log").insert({
+    // El id de la fila de email_log (no solo resend_id, que puede faltar) va
+    // en la respuesta para que un caller server-side pueda referenciar el mail
+    // concreto que salió, sin depender de buscarlo por gym_id/to_email/type.
+    const { data: logRow, error: logError } = await supabaseAdmin.from("email_log").insert({
       gym_id: gym_id ?? null,
       to_email: to,
       type,
       subject,
       resend_id: resendId,
       status: "sent",
-    });
+    }).select("id").single();
     if (logError) {
       // El mail ya salió: no fallamos la request por un error de log, solo avisamos.
       console.warn("[send-email] Mail enviado pero falló el log:", logError.message);
     }
 
-    return jsonResponse({ id: resendId }, 200);
+    return jsonResponse({ id: resendId, log_id: logRow?.id ?? null }, 200);
   } catch (error) {
     const message = (error as Error)?.message ?? "Error interno del servidor";
     console.error("[send-email] Error crítico:", message);
