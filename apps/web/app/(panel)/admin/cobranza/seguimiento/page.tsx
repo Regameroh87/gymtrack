@@ -1,7 +1,8 @@
 "use client";
 
-// Seguimiento de cobranza (/admin/cobranza/seguimiento): a quién le llegaría un
-// recordatorio hoy, agrupado por escalón.
+// Seguimiento de cobranza (/admin/cobranza/seguimiento). Dos tarjetas, una por
+// cada lado del tiempo: a quién le llegaría un recordatorio hoy (proyección) y
+// qué se mandó realmente (historial, en CobranzaHistorial).
 //
 // Estaba dentro de la pantalla de configuración, como un bloque más abajo de
 // todo. Se separó porque son dos cosas distintas: configurar la escalada es algo
@@ -19,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { CobranzaTabs } from "@/components/panel/cobranza-tabs";
+import { CobranzaHistorial } from "@/components/panel/cobranza-historial";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { isAdminRole } from "@/lib/auth/roles";
 import { useDunningSettings } from "@/lib/hooks/use-dunning-settings";
@@ -99,75 +101,79 @@ export default function CobranzaSeguimientoPage() {
       <PageHeader
         section="Cobranza"
         title="Seguimiento"
-        description="A quién le llegaría un recordatorio hoy, según la deuda actual y los escalones activos."
+        description="A quién le llegaría un recordatorio hoy y qué se mandó realmente, con el motivo de cada envío salteado o fallido."
       />
       <CobranzaTabs />
 
-      <Card>
-        <div className="mb-4 flex items-center gap-2.5">
-          <Users size={16} color="#6b7280" />
-          <h2 className="font-jakarta text-[15px] font-bold text-ui-text-main">Hoy le llegaría a...</h2>
-          <span className="rounded-full bg-brandPrimary-50 px-2 py-0.5 font-manrope text-[11px] font-bold text-brandPrimary-600">
-            {totalToday}
-          </span>
-        </div>
-
-        {totalToday === 0 ? (
-          <p className="rounded-xl border border-dashed border-ui-input-border py-6 text-center font-manrope text-xs text-ui-text-muted">
-            Con la deuda actual, ningún recordatorio dispararía hoy.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {steps
-              .filter((s) => candidatesByStep.has(s.id))
-              .map((step) => (
-                <div key={step.id}>
-                  <p className="mb-2 font-manrope text-[11px] font-bold uppercase tracking-wide text-ui-text-muted">
-                    {daysLabel(step.daysAfterDue)} ({candidatesByStep.get(step.id)?.length ?? 0})
-                  </p>
-                  <div className="overflow-x-auto rounded-xl border border-ui-input-border">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="border-b border-ui-input-border bg-gray-50">
-                          <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                            Socio
-                          </th>
-                          <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                            Vencimiento
-                          </th>
-                          <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                            Atraso
-                          </th>
-                          <th className="px-3.5 py-2 text-right font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                            Monto
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(candidatesByStep.get(step.id) ?? []).map((c) => (
-                          <tr key={c.userId} className="border-b border-ui-input-border last:border-0">
-                            <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-main">
-                              {[c.name, c.lastName].filter(Boolean).join(" ") || c.email || "—"}
-                            </td>
-                            <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-muted">
-                              {fmtDateAR(c.referenceDueDate)}
-                            </td>
-                            <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-muted">
-                              {c.daysOverdue} día{c.daysOverdue === 1 ? "" : "s"}
-                            </td>
-                            <td className="px-3.5 py-2.5 text-right font-manrope text-[13px] font-bold text-ui-text-main">
-                              {fmtMoneyARS(c.totalAmount)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ))}
+      <div className="flex flex-col gap-5">
+        <Card>
+          <div className="mb-4 flex items-center gap-2.5">
+            <Users size={16} color="#6b7280" />
+            <h2 className="font-jakarta text-[15px] font-bold text-ui-text-main">Hoy le llegaría a...</h2>
+            <span className="rounded-full bg-brandPrimary-50 px-2 py-0.5 font-manrope text-[11px] font-bold text-brandPrimary-600">
+              {totalToday}
+            </span>
           </div>
-        )}
-      </Card>
+
+          {totalToday === 0 ? (
+            <p className="rounded-xl border border-dashed border-ui-input-border py-6 text-center font-manrope text-xs text-ui-text-muted">
+              Con la deuda actual, ningún recordatorio dispararía hoy.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {steps
+                .filter((s) => candidatesByStep.has(s.id))
+                .map((step) => (
+                  <div key={step.id}>
+                    <p className="mb-2 font-manrope text-[11px] font-bold uppercase tracking-wide text-ui-text-muted">
+                      {daysLabel(step.daysAfterDue)} ({candidatesByStep.get(step.id)?.length ?? 0})
+                    </p>
+                    <div className="overflow-x-auto rounded-xl border border-ui-input-border">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="border-b border-ui-input-border bg-gray-50">
+                            <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
+                              Socio
+                            </th>
+                            <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
+                              Vencimiento
+                            </th>
+                            <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
+                              Atraso
+                            </th>
+                            <th className="px-3.5 py-2 text-right font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
+                              Monto
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(candidatesByStep.get(step.id) ?? []).map((c) => (
+                            <tr key={c.userId} className="border-b border-ui-input-border last:border-0">
+                              <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-main">
+                                {[c.name, c.lastName].filter(Boolean).join(" ") || c.email || "—"}
+                              </td>
+                              <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-muted">
+                                {fmtDateAR(c.referenceDueDate)}
+                              </td>
+                              <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-muted">
+                                {c.daysOverdue} día{c.daysOverdue === 1 ? "" : "s"}
+                              </td>
+                              <td className="px-3.5 py-2.5 text-right font-manrope text-[13px] font-bold text-ui-text-main">
+                                {fmtMoneyARS(c.totalAmount)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+        </Card>
+
+        <CobranzaHistorial gymId={gymId} />
+      </div>
     </div>
   );
 }

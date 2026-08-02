@@ -18,6 +18,24 @@ export function fmtDateAR(iso: string): string {
 }
 
 /**
+ * Fecha + hora de un timestamptz, en hora de Argentina.
+ *
+ * A diferencia de fmtDateAR, acá el input SÍ trae zona (sent_at es timestamptz,
+ * llega en UTC), así que se pasa tal cual al Date y se fija la timeZone en el
+ * formateo. Sin el timeZone explícito, un envío de las 09:00 se vería a las
+ * 12:00 para quien tenga la máquina en otro huso.
+ */
+export function fmtDateTimeAR(iso: string): string {
+  return new Date(iso).toLocaleString("es-AR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Argentina/Buenos_Aires",
+  });
+}
+
+/**
  * Mensaje legible de lo que sea que haya tirado una query.
  *
  * `err instanceof Error` no alcanza: los errores de supabase-js son objetos
