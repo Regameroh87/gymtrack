@@ -3,10 +3,18 @@
 -- gimnasio) y tenerla duplicada solo abría la puerta a que difirieran.
 --
 -- gym_dunning_settings.reply_to queda sin uso: el panel ya no lo escribe y el
--- job ya no lo lee. Se elimina en vez de dejarlo muerto — está en NULL en todas
--- las filas (la columna nació hoy, en 20260802120000, y nunca se cargó), así
--- que no se pierde ningún dato.
-alter table gym_dunning_settings drop column if exists reply_to;
+-- job ya no lo lee.
+--
+-- NO se borra todavía. Borrarla acá rompe el frontend que está corriendo, que
+-- sigue pidiéndola en su select hasta que se despliegue esta misma rama: la
+-- pantalla de cobranza se cae entera con "column gym_dunning_settings.reply_to
+-- does not exist". La columna se elimina en una migración posterior, una vez
+-- desplegada la web que dejó de leerla. Está en NULL en todas las filas, así
+-- que mientras tanto no molesta a nadie.
+comment on column gym_dunning_settings.reply_to is
+  'SIN USO. El Reply-To de la cobranza sale de gyms.email. Esta columna existe '
+  'solo para no romper el frontend anterior; se puede borrar una vez que la web '
+  'desplegada ya no la incluya en su select.';
 
 -- gyms.email viaja tal cual hasta Resend, que valida las direcciones y rechaza
 -- el envío entero si no le cierra. Sin este check, un typo en el mail del
