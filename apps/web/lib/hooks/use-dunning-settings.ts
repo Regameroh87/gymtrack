@@ -17,7 +17,6 @@ import { defaultDunningStep } from "@/lib/dunning-defaults";
 export interface DunningSettings {
   enabled: boolean;
   cooldownDays: number;
-  replyTo: string | null;
 }
 
 export interface DunningStep {
@@ -46,9 +45,16 @@ export interface DunningData {
   settings: DunningSettings;
   steps: DunningStep[];
   candidates: DunningCandidate[];
+  /**
+   * Mail de contacto del gimnasio (gyms.email). Es el Reply-To de los mails de
+   * cobranza y es obligatorio para poder prenderla: sin él, las respuestas de
+   * los socios caen en el noreply@ de la plataforma, que no lee nadie. No se
+   * configura desde esta pantalla — se lee para poder bloquear el interruptor.
+   */
+  gymEmail: string | null;
 }
 
-const DEFAULT_SETTINGS: DunningSettings = { enabled: false, cooldownDays: 3, replyTo: null };
+const DEFAULT_SETTINGS: DunningSettings = { enabled: false, cooldownDays: 3 };
 
 const queryKey = (gymId: string | null | undefined) => ["gym_dunning", gymId];
 
@@ -60,10 +66,10 @@ export function useDunningSettings(gymId: string | null | undefined) {
     queryFn: async (): Promise<DunningData> => {
       const supabase = getBrowserSupabase();
 
-      const [settingsRes, stepsRes, candidatesRes] = await Promise.all([
+      const [settingsRes, stepsRes, candidatesRes, gymRes] = await Promise.all([
         supabase
           .from("gym_dunning_settings")
-          .select("enabled, cooldown_days, reply_to")
+          .select("enabled, cooldown_days")
           .eq("gym_id", gymId!)
           .maybeSingle(),
         supabase
@@ -75,17 +81,18 @@ export function useDunningSettings(gymId: string | null | undefined) {
         // adentro: si el caller no es admin de este gym, la RPC misma lo
         // rechaza. No hay nada que este hook tenga que validar de más.
         supabase.rpc("gym_dunning_candidates", { p_gym_id: gymId! }),
+        supabase.from("gyms").select("email").eq("id", gymId!).maybeSingle(),
       ]);
 
       if (settingsRes.error) throw settingsRes.error;
       if (stepsRes.error) throw stepsRes.error;
       if (candidatesRes.error) throw candidatesRes.error;
+      if (gymRes.error) throw gymRes.error;
 
       const settings: DunningSettings = settingsRes.data
         ? {
             enabled: settingsRes.data.enabled,
             cooldownDays: settingsRes.data.cooldown_days,
-            replyTo: settingsRes.data.reply_to,
           }
         : DEFAULT_SETTINGS;
 
@@ -122,12 +129,12 @@ export function useDunningSettings(gymId: string | null | undefined) {
         }),
       );
 
-      return { settings, steps, candidates };
+      return { settings, steps, candidates, gymEmail: gymRes.data?.email ?? null };
     },
   });
 }
 
-/** Guarda (o siembra) la configuración general: interruptor, cooldown, reply-to. */
+/** Guarda (o siembra) la configuración general: interruptor y cooldown. */
 export function useSaveDunningSettings(gymId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
@@ -141,7 +148,6 @@ export function useSaveDunningSettings(gymId: string | null | undefined) {
         gym_id: gymId,
         enabled: next.enabled,
         cooldown_days: next.cooldownDays,
-        reply_to: next.replyTo,
       });
       if (error) throw error;
     },

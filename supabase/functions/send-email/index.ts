@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
       subject?: string;
       /** true = renderiza y devuelve { subject, html } sin mandar nada ni loguear. */
       preview?: boolean;
-      /** Opcional. Hoy solo lo manda cobranza-recordatorios (gym_dunning_settings.reply_to). */
+      /** Opcional. Hoy solo lo manda cobranza-recordatorios, con gyms.email. */
       reply_to?: string | null;
     };
     toEmail = to;

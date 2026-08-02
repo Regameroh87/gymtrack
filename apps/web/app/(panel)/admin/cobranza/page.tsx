@@ -123,6 +123,7 @@ export default function CobranzaPage() {
 
   const steps = useMemo(() => data?.steps ?? [], [data?.steps]);
   const candidates = data?.candidates ?? [];
+  const gymEmail = data?.gymEmail ?? null;
 
   // Auto-selecciona el primer recordatorio al cargar (o al quedarse sin el
   // seleccionado, p.ej. lo borraron). No pisa una selección válida existente.
@@ -243,6 +244,13 @@ export default function CobranzaPage() {
   const selectedStep = steps.find((s) => s.id === selectedStepId) ?? null;
 
   function handleToggle(enabled: boolean) {
+    // Prender sin mail de contacto deja a los socios respondiéndole al
+    // noreply@. Apagar siempre se puede: la traba no puede dejar a nadie
+    // atrapado con la cobranza encendida.
+    if (enabled && !gymEmail) {
+      toast.error("Cargá el mail de contacto del gimnasio antes de prender la cobranza.");
+      return;
+    }
     saveSettings.mutate(
       { enabled },
       {
@@ -452,18 +460,19 @@ export default function CobranzaPage() {
             </div>
             <div>
               <label className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
-                Mail de contacto (reply-to, opcional)
+                Mail de contacto
               </label>
-              <input
-                type="email"
-                placeholder="contacto@tugimnasio.com"
-                defaultValue={settings.replyTo ?? ""}
-                onBlur={(e) => {
-                  const v = e.target.value.trim() || null;
-                  if (v !== settings.replyTo) saveSettings.mutate({ replyTo: v });
-                }}
-                className="mt-1.5 w-full rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-main outline-none"
-              />
+              {/* No se edita acá: es el mail del gimnasio y lo usan también
+                  otros mails. Se muestra para que el owner entienda por qué el
+                  interruptor está bloqueado cuando falta. */}
+              <p className="mt-1.5 font-manrope text-[13px] text-ui-text-main">
+                {gymEmail ?? <span className="text-red-600">Sin cargar</span>}
+              </p>
+              <p className="mt-1 font-manrope text-[11px] text-ui-text-muted">
+                Es la dirección adonde le responden los socios: los recordatorios salen desde el{" "}
+                <strong>noreply@</strong> de la plataforma, así que sin esto las respuestas no llegan a nadie. Por eso
+                hace falta tenerlo cargado para poder prender la cobranza.
+              </p>
             </div>
           </div>
         </Card>

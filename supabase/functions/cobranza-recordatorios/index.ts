@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
   // ── Gyms con la cobranza prendida ─────────────────────────────────────────
   const { data: settingsRows, error: settingsError } = await supabaseAdmin
     .from('gym_dunning_settings')
-    .select('gym_id, cooldown_days, reply_to, gyms(id, name, is_active, online_payments_enabled)')
+    .select('gym_id, cooldown_days, gyms(id, name, email, is_active, online_payments_enabled)')
     .eq('enabled', true)
 
   if (settingsError) {
@@ -161,7 +161,7 @@ Deno.serve(async (req: Request) => {
 
   for (const setting of settingsRows ?? []) {
     const gym = (Array.isArray(setting.gyms) ? setting.gyms[0] : setting.gyms) as
-      | { id: string; name: string; is_active: boolean; online_payments_enabled: boolean }
+      | { id: string; name: string; email: string | null; is_active: boolean; online_payments_enabled: boolean }
       | null
     const gymId = setting.gym_id as string
 
@@ -173,6 +173,16 @@ Deno.serve(async (req: Request) => {
       // pagar el abono no genera actividad nueva, aunque tenga la cobranza
       // configurada de antes.
       if (!gym.is_active) continue
+
+      // El panel no deja prender la cobranza sin mail de contacto, pero la fila
+      // se puede quedar sin él después (lo borran, o alguien escribe la tabla
+      // por fuera). Sin Reply-To el socio le contesta al noreply@ y ese mensaje
+      // se pierde sin que nadie se entere, así que no mandamos: es preferible
+      // que no salga a que salga sin vuelta.
+      if (!gym.email) {
+        console.error(`[cobranza-recordatorios] gym ${gymId} tiene la cobranza prendida sin gyms.email; se saltea`)
+        continue
+      }
 
       const { data: saasActive } = await supabaseAdmin.rpc('is_saas_subscription_active', { p_gym_id: gymId })
       if (saasActive === false) continue
@@ -414,7 +424,7 @@ Deno.serve(async (req: Request) => {
               to: candidate.email,
               type: 'dunning_reminder',
               subject,
-              reply_to: setting.reply_to ?? undefined,
+              reply_to: gym.email,
               data: {
                 heading,
                 body: bodyText,
