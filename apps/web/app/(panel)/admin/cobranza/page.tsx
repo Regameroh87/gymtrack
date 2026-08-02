@@ -26,7 +26,6 @@ import {
   RotateCcw,
   Send,
   Info,
-  Users,
   Loader2,
   CreditCard,
 } from "lucide-react";
@@ -34,6 +33,8 @@ import {
 // Hooks de datos, contextos y helpers
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { isAdminRole } from "@/lib/auth/roles";
+import { CobranzaTabs } from "@/components/panel/cobranza-tabs";
+import { daysLabel, errorMessage } from "@/lib/cobranza/format";
 import {
   useDunningSettings,
   useSaveDunningSettings,
@@ -50,19 +51,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
-
-function daysLabel(n: number): string {
-  if (n === 0) return "El mismo día del vencimiento";
-  return `A los ${n} día${n === 1 ? "" : "s"} del vencimiento`;
-}
-
-function fmtMoneyARS(n: number): string {
-  return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-}
-
-function fmtDateAR(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
-}
 
 interface DraftStep {
   subject: string;
@@ -113,26 +101,6 @@ function StatusPill({ enabled }: { enabled: boolean }) {
  */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Mensaje legible de lo que sea que haya tirado la query.
- *
- * `error instanceof Error` no alcanza: los errores de supabase-js son objetos
- * planos ({ message, details, hint, code }), no instancias de Error, así que la
- * pantalla mostraba "Error desconocido" justo cuando había algo para leer. Pasó
- * de verdad — un select contra una columna borrada devolvía 400 y el owner solo
- * veía el cartel genérico.
- */
-function errorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  if (err && typeof err === "object" && "message" in err) {
-    const { message, details } = err as { message?: unknown; details?: unknown };
-    if (typeof message === "string" && message) {
-      return typeof details === "string" && details ? `${message} (${details})` : message;
-    }
-  }
-  return "Error desconocido";
-}
-
 export default function CobranzaPage() {
   const { gymId, role } = useActiveGym();
   const { data, isLoading, isError, error, refetch } = useDunningSettings(gymId);
@@ -154,7 +122,6 @@ export default function CobranzaPage() {
   const [sendingTest, setSendingTest] = useState(false);
 
   const steps = useMemo(() => data?.steps ?? [], [data?.steps]);
-  const candidates = data?.candidates ?? [];
   const gymEmail = data?.gymEmail ?? null;
 
   // Auto-selecciona el primer recordatorio al cargar (o al quedarse sin el
@@ -388,16 +355,6 @@ export default function CobranzaPage() {
     }
   }
 
-  // Candidatos agrupados por el step que les tocaría hoy (coincidencia exacta
-  // días de atraso ↔ days_after_due, mismo criterio que el job).
-  const candidatesByStep = new Map<string, typeof candidates>();
-  for (const c of candidates) {
-    const step = steps.find((s) => s.active && s.daysAfterDue === c.daysOverdue);
-    if (!step) continue;
-    candidatesByStep.set(step.id, [...(candidatesByStep.get(step.id) ?? []), c]);
-  }
-  const totalToday = [...candidatesByStep.values()].reduce((sum, arr) => sum + arr.length, 0);
-
   return (
     <div className="p-4 pb-14 md:p-9">
       <PageHeader
@@ -406,6 +363,7 @@ export default function CobranzaPage() {
         description="Configurá los recordatorios de cuota vencida que se mandan solos por mail, con link de pago de MercadoPago."
         cta={<StatusPill enabled={settings.enabled} />}
       />
+      <CobranzaTabs />
 
       <div className="flex flex-col gap-5">
         {/* ── Bloque 1: interruptor + estado ─────────────────────────────── */}
@@ -817,73 +775,6 @@ export default function CobranzaPage() {
             </div>
           </Card>
         )}
-
-        {/* ── Bloque 4: a quién le llegaría hoy ─────────────────────────────── */}
-        <Card>
-          <div className="mb-4 flex items-center gap-2.5">
-            <Users size={16} color="#6b7280" />
-            <h2 className="font-jakarta text-[15px] font-bold text-ui-text-main">Hoy le llegaría a...</h2>
-            <span className="rounded-full bg-brandPrimary-50 px-2 py-0.5 font-manrope text-[11px] font-bold text-brandPrimary-600">
-              {totalToday}
-            </span>
-          </div>
-
-          {totalToday === 0 ? (
-            <p className="rounded-xl border border-dashed border-ui-input-border py-6 text-center font-manrope text-xs text-ui-text-muted">
-              Con la deuda actual, ningún recordatorio dispararía hoy.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {steps
-                .filter((s) => candidatesByStep.has(s.id))
-                .map((step) => (
-                  <div key={step.id}>
-                    <p className="mb-2 font-manrope text-[11px] font-bold uppercase tracking-wide text-ui-text-muted">
-                      {daysLabel(step.daysAfterDue)} ({candidatesByStep.get(step.id)?.length ?? 0})
-                    </p>
-                    <div className="overflow-x-auto rounded-xl border border-ui-input-border">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="border-b border-ui-input-border bg-gray-50">
-                            <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                              Socio
-                            </th>
-                            <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                              Vencimiento
-                            </th>
-                            <th className="px-3.5 py-2 font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                              Atraso
-                            </th>
-                            <th className="px-3.5 py-2 text-right font-manrope text-[10px] font-bold uppercase tracking-wide text-ui-text-muted">
-                              Monto
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(candidatesByStep.get(step.id) ?? []).map((c) => (
-                            <tr key={c.userId} className="border-b border-ui-input-border last:border-0">
-                              <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-main">
-                                {[c.name, c.lastName].filter(Boolean).join(" ") || c.email || "—"}
-                              </td>
-                              <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-muted">
-                                {fmtDateAR(c.referenceDueDate)}
-                              </td>
-                              <td className="px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-muted">
-                                {c.daysOverdue} día{c.daysOverdue === 1 ? "" : "s"}
-                              </td>
-                              <td className="px-3.5 py-2.5 text-right font-manrope text-[13px] font-bold text-ui-text-main">
-                                {fmtMoneyARS(c.totalAmount)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </Card>
       </div>
     </div>
   );
