@@ -171,8 +171,8 @@ Deno.serve(async (req) => {
       address,
     } = body
 
-    if (!gym_name || !gym_slug || !email) {
-      return new Response(JSON.stringify({ error: 'gym_name, gym_slug y email son requeridos.' }), {
+    if (!gym_name || !gym_slug || !email || !gym_email) {
+      return new Response(JSON.stringify({ error: 'gym_name, gym_slug, email y gym_email son requeridos.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       })
