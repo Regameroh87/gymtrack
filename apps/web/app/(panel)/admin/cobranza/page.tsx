@@ -101,6 +101,26 @@ function StatusPill({ enabled }: { enabled: boolean }) {
 
 // ── main page ─────────────────────────────────────────────────────────────────
 
+/**
+ * Mensaje legible de lo que sea que haya tirado la query.
+ *
+ * `error instanceof Error` no alcanza: los errores de supabase-js son objetos
+ * planos ({ message, details, hint, code }), no instancias de Error, así que la
+ * pantalla mostraba "Error desconocido" justo cuando había algo para leer. Pasó
+ * de verdad — un select contra una columna borrada devolvía 400 y el owner solo
+ * veía el cartel genérico.
+ */
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object" && "message" in err) {
+    const { message, details } = err as { message?: unknown; details?: unknown };
+    if (typeof message === "string" && message) {
+      return typeof details === "string" && details ? `${message} (${details})` : message;
+    }
+  }
+  return "Error desconocido";
+}
+
 export default function CobranzaPage() {
   const { gymId, role } = useActiveGym();
   const { data, isLoading, isError, error, refetch } = useDunningSettings(gymId);
@@ -221,7 +241,7 @@ export default function CobranzaPage() {
             No se pudo cargar la cobranza
           </p>
           <p className="mb-5 max-w-prose text-center font-manrope text-xs text-ui-text-muted">
-            {error instanceof Error ? error.message : "Error desconocido"}
+            {errorMessage(error)}
           </p>
           <Button variant="secondary" icon={<RotateCcw size={15} />} onClick={() => refetch()}>
             Reintentar
