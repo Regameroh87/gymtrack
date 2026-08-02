@@ -44,7 +44,7 @@ export function fmtDateTimeAR(iso: string): string {
  * de verdad — un select contra una columna borrada devolvía 400 y el owner solo
  * veía el cartel genérico.
  */
-export function errorMessage(err: unknown): string {
+export function errorMessage(err: unknown, fallback = "Error desconocido"): string {
   if (err instanceof Error) return err.message;
   if (err && typeof err === "object" && "message" in err) {
     const { message, details } = err as { message?: unknown; details?: unknown };
@@ -52,5 +52,5 @@ export function errorMessage(err: unknown): string {
       return typeof details === "string" && details ? `${message} (${details})` : message;
     }
   }
-  return "Error desconocido";
+  return fallback;
 }

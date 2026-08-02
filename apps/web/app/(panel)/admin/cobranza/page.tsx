@@ -178,7 +178,7 @@ export default function CobranzaPage() {
       } catch (err) {
         // El preview es una ayuda visual: si falla, no bloquea el resto de la
         // pantalla — pero sí tiene que decir que falló.
-        setPreviewError(err instanceof Error ? err.message : "No se pudo generar la vista previa.");
+        setPreviewError(errorMessage(err, "No se pudo generar la vista previa."));
       } finally {
         setPreviewLoading(false);
       }
@@ -256,15 +256,27 @@ export default function CobranzaPage() {
       {
         onSuccess: () =>
           toast.success(enabled ? "Cobranza automática habilitada." : "Cobranza automática deshabilitada."),
-        onError: (err) => toast.error(err instanceof Error ? err.message : "No se pudo cambiar el estado"),
+        onError: (err) => toast.error(errorMessage(err, "No se pudo cambiar el estado")),
       },
     );
   }
 
   function handleAddStep() {
+    // El campo vacío se chequea ANTES de convertir: Number("") es 0, no NaN, así
+    // que sin esto apretar "Agregar" con el campo en blanco no avisaba nada —
+    // intentaba crear un recordatorio para el día 0 y moría contra el unique si
+    // ya existía uno, que es el caso normal porque el día 0 viene sembrado.
+    if (newStepDays.trim() === "") {
+      toast.error("Poné a los cuántos días del vencimiento tiene que salir.");
+      return;
+    }
     const days = Number(newStepDays);
-    if (!Number.isFinite(days) || days < 0) {
-      toast.error("Ingresá un número de días válido (0 o más).");
+    if (!Number.isInteger(days) || days < 0) {
+      toast.error("Ingresá un número entero de días (0 o más).");
+      return;
+    }
+    if (steps.some((s) => s.daysAfterDue === days)) {
+      toast.error(`Ya hay un recordatorio para el día ${days}.`);
       return;
     }
     createStep.mutate(days, {
@@ -280,14 +292,18 @@ export default function CobranzaPage() {
         });
         toast.success("Recordatorio agregado.");
       },
-      onError: (err) =>
+      // El unique sigue siendo la autoridad aunque arriba ya se chequee contra
+      // la lista en memoria: la lista puede estar vieja (otro admin agregó un
+      // step desde otra pestaña). Se mira el code 23505 y no el texto del
+      // mensaje, que cambia según la versión de Postgres y el idioma.
+      onError: (err) => {
+        const code = (err as { code?: string })?.code;
         toast.error(
-          err instanceof Error && err.message.includes("duplicate")
+          code === "23505"
             ? "Ya hay un recordatorio configurado para ese día."
-            : err instanceof Error
-              ? err.message
-              : "No se pudo agregar el recordatorio",
-        ),
+            : errorMessage(err),
+        );
+      },
     });
   }
 
@@ -297,7 +313,7 @@ export default function CobranzaPage() {
         setConfirmDeleteId(null);
         toast.success("Recordatorio eliminado.");
       },
-      onError: (err) => toast.error(err instanceof Error ? err.message : "No se pudo eliminar"),
+      onError: (err) => toast.error(errorMessage(err, "No se pudo eliminar")),
     });
   }
 
@@ -307,7 +323,7 @@ export default function CobranzaPage() {
       { id: selectedStep.id, patch: draft },
       {
         onSuccess: () => toast.success("Recordatorio guardado."),
-        onError: (err) => toast.error(err instanceof Error ? err.message : "No se pudo guardar"),
+        onError: (err) => toast.error(errorMessage(err, "No se pudo guardar")),
       },
     );
   }
@@ -325,7 +341,7 @@ export default function CobranzaPage() {
         });
         toast.success("Se restauró la plantilla por defecto.");
       },
-      onError: (err) => toast.error(err instanceof Error ? err.message : "No se pudo restaurar"),
+      onError: (err) => toast.error(errorMessage(err, "No se pudo restaurar")),
     });
   }
 
@@ -349,7 +365,7 @@ export default function CobranzaPage() {
       if (!res.ok) throw new Error(json.error ?? "No se pudo enviar el mail de prueba");
       toast.success(`Mail de prueba enviado a ${json.to}.`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo enviar el mail de prueba");
+      toast.error(errorMessage(err, "No se pudo enviar el mail de prueba"));
     } finally {
       setSendingTest(false);
     }
