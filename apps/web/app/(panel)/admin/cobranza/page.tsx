@@ -430,7 +430,7 @@ export default function CobranzaPage() {
           <div className="mt-4 grid grid-cols-1 gap-4 border-t border-ui-input-border pt-4 md:grid-cols-2">
             <div>
               <label className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
-                Días de espera entre envíos (cooldown)
+                Días mínimos antes de repetir el mismo recordatorio
               </label>
               <input
                 type="number"
@@ -445,7 +445,9 @@ export default function CobranzaPage() {
                 className="mt-1.5 w-full rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-main outline-none"
               />
               <p className="mt-1 font-manrope text-[11px] text-ui-text-muted">
-                Mínimo entre dos recordatorios al mismo socio (evita duplicar avisos si paga una cuota parcial).
+                Red de seguridad para pagos parciales: si un socio paga una de sus cuotas, evita que le vuelva a
+                llegar <strong>el mismo</strong> recordatorio por lo que queda. <strong>No afecta la escalada</strong>
+                : pasar de un recordatorio al siguiente nunca se frena por esto.
               </p>
             </div>
             <div>

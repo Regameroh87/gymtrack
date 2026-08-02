@@ -16,7 +16,9 @@
 // nada nuevo — cualquier fila previa para esa combinación, sea cual sea su
 // status, cuenta como "ya cubierto". El cooldown de gym_dunning_settings es la
 // red aparte para el caso borde de un pago parcial que corre reference_due_date
-// hacia otro valor y generaría, técnicamente, una clave nueva.
+// hacia otro valor y generaría, técnicamente, una clave nueva — y por eso está
+// acotado al MISMO step: la escalada a un step distinto nunca es un duplicado y
+// el cooldown no la puede frenar.
 //
 // Variables de entorno requeridas:
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
@@ -216,17 +218,32 @@ Deno.serve(async (req: Request) => {
         (existingLogRows ?? []).map((r) => `${r.user_id}|${r.step_id}|${r.reference_due_date}`),
       )
 
-      // ── Cooldown: otro envío reciente al mismo socio ─────────────────────
+      // ── Cooldown: el MISMO recordatorio, de nuevo, hace muy poco ─────────
+      // Clave por (socio, step) y no por socio solo. La diferencia es todo lo
+      // que hace útil a este freno:
+      //
+      //   Mismo step otra vez  → es el rebote de un pago parcial (la fecha de
+      //                          referencia se corrió, así que la idempotencia
+      //                          por unique no lo reconoce). Es un duplicado
+      //                          real y hay que frenarlo.
+      //   Otro step            → es la escalada normal (día 10 → día 15). No es
+      //                          un duplicado y NUNCA se frena.
+      //
+      // Con la clave por socio solo, un cooldown más grande que el salto entre
+      // dos escalones se comía el segundo en silencio: con steps en 10 y 15 y
+      // un cooldown de 7, el recordatorio del día 15 no salía nunca y quedaba
+      // como 'skipped' sin que nadie lo notara. Ahora el cooldown es inocuo
+      // para la escalada, valga lo que valga.
       const cooldownDays = (setting.cooldown_days as number) ?? 3
       const cooldownCutoff = new Date(Date.now() - cooldownDays * 24 * 60 * 60 * 1000).toISOString()
       const { data: recentSentRows } = await supabaseAdmin
         .from('gym_dunning_log')
-        .select('user_id')
+        .select('user_id, step_id')
         .eq('gym_id', gymId)
         .eq('status', 'sent')
         .in('user_id', userIds)
         .gte('sent_at', cooldownCutoff)
-      const recentlyNotified = new Set((recentSentRows ?? []).map((r) => r.user_id))
+      const recentlyNotified = new Set((recentSentRows ?? []).map((r) => `${r.user_id}|${r.step_id}`))
 
       // ── Credenciales de MP del gym, una sola vez (no por socio) ──────────
       // Sin esto el link de pago sale igual, solo que sin botón: es lo que
@@ -290,12 +307,15 @@ Deno.serve(async (req: Request) => {
           continue
         }
 
-        if (recentlyNotified.has(candidate.user_id)) {
+        if (recentlyNotified.has(`${candidate.user_id}|${step.id}`)) {
           await logDunning({
             gymId, userId: candidate.user_id, stepId: step.id,
             referenceDueDate: candidate.reference_due_date, daysAfterDue: step.days_after_due,
             status: 'skipped',
-            error: `Cooldown activo: ya se le mandó un recordatorio hace menos de ${cooldownDays} día(s).`,
+            error:
+              `Cooldown activo: este mismo recordatorio (día ${step.days_after_due}) ya se le mandó ` +
+              `hace menos de ${cooldownDays} día(s), probablemente porque un pago parcial corrió el ` +
+              `vencimiento de referencia.`,
           })
           summary.skipped++
           continue
