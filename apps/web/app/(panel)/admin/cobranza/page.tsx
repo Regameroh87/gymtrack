@@ -102,6 +102,18 @@ function StatusPill({ enabled }: { enabled: boolean }) {
 // ── main page ─────────────────────────────────────────────────────────────────
 
 /**
+ * El reply-to viaja tal cual hasta Resend, que valida las direcciones y rechaza
+ * el envío entero si no le cierra. O sea que un typo acá voltea toda la
+ * cobranza y el owner recién lo ve en el historial. Mejor frenarlo en el
+ * guardado, donde todavía se puede corregir.
+ *
+ * A propósito no se intenta validar el RFC completo: el caso real no es ese, es
+ * la coma en lugar del punto o el @ que falta. Es la misma forma que usan los
+ * formularios de gimnasio y que espeja el check de la tabla.
+ */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
  * Mensaje legible de lo que sea que haya tirado la query.
  *
  * `error instanceof Error` no alcanza: los errores de supabase-js son objetos
@@ -264,11 +276,12 @@ export default function CobranzaPage() {
   const selectedStep = steps.find((s) => s.id === selectedStepId) ?? null;
 
   function handleToggle(enabled: boolean) {
-    // Prender sin mail de contacto deja a los socios respondiéndole al
-    // noreply@. Apagar siempre se puede: la traba no puede dejar a nadie
-    // atrapado con la cobranza encendida.
-    if (enabled && !gymEmail) {
-      toast.error("Cargá el mail de contacto del gimnasio antes de prender la cobranza.");
+    // Prender sin ningún Reply-To deja a los socios respondiéndole al noreply@.
+    // Alcanza con cualquiera de los dos: el propio de la cobranza o, si está
+    // vacío, el del gimnasio. Apagar siempre se puede: la traba no puede dejar
+    // a nadie atrapado con la cobranza encendida.
+    if (enabled && !settings.replyTo && !gymEmail) {
+      toast.error("Cargá un mail para las respuestas antes de prender la cobranza.");
       return;
     }
     saveSettings.mutate(
@@ -480,18 +493,47 @@ export default function CobranzaPage() {
             </div>
             <div>
               <label className="font-manrope text-[10px] font-bold uppercase tracking-[1.2px] text-ui-text-muted">
-                Mail de contacto
+                Mail para las respuestas
               </label>
-              {/* No se edita acá: es el mail del gimnasio y lo usan también
-                  otros mails. Se muestra para que el owner entienda por qué el
-                  interruptor está bloqueado cuando falta. */}
-              <p className="mt-1.5 font-manrope text-[13px] text-ui-text-main">
-                {gymEmail ?? <span className="text-red-600">Sin cargar</span>}
-              </p>
+              <input
+                type="email"
+                // Vacío = usar el del gimnasio. El placeholder muestra cuál es,
+                // así el campo en blanco no se lee como "no hay ninguno".
+                placeholder={gymEmail ?? "Cargá el mail de contacto del gimnasio"}
+                defaultValue={settings.replyTo ?? ""}
+                onBlur={(e) => {
+                  const v = e.target.value.trim() || null;
+                  if (v === settings.replyTo) return;
+                  // Vaciarlo es válido: vuelve a usar el del gimnasio.
+                  if (v !== null && !EMAIL_RE.test(v)) {
+                    toast.error("Ese mail no parece válido. Revisalo, si no los recordatorios no van a salir.");
+                    return;
+                  }
+                  saveSettings.mutate(
+                    { replyTo: v },
+                    {
+                      onSuccess: () =>
+                        toast.success(v ? "Mail para las respuestas guardado." : `Vuelve a usarse ${gymEmail}.`),
+                      onError: (err) => toast.error(errorMessage(err)),
+                    },
+                  );
+                }}
+                className="mt-1.5 w-full rounded-xl border border-ui-input-border bg-white px-3.5 py-2.5 font-manrope text-[13px] text-ui-text-main outline-none"
+              />
               <p className="mt-1 font-manrope text-[11px] text-ui-text-muted">
-                Es la dirección adonde le responden los socios: los recordatorios salen desde el{" "}
-                <strong>noreply@</strong> de la plataforma, así que sin esto las respuestas no llegan a nadie. Por eso
-                hace falta tenerlo cargado para poder prender la cobranza.
+                Adonde le contestan los socios. Los recordatorios salen desde el <strong>noreply@</strong> de la
+                plataforma, así que sin esto las respuestas no llegan a nadie.{" "}
+                {gymEmail ? (
+                  <>
+                    Vacío usa el mail de contacto del gimnasio (<strong>{gymEmail}</strong>); completalo solo si querés
+                    que las respuestas de cobranza vayan a otra casilla.
+                  </>
+                ) : (
+                  <span className="text-red-600">
+                    El gimnasio no tiene mail de contacto cargado, así que hace falta uno acá para poder prender la
+                    cobranza.
+                  </span>
+                )}
               </p>
             </div>
           </div>

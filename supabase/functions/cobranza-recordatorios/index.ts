@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
   // ── Gyms con la cobranza prendida ─────────────────────────────────────────
   const { data: settingsRows, error: settingsError } = await supabaseAdmin
     .from('gym_dunning_settings')
-    .select('gym_id, cooldown_days, gyms(id, name, email, is_active, online_payments_enabled)')
+    .select('gym_id, cooldown_days, reply_to, gyms(id, name, email, is_active, online_payments_enabled)')
     .eq('enabled', true)
 
   if (settingsError) {
@@ -174,13 +174,18 @@ Deno.serve(async (req: Request) => {
       // configurada de antes.
       if (!gym.is_active) continue
 
-      // El panel no deja prender la cobranza sin mail de contacto, pero la fila
-      // se puede quedar sin él después (lo borran, o alguien escribe la tabla
-      // por fuera). Sin Reply-To el socio le contesta al noreply@ y ese mensaje
-      // se pierde sin que nadie se entere, así que no mandamos: es preferible
-      // que no salga a que salga sin vuelta.
-      if (!gym.email) {
-        console.error(`[cobranza-recordatorios] gym ${gymId} tiene la cobranza prendida sin gyms.email; se saltea`)
+      // Reply-To efectivo: el propio de la cobranza pisa al del gimnasio, que
+      // es el default. El panel no deja prender la cobranza sin ninguno de los
+      // dos, pero la fila se puede quedar sin ambos después (los borran, o
+      // alguien escribe las tablas por fuera). Sin Reply-To el socio le
+      // contesta al noreply@ y ese mensaje se pierde sin que nadie se entere,
+      // así que no mandamos: es preferible que no salga a que salga sin vuelta.
+      const replyTo = (setting.reply_to as string | null) ?? gym.email
+      if (!replyTo) {
+        console.error(
+          `[cobranza-recordatorios] gym ${gymId} tiene la cobranza prendida y ningún Reply-To ` +
+          `(ni gym_dunning_settings.reply_to ni gyms.email); se saltea`,
+        )
         continue
       }
 
@@ -424,7 +429,7 @@ Deno.serve(async (req: Request) => {
               to: candidate.email,
               type: 'dunning_reminder',
               subject,
-              reply_to: gym.email,
+              reply_to: replyTo,
               data: {
                 heading,
                 body: bodyText,
