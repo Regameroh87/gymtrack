@@ -95,7 +95,8 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
     if (slug.trim().length < 3) next.slug = "Mínimo 3 caracteres";
     else if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug.trim()))
       next.slug = "Solo minúsculas, números y guiones";
-    if (email.trim() && !EMAIL_RE.test(email.trim()))
+    if (!email.trim()) next.email = "El email de contacto es obligatorio";
+    else if (!EMAIL_RE.test(email.trim()))
       next.email = "Correo electrónico inválido";
     if (!HEX_RE.test(themePrimary)) next.theme_primary = "Hex inválido (#RRGGBB)";
     if (!HEX_RE.test(themeAccent)) next.theme_accent = "Hex inválido (#RRGGBB)";
@@ -333,7 +334,7 @@ export function NewGymForm({ owners }: { owners: OwnerCandidate[] }) {
               </Field>
             </div>
             <div className="flex-1">
-              <Field label="Email (opcional)" error={errors.email}>
+              <Field label="Email" error={errors.email}>
                 <Input
                   placeholder="contacto@energym.com"
                   icon={<Mail size={15} className="text-gray-400" />}
