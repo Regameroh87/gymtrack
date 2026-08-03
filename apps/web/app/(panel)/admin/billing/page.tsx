@@ -174,9 +174,9 @@ export default function BillingPage() {
   return (
     <>
       <PageHeader
-        section="Contabilidad"
-        title="Membresías y cobranza"
-        description="Inscripciones activas, cuotas y estado de pago de tus socios"
+        section="Socios"
+        title="Membresías"
+        description="Inscripciones activas de tus socios — altas, bajas y estado de pago"
         cta={
           canManage ? (
             <Button

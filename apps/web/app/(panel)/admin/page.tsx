@@ -19,6 +19,7 @@ import {
   Lock,
   ChevronRight,
   UserPlus,
+  UserCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -73,7 +74,8 @@ const buildModules = (
   { icon: Dumbbell, label: "Máquinas", sub: "Inventario del gimnasio", path: "equipments", color: "#f43f5e", bar: "bg-rose-500", bubble: "bg-rose-500/10" },
   { icon: ClipboardList, label: "Sesiones", sub: "Armador técnico", path: "sessions", color: "#7c3aed", bar: "bg-violet-600", bubble: "bg-violet-600/10" },
   { icon: ClipboardList, label: "Planes", sub: "Plantillas de entreno", path: "plans", color: "#0284c7", bar: "bg-sky-600", bubble: "bg-sky-600/10" },
-  { icon: Receipt, label: "Contabilidad", sub: "Membresías y pagos", path: "billing", color: "#d97706", bar: "bg-amber-600", bubble: "bg-amber-600/10" },
+  { icon: Receipt, label: "Contabilidad", sub: "Pagos y seguimiento", path: "cobranza", color: "#d97706", bar: "bg-amber-600", bubble: "bg-amber-600/10" },
+  { icon: UserCheck, label: "Membresías", sub: "Inscripciones activas", path: "billing", color: "#16a34a", bar: "bg-emerald-600", bubble: "bg-emerald-600/10" },
 ];
 
 const buildQuickActions = (
@@ -81,6 +83,7 @@ const buildQuickActions = (
   brandSecondary: Record<number, string>
 ): QuickAction[] => [
   { label: "Registrar socio", sub: "Nuevo miembro", path: "users/register", color: brandPrimary[600], bubble: "bg-brandPrimary-600/10", icon: UserPlus },
+  { label: "Suscribir socio", sub: "Nueva membresía", path: "billing", color: "#16a34a", bubble: "bg-emerald-600/10", icon: UserCheck },
   { label: "Crear ejercicio", sub: "Builder de ejercicios", path: "exercises/builder", color: brandSecondary[500], bubble: "bg-brandSecondary-500/10", icon: Dumbbell },
   { label: "Armar sesión", sub: "Constructor técnico", path: "sessions/builder", color: "#7c3aed", bubble: "bg-violet-600/10", icon: ClipboardList },
   { label: "Crear plan", sub: "Plantilla semanal", path: "plans/builder", color: "#0284c7", bubble: "bg-sky-600/10", icon: ClipboardList },
