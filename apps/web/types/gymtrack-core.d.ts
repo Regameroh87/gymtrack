@@ -24,8 +24,14 @@ declare module "@gymtrack/core" {
     chip: string;
     text: string;
   }
-  export function paymentBadge(dueDate: string | null | undefined): PaymentBadge;
-  export function isOverdue(dueDate: string | null | undefined): boolean;
+  export function paymentBadge(
+    dueDate: string | null | undefined,
+    dueDayIsCovered?: boolean
+  ): PaymentBadge;
+  export function isOverdue(
+    dueDate: string | null | undefined,
+    dueDayIsCovered?: boolean
+  ): boolean;
   export function firstMonthAmount(
     price: number | string | null | undefined,
     prorate: boolean,
@@ -416,13 +422,18 @@ declare module "@gymtrack/core/hooks/activities/use-billing-settings" {
   import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
   export interface BillingSettings {
     prorateFirstMonth: boolean;
+    dueDayIsCovered: boolean;
   }
   export function useBillingSettings(
     gymId: string | null
   ): UseQueryResult<BillingSettings>;
   export function useSetBillingSettings(
     gymId: string | null
-  ): UseMutationResult<void, Error, { prorateFirstMonth?: boolean | null }>;
+  ): UseMutationResult<
+    void,
+    Error,
+    { prorateFirstMonth?: boolean | null; dueDayIsCovered?: boolean | null }
+  >;
 }
 
 declare module "@gymtrack/core/hooks/activities/use-activity-coaches" {

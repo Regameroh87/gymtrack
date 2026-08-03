@@ -113,24 +113,34 @@ export default function BillingScreen() {
   const [detailSub, setDetailSub] = useState(null);
 
   const { data: subs, isLoading } = useGymSubscriptions(gymId);
+  const { data: billing } = useBillingSettings(gymId);
   const { cancel } = useActivitySubscriptionMutations();
+
+  // Qué pasa el día exacto del vencimiento lo decide el gym. Se baja una sola vez
+  // acá y se pasa hacia abajo: si cada fila lo resolviera por su cuenta, alcanza
+  // con que una se olvide para que la lista se contradiga a sí misma.
+  const dueDayIsCovered = billing?.dueDayIsCovered === true;
 
   const stats = useMemo(() => {
     const rows = subs ?? [];
     const revenue = rows.reduce((s, r) => s + (Number(r.price) || 0), 0);
-    const overdue = rows.filter((r) => isOverdue(r.due_date)).length;
+    const overdue = rows.filter((r) =>
+      isOverdue(r.due_date, dueDayIsCovered)
+    ).length;
     return { revenue, overdue, ok: rows.length - overdue };
-  }, [subs]);
+  }, [subs, dueDayIsCovered]);
 
   const filtered = useMemo(() => {
     let rows = subs ?? [];
-    if (filter === "overdue") rows = rows.filter((r) => isOverdue(r.due_date));
-    else if (filter === "ok") rows = rows.filter((r) => !isOverdue(r.due_date));
+    if (filter === "overdue")
+      rows = rows.filter((r) => isOverdue(r.due_date, dueDayIsCovered));
+    else if (filter === "ok")
+      rows = rows.filter((r) => !isOverdue(r.due_date, dueDayIsCovered));
     const q = search.trim().toLowerCase();
     if (q)
       rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
     return rows;
-  }, [subs, filter, search]);
+  }, [subs, filter, search, dueDayIsCovered]);
 
   const onRegisterPayment = (sub) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -287,6 +297,7 @@ export default function BillingScreen() {
                 onRegisterPayment={() => onRegisterPayment(sub)}
                 onDetail={() => onDetail(sub)}
                 onCancel={() => onCancel(sub)}
+                dueDayIsCovered={dueDayIsCovered}
               />
             ))}
           </View>
@@ -343,8 +354,9 @@ function SubRow({
   onRegisterPayment,
   onDetail,
   onCancel,
+  dueDayIsCovered,
 }) {
-  const badge = paymentBadge(sub.due_date);
+  const badge = paymentBadge(sub.due_date, dueDayIsCovered);
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
     <View className="bg-ui-surface-light dark:bg-ui-surface-dark border border-ui-input-border rounded-2xl p-3.5">

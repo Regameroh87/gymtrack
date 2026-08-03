@@ -93,20 +93,28 @@ const addMonth = (d: Date) => {
 // contaba un mes menos que el que termina cobrando el RPC.
 //
 // Esto es solo para pintar la lista y el contador — la plata la calcula el RPC.
-const overdueDates = (dueDate: string | null) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+//
+// dueDayIsCovered corre el corte un día, igual que en la función de SQL: es la
+// política del gym sobre el día exacto del vencimiento, y las dos puntas tienen
+// que contar lo mismo o la pantalla ofrece un mes que el RPC no va a cobrar.
+const overdueDates = (dueDate: string | null, dueDayIsCovered = false) => {
+  const corte = new Date();
+  corte.setHours(0, 0, 0, 0);
+  if (dueDayIsCovered) corte.setDate(corte.getDate() - 1);
   const out: Date[] = [];
-  // Sin vencimiento debe el mes en curso, igual que member_pending_charges.
-  let d = new Date(`${dueDate ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
-  while (d <= today) {
+  // Sin vencimiento debe el mes en curso, igual que member_pending_charges (que
+  // tampoco le aplica la gracia a ese caso).
+  if (!dueDate) return [new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00`)];
+  let d = new Date(`${dueDate}T00:00:00`);
+  while (d <= corte) {
     out.push(d);
     d = addMonth(d);
   }
   return out;
 };
 
-const monthsOwed = (dueDate: string | null) => overdueDates(dueDate).length;
+const monthsOwed = (dueDate: string | null, dueDayIsCovered = false) =>
+  overdueDates(dueDate, dueDayIsCovered).length;
 
 // Etiqueta legible del mes cubierto por un cobro, tipo "ago 2026".
 const monthLabel = (iso: string | null) => {
@@ -143,23 +151,31 @@ export default function BillingPage() {
   const [cancelSub, setCancelSub] = useState<GymSubscription | null>(null);
 
   const { data: subs, isLoading } = useGymSubscriptions(gymId);
+  const { data: billing } = useBillingSettings(gymId);
   const { cancel } = useActivitySubscriptionMutations();
+
+  // Qué pasa el día exacto del vencimiento lo decide el gym. Se baja una sola vez
+  // acá y se pasa hacia abajo: si cada fila lo resolviera por su cuenta, alcanza
+  // con que una se olvide para que la tabla se contradiga a sí misma.
+  const dueDayIsCovered = billing?.dueDayIsCovered === true;
 
   const stats = useMemo(() => {
     const rows = subs ?? [];
     const revenue = rows.reduce((s, r) => s + (Number(r.price) || 0), 0);
-    const overdue = rows.filter((r) => isOverdue(r.due_date)).length;
+    const overdue = rows.filter((r) => isOverdue(r.due_date, dueDayIsCovered)).length;
     return { revenue, total: rows.length, overdue, ok: rows.length - overdue };
-  }, [subs]);
+  }, [subs, dueDayIsCovered]);
 
   const filtered = useMemo(() => {
     let rows = subs ?? [];
-    if (filter === "overdue") rows = rows.filter((r) => isOverdue(r.due_date));
-    else if (filter === "ok") rows = rows.filter((r) => !isOverdue(r.due_date));
+    if (filter === "overdue")
+      rows = rows.filter((r) => isOverdue(r.due_date, dueDayIsCovered));
+    else if (filter === "ok")
+      rows = rows.filter((r) => !isOverdue(r.due_date, dueDayIsCovered));
     const q = search.trim().toLowerCase();
     if (q) rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
     return rows;
-  }, [subs, filter, search]);
+  }, [subs, filter, search, dueDayIsCovered]);
 
   const confirmCancel = () => {
     if (!cancelSub) return;
@@ -201,9 +217,9 @@ export default function BillingPage() {
         <StatCard icon={Clock} label="Vencidas" value={stats.overdue} iconColor="#ef4444" bubble="bg-red-50" />
       </div>
 
-      {/* Política de cobro del primer mes. Solo owner/admin: es política de
-          precios, y el RPC igual corta a cualquier otro. */}
-      {canManage && <PrimerMesCard gymId={gymId} />}
+      {/* Políticas de cobranza del gym. Solo owner/admin: es política comercial,
+          y el RPC igual corta a cualquier otro. */}
+      {canManage && <CobranzaSettingsCard gymId={gymId} />}
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
@@ -269,6 +285,7 @@ export default function BillingPage() {
               onDetail={() => setDetailSub(sub)}
               onCancel={() => setCancelSub(sub)}
               busy={cancel.isPending}
+              dueDayIsCovered={dueDayIsCovered}
             />
           ))}
         </div>
@@ -281,7 +298,11 @@ export default function BillingPage() {
 
       {/* Registrar pago (elegir mes) */}
       {payingSub && (
-        <RegistrarPagoModal sub={payingSub} onClose={() => setPayingSub(null)} />
+        <RegistrarPagoModal
+          sub={payingSub}
+          onClose={() => setPayingSub(null)}
+          dueDayIsCovered={dueDayIsCovered}
+        />
       )}
 
       {/* Detalle / historial de pagos del socio */}
@@ -354,6 +375,7 @@ function SubRow({
   onDetail,
   onCancel,
   busy,
+  dueDayIsCovered,
 }: {
   sub: GymSubscription;
   last: boolean;
@@ -364,9 +386,10 @@ function SubRow({
   onDetail: () => void;
   onCancel: () => void;
   busy: boolean;
+  dueDayIsCovered: boolean;
 }) {
-  const badge = paymentBadge(sub.due_date);
-  const owed = monthsOwed(sub.due_date);
+  const badge = paymentBadge(sub.due_date, dueDayIsCovered);
+  const owed = monthsOwed(sub.due_date, dueDayIsCovered);
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
     <div className={`flex flex-wrap items-center gap-y-2 px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"}`}>
@@ -466,29 +489,32 @@ function SubRow({
   );
 }
 
-// Cómo cobra el gym el primer mes de una membresía que arranca a mitad de mes.
+// Las dos políticas de cobranza que decide el gym, no nosotros.
 //
-// No hay una respuesta buena para todos: el gym que cobra por mes cerrado no
-// quiere andar calculando fracciones, y el que compite por precio no quiere
-// cobrarle el mes entero a alguien que se anota un 28. Por eso lo elige el gym.
+// Ninguna de las dos tiene respuesta universal: el gym que cobra por mes cerrado
+// no quiere andar calculando fracciones y el que compite por precio no quiere
+// cobrarle el mes entero a alguien que se anota un 28; el que cobra por
+// adelantado quiere que el día del vencimiento ya sea deuda y el que le da el día
+// al socio para pasar por el gimnasio no.
 //
-// Ojo con lo que NO hace: el período cubierto es el mes calendario en los dos
-// casos. Esto mueve el monto sugerido del primer cobro, no las fechas — el
-// ejemplo en vivo con el mes actual está justamente para que eso quede claro
-// antes de prenderlo.
-function PrimerMesCard({ gymId }: { gymId: string | null }) {
+// Las dos muestran el efecto con la fecha de HOY. Es a propósito: los dos
+// toggles tienen días en los que no cambian nada visible (el 1 no hay nada que
+// prorratear; ningún socio vence hoy), y sin el ejemplo parecen rotos.
+function CobranzaSettingsCard({ gymId }: { gymId: string | null }) {
   const { data: settings, isLoading } = useBillingSettings(gymId);
   const { mutate: save, isPending, error } = useSetBillingSettings(gymId);
 
   if (isLoading || !settings) return null;
 
   const prorate = settings.prorateFirstMonth;
+  const covered = settings.dueDayIsCovered;
   const today = new Date().toISOString().slice(0, 10);
   const day = Number(today.slice(8, 10));
   const ejemplo = firstMonthAmount(10000, prorate, today);
 
   return (
     <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
+      {/* Cómo se cobra el primer mes */}
       <div className="flex items-start gap-3.5">
         <div
           className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
@@ -510,19 +536,11 @@ function PrimerMesCard({ gymId }: { gymId: string | null }) {
             el monto se puede editar en el alta.
           </p>
 
-          {/* El ejemplo usa la fecha de hoy: el día 1 los dos criterios dan lo
-              mismo y el toggle parecería no hacer nada. Que se vea por qué. */}
           <p className="mt-2 font-manrope text-[11px] text-ui-text-muted">
             Hoy (día {day}), un pase de {money(10000)} se cobraría{" "}
             <span className="font-bold text-ui-text-main">{money(ejemplo)}</span>
             {day === 1 ? " — el día 1 no hay nada que prorratear." : "."}
           </p>
-
-          {error && (
-            <p className="mt-3 font-manrope text-[11px] text-red-600">
-              {(error as Error).message}
-            </p>
-          )}
         </div>
 
         <Toggle
@@ -532,6 +550,52 @@ function PrimerMesCard({ gymId }: { gymId: string | null }) {
           label="Prorratear el primer mes de una membresía nueva"
         />
       </div>
+
+      {/* Qué pasa el día exacto del vencimiento */}
+      <div className="mt-4 flex items-start gap-3.5 border-t border-ui-input-border pt-4">
+        <div
+          className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
+            covered ? "bg-brandPrimary-50" : "bg-ui-background-light"
+          }`}
+        >
+          <Clock size={18} color={covered ? "#4A44E4" : ui.text.muted} />
+        </div>
+
+        <div className="flex-1">
+          <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
+            Dar por cubierto el día del vencimiento
+          </p>
+          <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
+            {covered
+              ? "La cuota que vence hoy todavía figura al día: recién cuenta como deuda mañana."
+              : "La cuota que vence hoy ya cuenta como deuda desde hoy."}{" "}
+            Vale para las tres cosas a la vez — el estado que ve el staff, la deuda
+            que se le cobra al socio y el día en que arranca la escalera de
+            recordatorios.
+          </p>
+
+          {/* Los recordatorios son lo que más sorprende de este toggle: el gym
+              lo prende pensando en el badge y le corre la escalera un día. */}
+          <p className="mt-2 font-manrope text-[11px] text-ui-text-muted">
+            {covered
+              ? "El recordatorio configurado para el día 0 sale el día después del vencimiento."
+              : "El recordatorio configurado para el día 0 sale el mismo día del vencimiento."}
+          </p>
+        </div>
+
+        <Toggle
+          on={covered}
+          disabled={isPending}
+          onClick={() => save({ dueDayIsCovered: !covered })}
+          label="Dar por cubierto el día del vencimiento"
+        />
+      </div>
+
+      {error && (
+        <p className="mt-3 font-manrope text-[11px] text-red-600">
+          {(error as Error).message}
+        </p>
+      )}
     </div>
   );
 }
@@ -912,16 +976,18 @@ function Empty({ text }: { text: string }) {
 function RegistrarPagoModal({
   sub,
   onClose,
+  dueDayIsCovered,
 }: {
   sub: GymSubscription;
   onClose: () => void;
+  dueDayIsCovered: boolean;
 }) {
   const { registerPayments } = useActivitySubscriptionMutations();
-  const owed = monthsOwed(sub.due_date);
+  const owed = monthsOwed(sub.due_date, dueDayIsCovered);
   // Los meses adeudados más tres por adelantado: el socio al día que quiere
   // pagar el mes que viene tenía esa opción con el input libre y no se pierde.
   const options = useMemo(() => {
-    const dates = overdueDates(sub.due_date);
+    const dates = overdueDates(sub.due_date, dueDayIsCovered);
     // Los adelantados siguen la misma cadena que los vencidos, así el mes que
     // muestra la lista es el mismo que va a cobrar el RPC.
     let next = dates.length
@@ -936,7 +1002,7 @@ function RegistrarPagoModal({
       periodStart: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`,
       overdue: k < dates.length,
     }));
-  }, [sub.due_date]);
+  }, [sub.due_date, dueDayIsCovered]);
 
   // Por defecto viene toda la deuda marcada: es lo que se cobra casi siempre.
   const [count, setCount] = useState(Math.max(owed, 1));
