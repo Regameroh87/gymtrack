@@ -2,8 +2,8 @@
 
 // Membresías y cobranza (admin). Clon de apps/mobile admin/billing/index.web.jsx:
 // lista de inscripciones activas del gym (useGymSubscriptions), stats, búsqueda +
-// filtro por estado de pago, registrar pago / dar de baja, y modal de alta en 3 pasos
-// (socio → actividad → pase).
+// filtro por estado de pago, registrar pago / dar de baja, y modal de alta en 4 pasos
+// (socio → actividad → pase → primer mes).
 
 // React / Next
 import { useMemo, useState } from "react";
@@ -35,7 +35,11 @@ import {
 import { useGymMembers, type GymMember } from "@gymtrack/core/hooks/users/use-gym-members";
 import { useActivities, type Activity, type ActivityPlan } from "@gymtrack/core/hooks/activities/use-activities";
 import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-subscription-payments";
-import { paymentBadge, isOverdue } from "@gymtrack/core";
+import {
+  useBillingSettings,
+  useSetBillingSettings,
+} from "@gymtrack/core/hooks/activities/use-billing-settings";
+import { paymentBadge, isOverdue, firstMonthAmount } from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
 import { PERMISSIONS } from "@gymtrack/core/permissions";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
@@ -47,6 +51,7 @@ import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { Toggle } from "@/components/ui/toggle";
 import { ConfirmDialog } from "@/components/platform/catalog/catalog-ui";
 
 const money = (n: number | string | null | undefined) =>
@@ -195,6 +200,10 @@ export default function BillingPage() {
         <StatCard icon={CheckCircle} label="Al día" value={stats.ok} iconColor="#16a34a" bubble="bg-emerald-50" />
         <StatCard icon={Clock} label="Vencidas" value={stats.overdue} iconColor="#ef4444" bubble="bg-red-50" />
       </div>
+
+      {/* Política de cobro del primer mes. Solo owner/admin: es política de
+          precios, y el RPC igual corta a cualquier otro. */}
+      {canManage && <PrimerMesCard gymId={gymId} />}
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
@@ -457,7 +466,83 @@ function SubRow({
   );
 }
 
-// Modal de alta: socio → actividad → pase.
+// Cómo cobra el gym el primer mes de una membresía que arranca a mitad de mes.
+//
+// No hay una respuesta buena para todos: el gym que cobra por mes cerrado no
+// quiere andar calculando fracciones, y el que compite por precio no quiere
+// cobrarle el mes entero a alguien que se anota un 28. Por eso lo elige el gym.
+//
+// Ojo con lo que NO hace: el período cubierto es el mes calendario en los dos
+// casos. Esto mueve el monto sugerido del primer cobro, no las fechas — el
+// ejemplo en vivo con el mes actual está justamente para que eso quede claro
+// antes de prenderlo.
+function PrimerMesCard({ gymId }: { gymId: string | null }) {
+  const { data: settings, isLoading } = useBillingSettings(gymId);
+  const { mutate: save, isPending, error } = useSetBillingSettings(gymId);
+
+  if (isLoading || !settings) return null;
+
+  const prorate = settings.prorateFirstMonth;
+  const today = new Date().toISOString().slice(0, 10);
+  const day = Number(today.slice(8, 10));
+  const ejemplo = firstMonthAmount(10000, prorate, today);
+
+  return (
+    <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
+      <div className="flex items-start gap-3.5">
+        <div
+          className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
+            prorate ? "bg-brandPrimary-50" : "bg-ui-background-light"
+          }`}
+        >
+          <Calendar size={18} color={prorate ? "#4A44E4" : ui.text.muted} />
+        </div>
+
+        <div className="flex-1">
+          <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
+            Prorratear el primer mes
+          </p>
+          <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
+            {prorate
+              ? "El alta a mitad de mes sugiere solo la parte proporcional a los días que quedan."
+              : "El alta sugiere el precio completo del pase, sin importar qué día del mes sea."}{" "}
+            En los dos casos la cuota queda cubierta hasta el 1 del mes que viene, y
+            el monto se puede editar en el alta.
+          </p>
+
+          {/* El ejemplo usa la fecha de hoy: el día 1 los dos criterios dan lo
+              mismo y el toggle parecería no hacer nada. Que se vea por qué. */}
+          <p className="mt-2 font-manrope text-[11px] text-ui-text-muted">
+            Hoy (día {day}), un pase de {money(10000)} se cobraría{" "}
+            <span className="font-bold text-ui-text-main">{money(ejemplo)}</span>
+            {day === 1 ? " — el día 1 no hay nada que prorratear." : "."}
+          </p>
+
+          {error && (
+            <p className="mt-3 font-manrope text-[11px] text-red-600">
+              {(error as Error).message}
+            </p>
+          )}
+        </div>
+
+        <Toggle
+          on={prorate}
+          disabled={isPending}
+          onClick={() => save({ prorateFirstMonth: !prorate })}
+          label="Prorratear el primer mes de una membresía nueva"
+        />
+      </div>
+    </div>
+  );
+}
+
+// Modal de alta: socio → actividad → pase → primer mes.
+//
+// El cuarto paso existe porque el alta ya no puede dar por cobrado el primer mes.
+// La membresía se crea SIEMPRE debiendo el mes en curso; cobrarlo es una decisión
+// explícita del staff, con su método de pago, y va por el mismo RPC que el resto
+// de los cobros. "Dejar pendiente" es una salida de primera clase: sirve para el
+// socio que se anota hoy y paga mañana, que antes no se podía representar.
 function AltaMembresiaModal({
   onClose,
   brandPrimary,
@@ -471,16 +556,29 @@ function AltaMembresiaModal({
     onlyRole: "member",
   });
   const { data: activities, isLoading: activitiesLoading } = useActivities(gymId);
-  const { assign } = useActivitySubscriptionMutations();
+  const { data: billing } = useBillingSettings(gymId);
+  const { assign, registerPayments } = useActivitySubscriptionMutations();
 
   const [memberSearch, setMemberSearch] = useState("");
   const [pickedMember, setPickedMember] = useState<GymMember | null>(null);
   const [pickedActivity, setPickedActivity] = useState<Activity | null>(null);
+  const [pickedPass, setPickedPass] = useState<ActivityPlan | null>(null);
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+
+  // El mes que la membresía va a deber al crearse: el mes calendario en curso.
+  // Es el mismo que calcula assign y el que va a cobrar el RPC.
+  const today = new Date().toISOString().slice(0, 10);
+  const periodStart = `${today.slice(0, 7)}-01`;
+  const prorate = billing?.prorateFirstMonth === true;
 
   const close = () => {
     setMemberSearch("");
     setPickedMember(null);
     setPickedActivity(null);
+    setPickedPass(null);
+    setAmount("");
+    setPaymentMethod("");
     onClose();
   };
 
@@ -492,30 +590,75 @@ function AltaMembresiaModal({
     fullName(m).toLowerCase().includes(memberSearch.trim().toLowerCase())
   );
 
-  const onPickPass = (pass: ActivityPlan) => {
-    if (!pickedMember || !pickedActivity) return;
+  const busy = assign.isPending || registerPayments.isPending;
+
+  // Alta + (opcional) cobro del primer mes. Son dos escrituras, no una
+  // transacción, y el orden importa: si el alta entra y el cobro falla, queda una
+  // membresía real marcada como impaga, visible en la tabla y con su botón de
+  // cobro al lado. El caso feo —cobro sin alta— no puede pasar, porque el cobro
+  // necesita el id que devuelve el alta.
+  const darDeAlta = (charge: boolean) => {
+    if (!pickedMember || !pickedActivity || !pickedPass) return;
+    if (charge && !paymentMethod) {
+      toast.error("Elegí un método de pago");
+      return;
+    }
     assign.mutate(
       {
         memberId: pickedMember.id,
         activityId: pickedActivity.id,
-        activityPlanId: pass.id,
-        price: pass.price,
+        activityPlanId: pickedPass.id,
+        price: pickedPass.price,
       },
       {
-        onSuccess: close,
+        onSuccess: ({ id, periodStart: debe }) => {
+          if (!charge) {
+            toast.success("Membresía creada", {
+              description: `Queda debiendo ${monthLabel(debe)}.`,
+            });
+            close();
+            return;
+          }
+          registerPayments.mutate(
+            {
+              id,
+              months: 1,
+              price: amount === "" ? null : amount,
+              memberId: pickedMember.id,
+              paymentMethod,
+            },
+            {
+              onSuccess: () => {
+                toast.success("Membresía creada y primer mes cobrado");
+                close();
+              },
+              // El alta ya entró: cerrar igual. Dejar el modal abierto invitaría a
+              // darla de alta dos veces, y el cobro se puede reintentar desde la
+              // tabla con el botón que ya existe.
+              onError: (error) => {
+                toast.error("Membresía creada, pero no se pudo cobrar el primer mes", {
+                  description: `${error.message} · Queda debiendo ${monthLabel(debe)}.`,
+                });
+                close();
+              },
+            }
+          );
+        },
         onError: (error) =>
           toast.error("No se pudo agregar la membresía", { description: error.message }),
       }
     );
   };
 
-  const step = !pickedMember ? 1 : !pickedActivity ? 2 : 3;
+  const step = !pickedMember ? 1 : !pickedActivity ? 2 : !pickedPass ? 3 : 4;
   const title =
     step === 1
       ? "Elegí el socio"
       : step === 2
         ? `Actividad · ${fullName(pickedMember)}`
-        : `Pase · ${pickedActivity?.name}`;
+        : step === 3
+          ? `Pase · ${pickedActivity?.name}`
+          : "Primer mes";
 
   return (
     <div
@@ -532,7 +675,12 @@ function AltaMembresiaModal({
             {step > 1 && (
               <button
                 type="button"
-                onClick={() => (step === 3 ? setPickedActivity(null) : setPickedMember(null))}
+                disabled={busy}
+                onClick={() => {
+                  if (step === 4) setPickedPass(null);
+                  else if (step === 3) setPickedActivity(null);
+                  else setPickedMember(null);
+                }}
               >
                 <ChevronLeft size={20} color={ui.text.muted} />
               </button>
@@ -605,10 +753,98 @@ function AltaMembresiaModal({
                   color={pickedActivity?.color ?? brandPrimary[600]}
                   title={(pass.label as string) ?? "Pase"}
                   subtitle={`${freqText(pass.frequency_per_week as number | null)} · ${money(pass.price)}/mes`}
-                  disabled={assign.isPending}
-                  onClick={() => onPickPass(pass)}
+                  onClick={() => {
+                    setPickedPass(pass);
+                    // Precarga según cómo cobre el gym el primer mes. Es una
+                    // sugerencia: el input queda editable.
+                    const sugerido = firstMonthAmount(pass.price, prorate, today);
+                    setAmount(sugerido == null ? "" : String(sugerido));
+                  }}
                 />
               ))}
+
+          {/* Paso 4: primer mes — cobrarlo o dejarlo pendiente */}
+          {step === 4 && (
+            <div className="px-1.5 pb-1">
+              <p className="mb-1 font-jakarta text-[15px] font-bold capitalize text-ui-text-main">
+                {fullName(pickedMember)}
+              </p>
+              <p className="mb-4 font-manrope text-[12px] text-ui-text-muted">
+                {pickedActivity?.name ?? "Actividad"} ·{" "}
+                {(pickedPass?.label as string) ?? "Pase"}
+              </p>
+
+              <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-ui-input-border bg-ui-background-light px-3.5 py-3">
+                <Calendar size={15} color={ui.text.muted} className="mt-px shrink-0" />
+                <p className="font-manrope text-[12px] leading-relaxed text-ui-text-main">
+                  La membresía arranca debiendo{" "}
+                  <span className="font-bold capitalize">{monthLabel(periodStart)}</span>. Si
+                  ya pagó, cobralo acá; si no, queda pendiente y lo cobrás después con el
+                  botón de cobro.
+                </p>
+              </div>
+
+              {/* Monto */}
+              <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+                Monto
+              </label>
+              <div className="flex items-center gap-2 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+                <span className="font-jakarta text-[14px] font-bold text-ui-text-muted">$</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0"
+                  className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
+                />
+              </div>
+              {/* Sin esto, un monto menor al precio del pase se lee como un error
+                  del sistema en vez de como la política del propio gym. */}
+              <p className="mb-4 mt-1.5 font-manrope text-[11px] text-ui-text-muted">
+                {prorate
+                  ? `Prorrateado por los días que quedan del mes. El pase completo sale ${money(pickedPass?.price)}.`
+                  : `Precio del pase, mes completo.`}
+              </p>
+
+              {/* Método de pago */}
+              <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+                Método de pago
+              </label>
+              <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="flex-1 cursor-pointer bg-transparent font-manrope text-[13px] text-ui-text-main outline-none"
+                >
+                  <option value="" disabled>
+                    Elegí un método
+                  </option>
+                  {PAYMENT_METHOD_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Button
+                onClick={() => darDeAlta(true)}
+                loading={busy}
+                className="w-full justify-center"
+              >
+                {`Dar de alta y cobrar ${money(amount === "" ? 0 : amount)}`}
+              </Button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => darDeAlta(false)}
+                className="mt-2.5 w-full rounded-xl py-2.5 font-manrope text-[13px] text-ui-text-muted hover:text-ui-text-main disabled:opacity-60"
+              >
+                Dar de alta sin cobrar
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -620,20 +856,17 @@ function PickRow({
   subtitle,
   color,
   onClick,
-  disabled,
 }: {
   title: string;
   subtitle?: string;
   color?: string;
   onClick: () => void;
-  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      disabled={disabled}
       onClick={onClick}
-      className="mb-2 flex w-full items-center gap-3 rounded-xl border border-ui-input-border bg-white p-3 text-left hover:border-brandPrimary-600/30 disabled:opacity-60"
+      className="mb-2 flex w-full items-center gap-3 rounded-xl border border-ui-input-border bg-white p-3 text-left hover:border-brandPrimary-600/30"
     >
       <div className="flex h-9 w-9 items-center justify-center rounded-[10px]" style={{ backgroundColor: color ? `${color}1A` : "#eef" }}>
         <Flame size={16} color={color ?? "#4A44E4"} />

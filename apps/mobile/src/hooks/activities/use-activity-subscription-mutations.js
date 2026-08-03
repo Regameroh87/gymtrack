@@ -9,12 +9,10 @@ import { useActiveGym } from "../../contexts/active-gym-context";
 
 const todayDate = () => new Date().toISOString().split("T")[0];
 
-// Suma un mes a una fecha ISO (YYYY-MM-DD); por defecto a partir de hoy.
-export const addOneMonth = (fromISO = todayDate()) => {
-  const d = new Date(`${fromISO}T00:00:00`);
-  d.setMonth(d.getMonth() + 1);
-  return d.toISOString().split("T")[0];
-};
+// Primer día del mes de una fecha ISO (YYYY-MM-DD); por defecto el mes en curso.
+// Es el período contable del resto del esquema: subscription_payments.period_start,
+// el desglose del checkout y member_pending_charges trabajan todos con mes calendario.
+const monthStart = (fromISO = todayDate()) => `${fromISO.slice(0, 7)}-01`;
 
 // Mutaciones de inscripciones a actividades (membresías con pago básico manual),
 // member-agnósticas: el socio se pasa por llamada. Las usa Contabilidad (gym-wide)
@@ -44,17 +42,23 @@ export const useActivitySubscriptionMutations = () => {
 
   // Inscribe a un socio a un pase. Si ya tenía una inscripción activa de ESA
   // actividad (otra frecuencia), la cierra primero (cerrar-luego-insertar) para
-  // respetar el único-activo por actividad. Asume el primer mes pagado (vence el
-  // mes que viene) → el badge arranca "Al día".
+  // respetar el único-activo por actividad. NO cobra: la membresía nace debiendo
+  // el mes en curso.
+  //
+  // Antes el alta daba por pagado el primer mes e insertaba el cobro a mano en
+  // subscription_payments. Eran tres cosas mal de una: metía en caja plata que
+  // podía no haber entrado (no había forma de anotar al que paga mañana), la
+  // metía sin método de pago, y anclaba el vencimiento al DÍA del alta
+  // (hoy + 1 mes) mientras el cobro cubría el MES calendario — un alta el 20/8
+  // registraba "agosto pago" y vencía el 20/9, regalando 19 días de septiembre.
+  //
+  // Ahora el vencimiento arranca en el primer día del mes en curso, o sea vencido:
+  // member_pending_charges lo expande a una cuota impaga y el cobro del primer mes
+  // es un paso aparte y explícito, por el mismo RPC que todos los demás cobros.
   const assign = useMutation({
-    mutationFn: async ({
-      memberId,
-      activityId,
-      activityPlanId,
-      price,
-      dueDate,
-    }) => {
+    mutationFn: async ({ memberId, activityId, activityPlanId, price }) => {
       const today = todayDate();
+      const periodStart = monthStart(today);
 
       const { error: closeErr } = await supabase
         .from("activity_subscriptions")
@@ -78,32 +82,18 @@ export const useActivitySubscriptionMutations = () => {
           price: normalizedPrice,
           status: "active",
           start_date: today,
-          last_payment_date: today,
-          due_date: dueDate === undefined ? addOneMonth(today) : dueDate,
+          // Todavía no pagó nada: lo escribe el RPC cuando se cobre de verdad.
+          last_payment_date: null,
+          due_date: periodStart,
           assigned_by: staffProfileId,
         });
       if (insErr) throw insErr;
 
-      // El alta asume el primer mes pagado: dejar ese cobro registrado en caja
-      // (subscription_payments) para que ingresos y % de coaches cierren. El
-      // período cubierto es el mes en curso.
-      const periodStart = `${today.slice(0, 7)}-01`;
-      const { error: payErr } = await supabase
-        .from("subscription_payments")
-        .insert({
-          gym_id: gymId,
-          subscription_id: id,
-          activity_id: activityId,
-          user_id: memberId,
-          amount: normalizedPrice ?? 0,
-          period_start: periodStart,
-          period_end: addOneMonth(periodStart),
-          registered_by: staffProfileId,
-        });
-      if (payErr) throw payErr;
-      return id;
+      // periodStart es el mes que queda debiendo, para que el paso de cobro sepa
+      // qué está cobrando sin volver a la base.
+      return { id, periodStart };
     },
-    onSuccess: (_id, vars) => invalidate(vars.memberId),
+    onSuccess: (_res, vars) => invalidate(vars.memberId),
   });
 
   // Registra un pago vía RPC atómico: inserta el cobro en subscription_payments

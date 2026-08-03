@@ -27,7 +27,8 @@ import { isAdminRole } from "../../../../../src/constants/roles";
 import { useGymMembers } from "@gymtrack/core/hooks/users/use-gym-members";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
 import { PERMISSIONS } from "@gymtrack/core/permissions";
-import { paymentBadge, isOverdue } from "@gymtrack/core";
+import { useBillingSettings } from "@gymtrack/core/hooks/activities/use-billing-settings";
+import { paymentBadge, isOverdue, firstMonthAmount } from "@gymtrack/core";
 import {
   Receipt,
   Plus,
@@ -414,6 +415,16 @@ function SubRow({
   );
 }
 
+// Alta: socio → actividad → pase → primer mes.
+//
+// El cuarto paso existe porque el alta ya no puede dar por cobrado el primer mes.
+// La membresía se crea SIEMPRE debiendo el mes en curso; cobrarlo es una decisión
+// explícita del staff y va por el mismo RPC que el resto de los cobros. "Dejar
+// pendiente" es una salida de primera clase: sirve para el socio que se anota hoy
+// y paga mañana, que antes no se podía representar.
+//
+// El monto viene precargado según cómo cobre el gym el primer mes
+// (gyms.prorate_first_month), y queda editable.
 function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
   const { gymId } = useActiveGym();
   const { user } = useAuth();
@@ -424,14 +435,25 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
   );
   const { data: activities, isLoading: activitiesLoading } =
     useActivities(gymId);
-  const { assign } = useActivitySubscriptionMutations();
+  const { data: billing } = useBillingSettings(gymId);
+  const { assign, registerPayment } = useActivitySubscriptionMutations();
 
   const [pickedMember, setPickedMember] = useState(null);
   const [pickedActivity, setPickedActivity] = useState(null);
+  const [pickedPass, setPickedPass] = useState(null);
+  const [amount, setAmount] = useState("");
+
+  const today = new Date().toISOString().slice(0, 10);
+  // El mes que la membresía va a deber al crearse: el mes calendario en curso.
+  const periodStart = `${today.slice(0, 7)}-01`;
+  const prorate = billing?.prorateFirstMonth === true;
+  const busy = assign.isPending || registerPayment.isPending;
 
   const close = () => {
     setPickedMember(null);
     setPickedActivity(null);
+    setPickedPass(null);
+    setAmount("");
     onClose();
   };
 
@@ -441,24 +463,76 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
 
   const onPickPass = (pass) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setPickedPass(pass);
+    // Precarga según la política del gym; es una sugerencia, el input se edita.
+    const sugerido = firstMonthAmount(pass.price, prorate, today);
+    setAmount(sugerido == null ? "" : String(sugerido));
+  };
+
+  // Alta + (opcional) cobro del primer mes. Son dos escrituras, no una
+  // transacción, y el orden importa: si el alta entra y el cobro falla, queda una
+  // membresía real marcada como impaga, visible en la lista y con su botón de
+  // cobro al lado. El caso feo —cobro sin alta— no puede pasar, porque el cobro
+  // necesita el id que devuelve el alta.
+  const darDeAlta = (charge) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     assign.mutate(
       {
         memberId: pickedMember.id,
         activityId: pickedActivity.id,
-        activityPlanId: pass.id,
-        price: pass.price,
+        activityPlanId: pickedPass.id,
+        price: pickedPass.price,
       },
-      { onSuccess: close }
+      {
+        onSuccess: ({ id, periodStart: debe }) => {
+          if (!charge) {
+            close();
+            return;
+          }
+          registerPayment.mutate(
+            {
+              id,
+              price: amount === "" ? null : amount,
+              // Sin periodStart el RPC cobra el mes del vencimiento actual, que
+              // es justo el que quedó debiendo.
+              periodStart: null,
+              memberId: pickedMember.id,
+            },
+            {
+              onSuccess: close,
+              // El alta ya entró: cerrar igual. Dejarlo abierto invitaría a darla
+              // de alta dos veces, y el cobro se reintenta desde la lista.
+              onError: (error) => {
+                close();
+                Alert.alert(
+                  "Membresía creada, sin cobrar",
+                  `No se pudo cobrar el primer mes: ${error.message}\n\nQueda debiendo ${monthLabel(debe)}.`
+                );
+              },
+            }
+          );
+        },
+        onError: (error) =>
+          Alert.alert("No se pudo agregar la membresía", error.message),
+      }
     );
   };
 
-  const step = !pickedMember ? 1 : !pickedActivity ? 2 : 3;
+  const step = !pickedMember
+    ? 1
+    : !pickedActivity
+      ? 2
+      : !pickedPass
+        ? 3
+        : 4;
   const title =
     step === 1
       ? "Elegí el socio"
       : step === 2
         ? "Elegí la actividad"
-        : "Elegí el pase";
+        : step === 3
+          ? "Elegí el pase"
+          : "Primer mes";
 
   return (
     <Modal
@@ -479,9 +553,12 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
           <View className="flex-row items-center px-6 pt-2 pb-3 gap-2">
             {step > 1 && (
               <Pressable
-                onPress={() =>
-                  step === 3 ? setPickedActivity(null) : setPickedMember(null)
-                }
+                disabled={busy}
+                onPress={() => {
+                  if (step === 4) setPickedPass(null);
+                  else if (step === 3) setPickedActivity(null);
+                  else setPickedMember(null);
+                }}
                 className="p-1 -ml-1"
               >
                 <ChevronLeft size={20} color={ui.text.muted} />
@@ -535,10 +612,84 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
                     color={pickedActivity.color ?? brandPrimary[600]}
                     title={pass.label}
                     subtitle={`${freqText(pass.frequency_per_week)} · ${money(pass.price)}/mes`}
-                    disabled={assign.isPending}
                     onPress={() => onPickPass(pass)}
                   />
                 ))}
+
+            {/* Paso 4: primer mes — cobrarlo o dejarlo pendiente */}
+            {step === 4 && (
+              <View className="px-6">
+                <Text className="text-[13px] font-jakarta-semi text-ui-text-main dark:text-ui-text-mainDark capitalize">
+                  {fullName(pickedMember)}
+                </Text>
+                <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mb-4">
+                  {pickedActivity.name ?? "Actividad"} ·{" "}
+                  {pickedPass.label ?? "Pase"}
+                </Text>
+
+                <View className="flex-row gap-2.5 items-start rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark px-3.5 py-3 mb-4">
+                  <Calendar size={15} color={ui.text.muted} />
+                  <Text className="flex-1 text-[12px] leading-[18px] font-manrope text-ui-text-main dark:text-ui-text-mainDark">
+                    La membresía arranca debiendo{" "}
+                    <Text className="font-manrope-bold capitalize">
+                      {monthLabel(periodStart)}
+                    </Text>
+                    . Si ya pagó, cobralo acá; si no, queda pendiente y lo cobrás
+                    después con el botón de cobro.
+                  </Text>
+                </View>
+
+                {/* Monto */}
+                <Text className="text-[10px] font-manrope-bold uppercase tracking-wider text-ui-text-muted dark:text-ui-text-mutedDark mb-2">
+                  Monto
+                </Text>
+                <View className="flex-row items-center gap-2 bg-ui-surface-light dark:bg-ui-surface-dark rounded-xl px-3.5 py-3 border border-ui-input-border">
+                  <Text className="text-[14px] font-jakarta-bold text-ui-text-muted dark:text-ui-text-mutedDark">
+                    $
+                  </Text>
+                  <TextInput
+                    value={amount}
+                    onChangeText={setAmount}
+                    keyboardType="numeric"
+                    placeholder="0"
+                    placeholderTextColor={ui.text.muted}
+                    className="flex-1 text-[14px] font-manrope text-ui-text-main dark:text-ui-text-mainDark"
+                  />
+                </View>
+                {/* Sin esto, un monto menor al precio del pase se lee como un
+                    error del sistema en vez de como la política del propio gym. */}
+                <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1.5 mb-5">
+                  {prorate
+                    ? `Prorrateado por los días que quedan del mes. El pase completo sale ${money(pickedPass.price)}.`
+                    : "Precio del pase, mes completo."}
+                </Text>
+
+                <Pressable
+                  onPress={() => darDeAlta(true)}
+                  disabled={busy}
+                  className="items-center py-3.5 rounded-2xl bg-brandPrimary-600 active:opacity-80"
+                  style={{ opacity: busy ? 0.6 : 1 }}
+                >
+                  {busy ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text className="text-[14px] font-manrope-bold text-white">
+                      Dar de alta y cobrar {money(amount)}
+                    </Text>
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={() => darDeAlta(false)}
+                  disabled={busy}
+                  className="items-center py-3 mt-2 active:opacity-70"
+                  style={{ opacity: busy ? 0.6 : 1 }}
+                >
+                  <Text className="text-[13px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark">
+                    Dar de alta sin cobrar
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </ScrollView>
         </Pressable>
       </Pressable>
@@ -546,13 +697,11 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
   );
 }
 
-function PickRow({ title, subtitle, color, onPress, disabled }) {
+function PickRow({ title, subtitle, color, onPress }) {
   return (
     <Pressable
-      disabled={disabled}
       onPress={onPress}
       className="mx-5 mb-2.5 flex-row items-center p-3.5 rounded-2xl border border-ui-input-border bg-ui-surface-light dark:bg-ui-surface-dark active:opacity-80"
-      style={{ opacity: disabled ? 0.6 : 1 }}
     >
       <View
         className="w-10 h-10 rounded-xl items-center justify-center mr-3"

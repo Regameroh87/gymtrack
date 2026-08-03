@@ -26,6 +26,11 @@ declare module "@gymtrack/core" {
   }
   export function paymentBadge(dueDate: string | null | undefined): PaymentBadge;
   export function isOverdue(dueDate: string | null | undefined): boolean;
+  export function firstMonthAmount(
+    price: number | string | null | undefined,
+    prorate: boolean,
+    todayISO: string
+  ): number | null;
 }
 
 declare module "@gymtrack/core/hooks/activities/use-gym-subscriptions" {
@@ -405,6 +410,19 @@ declare module "@gymtrack/core/hooks/activities/use-training-access-settings" {
     Error,
     { gated: boolean; graceDays?: number | null; requirePaid?: boolean | null }
   >;
+}
+
+declare module "@gymtrack/core/hooks/activities/use-billing-settings" {
+  import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
+  export interface BillingSettings {
+    prorateFirstMonth: boolean;
+  }
+  export function useBillingSettings(
+    gymId: string | null
+  ): UseQueryResult<BillingSettings>;
+  export function useSetBillingSettings(
+    gymId: string | null
+  ): UseMutationResult<void, Error, { prorateFirstMonth?: boolean | null }>;
 }
 
 declare module "@gymtrack/core/hooks/activities/use-activity-coaches" {
