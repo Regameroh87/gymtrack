@@ -103,34 +103,38 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
-  // Registra un pago vía RPC atómico: inserta el cobro en subscription_payments
-  // (con el mes que cubre) Y mueve el vencimiento en la misma transacción (caja
-  // y "al día" no divergen). periodStart = primer día del mes a pagar; si se
-  // omite, el RPC usa el mes del vencimiento actual.
-  const registerPayment = useMutation({
+  // Cobra uno o varios meses vía RPC atómico: inserta los cobros en
+  // subscription_payments (con el mes que cubre cada uno) Y mueve el vencimiento
+  // en la misma transacción, así caja y "al día" no divergen. Si falla el tercero
+  // de tres, no queda plata cobrada con la deuda a medio saldar.
+  //
+  // No recibe qué meses sino cuántos, y arrancan siempre en el vencimiento
+  // actual. Es a propósito: la deuda se deriva de due_date, así que saltear un
+  // mes no lo deja impago, lo hace desaparecer.
+  const registerPayments = useMutation({
     mutationFn: async ({
       id,
+      months,
       price,
-      periodStart,
       paymentMethod,
     }: {
       id: string;
+      months: number;
       price?: number | string | null;
       memberId?: string | null;
-      periodStart?: string | null;
       paymentMethod: string;
     }) => {
       const supabase = getBrowserSupabase();
-      const { data, error } = await supabase.rpc("register_subscription_payment", {
+      const { data, error } = await supabase.rpc("register_subscription_payments", {
         p_subscription_id: id,
+        p_months: months,
         p_amount: price == null || price === "" ? null : Number(price),
-        p_period_start: periodStart ?? null,
         p_payment_method: paymentMethod,
       });
       if (error) throw error;
-      return data as string; // id del cobro
+      return data as string[]; // ids de los cobros
     },
-    onSuccess: (_id, vars) => invalidate(vars.memberId),
+    onSuccess: (_ids, vars) => invalidate(vars.memberId),
   });
 
   // Anula un cobro (insert-only: la fila nunca se edita ni se borra). El RPC
@@ -169,5 +173,5 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
-  return { assign, registerPayment, voidPayment, cancel };
+  return { assign, registerPayments, voidPayment, cancel };
 };
