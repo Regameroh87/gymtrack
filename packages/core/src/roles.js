@@ -67,6 +67,10 @@ export const MODULE_ROLES = {
   settings: ADMIN_ROLES,
   // Export/import masivo de los datos del gym (web /admin/data).
   data: ADMIN_ROLES,
+  // Configura los recordatorios de cuota vencida (web /admin/cobranza).
+  // owner + admin, a diferencia de "Cobros online" (cobros) que es ownerOnly:
+  // ahí se conecta la cuenta bancaria del gym, acá solo se edita copy y días.
+  cobranza: ADMIN_ROLES,
 };
 
 // Permisos que, por sí solos, abren un módulo del panel a quien no lo tiene por

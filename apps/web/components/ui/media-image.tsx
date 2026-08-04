@@ -4,7 +4,7 @@
 // que muestra un skeleton mientras carga y cae al fallback si la URL falla.
 // Se dibuja al 100% del contenedor: usalo dentro del div que ya define el
 // aspect-ratio / tamaño del thumbnail.
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 type Status = "loading" | "loaded" | "error";
 
@@ -25,13 +25,23 @@ export function MediaImage({
 }) {
   const [status, setStatus] = useState<Status>(src ? "loading" : "error");
 
+  // Tracks the src that was last resolved by handleRef to avoid the useEffect
+  // clobbering "loaded" back to "loading" during SSR hydration.
+  const resolvedSrcRef = useRef<string | null>(null);
+
   useEffect(() => {
+    // Skip the reset if handleRef already resolved this exact src as loaded
+    // (happens when the browser cache delivers the image before React mounts).
+    if (resolvedSrcRef.current === src) return;
     setStatus(src ? "loading" : "error");
   }, [src]);
 
   // Si la imagen ya venía cacheada, el onLoad puede dispararse antes de hidratar.
   const handleRef = useCallback((node: HTMLImageElement | null) => {
-    if (node?.complete && node.naturalWidth > 0) setStatus("loaded");
+    if (node?.complete && node.naturalWidth > 0) {
+      resolvedSrcRef.current = node.src;
+      setStatus("loaded");
+    }
   }, []);
 
   if (!src || status === "error") {

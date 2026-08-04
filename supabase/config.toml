@@ -451,3 +451,12 @@ entrypoint = "./functions/crear-cobro-socio/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/mp-gym-webhook/index.ts"
+
+# Job diario de recordatorios de cuota vencida (/admin/cobranza). Lo dispara
+# pg_cron vía net.http_post (ver bootstrap_env.sql, sección 5), que no puede
+# armar un JWT de usuario: verify_jwt off + el mismo secreto interno que
+# send-email, validado adentro.
+[functions.cobranza-recordatorios]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/cobranza-recordatorios/index.ts"
