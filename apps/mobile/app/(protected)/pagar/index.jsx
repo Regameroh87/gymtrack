@@ -29,22 +29,9 @@ import {
 // Componentes / assets
 import { ArrowLeft, CheckCircle, Clock, Receipt, X } from "../../../assets/icons";
 import { ui } from "@gymtrack/core/colors";
+import { periodLabel } from "@gymtrack/core/billing-period";
 
 const money = (n) => `$${Number(n || 0).toLocaleString("es-AR")}`;
-
-const MONTHS_ES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
-
-// "julio 2026" a partir de un date ISO (YYYY-MM-DD). Se parte el string en vez
-// de usar new Date(iso) porque eso lo interpreta en UTC y en Argentina puede
-// devolver el mes anterior.
-function monthLabel(iso) {
-  if (!iso) return "";
-  const [y, m] = iso.split("-");
-  return `${MONTHS_ES[Number(m) - 1]} ${y}`;
-}
 
 export default function PagarScreen() {
   const router = useRouter();
@@ -126,7 +113,7 @@ export default function PagarScreen() {
                     </Text>
                     <Text className="font-manrope text-xs text-ui-text-muted dark:text-ui-text-mutedDark mt-0.5">
                       {item.plan_label ? `${item.plan_label} · ` : ""}
-                      {monthLabel(item.period_start)}
+                      {periodLabel(item.period_start, item.period_end)}
                     </Text>
                   </View>
                   <Text className="font-manrope-bold text-[15px] text-ui-text-main dark:text-ui-text-mainDark">

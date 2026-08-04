@@ -3,7 +3,12 @@
 // Membresías y cobranza (admin). Clon de apps/mobile admin/billing/index.web.jsx:
 // lista de inscripciones activas del gym (useGymSubscriptions), stats, búsqueda +
 // filtro por estado de pago, registrar pago / dar de baja, y modal de alta en 4 pasos
-// (socio → actividad → pase → primer mes).
+// (socio → actividad → pase → primer ciclo).
+//
+// Los ciclos de cuota van de aniversario a aniversario desde la fecha de alta, no
+// por mes calendario. El cálculo NO vive acá: sale de @gymtrack/core/billing-period,
+// que replica el de subscription_period en SQL. Si la pantalla calculara por su
+// cuenta, ofrecería un período y el RPC cobraría otro.
 
 // React / Next
 import { useMemo, useState } from "react";
@@ -39,7 +44,15 @@ import {
   useBillingSettings,
   useSetBillingSettings,
 } from "@gymtrack/core/hooks/activities/use-billing-settings";
-import { paymentBadge, isOverdue, firstMonthAmount } from "@gymtrack/core";
+import {
+  paymentBadge,
+  isOverdue,
+  owedPeriods,
+  periodAt,
+  cycleIndexAt,
+  periodLabel,
+  type BillingPeriod,
+} from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
 import { PERMISSIONS } from "@gymtrack/core/permissions";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
@@ -72,62 +85,14 @@ const formatDate = (iso: string | null) => {
   }
 };
 
-// Suma un mes recortando al último día si el día no existe: 31 ene + 1 mes = 28
-// feb. Sin el recorte, el Date de JS desborda al mes siguiente (31 ene + 1 mes =
-// 3 mar) y la cuenta de meses se iría a cualquier lado.
-const addMonth = (d: Date) => {
-  const target = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
-  target.setDate(Math.min(d.getDate(), lastDay));
-  return target;
-};
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
-// Vencimientos ya cumplidos de una suscripción, uno por mes impago. Replica la
-// regla de member_pending_charges, que expande con generate_series sobre la
-// fecha REAL de vencimiento.
-//
-// Ojo con encadenar: generate_series NO suma n meses a la fecha original, suma
-// uno por vez sobre el resultado anterior. Con vencimiento el 31 de enero da
-// 31 ene → 28 feb → 28 MAR (no 31 mar): una vez que cae en un mes corto se
-// queda ahí. Calculándolo desde el original en vez de encadenando, la pantalla
-// contaba un mes menos que el que termina cobrando el RPC.
-//
-// Esto es solo para pintar la lista y el contador — la plata la calcula el RPC.
-//
-// dueDayIsCovered corre el corte un día, igual que en la función de SQL: es la
-// política del gym sobre el día exacto del vencimiento, y las dos puntas tienen
-// que contar lo mismo o la pantalla ofrece un mes que el RPC no va a cobrar.
-const overdueDates = (dueDate: string | null, dueDayIsCovered = false) => {
-  const corte = new Date();
-  corte.setHours(0, 0, 0, 0);
-  if (dueDayIsCovered) corte.setDate(corte.getDate() - 1);
-  const out: Date[] = [];
-  // Sin vencimiento debe el mes en curso, igual que member_pending_charges (que
-  // tampoco le aplica la gracia a ese caso).
-  if (!dueDate) return [new Date(`${new Date().toISOString().slice(0, 10)}T00:00:00`)];
-  let d = new Date(`${dueDate}T00:00:00`);
-  while (d <= corte) {
-    out.push(d);
-    d = addMonth(d);
-  }
-  return out;
-};
-
-const monthsOwed = (dueDate: string | null, dueDayIsCovered = false) =>
-  overdueDates(dueDate, dueDayIsCovered).length;
-
-// Etiqueta legible del mes cubierto por un cobro, tipo "ago 2026".
-const monthLabel = (iso: string | null) => {
-  if (!iso) return "—";
-  try {
-    return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", {
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return "—";
-  }
-};
+// Los ciclos que un socio debe. Es solo para pintar la lista y el contador — la
+// plata la calcula el RPC — pero tiene que dar exactamente lo mismo que él, o la
+// pantalla ofrece un período que después no se cobra. Por eso sale de core y no
+// se recalcula acá.
+const owed = (sub: GymSubscription, dueDayIsCovered: boolean) =>
+  owedPeriods(sub.start_date, sub.due_date, todayISO(), dueDayIsCovered);
 
 const FILTERS = [
   { key: "all", label: "Todas" },
@@ -389,7 +354,7 @@ function SubRow({
   dueDayIsCovered: boolean;
 }) {
   const badge = paymentBadge(sub.due_date, dueDayIsCovered);
-  const owed = monthsOwed(sub.due_date, dueDayIsCovered);
+  const debe = owed(sub, dueDayIsCovered).length;
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
     <div className={`flex flex-wrap items-center gap-y-2 px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"}`}>
@@ -417,9 +382,9 @@ function SubRow({
                 {badge.label}
               </span>
             </div>
-            {owed > 1 && (
+            {debe > 1 && (
               <span className="font-manrope text-[10px] font-bold text-amber-600">
-                debe {owed} meses
+                debe {debe} cuotas
               </span>
             )}
           </div>
@@ -443,10 +408,10 @@ function SubRow({
           vence {formatDate(sub.due_date)}
         </span>
         {/* La deuda acumulada no se ve en el vencimiento solo: "vence 10 jun" no
-            dice si debe uno o cuatro meses. */}
-        {owed > 1 && (
+            dice si debe una o cuatro cuotas. */}
+        {debe > 1 && (
           <span className="font-manrope text-[10px] font-bold text-amber-600">
-            debe {owed} meses
+            debe {debe} cuotas
           </span>
         )}
       </div>
@@ -489,112 +454,32 @@ function SubRow({
   );
 }
 
-// Las dos políticas de cobranza que decide el gym, no nosotros.
+// La política de cobranza que decide el gym, no nosotros: qué pasa el día EXACTO
+// del vencimiento.
 //
-// Ninguna de las dos tiene respuesta universal: el gym que cobra por mes cerrado
-// no quiere andar calculando fracciones y el que compite por precio no quiere
-// cobrarle el mes entero a alguien que se anota un 28; el que cobra por
-// adelantado quiere que el día del vencimiento ya sea deuda y el que le da el día
-// al socio para pasar por el gimnasio no.
+// No tiene respuesta universal — el que cobra por adelantado quiere que ese día ya
+// sea deuda, y el que le da el día entero al socio para pasar por el gimnasio no.
+// Lo que sí es obligatorio es que los tres lugares digan lo mismo, y de eso se
+// encarga el setting.
 //
-// Las dos muestran el efecto con la fecha de HOY. Es a propósito: los dos
-// toggles tienen días en los que no cambian nada visible (el 1 no hay nada que
-// prorratear; ningún socio vence hoy), y sin el ejemplo parecen rotos.
+// Acá vivía también el prorrateo del primer mes. Se fue con el pase a cobranza por
+// aniversario: el primer ciclo va del día del alta al mismo día del mes siguiente,
+// así que siempre es un mes completo y no hay nada que prorratear.
+//
+// Muestra el efecto en texto porque hay días en los que el toggle no cambia nada
+// visible (ningún socio vence hoy) y sin eso parece roto.
 function CobranzaSettingsCard({ gymId }: { gymId: string | null }) {
   const { data: settings, isLoading } = useBillingSettings(gymId);
   const { mutate: save, isPending, error } = useSetBillingSettings(gymId);
 
-  // El input del día se edita en local y recién se manda al confirmar: mandando
-  // en cada tecla, un borrado momentáneo del campo sería un valor inválido.
-  const [corte, setCorte] = useState<string | null>(null);
-
   if (isLoading || !settings) return null;
 
-  const prorate = settings.prorateFirstMonth;
   const covered = settings.dueDayIsCovered;
-  const hasta = settings.fullMonthUntilDay;
-  const corteValue = corte ?? String(hasta);
-  const today = new Date().toISOString().slice(0, 10);
-  const day = Number(today.slice(8, 10));
-  const ejemplo = firstMonthAmount(10000, prorate, today, hasta);
-
-  const commitCorte = () => {
-    const parsed = Number(corteValue);
-    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 28) {
-      setCorte(String(hasta));
-      return;
-    }
-    if (parsed === hasta) return;
-    save({ fullMonthUntilDay: parsed });
-  };
 
   return (
     <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
-      {/* Cómo se cobra el primer mes */}
-      <div className="flex items-start gap-3.5">
-        <div
-          className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
-            prorate ? "bg-brandPrimary-50" : "bg-ui-background-light"
-          }`}
-        >
-          <Calendar size={18} color={prorate ? "#4A44E4" : ui.text.muted} />
-        </div>
-
-        <div className="flex-1">
-          <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
-            Prorratear el primer mes
-          </p>
-          <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
-            {prorate
-              ? "El que se anota los primeros días paga el mes entero; más tarde, solo la parte proporcional a los días que quedan."
-              : "El alta sugiere el precio completo del pase, sin importar qué día del mes sea."}{" "}
-            En los dos casos la cuota queda cubierta hasta el 1 del mes que viene, del
-            segundo mes en adelante se cobra el pase completo, y el monto se puede
-            editar en el alta.
-          </p>
-
-          {/* El día de corte: sin él, un alta el día 2 sugeriría 30/31 del precio
-              — un 3% de descuento que nadie decidió dar. */}
-          {prorate && (
-            <div className="mt-3 flex items-center gap-2">
-              <span className="font-manrope text-[12px] text-ui-text-muted">
-                Se cobra el mes entero hasta el día
-              </span>
-              <input
-                type="number"
-                min={1}
-                max={28}
-                value={corteValue}
-                disabled={isPending}
-                onChange={(e) => setCorte(e.target.value)}
-                onBlur={commitCorte}
-                className="w-14 rounded-lg border border-ui-input-border bg-[#eae8f4] px-2 py-1 text-center font-manrope text-[12px] text-ui-text-main outline-none disabled:opacity-60"
-              />
-              <span className="font-manrope text-[12px] text-ui-text-muted">
-                del mes
-              </span>
-            </div>
-          )}
-
-          <p className="mt-2 font-manrope text-[11px] text-ui-text-muted">
-            Hoy (día {day}), un pase de {money(10000)} se cobraría{" "}
-            <span className="font-bold text-ui-text-main">{money(ejemplo)}</span>
-            {prorate && day <= hasta
-              ? ` — entero, porque el corte está en el día ${hasta}.`
-              : "."}
-          </p>
-        </div>
-
-        <Toggle
-          on={prorate}
-          disabled={isPending}
-          onClick={() => save({ prorateFirstMonth: !prorate })}
-          label="Prorratear el primer mes de una membresía nueva"
-        />
-      </div>
-
       {/* Qué pasa el día exacto del vencimiento */}
-      <div className="mt-4 flex items-start gap-3.5 border-t border-ui-input-border pt-4">
+      <div className="flex items-start gap-3.5">
         <div
           className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
             covered ? "bg-brandPrimary-50" : "bg-ui-background-light"
@@ -642,13 +527,16 @@ function CobranzaSettingsCard({ gymId }: { gymId: string | null }) {
   );
 }
 
-// Modal de alta: socio → actividad → pase → primer mes.
+// Modal de alta: socio → actividad → pase → primer ciclo.
 //
-// El cuarto paso existe porque el alta ya no puede dar por cobrado el primer mes.
-// La membresía se crea SIEMPRE debiendo el mes en curso; cobrarlo es una decisión
-// explícita del staff, con su método de pago, y va por el mismo RPC que el resto
-// de los cobros. "Dejar pendiente" es una salida de primera clase: sirve para el
-// socio que se anota hoy y paga mañana, que antes no se podía representar.
+// El cuarto paso existe porque el alta ya no puede dar por cobrado el primer
+// ciclo. La membresía se crea SIEMPRE debiendo; cobrarlo es una decisión explícita
+// del staff, con su método de pago, y va por el mismo RPC que el resto de los
+// cobros. "Dejar pendiente" es una salida de primera clase: sirve para el socio
+// que se anota hoy y paga mañana, que antes no se podía representar.
+//
+// El día del alta fija el ancla de cobro del socio para siempre, así que el paso
+// muestra el ciclo completo y no solo el precio.
 function AltaMembresiaModal({
   onClose,
   brandPrimary,
@@ -662,8 +550,7 @@ function AltaMembresiaModal({
     onlyRole: "member",
   });
   const { data: activities, isLoading: activitiesLoading } = useActivities(gymId);
-  const { data: billing } = useBillingSettings(gymId);
-  const { assign, registerPayments } = useActivitySubscriptionMutations();
+  const { assign, registerPayment } = useActivitySubscriptionMutations();
 
   const [memberSearch, setMemberSearch] = useState("");
   const [pickedMember, setPickedMember] = useState<GymMember | null>(null);
@@ -672,12 +559,10 @@ function AltaMembresiaModal({
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
 
-  // El mes que la membresía va a deber al crearse: el mes calendario en curso.
+  // El ciclo que la membresía va a deber al crearse: arranca hoy y dura un mes.
   // Es el mismo que calcula assign y el que va a cobrar el RPC.
-  const today = new Date().toISOString().slice(0, 10);
-  const periodStart = `${today.slice(0, 7)}-01`;
-  const prorate = billing?.prorateFirstMonth === true;
-  const fullMonthUntilDay = billing?.fullMonthUntilDay ?? 5;
+  const today = todayISO();
+  const primerCiclo = periodAt(today, 0);
 
   const close = () => {
     setMemberSearch("");
@@ -697,9 +582,9 @@ function AltaMembresiaModal({
     fullName(m).toLowerCase().includes(memberSearch.trim().toLowerCase())
   );
 
-  const busy = assign.isPending || registerPayments.isPending;
+  const busy = assign.isPending || registerPayment.isPending;
 
-  // Alta + (opcional) cobro del primer mes. Son dos escrituras, no una
+  // Alta + (opcional) cobro del primer ciclo. Son dos escrituras, no una
   // transacción, y el orden importa: si el alta entra y el cobro falla, queda una
   // membresía real marcada como impaga, visible en la tabla y con su botón de
   // cobro al lado. El caso feo —cobro sin alta— no puede pasar, porque el cobro
@@ -718,15 +603,16 @@ function AltaMembresiaModal({
         price: pickedPass.price,
       },
       {
-        onSuccess: ({ id, periodStart: debe }) => {
+        onSuccess: ({ id, period: debe }) => {
+          const cicloTxt = periodLabel(debe.start, debe.end);
           if (!charge) {
             toast.success("Membresía creada", {
-              description: `Queda debiendo ${monthLabel(debe)}.`,
+              description: `Queda debiendo el ciclo ${cicloTxt}.`,
             });
             close();
             return;
           }
-          registerPayments.mutate(
+          registerPayment.mutate(
             {
               id,
               months: 1,
@@ -736,15 +622,15 @@ function AltaMembresiaModal({
             },
             {
               onSuccess: () => {
-                toast.success("Membresía creada y primer mes cobrado");
+                toast.success("Membresía creada y primer ciclo cobrado");
                 close();
               },
               // El alta ya entró: cerrar igual. Dejar el modal abierto invitaría a
               // darla de alta dos veces, y el cobro se puede reintentar desde la
               // tabla con el botón que ya existe.
               onError: (error) => {
-                toast.error("Membresía creada, pero no se pudo cobrar el primer mes", {
-                  description: `${error.message} · Queda debiendo ${monthLabel(debe)}.`,
+                toast.error("Membresía creada, pero no se pudo cobrar el primer ciclo", {
+                  description: `${error.message} · Queda debiendo ${cicloTxt}.`,
                 });
                 close();
               },
@@ -765,7 +651,7 @@ function AltaMembresiaModal({
         ? `Actividad · ${fullName(pickedMember)}`
         : step === 3
           ? `Pase · ${pickedActivity?.name}`
-          : "Primer mes";
+          : "Primer ciclo";
 
   return (
     <div
@@ -862,20 +748,15 @@ function AltaMembresiaModal({
                   subtitle={`${freqText(pass.frequency_per_week as number | null)} · ${money(pass.price)}/mes`}
                   onClick={() => {
                     setPickedPass(pass);
-                    // Precarga según cómo cobre el gym el primer mes. Es una
-                    // sugerencia: el input queda editable.
-                    const sugerido = firstMonthAmount(
-                      pass.price,
-                      prorate,
-                      today,
-                      fullMonthUntilDay
-                    );
-                    setAmount(sugerido == null ? "" : String(sugerido));
+                    // El primer ciclo es un mes completo (del día del alta al
+                    // mismo día del mes que viene), así que el sugerido es el
+                    // precio del pase. Editable igual.
+                    setAmount(pass.price == null ? "" : String(pass.price));
                   }}
                 />
               ))}
 
-          {/* Paso 4: primer mes — cobrarlo o dejarlo pendiente */}
+          {/* Paso 4: primer ciclo — cobrarlo o dejarlo pendiente */}
           {step === 4 && (
             <div className="px-1.5 pb-1">
               <p className="mb-1 font-jakarta text-[15px] font-bold capitalize text-ui-text-main">
@@ -886,13 +767,19 @@ function AltaMembresiaModal({
                 {(pickedPass?.label as string) ?? "Pase"}
               </p>
 
+              {/* El día del alta fija el día de cobro del socio para siempre, así
+                  que conviene que el staff lo vea antes de confirmar y no lo
+                  descubra el mes que viene. */}
               <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-ui-input-border bg-ui-background-light px-3.5 py-3">
                 <Calendar size={15} color={ui.text.muted} className="mt-px shrink-0" />
                 <p className="font-manrope text-[12px] leading-relaxed text-ui-text-main">
-                  La membresía arranca debiendo{" "}
-                  <span className="font-bold capitalize">{monthLabel(periodStart)}</span>. Si
-                  ya pagó, cobralo acá; si no, queda pendiente y lo cobrás después con el
-                  botón de cobro.
+                  La membresía arranca debiendo el ciclo{" "}
+                  <span className="font-bold">
+                    {periodLabel(primerCiclo.start, primerCiclo.end)}
+                  </span>
+                  , y de ahí en más vence todos los {Number(today.slice(8, 10))} de cada
+                  mes. Si ya pagó, cobralo acá; si no, queda pendiente y lo cobrás
+                  después con el botón de cobro.
                 </p>
               </div>
 
@@ -911,15 +798,8 @@ function AltaMembresiaModal({
                   className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
                 />
               </div>
-              {/* Sin esto, un monto menor al precio del pase se lee como un error
-                  del sistema en vez de como la política del propio gym. */}
-              {/* El texto sigue al monto real, no al toggle: con el prorrateo
-                  prendido pero dentro del corte, el sugerido ES el pase completo y
-                  decir "prorrateado" ahí sería mentira. */}
               <p className="mb-4 mt-1.5 font-manrope text-[11px] text-ui-text-muted">
-                {prorate && Number(today.slice(8, 10)) > fullMonthUntilDay
-                  ? `Prorrateado por los días que quedan del mes. El pase completo sale ${money(pickedPass?.price)}.`
-                  : "Precio del pase, mes completo."}
+                Precio del pase. El ciclo es un mes completo.
               </p>
 
               {/* Método de pago */}
@@ -1015,15 +895,15 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-// Modal de cobro: el staff elige cuántos meses abona. Arranca en el vencimiento
-// actual y avanza sin huecos — se pueden saldar varios meses atrasados de una, o
-// adelantar meses si el socio está al día.
+// Modal de cobro: el staff elige cuántos ciclos abona. Arranca en el vencimiento
+// actual y avanza sin huecos — se pueden saldar varios ciclos atrasados de una, o
+// adelantar si el socio está al día.
 //
 // Antes acá había un <input type="month"> libre, y era un agujero: la deuda se
-// deriva de due_date, así que cobrar un mes salteado (agosto debiendo junio)
-// empujaba el vencimiento a septiembre y hacía desaparecer junio y julio. No
-// quedaban impagos, dejaban de existir. Por eso ahora la selección es un prefijo:
-// tocar un mes marca ese y todos los anteriores.
+// deriva de due_date, así que cobrar un ciclo salteado empujaba el vencimiento
+// hacia adelante y hacía desaparecer los del medio. No quedaban impagos, dejaban
+// de existir. Por eso la selección es un prefijo: tocar un ciclo marca ese y todos
+// los anteriores.
 function RegistrarPagoModal({
   sub,
   onClose,
@@ -1033,30 +913,32 @@ function RegistrarPagoModal({
   onClose: () => void;
   dueDayIsCovered: boolean;
 }) {
-  const { registerPayments } = useActivitySubscriptionMutations();
-  const owed = monthsOwed(sub.due_date, dueDayIsCovered);
-  // Los meses adeudados más tres por adelantado: el socio al día que quiere
+  const { registerPayment } = useActivitySubscriptionMutations();
+
+  // Los ciclos adeudados más tres por adelantado: el socio al día que quiere
   // pagar el mes que viene tenía esa opción con el input libre y no se pierde.
-  const options = useMemo(() => {
-    const dates = overdueDates(sub.due_date, dueDayIsCovered);
-    // Los adelantados siguen la misma cadena que los vencidos, así el mes que
-    // muestra la lista es el mismo que va a cobrar el RPC.
-    let next = dates.length
-      ? addMonth(dates[dates.length - 1])
-      : new Date(`${sub.due_date ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
-    const ahead: Date[] = [];
-    for (let i = 0; i < 3; i += 1) {
-      ahead.push(next);
-      next = addMonth(next);
-    }
-    return [...dates, ...ahead].map((d, k) => ({
-      periodStart: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`,
-      overdue: k < dates.length,
-    }));
-  }, [sub.due_date, dueDayIsCovered]);
+  //
+  // Los dos tramos salen de periodAt sobre el mismo ancla, así que el ciclo que
+  // muestra la lista es exactamente el que va a cobrar el RPC.
+  const { options, debe } = useMemo(() => {
+    const vencidos = owed(sub, dueDayIsCovered);
+    const anchor = sub.start_date ?? todayISO();
+    const primeroK = vencidos.length
+      ? cycleIndexAt(anchor, vencidos[vencidos.length - 1].start) + 1
+      : cycleIndexAt(anchor, sub.due_date ?? todayISO());
+    const adelantados: BillingPeriod[] = [];
+    for (let i = 0; i < 3; i += 1) adelantados.push(periodAt(anchor, primeroK + i));
+    return {
+      debe: vencidos.length,
+      options: [...vencidos, ...adelantados].map((p, k) => ({
+        ...p,
+        overdue: k < vencidos.length,
+      })),
+    };
+  }, [sub, dueDayIsCovered]);
 
   // Por defecto viene toda la deuda marcada: es lo que se cobra casi siempre.
-  const [count, setCount] = useState(Math.max(owed, 1));
+  const [count, setCount] = useState(Math.max(debe, 1));
   const [amount, setAmount] = useState(sub.price == null ? "" : String(sub.price));
   const [paymentMethod, setPaymentMethod] = useState("");
 
@@ -1068,7 +950,7 @@ function RegistrarPagoModal({
       toast.error("Elegí un método de pago");
       return;
     }
-    registerPayments.mutate(
+    registerPayment.mutate(
       {
         id: sub.id,
         months: count,
@@ -1079,7 +961,7 @@ function RegistrarPagoModal({
       {
         onSuccess: (ids) => {
           toast.success(
-            ids.length === 1 ? "Pago registrado" : `${ids.length} meses registrados`
+            ids.length === 1 ? "Pago registrado" : `${ids.length} cuotas registradas`
           );
           onClose();
         },
@@ -1119,26 +1001,26 @@ function RegistrarPagoModal({
           </p>
 
           {/* Estado de deuda, para que el staff sepa qué está cobrando */}
-          {owed > 1 && (
+          {debe > 1 && (
             <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3">
               <Clock size={15} color="#d97706" className="mt-px shrink-0" />
               <p className="font-manrope text-[12px] leading-relaxed text-amber-900">
-                Debe <span className="font-bold">{owed} meses</span>. Se cobran desde el más
-                viejo: tocá un mes para incluirlo junto con los anteriores.
+                Debe <span className="font-bold">{debe} cuotas</span>. Se cobran desde la
+                más vieja: tocá un ciclo para incluirlo junto con los anteriores.
               </p>
             </div>
           )}
 
-          {/* Meses que se pagan: selección por prefijo, nunca con huecos */}
+          {/* Ciclos que se pagan: selección por prefijo, nunca con huecos */}
           <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
-            {owed > 1 ? "Meses que paga" : "Mes que paga"}
+            {debe > 1 ? "Cuotas que paga" : "Cuota que paga"}
           </label>
           <div className="mb-4 flex flex-col gap-1.5">
             {options.map((opt, k) => {
               const selected = k < count;
               return (
                 <button
-                  key={opt.periodStart}
+                  key={opt.start}
                   type="button"
                   onClick={() => setCount(k + 1)}
                   className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-colors ${
@@ -1153,11 +1035,11 @@ function RegistrarPagoModal({
                     <Calendar size={15} color={ui.text.muted} className="shrink-0" />
                   )}
                   <span
-                    className={`flex-1 font-manrope text-[13px] capitalize ${
+                    className={`flex-1 font-manrope text-[13px] ${
                       selected ? "font-semibold text-green-900" : "text-ui-text-main"
                     }`}
                   >
-                    {monthLabel(opt.periodStart)}
+                    {periodLabel(opt.start, opt.end)}
                   </span>
                   <span
                     className={`font-manrope text-[10px] font-bold uppercase tracking-wider ${
@@ -1173,7 +1055,7 @@ function RegistrarPagoModal({
 
           {/* Monto */}
           <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
-            Monto por mes
+            Monto por cuota
           </label>
           <div className="mb-5 flex items-center gap-2 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
             <span className="font-jakarta text-[14px] font-bold text-ui-text-muted">$</span>
@@ -1210,12 +1092,15 @@ function RegistrarPagoModal({
 
           <Button
             onClick={onConfirm}
-            loading={registerPayments.isPending}
+            loading={registerPayment.isPending}
             className="w-full justify-center"
           >
             {count === 1
-              ? `Cobrar ${money(total)} · ${monthLabel(options[0]?.periodStart ?? null)}`
-              : `Cobrar ${money(total)} · ${count} meses`}
+              ? `Cobrar ${money(total)} · ${periodLabel(
+                  options[0]?.start ?? null,
+                  options[0]?.end ?? null
+                )}`
+              : `Cobrar ${money(total)} · ${count} cuotas`}
           </Button>
         </div>
       </div>
@@ -1223,7 +1108,7 @@ function RegistrarPagoModal({
   );
 }
 
-// Modal de detalle: historial de cobros de la suscripción, con el mes que cubre
+// Modal de detalle: historial de cobros de la suscripción, con el ciclo que cubre
 // cada uno, cuándo se cobró y el monto.
 function DetallePagosModal({
   sub,
@@ -1279,8 +1164,10 @@ function DetallePagosModal({
                   <Calendar size={15} color="#16a34a" />
                 </div>
                 <div className="ml-3 min-w-0 flex-1">
-                  <p className="font-jakarta text-[13px] font-bold capitalize text-ui-text-main">
-                    {monthLabel(p.period_start)}
+                  {/* Con año: el historial cruza años y "12 ago – 11 sep" solo no
+                      alcanza para saber de cuál. */}
+                  <p className="font-jakarta text-[13px] font-bold text-ui-text-main">
+                    {periodLabel(p.period_start, p.period_end, { year: true })}
                   </p>
                   <p className="font-manrope text-[11px] text-ui-text-muted">
                     Cobrado el {formatDate(p.paid_at)}

@@ -16,6 +16,7 @@ import { Receipt, Search, Flame, Wallet, Hash, Loader2, Calendar, User, Banknote
 import { useGymPayments, type GymPayment } from "@gymtrack/core/hooks/activities/use-gym-payments";
 import { useActivities } from "@gymtrack/core/hooks/activities/use-activities";
 import { PERMISSIONS } from "@gymtrack/core/permissions";
+import { periodLabel } from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -46,19 +47,6 @@ const formatDate = (iso: string | null) => {
     return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", {
       day: "2-digit",
       month: "short",
-    });
-  } catch {
-    return "—";
-  }
-};
-
-// Mes cubierto por el cobro, tipo "ago 2026".
-const monthLabel = (iso: string | null) => {
-  if (!iso) return "—";
-  try {
-    return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", {
-      month: "short",
-      year: "numeric",
     });
   } catch {
     return "—";
@@ -331,15 +319,15 @@ function PaymentRow({
         </div>
       </div>
 
-      {/* Mes que cubre */}
-      <div className="hidden w-28 flex-col items-center md:flex">
+      {/* Ciclo que cubre */}
+      <div className="hidden w-36 flex-col items-center md:flex">
         <div className="flex items-center gap-1">
           <Calendar size={12} color={ui.text.muted} />
-          <span className="font-manrope text-[12px] font-semibold capitalize text-ui-text-main">
-            {monthLabel(payment.period_start)}
+          <span className="font-manrope text-[12px] font-semibold text-ui-text-main">
+            {periodLabel(payment.period_start, payment.period_end)}
           </span>
         </div>
-        <span className="mt-0.5 font-manrope text-[10px] text-ui-text-muted">mes cubierto</span>
+        <span className="mt-0.5 font-manrope text-[10px] text-ui-text-muted">ciclo cubierto</span>
       </div>
 
       {/* Método de pago */}

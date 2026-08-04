@@ -1,14 +1,13 @@
-// Política de cobranza de UN gym (lado panel). Dos decisiones:
+// Política de cobranza de UN gym (lado panel). Una decisión:
 //
-//   prorateFirstMonth  cómo se cobra el primer mes de una membresía que arranca
-//                      a mitad de mes: completo, o proporcional a los días que
-//                      quedan. fullMonthUntilDay lo parametriza — hasta ese día
-//                      del mes se cobra entero igual — y solo tiene efecto con el
-//                      prorrateo prendido.
-//   dueDayIsCovered    qué pasa el día EXACTO del vencimiento: si ya es deuda o
-//                      si todavía está cubierto. Se aplica pareja a la deuda, a
-//                      los recordatorios y al badge — que los tres coincidan no
-//                      es opinable, cuál de las dos sí.
+//   dueDayIsCovered  qué pasa el día EXACTO del vencimiento: si ya es deuda o si
+//                    todavía está cubierto. Se aplica pareja a la deuda, a los
+//                    recordatorios y al badge — que los tres coincidan no es
+//                    opinable, cuál de las dos sí.
+//
+// Acá vivía también el prorrateo del primer mes. Se fue con el pase a cobranza
+// por aniversario: el primer ciclo va del día del alta al mismo día del mes
+// siguiente, o sea que siempre es un mes completo y no hay nada que prorratear.
 //
 // La lectura sale de gyms; la escritura NO va por un update directo: la RLS de
 // gyms solo deja escribir a la plataforma, así que el owner pasa por el RPC
@@ -28,18 +27,14 @@ export const useBillingSettings = (gymId) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gyms")
-        .select("prorate_first_month, due_day_is_covered, full_month_until_day")
+        .select("due_day_is_covered")
         .eq("id", gymId)
         .maybeSingle();
       if (error) throw error;
       return {
-        // Default false: mes completo es lo que hacían todos los gyms antes de
-        // que esto fuera configurable.
-        prorateFirstMonth: data?.prorate_first_month === true,
         // Default false: el día del vencimiento ya debe, que es lo que ya hacían
-        // la deuda, los meses adeudados de la pantalla y los recordatorios.
+        // la deuda, los ciclos adeudados de la pantalla y los recordatorios.
         dueDayIsCovered: data?.due_day_is_covered === true,
-        fullMonthUntilDay: data?.full_month_until_day ?? 5,
       };
     },
   });
@@ -48,18 +43,14 @@ export const useSetBillingSettings = (gymId) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    // Lo que no se manda queda como está (el RPC lo resuelve con COALESCE), así
-    // que cada control del panel puede tocar solo lo suyo.
-    mutationFn: async ({
-      prorateFirstMonth,
-      dueDayIsCovered,
-      fullMonthUntilDay,
-    }) => {
+    // Se manda solo lo que se toca: el RPC lo resuelve con COALESCE. Eso además
+    // hace que esta llamada funcione contra las dos versiones de la función
+    // durante el despliegue — la que todavía recibe los parámetros del prorrateo
+    // y la que ya no.
+    mutationFn: async ({ dueDayIsCovered }) => {
       const { error } = await supabase.rpc("set_billing_settings", {
         p_gym_id: gymId,
-        p_prorate_first_month: prorateFirstMonth ?? null,
         p_due_day_is_covered: dueDayIsCovered ?? null,
-        p_full_month_until_day: fullMonthUntilDay ?? null,
       });
       if (error) throw error;
     },

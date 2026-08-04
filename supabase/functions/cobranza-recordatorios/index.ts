@@ -36,7 +36,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 import { hasOAuthApp, needsRefresh, refreshGymToken } from '../_shared/mp-oauth.ts'
-import { createMemberCharge, type PendingCharge } from '../_shared/member-charge.ts'
+import { createMemberCharge, periodLabel, type PendingCharge } from '../_shared/member-charge.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -340,8 +340,15 @@ Deno.serve(async (req: Request) => {
         const { data: chargesRows } = await supabaseAdmin
           .rpc('member_pending_charges', { p_gym_id: gymId, p_user_id: candidate.user_id })
         const charges = (chargesRows ?? []) as PendingCharge[]
+        // El período va en la etiqueta: con deuda acumulada, un socio que debe
+        // tres ciclos de la misma actividad daba tres líneas idénticas y no había
+        // forma de saber cuáles eran. Con aniversario ya no hay un nombre de mes
+        // que las distinga, así que el rango es lo único que las identifica.
         const items = charges.map((c) => ({
-          label: c.plan_label ? `${c.activity_name} · ${c.plan_label}` : c.activity_name,
+          label: [
+            c.plan_label ? `${c.activity_name} · ${c.plan_label}` : c.activity_name,
+            periodLabel(c.period_start, c.period_end),
+          ].filter(Boolean).join(' · '),
           amount: fmtMoney(Number(c.amount)),
         }))
         const totalStr = fmtMoney(candidate.total_amount)

@@ -32,12 +32,24 @@ declare module "@gymtrack/core" {
     dueDate: string | null | undefined,
     dueDayIsCovered?: boolean
   ): boolean;
-  export function firstMonthAmount(
-    price: number | string | null | undefined,
-    prorate: boolean,
+  export interface BillingPeriod {
+    start: string;
+    end: string;
+  }
+  export function monthIndex(startISO: string, dateISO: string): number;
+  export function periodAt(startISO: string, k: number): BillingPeriod;
+  export function cycleIndexAt(startISO: string, dateISO: string): number;
+  export function owedPeriods(
+    startISO: string | null | undefined,
+    dueISO: string | null,
     todayISO: string,
-    fullMonthUntilDay?: number
-  ): number | null;
+    dueDayIsCovered?: boolean
+  ): BillingPeriod[];
+  export function periodLabel(
+    startISO: string | null,
+    endISO: string | null,
+    options?: { year?: boolean }
+  ): string;
 }
 
 declare module "@gymtrack/core/hooks/activities/use-gym-subscriptions" {
@@ -47,6 +59,8 @@ declare module "@gymtrack/core/hooks/activities/use-gym-subscriptions" {
     user_id: string;
     price: number | string | null;
     due_date: string | null;
+    /** Fecha de alta. Es el ancla de todos los ciclos de cuota. */
+    start_date: string | null;
     status: string | null;
     activities: {
       name: string | null;
@@ -422,24 +436,14 @@ declare module "@gymtrack/core/hooks/activities/use-training-access-settings" {
 declare module "@gymtrack/core/hooks/activities/use-billing-settings" {
   import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
   export interface BillingSettings {
-    prorateFirstMonth: boolean;
     dueDayIsCovered: boolean;
-    fullMonthUntilDay: number;
   }
   export function useBillingSettings(
     gymId: string | null
   ): UseQueryResult<BillingSettings>;
   export function useSetBillingSettings(
     gymId: string | null
-  ): UseMutationResult<
-    void,
-    Error,
-    {
-      prorateFirstMonth?: boolean | null;
-      dueDayIsCovered?: boolean | null;
-      fullMonthUntilDay?: number | null;
-    }
-  >;
+  ): UseMutationResult<void, Error, { dueDayIsCovered?: boolean | null }>;
 }
 
 declare module "@gymtrack/core/hooks/activities/use-activity-coaches" {

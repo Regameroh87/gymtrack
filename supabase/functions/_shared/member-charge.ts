@@ -103,16 +103,37 @@ export class MemberChargeError extends Error {
 // es peor que la ausencia del dato — el motor lo cruza contra el titular de la
 // tarjeta y una discrepancia cuenta en contra.
 
-const MONTHS_ES = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+const MESES = [
+  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+  'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
 ]
 
-/** "julio 2026" a partir de un date ISO (YYYY-MM-DD). */
-export function monthLabel(iso: string | null): string {
-  const [y, m] = (iso ?? '').split('-')
-  const name = MONTHS_ES[Number(m) - 1]
-  return name ? `${name} ${y}` : ''
+/**
+ * "12 ago – 11 sep 2026" a partir del ciclo cubierto.
+ *
+ * Los ciclos van de aniversario a aniversario desde la fecha de alta, así que ya
+ * no hay un nombre de mes que los identifique: el socio del 12 y el del 28 pagan
+ * los dos "agosto" y son períodos distintos. Va el rango completo, que es lo que
+ * el socio ve en el checkout y lo único que le permite reconocer qué está pagando.
+ *
+ * period_end es exclusivo en la base, así que se muestra el día anterior — decir
+ * "12 ago – 12 sep" haría que dos ciclos consecutivos parecieran pisarse.
+ *
+ * Réplica de periodLabel en packages/core/src/billing-period.js. Está duplicado a
+ * mano porque las edge functions corren en Deno y no comparten el workspace de
+ * npm; si cambia el formato, hay que tocar los dos.
+ */
+export function periodLabel(startISO: string | null, endISO: string | null): string {
+  if (!startISO || !endISO) return ''
+  const [, sm, sd] = startISO.split('-').map(Number)
+  const [ey, em, ed] = endISO.split('-').map(Number)
+  // Se arma en UTC a partir de los números y no parseando el string: `new
+  // Date("2026-09-12")` es medianoche UTC y en Argentina (UTC-3) cae un día antes.
+  const ultimo = new Date(Date.UTC(ey, em - 1, ed - 1))
+  return (
+    `${sd} ${MESES[sm - 1]} – ` +
+    `${ultimo.getUTCDate()} ${MESES[ultimo.getUTCMonth()]} ${ultimo.getUTCFullYear()}`
+  )
 }
 
 const onlyDigits = (s: string) => s.replace(/\D/g, '')
@@ -237,7 +258,7 @@ export async function createMemberCharge(
         title: c.plan_label ? `${c.activity_name} · ${c.plan_label}` : c.activity_name,
         description: [
           `Cuota de ${c.activity_name}`,
-          monthLabel(c.period_start),
+          periodLabel(c.period_start, c.period_end),
           gymName,
         ].filter(Boolean).join(' · '),
         // El listado de categorías está en

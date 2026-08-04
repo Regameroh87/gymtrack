@@ -7,16 +7,13 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { periodAt } from "@gymtrack/core";
+
 import { getBrowserSupabase } from "@/lib/supabase-browser";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useActiveGym } from "@/components/auth/active-gym-provider";
 
 const todayDate = () => new Date().toISOString().split("T")[0];
-
-// Primer día del mes de una fecha ISO (YYYY-MM-DD); por defecto el mes en curso.
-// Es el período contable del resto del esquema: subscription_payments.period_start,
-// el desglose del checkout y member_pending_charges trabajan todos con mes calendario.
-const monthStart = (fromISO: string = todayDate()) => `${fromISO.slice(0, 7)}-01`;
 
 export const useActivitySubscriptionMutations = () => {
   const queryClient = useQueryClient();
@@ -38,18 +35,16 @@ export const useActivitySubscriptionMutations = () => {
   };
 
   // Inscribe a un socio a un pase (cierra la inscripción activa previa de esa
-  // actividad). NO cobra: la membresía nace debiendo el mes en curso.
+  // actividad). NO cobra: la membresía nace debiendo su primer ciclo.
   //
-  // Antes el alta daba por pagado el primer mes e insertaba el cobro a mano en
-  // subscription_payments. Eran tres cosas mal de una: metía en caja plata que
-  // podía no haber entrado (no había forma de anotar al que paga mañana), la
-  // metía sin método de pago, y anclaba el vencimiento al DÍA del alta
-  // (hoy + 1 mes) mientras el cobro cubría el MES calendario — un alta el 20/8
-  // registraba "agosto pago" y vencía el 20/9, regalando 19 días de septiembre.
+  // El ciclo arranca HOY y dura un mes — del 12/8 al 12/9 para un alta del 12/8.
+  // start_date es además el ancla de todos los ciclos siguientes, así que este
+  // insert es lo que fija el día de cobro del socio para siempre.
   //
-  // Ahora el vencimiento arranca en el primer día del mes en curso, o sea vencido:
-  // member_pending_charges lo expande a una cuota impaga y el cobro del primer mes
-  // es un paso aparte y explícito, por el mismo RPC que todos los demás cobros.
+  // El alta no cobra a propósito: antes daba por pagado el primer mes e insertaba
+  // el cobro a mano en subscription_payments, o sea que metía en caja plata que
+  // podía no haber entrado y sin método de pago. Ahora nace debiendo y el cobro
+  // es un paso explícito, por el mismo RPC que todos los demás.
   const assign = useMutation({
     mutationFn: async ({
       memberId,
@@ -64,7 +59,6 @@ export const useActivitySubscriptionMutations = () => {
     }) => {
       const supabase = getBrowserSupabase();
       const today = todayDate();
-      const periodStart = monthStart(today);
 
       const { error: closeErr } = await supabase
         .from("activity_subscriptions")
@@ -84,30 +78,32 @@ export const useActivitySubscriptionMutations = () => {
         activity_plan_id: activityPlanId,
         price: normalizedPrice,
         status: "active",
+        // El ancla: de acá salen todos los ciclos de esta suscripción.
         start_date: today,
         // Todavía no pagó nada: lo escribe el RPC cuando se cobre de verdad.
         last_payment_date: null,
-        due_date: periodStart,
+        // Debe desde hoy, que es el arranque de su primer ciclo (k=0).
+        due_date: today,
         assigned_by: staffProfileId,
       });
       if (insErr) throw insErr;
 
-      // periodStart es el mes que queda debiendo, para que el paso de cobro sepa
-      // qué está cobrando sin volver a la base.
-      return { id, periodStart };
+      // El ciclo que queda debiendo, para que el paso de cobro lo pueda nombrar
+      // sin volver a la base.
+      return { id, period: periodAt(today, 0) };
     },
     onSuccess: (_res, vars) => invalidate(vars.memberId),
   });
 
-  // Cobra uno o varios meses vía RPC atómico: inserta los cobros en
-  // subscription_payments (con el mes que cubre cada uno) Y mueve el vencimiento
-  // en la misma transacción, así caja y "al día" no divergen. Si falla el tercero
-  // de tres, no queda plata cobrada con la deuda a medio saldar.
+  // Cobra uno o varios ciclos vía RPC atómico: inserta los cobros en
+  // subscription_payments (con el período que cubre cada uno) Y mueve el
+  // vencimiento en la misma transacción, así caja y "al día" no divergen. Si
+  // falla el tercero de tres, no queda plata cobrada con la deuda a medio saldar.
   //
-  // No recibe qué meses sino cuántos, y arrancan siempre en el vencimiento
-  // actual. Es a propósito: la deuda se deriva de due_date, así que saltear un
-  // mes no lo deja impago, lo hace desaparecer.
-  const registerPayments = useMutation({
+  // No recibe qué ciclos sino cuántos, y arrancan siempre en el vencimiento
+  // actual. Es a propósito: la deuda se deriva de due_date, así que saltear uno
+  // no lo deja impago, lo hace desaparecer.
+  const registerPayment = useMutation({
     mutationFn: async ({
       id,
       months,
@@ -121,7 +117,7 @@ export const useActivitySubscriptionMutations = () => {
       paymentMethod: string;
     }) => {
       const supabase = getBrowserSupabase();
-      const { data, error } = await supabase.rpc("register_subscription_payments", {
+      const { data, error } = await supabase.rpc("register_subscription_payment", {
         p_subscription_id: id,
         p_months: months,
         p_amount: price == null || price === "" ? null : Number(price),
@@ -169,5 +165,5 @@ export const useActivitySubscriptionMutations = () => {
     onSuccess: (_id, vars) => invalidate(vars.memberId),
   });
 
-  return { assign, registerPayments, voidPayment, cancel };
+  return { assign, registerPayment, voidPayment, cancel };
 };
