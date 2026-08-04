@@ -459,6 +459,10 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
   // El mes que la membresía va a deber al crearse: el mes calendario en curso.
   const periodStart = `${today.slice(0, 7)}-01`;
   const prorate = billing?.prorateFirstMonth === true;
+  const fullMonthUntilDay = billing?.fullMonthUntilDay ?? 5;
+  // Dentro del corte el sugerido ES el pase completo, así que el texto de abajo
+  // sigue al monto real y no al toggle.
+  const prorateado = prorate && Number(today.slice(8, 10)) > fullMonthUntilDay;
   const busy = assign.isPending || registerPayment.isPending;
 
   const close = () => {
@@ -477,7 +481,12 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPickedPass(pass);
     // Precarga según la política del gym; es una sugerencia, el input se edita.
-    const sugerido = firstMonthAmount(pass.price, prorate, today);
+    const sugerido = firstMonthAmount(
+      pass.price,
+      prorate,
+      today,
+      fullMonthUntilDay
+    );
     setAmount(sugerido == null ? "" : String(sugerido));
   };
 
@@ -671,7 +680,7 @@ function AltaMembresiaModal({ visible, onClose, brandPrimary, insets }) {
                 {/* Sin esto, un monto menor al precio del pase se lee como un
                     error del sistema en vez de como la política del propio gym. */}
                 <Text className="text-[11px] font-manrope text-ui-text-muted dark:text-ui-text-mutedDark mt-1.5 mb-5">
-                  {prorate
+                  {prorateado
                     ? `Prorrateado por los días que quedan del mes. El pase completo sale ${money(pickedPass.price)}.`
                     : "Precio del pase, mes completo."}
                 </Text>

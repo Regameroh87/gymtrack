@@ -35,7 +35,8 @@ declare module "@gymtrack/core" {
   export function firstMonthAmount(
     price: number | string | null | undefined,
     prorate: boolean,
-    todayISO: string
+    todayISO: string,
+    fullMonthUntilDay?: number
   ): number | null;
 }
 
@@ -423,6 +424,7 @@ declare module "@gymtrack/core/hooks/activities/use-billing-settings" {
   export interface BillingSettings {
     prorateFirstMonth: boolean;
     dueDayIsCovered: boolean;
+    fullMonthUntilDay: number;
   }
   export function useBillingSettings(
     gymId: string | null
@@ -432,7 +434,11 @@ declare module "@gymtrack/core/hooks/activities/use-billing-settings" {
   ): UseMutationResult<
     void,
     Error,
-    { prorateFirstMonth?: boolean | null; dueDayIsCovered?: boolean | null }
+    {
+      prorateFirstMonth?: boolean | null;
+      dueDayIsCovered?: boolean | null;
+      fullMonthUntilDay?: number | null;
+    }
   >;
 }
 

@@ -2,7 +2,9 @@
 //
 //   prorateFirstMonth  cómo se cobra el primer mes de una membresía que arranca
 //                      a mitad de mes: completo, o proporcional a los días que
-//                      quedan.
+//                      quedan. fullMonthUntilDay lo parametriza — hasta ese día
+//                      del mes se cobra entero igual — y solo tiene efecto con el
+//                      prorrateo prendido.
 //   dueDayIsCovered    qué pasa el día EXACTO del vencimiento: si ya es deuda o
 //                      si todavía está cubierto. Se aplica pareja a la deuda, a
 //                      los recordatorios y al badge — que los tres coincidan no
@@ -26,7 +28,7 @@ export const useBillingSettings = (gymId) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("gyms")
-        .select("prorate_first_month, due_day_is_covered")
+        .select("prorate_first_month, due_day_is_covered, full_month_until_day")
         .eq("id", gymId)
         .maybeSingle();
       if (error) throw error;
@@ -37,6 +39,7 @@ export const useBillingSettings = (gymId) =>
         // Default false: el día del vencimiento ya debe, que es lo que ya hacían
         // la deuda, los meses adeudados de la pantalla y los recordatorios.
         dueDayIsCovered: data?.due_day_is_covered === true,
+        fullMonthUntilDay: data?.full_month_until_day ?? 5,
       };
     },
   });
@@ -47,11 +50,16 @@ export const useSetBillingSettings = (gymId) => {
   return useMutation({
     // Lo que no se manda queda como está (el RPC lo resuelve con COALESCE), así
     // que cada control del panel puede tocar solo lo suyo.
-    mutationFn: async ({ prorateFirstMonth, dueDayIsCovered }) => {
+    mutationFn: async ({
+      prorateFirstMonth,
+      dueDayIsCovered,
+      fullMonthUntilDay,
+    }) => {
       const { error } = await supabase.rpc("set_billing_settings", {
         p_gym_id: gymId,
         p_prorate_first_month: prorateFirstMonth ?? null,
         p_due_day_is_covered: dueDayIsCovered ?? null,
+        p_full_month_until_day: fullMonthUntilDay ?? null,
       });
       if (error) throw error;
     },

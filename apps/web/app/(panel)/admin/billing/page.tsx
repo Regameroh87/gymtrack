@@ -504,13 +504,29 @@ function CobranzaSettingsCard({ gymId }: { gymId: string | null }) {
   const { data: settings, isLoading } = useBillingSettings(gymId);
   const { mutate: save, isPending, error } = useSetBillingSettings(gymId);
 
+  // El input del día se edita en local y recién se manda al confirmar: mandando
+  // en cada tecla, un borrado momentáneo del campo sería un valor inválido.
+  const [corte, setCorte] = useState<string | null>(null);
+
   if (isLoading || !settings) return null;
 
   const prorate = settings.prorateFirstMonth;
   const covered = settings.dueDayIsCovered;
+  const hasta = settings.fullMonthUntilDay;
+  const corteValue = corte ?? String(hasta);
   const today = new Date().toISOString().slice(0, 10);
   const day = Number(today.slice(8, 10));
-  const ejemplo = firstMonthAmount(10000, prorate, today);
+  const ejemplo = firstMonthAmount(10000, prorate, today, hasta);
+
+  const commitCorte = () => {
+    const parsed = Number(corteValue);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > 28) {
+      setCorte(String(hasta));
+      return;
+    }
+    if (parsed === hasta) return;
+    save({ fullMonthUntilDay: parsed });
+  };
 
   return (
     <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
@@ -530,16 +546,42 @@ function CobranzaSettingsCard({ gymId }: { gymId: string | null }) {
           </p>
           <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
             {prorate
-              ? "El alta a mitad de mes sugiere solo la parte proporcional a los días que quedan."
+              ? "El que se anota los primeros días paga el mes entero; más tarde, solo la parte proporcional a los días que quedan."
               : "El alta sugiere el precio completo del pase, sin importar qué día del mes sea."}{" "}
-            En los dos casos la cuota queda cubierta hasta el 1 del mes que viene, y
-            el monto se puede editar en el alta.
+            En los dos casos la cuota queda cubierta hasta el 1 del mes que viene, del
+            segundo mes en adelante se cobra el pase completo, y el monto se puede
+            editar en el alta.
           </p>
+
+          {/* El día de corte: sin él, un alta el día 2 sugeriría 30/31 del precio
+              — un 3% de descuento que nadie decidió dar. */}
+          {prorate && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="font-manrope text-[12px] text-ui-text-muted">
+                Se cobra el mes entero hasta el día
+              </span>
+              <input
+                type="number"
+                min={1}
+                max={28}
+                value={corteValue}
+                disabled={isPending}
+                onChange={(e) => setCorte(e.target.value)}
+                onBlur={commitCorte}
+                className="w-14 rounded-lg border border-ui-input-border bg-[#eae8f4] px-2 py-1 text-center font-manrope text-[12px] text-ui-text-main outline-none disabled:opacity-60"
+              />
+              <span className="font-manrope text-[12px] text-ui-text-muted">
+                del mes
+              </span>
+            </div>
+          )}
 
           <p className="mt-2 font-manrope text-[11px] text-ui-text-muted">
             Hoy (día {day}), un pase de {money(10000)} se cobraría{" "}
             <span className="font-bold text-ui-text-main">{money(ejemplo)}</span>
-            {day === 1 ? " — el día 1 no hay nada que prorratear." : "."}
+            {prorate && day <= hasta
+              ? ` — entero, porque el corte está en el día ${hasta}.`
+              : "."}
           </p>
         </div>
 
@@ -635,6 +677,7 @@ function AltaMembresiaModal({
   const today = new Date().toISOString().slice(0, 10);
   const periodStart = `${today.slice(0, 7)}-01`;
   const prorate = billing?.prorateFirstMonth === true;
+  const fullMonthUntilDay = billing?.fullMonthUntilDay ?? 5;
 
   const close = () => {
     setMemberSearch("");
@@ -821,7 +864,12 @@ function AltaMembresiaModal({
                     setPickedPass(pass);
                     // Precarga según cómo cobre el gym el primer mes. Es una
                     // sugerencia: el input queda editable.
-                    const sugerido = firstMonthAmount(pass.price, prorate, today);
+                    const sugerido = firstMonthAmount(
+                      pass.price,
+                      prorate,
+                      today,
+                      fullMonthUntilDay
+                    );
                     setAmount(sugerido == null ? "" : String(sugerido));
                   }}
                 />
@@ -865,10 +913,13 @@ function AltaMembresiaModal({
               </div>
               {/* Sin esto, un monto menor al precio del pase se lee como un error
                   del sistema en vez de como la política del propio gym. */}
+              {/* El texto sigue al monto real, no al toggle: con el prorrateo
+                  prendido pero dentro del corte, el sugerido ES el pase completo y
+                  decir "prorrateado" ahí sería mentira. */}
               <p className="mb-4 mt-1.5 font-manrope text-[11px] text-ui-text-muted">
-                {prorate
+                {prorate && Number(today.slice(8, 10)) > fullMonthUntilDay
                   ? `Prorrateado por los días que quedan del mes. El pase completo sale ${money(pickedPass?.price)}.`
-                  : `Precio del pase, mes completo.`}
+                  : "Precio del pase, mes completo."}
               </p>
 
               {/* Método de pago */}
