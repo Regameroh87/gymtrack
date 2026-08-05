@@ -1,110 +1,184 @@
-// Limpieza diaria del media en Supabase Storage (cron "cleanup-media", 6:00).
-//   FASE 1: barre huérfanos del bucket (archivos > 24hs sin referencia en la
-//           BD) — cubre subidas cuyo formulario nunca llegó a crear la fila.
+// Limpieza diaria del media (cron "cleanup-media", 6:00).
+//   FASE 1: barre huérfanos (archivos > 24hs sin referencia en la BD) — cubre
+//           subidas cuyo formulario nunca llegó a crear la fila. Las imágenes
+//           se barren en el bucket "media" de Supabase Storage; los videos, en
+//           Cloudflare R2.
 //   FASE 2: procesa media_delete_queue, la cola de reintentos que alimentan
 //           sync-media-webhook, delete_gym_cascade y eliminar-socio.
+//
+// ── Por qué el barrido de Storage ya no mira videos/ ─────────────────────────
+// Los videos se mudaron a R2 y las columnas video_uri apuntan allá, así que los
+// ~150 videos que quedaron en Storage no los referencia nadie: si este barrido
+// siguiera mirando el prefijo videos/ del bucket, los borraría a todos en la
+// primera corrida posterior a la mudanza. No es lo que queremos — tienen que
+// sobrevivir hasta que los bundles viejos de Expo terminen de re-sincronizar,
+// y recién ahí se borran en una tanda explícita y aparte. Sacar videos/ de acá
+// es lo que garantiza que ningún proceso automático los toque.
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+import {
+  isR2Url,
+  r2Delete,
+  r2IsConfigured,
+  r2List,
+  r2PathFromUrl,
+  r2PublicUrl,
+} from "../_shared/r2.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const MAX_ATTEMPTS = 5;
 
-// Las columnas guardan la URL pública completa del bucket "media".
+// Las columnas de imagen guardan la URL pública completa del bucket "media".
 const STORAGE_MARKER = "/storage/v1/object/public/media/";
 const isStorageUrl = (uri: string) => uri.includes(STORAGE_MARKER);
 const storagePathFromUrl = (url: string) =>
   url.slice(url.indexOf(STORAGE_MARKER) + STORAGE_MARKER.length);
 
-// Tablas/columnas que referencian media (mismas que delete_gym_cascade +
-// sync-media-webhook). Las usa el sweep de huérfanos.
-const MEDIA_REFS: Array<[table: string, column: string]> = [
+// Columnas de imagen (mismas que delete_gym_cascade + sync-media-webhook).
+const IMAGE_REFS: Array<[table: string, column: string]> = [
   ["gyms", "logo_url"],
   ["gyms", "logo_url_dark"],
   ["exercises_base", "image_uri"],
-  ["exercises_base", "video_uri"],
   ["sessions", "cover_image_uri"],
   ["training_plans", "cover_image_uri"],
   ["equipment", "image_uri"],
   ["profiles", "image_profile"],
   ["custom_exercises", "image_uri"],
-  ["custom_exercises", "video_uri"],
   ["custom_sessions", "cover_image_uri"],
   ["custom_plans", "cover_image_uri"],
 ];
 
-// Prefijos del bucket donde suben los clientes (policy de INSERT).
-const PREFIXES = ["images", "videos"];
+// Columnas de video. Solo estas dos: un video huérfano en R2 no puede estar
+// referenciado desde una columna de imagen.
+const VIDEO_REFS: Array<[table: string, column: string]> = [
+  ["exercises_base", "video_uri"],
+  ["custom_exercises", "video_uri"],
+];
+
+const DAY_MS = 86400 * 1000;
 
 serve(async () => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // ═══════════════════════════════════════════════════════════════
-    // FASE 1: Huérfanos en el bucket (> 24hs sin referencia en la BD)
-    // ═══════════════════════════════════════════════════════════════
-    console.log("── FASE 1: Huérfanos en Storage ──");
-
-    const deletedOrphans: string[] = [];
-    const dayAgoMs = Date.now() - 86400 * 1000;
-
-    for (const prefix of PREFIXES) {
-      const { data: files, error: listError } = await supabase.storage
-        .from("media")
-        .list(prefix, { limit: 500 });
-
-      if (listError) {
-        console.error(`Error listando media/${prefix}:`, listError.message);
-        continue;
-      }
-
-      const oldFiles = (files ?? []).filter(
-        (f) => f.created_at && new Date(f.created_at).getTime() < dayAgoMs
-      );
-      if (oldFiles.length === 0) continue;
-
-      const urlFor = (name: string) =>
-        `${SUPABASE_URL}${STORAGE_MARKER}${prefix}/${name}`;
-      const candidateUrls = oldFiles.map((f) => urlFor(f.name));
-
-      // URLs referenciadas por alguna columna de media. Si una consulta falla
-      // se aborta el sweep del prefijo entero: nunca borrar sin certeza.
+    // Devuelve el subconjunto de candidateUrls que sigue referenciado en la BD.
+    // Si alguna consulta falla devuelve null: nunca borrar sin certeza.
+    const referencedUrls = async (
+      refs: Array<[string, string]>,
+      candidateUrls: string[]
+    ): Promise<Set<string> | null> => {
       const referenced = new Set<string>();
-      let sweepFailed = false;
-      for (const [table, column] of MEDIA_REFS) {
+      for (const [table, column] of refs) {
         const { data, error } = await supabase
           .from(table)
           .select(column)
           .in(column, candidateUrls);
         if (error) {
           console.error(`Error consultando ${table}.${column}:`, error.message);
-          sweepFailed = true;
-          break;
+          return null;
         }
         for (const row of data ?? []) {
           const value = (row as Record<string, string | null>)[column];
           if (value) referenced.add(value);
         }
       }
-      if (sweepFailed) continue;
+      return referenced;
+    };
 
-      const orphanPaths = oldFiles
-        .filter((f) => !referenced.has(urlFor(f.name)))
-        .map((f) => `${prefix}/${f.name}`);
+    // ═══════════════════════════════════════════════════════════════
+    // FASE 1a: Huérfanos de imagen en Supabase Storage
+    // ═══════════════════════════════════════════════════════════════
+    console.log("── FASE 1a: Huérfanos de imagen en Storage ──");
 
-      if (orphanPaths.length > 0) {
-        const { error: removeError } = await supabase.storage
-          .from("media")
-          .remove(orphanPaths);
-        if (removeError) {
-          console.error("Error borrando huérfanos:", removeError.message);
-        } else {
-          deletedOrphans.push(...orphanPaths);
+    const deletedImages: string[] = [];
+    const dayAgoMs = Date.now() - DAY_MS;
+
+    const { data: imageFiles, error: listImagesError } = await supabase.storage
+      .from("media")
+      .list("images", { limit: 500 });
+
+    if (listImagesError) {
+      console.error("Error listando media/images:", listImagesError.message);
+    } else {
+      const oldFiles = (imageFiles ?? []).filter(
+        (f) => f.created_at && new Date(f.created_at).getTime() < dayAgoMs
+      );
+
+      if (oldFiles.length > 0) {
+        const urlFor = (name: string) =>
+          `${SUPABASE_URL}${STORAGE_MARKER}images/${name}`;
+        const referenced = await referencedUrls(
+          IMAGE_REFS,
+          oldFiles.map((f) => urlFor(f.name))
+        );
+
+        if (referenced) {
+          const orphanPaths = oldFiles
+            .filter((f) => !referenced.has(urlFor(f.name)))
+            .map((f) => `images/${f.name}`);
+
+          if (orphanPaths.length > 0) {
+            const { error: removeError } = await supabase.storage
+              .from("media")
+              .remove(orphanPaths);
+            if (removeError) {
+              console.error("Error borrando huérfanos:", removeError.message);
+            } else {
+              deletedImages.push(...orphanPaths);
+            }
+          }
         }
       }
     }
-    console.log(`Huérfanos borrados: ${deletedOrphans.length}`);
+    console.log(`Imágenes huérfanas borradas: ${deletedImages.length}`);
+
+    // ═══════════════════════════════════════════════════════════════
+    // FASE 1b: Huérfanos de video en R2
+    // ═══════════════════════════════════════════════════════════════
+    console.log("── FASE 1b: Huérfanos de video en R2 ──");
+
+    const deletedVideos: string[] = [];
+
+    if (!r2IsConfigured()) {
+      // Sin credenciales no se barre, pero el resto del job tiene que correr:
+      // un R2 mal configurado no puede frenar la cola ni el barrido de imágenes.
+      console.error("R2 sin configurar: se saltea el barrido de video.");
+    } else {
+      try {
+        const objects = await r2List("videos/");
+        const oldObjects = objects.filter(
+          (o) => o.lastModified.getTime() < dayAgoMs
+        );
+
+        if (oldObjects.length > 0) {
+          const referenced = await referencedUrls(
+            VIDEO_REFS,
+            oldObjects.map((o) => r2PublicUrl(o.key))
+          );
+
+          if (referenced) {
+            for (const object of oldObjects) {
+              if (referenced.has(r2PublicUrl(object.key))) continue;
+              try {
+                await r2Delete(object.key);
+                deletedVideos.push(object.key);
+              } catch (err) {
+                console.error(
+                  `Error borrando ${object.key}:`,
+                  (err as Error).message
+                );
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error listando R2:", (err as Error).message);
+      }
+    }
+    console.log(`Videos huérfanos borrados: ${deletedVideos.length}`);
 
     // ═══════════════════════════════════════════════════════════════
     // FASE 2: Procesar cola de eliminación (media_delete_queue)
@@ -126,16 +200,25 @@ serve(async () => {
 
     for (const item of queueItems ?? []) {
       let success: boolean;
-      if (isStorageUrl(item.public_id)) {
+
+      if (isR2Url(item.public_id)) {
+        success = await r2Delete(r2PathFromUrl(item.public_id)).then(
+          () => true,
+          (err: Error) => {
+            console.error(`Error al borrar ${item.public_id}:`, err.message);
+            return false;
+          }
+        );
+      } else if (isStorageUrl(item.public_id)) {
         const path = storagePathFromUrl(item.public_id);
         const { error } = await supabase.storage.from("media").remove([path]);
         // remove() no falla si el objeto no existe: mismo criterio que "ya borrado".
         success = !error;
         if (error) console.error(`Error al borrar ${path}:`, error.message);
       } else {
-        // Valor que no es una URL del bucket (file:// de un draft, resto legacy):
-        // no hay nada que borrar en Storage → se descarta de la cola.
-        console.warn(`Descartando item no-Storage de la cola: ${item.public_id}`);
+        // Valor que no es una URL de media (file:// de un draft, resto legacy):
+        // no hay nada que borrar → se descarta de la cola.
+        console.warn(`Descartando item no-media de la cola: ${item.public_id}`);
         success = true;
       }
 
@@ -163,7 +246,14 @@ serve(async () => {
     }
 
     const summary = {
-      storage_orphans: { deleted_count: deletedOrphans.length, deleted: deletedOrphans },
+      storage_orphans: {
+        deleted_count: deletedImages.length,
+        deleted: deletedImages,
+      },
+      r2_orphans: {
+        deleted_count: deletedVideos.length,
+        deleted: deletedVideos,
+      },
       queue_cleanup: {
         deleted_count: deletedFromQueue.length,
         deleted: deletedFromQueue,
