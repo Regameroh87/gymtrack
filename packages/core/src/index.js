@@ -4,6 +4,7 @@ export { paymentBadge, isOverdue } from "./payment-status.js";
 export {
   monthIndex,
   periodAt,
+  cycleIndexAt,
   owedPeriods,
   periodLabel,
 } from "./billing-period.js";
