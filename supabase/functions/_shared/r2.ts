@@ -72,6 +72,13 @@ export const r2PathFromUrl = (url: string): string =>
 // firma (X-Amz-SignedHeaders), así que si no coinciden exactamente R2 rechaza
 // el PUT con 403. Que los devuelva el server evita que cliente y firma se
 // desincronicen cuando cambie qué headers firmamos.
+//
+// OJO al tocar los headers firmados: el PUT desde el navegador es cross-origin
+// (el endpoint S3 no es gymtrack.ar), así que la policy de CORS del bucket
+// tiene que listar exactamente estos headers en AllowedHeaders. Si se agrega
+// uno acá y no allá, el preflight lo rechaza y web falla con un "Failed to
+// fetch" que no dice nada — mobile sigue andando porque no aplica CORS. La
+// policy está en PROD_CHECKLIST.md, sección de Cloudflare R2.
 export async function presignPut({
   path,
   contentType,

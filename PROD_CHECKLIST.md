@@ -65,6 +65,33 @@ cobra. Las imágenes (~15 MB) se quedan en Supabase Storage.
 - [ ] **Cargar los secrets** en las edge functions: `R2_ACCOUNT_ID`,
       `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`,
       `R2_PUBLIC_BASE_URL`.
+- [ ] **Configurar CORS en el bucket** (R2 → el bucket → Settings → CORS
+      Policy). Sin esto las subidas desde el navegador fallan con un
+      `Failed to fetch` a secas: el browser hace el PUT contra el endpoint S3,
+      que es otro origen, y el preflight se rechaza. Mobile no lo necesita
+      (React Native no aplica CORS), así que el síntoma aparece **solo en
+      web** y solo al subir un video.
+
+      ```json
+      [
+        {
+          "AllowedOrigins": [
+            "https://www.gymtrack.ar",
+            "https://gymtrack.ar",
+            "https://*.vercel.app",
+            "http://localhost:3000"
+          ],
+          "AllowedMethods": ["PUT"],
+          "AllowedHeaders": ["content-type", "cache-control"],
+          "MaxAgeSeconds": 3600
+        }
+      ]
+      ```
+
+      `AllowedHeaders` tiene que listar exactamente los headers que van
+      firmados en `presignPut` — el preflight pide permiso para esos y si
+      falta uno, falla. Si algún día se agrega un header a la firma, hay que
+      agregarlo también acá.
 
 **El dominio público tiene que ser el definitivo antes del paso 3**: el prefijo
 queda escrito en las 151 filas de `video_uri`. Migrar con `r2.dev` y mudarse
