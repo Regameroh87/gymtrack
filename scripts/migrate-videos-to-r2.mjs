@@ -156,7 +156,10 @@ export function sigV4({
   };
 }
 
-function signRequest({ method, key, payload, extraHeaders = {} }) {
+// Exportada para delete-storage-video-originals.mjs, que necesita firmar los
+// HEAD de verificación contra R2. Los dos scripts son temporales y se van
+// juntos cuando la mudanza esté cerrada.
+export function signRequest({ method, key, payload, extraHeaders = {} }) {
   const url = new URL(`${R2_ENDPOINT}/${R2_BUCKET}/${key}`);
   const amzDate = new Date().toISOString().replace(/[-:]|\.\d{3}/g, "");
   const payloadHash = sha256Hex(payload ?? "");
