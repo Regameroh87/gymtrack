@@ -24,7 +24,7 @@ jobs:
       - run: npx next lint
 
   edge-functions:
-    name: Edge functions de pago (check + tests)
+    name: Edge functions de pago y media (check + tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,9 +34,11 @@ jobs:
       # Los tests de firma no importan nada de la red: corren solos.
       - name: Tests de la firma de MercadoPago
         run: deno test supabase/functions/_shared/mp-signature.test.ts
-      # El check acotado a las funciones de pago a propósito: son las que tocan
-      # plata y las únicas verificadas contra `deno check`. Sumar el resto es
-      # bienvenido, pero cada una que entre tiene que pasar primero.
+      # El check arrancó acotado a las funciones de pago, que son las que tocan
+      # plata. Sumar el resto es bienvenido, pero cada una que entre tiene que
+      # pasar primero. Las de media entraron con la mudanza a R2: firman
+      # subidas y borran archivos, así que un error de tipos ahí se paga en
+      # assets perdidos.
       - name: Type-check de las funciones de pago
         run: |
           deno check \
@@ -45,6 +47,13 @@ jobs:
             supabase/functions/mp-webhook/index.ts \
             supabase/functions/mp-gym-webhook/index.ts \
             supabase/functions/crear-cobro-socio/index.ts
+      - name: Type-check de las funciones de media
+        run: |
+          deno check \
+            supabase/functions/_shared/r2.ts \
+            supabase/functions/sign-video-upload/index.ts \
+            supabase/functions/sync-media-webhook/index.ts \
+            supabase/functions/cleanUp-media/index.ts
 
   mobile:
     name: Mobile (sintaxis + tests)
