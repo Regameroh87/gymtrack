@@ -66,6 +66,17 @@ cobra. Las imágenes (~15 MB) se quedan en Supabase Storage.
       `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`,
       `R2_PUBLIC_BASE_URL`.
 
+**El dominio público tiene que ser el definitivo antes del paso 3**: el prefijo
+queda escrito en las 151 filas de `video_uri`. Migrar con `r2.dev` y mudarse
+después a un dominio propio obliga a reescribir todo otra vez.
+
+**Los pasos 1 a 3 van en la misma sesión, el mismo día.** Entre la copia y la
+reescritura los objetos de R2 todavía no los referencia ninguna fila, así que
+si pasan más de 24hs quedan a tiro del barrido de huérfanos de `cleanUp-media`
+y se borran solos. No es pérdida de datos — los originales de Storage siguen
+intactos — pero deshace la copia sin avisar. Si se cortó a mitad de camino,
+volvé a correr el script antes de seguir: es idempotente.
+
 **El orden importa y no es negociable** — cada paso depende del anterior:
 
 1. [ ] `node scripts/migrate-videos-to-r2.mjs` (dry-run) y después con
