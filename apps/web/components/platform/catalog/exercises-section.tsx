@@ -216,7 +216,7 @@ export function CatalogExercisesSection() {
               El catálogo está vacío
             </p>
             <p className="font-manrope text-xs text-ui-text-muted">
-              Agregá el primer ejercicio con "Nuevo ejercicio".
+              Agregá el primer ejercicio con &ldquo;Nuevo ejercicio&rdquo;.
             </p>
           </div>
         ) : filtered.length === 0 ? (
