@@ -1,13 +1,21 @@
-// Ciclo de vida del media en Supabase Storage. Los triggers de BD
-// "sync-media-assets-*" (gyms, exercises_base, sessions, training_plans,
-// equipment, profiles) llaman esta función en INSERT/UPDATE/DELETE:
-//   - DELETE: borra del bucket los assets que referenciaba la fila.
+// Ciclo de vida del media. Los triggers de BD "sync-media-assets-*" (gyms,
+// exercises_base, sessions, training_plans, equipment, profiles) llaman esta
+// función en INSERT/UPDATE/DELETE:
+//   - DELETE: borra los assets que referenciaba la fila.
 //   - UPDATE: si una columna de media cambió, borra el asset viejo.
 //   - INSERT: no hace nada (no hay ciclo pending/confirmed; los huérfanos los
 //     barre el cron cleanUp-media).
 // Si un borrado falla, se encola en media_delete_queue y el cron lo reintenta.
+//
+// El media vive en dos lados y la URL guardada dice en cuál: las imágenes en el
+// bucket "media" de Supabase Storage, los videos en Cloudflare R2 (ver
+// _shared/r2.ts). Quedan además videos viejos con URL de Storage — los subidos
+// antes de la mudanza — y se siguen borrando de donde estén: lo que manda es el
+// prefijo de la URL, no el tipo de asset.
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+import { isR2Url, r2Delete, r2PathFromUrl } from "../_shared/r2.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,11 +55,27 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Borra un asset del bucket; si falla lo encola para reintento por el cron.
+    // Borra un asset de donde viva; si falla lo encola para reintento por el cron.
     const destroyAsset = async (uri: string) => {
-      if (!isStorageUrl(uri)) return; // file:// de drafts, YouTube, etc.
-      const path = storagePathFromUrl(uri);
-      const { error } = await supabase.storage.from("media").remove([path]);
+      let path: string;
+      let error: Error | null = null;
+
+      if (isR2Url(uri)) {
+        path = r2PathFromUrl(uri);
+        error = await r2Delete(path).then(
+          () => null,
+          (err: Error) => err
+        );
+      } else if (isStorageUrl(uri)) {
+        path = storagePathFromUrl(uri);
+        const { error: storageError } = await supabase.storage
+          .from("media")
+          .remove([path]);
+        error = storageError ? new Error(storageError.message) : null;
+      } else {
+        return; // file:// de drafts, YouTube, etc.
+      }
+
       if (error) {
         console.error(`[!] Error al borrar ${path}:`, error.message);
         const resource_type = path.startsWith("videos/") ? "video" : "image";
@@ -88,8 +112,9 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error(error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = (error as Error).message;
+    console.error(message);
+    return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });

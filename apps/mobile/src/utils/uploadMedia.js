@@ -1,19 +1,24 @@
 // Librerías externas
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import * as FileSystem from "expo-file-system/legacy";
 
 // BD
 import { supabase } from "../database/supabase";
 
-// Sube media a Supabase Storage (bucket público "media"). Las imágenes se
-// redimensionan/comprimen y los videos se transcodifican a ~720p
-// (react-native-compressor) antes de subir, porque Storage no procesa nada
-// del lado del servidor. Devuelve { url, public_id }: ambos son la URL
-// pública completa, que es lo que guardan las columnas de media.
+// Sube media y devuelve { url, public_id }: ambos son la URL pública completa,
+// que es lo que guardan las columnas de media.
+//
+// Las imágenes van al bucket público "media" de Supabase Storage; los videos,
+// a Cloudflare R2 — el video era el 99% del storage y todo el egress, y R2 no
+// cobra egress. Ninguno de los dos procesa nada del lado del servidor, así que
+// la optimización es toda client-side: las imágenes se redimensionan/comprimen
+// y los videos se transcodifican a ~720p (react-native-compressor).
 
 const MAX_IMAGE_WIDTH = 1600;
 const IMAGE_QUALITY = 0.8;
-// Lado mayor máximo del video comprimido (~720p). El modelo de costos asume
-// videos de 10-20 MB; sin esta compresión el egress se multiplica por 6-20.
+// Lado mayor máximo del video comprimido (~720p). Con R2 el egress ya no se
+// paga, pero comprimir sigue mandando: es el tope de 60 MB de la subida, los
+// datos móviles del socio que mira el video y el tiempo de carga.
 const MAX_VIDEO_SIZE = 1280;
 
 // Nombre aleatorio no adivinable (el bucket es público): timestamp + random.
@@ -92,9 +97,42 @@ const uploadImage = async (fileUri) => {
   });
 };
 
+// Los videos van a R2 con una URL PUT prefirmada: la app no puede tener las
+// credenciales del bucket, así que la edge function sign-video-upload valida
+// la sesión y devuelve una URL de un solo uso. El archivo sube directo a
+// Cloudflare — no pasa por Supabase — y los headers son los que vienen
+// firmados: si no se mandan tal cual, R2 responde 403.
+const uploadVideoToR2 = async ({ uri, mime }) => {
+  // eslint-disable-next-line import/namespace
+  const info = await FileSystem.getInfoAsync(uri);
+  if (!info.exists) {
+    throw new Error("No se encontró el video a subir.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("sign-video-upload", {
+    body: { content_type: mime, size_bytes: info.size },
+  });
+  if (error) {
+    throw new Error(error.message || "No se pudo preparar la subida del video");
+  }
+
+  // eslint-disable-next-line import/namespace
+  const res = await FileSystem.uploadAsync(data.upload_url, uri, {
+    httpMethod: "PUT",
+    // eslint-disable-next-line import/namespace
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: data.headers,
+  });
+  if (res.status < 200 || res.status >= 300) {
+    throw new Error(`Error al subir el video (HTTP ${res.status})`);
+  }
+
+  return { url: data.public_url, public_id: data.public_url, result: data };
+};
+
 const uploadVideo = async (fileUri) => {
   let uri = fileUri;
-  let extension = fileUri.split("/").pop().split(".").pop().toLowerCase();
+  const extension = fileUri.split("/").pop().split(".").pop().toLowerCase();
   let mime = `video/${extension === "mov" ? "quicktime" : extension}`;
 
   try {
@@ -102,17 +140,12 @@ const uploadVideo = async (fileUri) => {
       compressionMethod: "auto",
       maxSize: MAX_VIDEO_SIZE,
     });
-    extension = "mp4"; // el compressor siempre emite H.264/mp4
-    mime = "video/mp4";
+    mime = "video/mp4"; // el compressor siempre emite H.264/mp4
   } catch (error) {
     console.warn("[upload] No se pudo comprimir el video:", error.message);
   }
 
-  return uploadToStorage({
-    uri,
-    path: `videos/${uniqueName(extension)}`,
-    mime,
-  });
+  return uploadVideoToR2({ uri, mime });
 };
 
 export const uploadMedia = async ({ fileUri, typeFile }) => {

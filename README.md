@@ -15,7 +15,7 @@ App móvil multi-tenant (white-label SaaS) para gestión de gimnasios. Permite a
 | Validación de forms | TanStack Form + Zod |
 | BD local | SQLite via expo-sqlite + Drizzle ORM |
 | BD remota | Supabase (PostgreSQL + Auth + Edge Functions) |
-| Media | Supabase Storage (bucket `media`; optimización client-side) |
+| Media | Imágenes en Supabase Storage (bucket `media`), videos en Cloudflare R2; optimización client-side |
 | Animaciones | Reanimated 4 + Gesture Handler 2 |
 
 ---
@@ -323,7 +323,7 @@ Se guarda el file:// local en SQLite (sync_status = "pending")
     ↓
 Al sincronizar: si image_uri empieza con "file://",
     uploadMedia() → optimiza (resize imágenes / compresión de video a ~720p)
-                    y sube a Supabase Storage
+                    y sube (imágenes → Supabase Storage, videos → R2)
     → reemplaza el file:// local con la URL pública
     → hace upsert en Supabase con esa URL
 ```
@@ -347,10 +347,13 @@ Al hacer submit:
 
 > Los perfiles (`profiles`) no son una tabla offline-first — se crean directamente en Supabase via Edge Function, que es una operación de red bloqueante. Por eso el upload ocurre inline en el submit, no de forma diferida.
 
-**Media (todo en Supabase Storage):**
-- Bucket público `media` (límite 60 MB): imágenes en `images/`, videos en `videos/`. Las columnas (`image_uri`, `video_uri`, `logo_url`, etc.) guardan la URL pública completa; los helpers de URL (`getMediaUrl` en core, `mediaUrl` en web) devuelven las URLs http(s) tal cual y `null` para URIs locales. Los huérfanos (subidas sin fila en la BD) los barre el cron `cleanUp-media` a las 24hs.
-- Optimización client-side (Storage no procesa nada server-side): imágenes → resize a 1600px + compresión (expo-image-manipulator en mobile, canvas en web; PNG conserva alpha para logos). Videos → mobile transcodifica a ~720p H.264 con react-native-compressor; web no puede transcodificar, acepta hasta 25 MB con aviso de subir el video ya exportado (el bucket admite 60 MB para los videos largos comprimidos de mobile).
-- El borrado es server-side: los triggers `sync-media-assets-*` llaman a `sync-media-webhook` al borrar/reemplazar media, con `media_delete_queue` como cola de reintentos que procesa el cron. Los clientes no tienen policy de DELETE en el bucket.
+**Media (imágenes en Supabase Storage, videos en Cloudflare R2):**
+- **Dónde vive cada cosa.** Las imágenes van al bucket público `media` de Supabase Storage, prefijo `images/`. Los videos van a R2, prefijo `videos/`. El corte es de costos y no de comodidad: el video era el 99% del storage y prácticamente todo el egress, y R2 no cobra egress; las imágenes pesan ~15 MB en total y entran de sobra en la cuota de Supabase, así que mudarlas no ahorraría nada y costaría el RLS y los triggers que ya funcionan.
+- Las columnas (`image_uri`, `video_uri`, `logo_url`, etc.) guardan la URL pública completa, venga del origen que venga; los helpers de URL (`getMediaUrl` en core, `mediaUrl` en web) devuelven las URLs http(s) tal cual y `null` para URIs locales. Los huérfanos (subidas sin fila en la BD) los barre el cron `cleanUp-media` a las 24hs, en los dos orígenes.
+- **Subida de video.** El cliente no puede tener credenciales de R2, así que la edge function `sign-video-upload` valida la sesión y devuelve una URL PUT prefirmada; el archivo sube directo a Cloudflare sin pasar por Supabase. Los headers que devuelve van dentro de la firma: hay que mandarlos tal cual o R2 responde 403.
+- Optimización client-side (ni Storage ni R2 procesan nada server-side): imágenes → resize a 1600px + compresión (expo-image-manipulator en mobile, canvas en web; PNG conserva alpha para logos). Videos → mobile transcodifica a ~720p H.264 con react-native-compressor; web no puede transcodificar, acepta hasta 25 MB con aviso de subir el video ya exportado (`sign-video-upload` firma hasta 60 MB para los videos largos comprimidos de mobile).
+- El borrado es server-side: los triggers `sync-media-assets-*` llaman a `sync-media-webhook` al borrar/reemplazar media, con `media_delete_queue` como cola de reintentos que procesa el cron. Lo que decide dónde se borra es el prefijo de la URL guardada, no el tipo de asset — así los videos viejos que todavía tienen URL de Storage se siguen borrando bien. Los clientes no tienen policy de DELETE en el bucket ni credenciales de R2.
+- **Secrets requeridos** en las edge functions: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` (ver `supabase/functions/_shared/r2.ts`).
 
 ---
 
