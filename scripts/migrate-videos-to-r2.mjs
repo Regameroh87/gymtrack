@@ -16,7 +16,7 @@
 // Es idempotente: un objeto que ya está en R2 con el mismo tamaño y el mismo
 // MD5 se saltea, así que se puede correr las veces que haga falta. Si algún
 // archivo falla, NO emite el SQL de reescritura — no se reescribe una sola URL
-// hasta que los 151 estén verificados.
+// hasta que TODOS estén verificados.
 //
 // ── Orden de la mudanza ──────────────────────────────────────────────────────
 //   1. Este script (--execute): copia + verificación. Nada más se toca.
@@ -25,7 +25,7 @@
 //      Va CON EL TRIGGER sync-media-assets-exercises DESACTIVADO, porque ese
 //      trigger llama a sync-media-webhook en cada UPDATE y la función borra el
 //      asset viejo cuando la columna cambia: sin desactivarlo, la reescritura
-//      borraría los 151 originales de Storage en el acto.
+//      borraría todos los originales de Storage en el acto.
 //   4. Mucho después, cuando ya no queden bundles viejos de Expo con las URLs
 //      de Storage en su SQLite: borrar los originales, en su propia tanda.
 import { createHash, createHmac } from "node:crypto";
@@ -57,6 +57,37 @@ function checkEnv() {
   if (missing.length > 0) {
     console.error(`Faltan env vars: ${missing.join(", ")}`);
     process.exit(2);
+  }
+
+  // Los dos errores de pegado que rompen todo con un mensaje que no ayuda:
+  // el account id con el endpoint entero adentro (la URL queda
+  // https://https://...r2.cloudflarestorage.com.r2.cloudflarestorage.com y el
+  // DNS falla), y el dominio público sin esquema.
+  if (!/^[0-9a-f]{32}$/i.test(R2_ACCOUNT_ID)) {
+    console.error(
+      `R2_ACCOUNT_ID tiene que ser el hash de 32 caracteres hex, solo eso — no el endpoint completo.\n` +
+        `  Recibido: ${R2_ACCOUNT_ID}\n` +
+        `  Sale de https://<ACCOUNT_ID>.r2.cloudflarestorage.com`
+    );
+    process.exit(2);
+  }
+  if (!/^https?:\/\//.test(R2_PUBLIC_BASE_URL)) {
+    console.error(
+      `R2_PUBLIC_BASE_URL tiene que arrancar con https:// — recibido: ${R2_PUBLIC_BASE_URL}`
+    );
+    process.exit(2);
+  }
+}
+
+// Node envuelve cualquier fallo de red en un "fetch failed" pelado que no dice
+// nada; el motivo real (DNS que no resuelve, TLS, conexión rechazada) viene
+// dentro de err.cause. Sin esto, un account id mal pegado y un firewall
+// corporativo se ven exactamente igual.
+async function fetchOrThrow(url, init, contexto) {
+  try {
+    return await fetch(url, init);
+  } catch (err) {
+    throw new Error(`${contexto}: ${err.cause?.message ?? err.message}`);
   }
 }
 
@@ -163,20 +194,24 @@ async function listStorageVideos() {
   let offset = 0;
 
   for (;;) {
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/list/media`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        apikey: SERVICE_KEY,
-        "Content-Type": "application/json",
+    const res = await fetchOrThrow(
+      `${SUPABASE_URL}/storage/v1/object/list/media`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          apikey: SERVICE_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prefix: "videos",
+          limit: pageSize,
+          offset,
+          sortBy: { column: "name", order: "asc" },
+        }),
       },
-      body: JSON.stringify({
-        prefix: "videos",
-        limit: pageSize,
-        offset,
-        sortBy: { column: "name", order: "asc" },
-      }),
-    });
+      "list media/videos"
+    );
     if (!res.ok) {
       throw new Error(`list media/videos → ${res.status} ${await res.text()}`);
     }
@@ -195,7 +230,7 @@ async function listStorageVideos() {
 // alcanza para saber si el que ya está en R2 es idéntico byte a byte.
 async function headR2(key) {
   const { url, headers } = signRequest({ method: "HEAD", key, payload: "" });
-  const res = await fetch(url, { method: "HEAD", headers });
+  const res = await fetchOrThrow(url, { method: "HEAD", headers }, `HEAD ${key}`);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`HEAD ${key} → ${res.status}`);
   return {
@@ -214,7 +249,7 @@ async function putR2(key, body, contentType) {
       "cache-control": CACHE_CONTROL,
     },
   });
-  const res = await fetch(url, { method: "PUT", headers, body });
+  const res = await fetchOrThrow(url, { method: "PUT", headers, body }, `PUT ${key}`);
   if (!res.ok) {
     throw new Error(`PUT ${key} → ${res.status} ${await res.text()}`);
   }
@@ -255,7 +290,11 @@ async function main() {
         continue;
       }
 
-      const download = await fetch(`${STORAGE_PREFIX}${key}`);
+      const download = await fetchOrThrow(
+        `${STORAGE_PREFIX}${key}`,
+        undefined,
+        `GET origen ${key}`
+      );
       if (!download.ok) {
         throw new Error(`GET origen → ${download.status}`);
       }
