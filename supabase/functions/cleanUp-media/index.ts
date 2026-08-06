@@ -81,7 +81,10 @@ serve(async () => {
           return null;
         }
         for (const row of data ?? []) {
-          const value = (row as Record<string, string | null>)[column];
+          // select() con una columna dinámica no le deja inferir la fila a
+          // supabase-js (el tipo que sale incluye GenericStringError), así que
+          // el cast pasa por unknown. Lo que llega siempre es { [column]: ... }.
+          const value = (row as unknown as Record<string, string | null>)[column];
           if (value) referenced.add(value);
         }
       }
@@ -268,7 +271,8 @@ serve(async () => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Error:", err.message);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    const message = (err as Error).message;
+    console.error("Error:", message);
+    return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
 });
