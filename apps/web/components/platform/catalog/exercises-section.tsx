@@ -17,6 +17,7 @@ import {
   Upload,
   Link as LinkIcon,
   Loader2,
+  Search,
 } from "lucide-react";
 
 import {
@@ -73,6 +74,22 @@ export function CatalogExercisesSection() {
   );
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [detail, setDetail] = useState<CatalogExercise | null>(null);
+
+  // ── Búsqueda y filtro ──
+  const [search, setSearch] = useState("");
+  const [muscleFilter, setMuscleFilter] = useState("all");
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return exercises.filter((ex) => {
+      const matchName = q === "" || ex.name.toLowerCase().includes(q);
+      const matchMuscle =
+        muscleFilter === "all" || ex.muscle_group === muscleFilter;
+      return matchName && matchMuscle;
+    });
+  }, [exercises, search, muscleFilter]);
+
+  const hasActiveFilters = search.trim() !== "" || muscleFilter !== "all";
 
   const askDelete = (ex: CatalogExercise) => {
     setDeleteError(null);
@@ -133,6 +150,58 @@ export function CatalogExercisesSection() {
         </button>
       </div>
 
+      {/* Barra de búsqueda y filtro por grupo muscular */}
+      {!isLoading && exercises.length > 0 && (
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+          {/* Search input */}
+          <div className="relative flex-1">
+            <Search
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ui-text-muted"
+            />
+            <input
+              type="text"
+              placeholder="Buscar ejercicio..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-10 w-full rounded-[11px] border border-ui-input-border bg-white pl-9 pr-9 font-manrope text-[13px] text-ui-text-main placeholder:text-ui-text-muted focus:outline-none focus:ring-2 focus:ring-brandPrimary-300"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-ui-text-muted transition hover:text-ui-text-main"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+
+          {/* Filtro grupo muscular */}
+          <select
+            value={muscleFilter}
+            onChange={(e) => setMuscleFilter(e.target.value)}
+            className="h-10 rounded-[11px] border border-ui-input-border bg-white px-3 font-manrope text-[13px] text-ui-text-main focus:outline-none focus:ring-2 focus:ring-brandPrimary-300 sm:w-52"
+          >
+            <option value="all">Todos los músculos</option>
+            {MUSCLE_GROUPS.map((mg) => (
+              <option key={mg.value} value={mg.value}>
+                {mg.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Contador de resultados */}
+      {!isLoading && exercises.length > 0 && (
+        <p className="mb-3 font-manrope text-[12px] text-ui-text-muted">
+          {hasActiveFilters
+            ? `${filtered.length} de ${exercises.length} ejercicio${exercises.length !== 1 ? "s" : ""}`
+            : `${exercises.length} ejercicio${exercises.length !== 1 ? "s" : ""}`}
+        </p>
+      )}
+
       <div className="mx-auto w-full max-w-[880px] overflow-hidden rounded-[20px] border border-ui-input-border bg-white">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -147,11 +216,33 @@ export function CatalogExercisesSection() {
               El catálogo está vacío
             </p>
             <p className="font-manrope text-xs text-ui-text-muted">
-              Agregá el primer ejercicio con “Nuevo ejercicio”.
+              Agregá el primer ejercicio con "Nuevo ejercicio".
             </p>
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center px-8 py-16">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-[14px] bg-ui-background-light">
+              <Search size={20} className="text-ui-text-muted" />
+            </div>
+            <p className="mb-1 font-manrope text-sm font-bold text-ui-text-main">
+              Sin resultados
+            </p>
+            <p className="font-manrope text-xs text-ui-text-muted">
+              Probá con otro nombre o grupo muscular.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setMuscleFilter("all");
+              }}
+              className="mt-3 font-manrope text-[12px] font-semibold text-brandPrimary-600 hover:underline"
+            >
+              Limpiar filtros
+            </button>
+          </div>
         ) : (
-          exercises.map((ex, i) => {
+          filtered.map((ex, i) => {
             const thumb = mediaUrl(ex.image_uri);
             return (
               <div
@@ -179,7 +270,7 @@ export function CatalogExercisesSection() {
                       {ex.name}
                     </p>
                     <p className="mt-0.5 font-manrope text-[11px] capitalize text-ui-text-muted">
-                      {ex.category} · {ex.muscle_group}
+                      {ex.category} · {labelOf(MUSCLE_GROUPS, ex.muscle_group)}
                       {ex.is_unilateral ? " · unilateral" : ""}
                     </p>
                   </div>
@@ -230,7 +321,7 @@ export function CatalogExercisesSection() {
       <DeleteConfirmModal
         visible={!!confirmDelete}
         title="Eliminar del catálogo"
-        message={`Vas a quitar “${confirmDelete?.name}” del catálogo. Los gimnasios dejarán de verlo y se borrará el historial de series que los socios hayan registrado con este ejercicio. Los planes custom que lo copiaron quedarán con el ejercicio sin resolver.`}
+        message={`Vas a quitar "${confirmDelete?.name}" del catálogo. Los gimnasios dejarán de verlo y se borrará el historial de series que los socios hayan registrado con este ejercicio. Los planes custom que lo copiaron quedarán con el ejercicio sin resolver.`}
         error={deleteError}
         isPending={deleteExercise.isPending}
         onCancel={() => {
