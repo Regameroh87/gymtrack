@@ -1,6 +1,8 @@
 // Facturación de la plataforma (super_admin): kill switch de registros
 // self-service + estado de la suscripción SaaS de cada gimnasio. Data fetch en
 // el servidor (RLS de super_admin lee todas las suscripciones); gating por rol.
+import Link from "next/link";
+import { Layers, ArrowRight } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { getSessionContext } from "@/lib/auth/session";
@@ -55,23 +57,36 @@ export default async function PlatformBillingPage() {
     <PlatformShell>
       <div className="p-4 pb-10 md:p-9 md:pb-14">
         {/* Header */}
-        <div className="mb-6">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-gray-400">
-              Plataforma
-            </span>
-            <span className="text-[11px] text-gray-400">·</span>
-            <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-brandSecondary-500">
-              Facturación
-            </span>
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-gray-400">
+                Plataforma
+              </span>
+              <span className="text-[11px] text-gray-400">·</span>
+              <span className="font-manrope text-[11px] font-semibold uppercase tracking-[1.4px] text-brandSecondary-500">
+                Facturación
+              </span>
+            </div>
+            <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-gray-900">
+              Facturación y suscripciones
+            </h1>
+            <p className="mt-1 font-manrope text-xs text-gray-400">
+              Estado de la suscripción SaaS de cada gimnasio y control de los
+              registros self-service
+            </p>
           </div>
-          <h1 className="font-jakarta text-[26px] font-bold tracking-tight text-gray-900">
-            Facturación y suscripciones
-          </h1>
-          <p className="mt-1 font-manrope text-xs text-gray-400">
-            Estado de la suscripción SaaS de cada gimnasio y control de los
-            registros self-service
-          </p>
+
+          <Link
+            href="/platform/subscriptions"
+            className="flex items-center gap-2 rounded-xl bg-brandPrimary-700 px-4 py-2.5 shadow-md shadow-brandPrimary-700/20 transition hover:bg-brandPrimary-600"
+          >
+            <Layers size={16} className="text-white" />
+            <span className="font-manrope text-xs font-bold text-white">
+              Gestionar Planes SaaS
+            </span>
+            <ArrowRight size={14} className="text-white/80" />
+          </Link>
         </div>
 
         <SignupToggle

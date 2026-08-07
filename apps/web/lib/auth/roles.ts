@@ -79,6 +79,7 @@ export const PLATFORM_MODULE_ROLES: Record<string, Role[]> = {
   gyms: PLATFORM_ADMIN_ROLES,
   catalog: PLATFORM_STAFF_ROLES,
   billing: [ROLES.SUPER_ADMIN],
+  subscriptions: PLATFORM_ADMIN_ROLES,
   users: PLATFORM_ADMIN_ROLES,
   settings: PLATFORM_ADMIN_ROLES,
 };
