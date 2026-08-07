@@ -5,6 +5,9 @@ import { Pressable, Text, View } from "react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 
+// Constantes
+import { MUSCLE_LABELS } from "../../constants/exerciseOptions";
+
 // Utils
 import { getMediaUrl } from "@gymtrack/core/media";
 
@@ -142,7 +145,8 @@ export default function SessionExerciseRow({
               fontFamily: "Manrope_600SemiBold",
             }}
           >
-            {exercise.exercise_muscle}
+            {MUSCLE_LABELS[exercise.exercise_muscle] ??
+              exercise.exercise_muscle}
           </Text>
         ) : null}
       </View>

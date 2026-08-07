@@ -2032,6 +2032,16 @@ async function cascadeDeleteCustomPlanLocally(planId) {
       .delete(custom_plan_week_days)
       .where(inArray(custom_plan_week_days.week_id, weekIds));
   }
+  // Espejo de cascadeDeletePlanLocally: la asignación se va con el plan y el log
+  // sobrevive con la FK liberada (el historial de entrenamientos no se pierde
+  // porque el usuario haya borrado el plan).
+  await database
+    .delete(plan_assignments)
+    .where(eq(plan_assignments.custom_plan_id, planId));
+  await database
+    .update(session_logs)
+    .set({ custom_plan_id: null })
+    .where(eq(session_logs.custom_plan_id, planId));
   await database
     .delete(custom_plan_weeks)
     .where(eq(custom_plan_weeks.plan_id, planId));
@@ -2405,6 +2415,19 @@ export async function pushCustomPlansChanges() {
 
   for (let row of localChanges) {
     if (row.sync_status === "deleted") {
+      // En Supabase NO hay FK de plan_assignments.custom_plan_id ni de
+      // session_logs.custom_plan_id hacia custom_plans (a diferencia del lado
+      // catálogo, que cascadea solo), así que el borrado del plan dejaría ambas
+      // colgadas. Se limpian a mano y antes del plan, igual que en
+      // pushTrainingPlansChanges.
+      await supabase
+        .from("plan_assignments")
+        .delete()
+        .eq("custom_plan_id", row.id);
+      await supabase
+        .from("session_logs")
+        .update({ custom_plan_id: null })
+        .eq("custom_plan_id", row.id);
       const { error } = await supabase
         .from("custom_plans")
         .delete()

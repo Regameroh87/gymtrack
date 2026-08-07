@@ -10,6 +10,9 @@ import { Image } from "expo-image";
 import { useColorScheme } from "nativewind";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 
+// Constantes
+import { MUSCLE_LABELS } from "../../constants/exerciseOptions";
+
 // Tema y assets
 import { LinearGradient } from "expo-linear-gradient";
 import { ui } from "@gymtrack/core/colors";
@@ -391,7 +394,8 @@ function PlanDayExerciseCard({ exercise, onChange, onDelete, drag, isActive }) {
                 marginTop: 1,
               }}
             >
-              {exercise.exercise_muscle_group}
+              {MUSCLE_LABELS[exercise.exercise_muscle_group] ??
+                exercise.exercise_muscle_group}
             </Text>
           )}
         </View>
