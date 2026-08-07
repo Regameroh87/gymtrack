@@ -37,6 +37,42 @@ proyecto. Ir tachando antes de invitar al primer gimnasio pagando.
       preapprovals `pending` que nadie autorizó (si no, reabrir un `init_point`
       viejo cobra la tarjeta y el webhook descarta el aviso). `eliminar-gym`
       cancela el preapproval antes del borrado en cascada.
+- [x] **Videos en Cloudflare R2** (mudanza completada el 2026-08-06). Los 162
+      videos (2,6 GB) eran el 99% del storage y todo el egress, contra 16 MB de
+      imágenes; en el plan Free de Supabase el tope son 1 GB y estábamos 2,6×
+      por encima. Ahora el bucket `media` de Storage guarda **solo imágenes**
+      (16 MB, el 1,6% de la cuota) y los videos se sirven desde
+      `media.gymtrack.ar`, donde el egress no se cobra ni tiene tope.
+      Migraciones `20260806130000_videos_to_r2.sql` (reescribió `video_uri`) y
+      `20260806180000_media_bucket_solo_imagenes.sql` (cerró el bucket a
+      `images/`, tope de vuelta a 10 MB, mime types de video afuera).
+      **Secrets requeridos** en Edge Functions: `R2_ACCOUNT_ID`,
+      `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`,
+      `R2_PUBLIC_BASE_URL` (sin barra final).
+      **CORS del bucket** (R2 → Settings → CORS Policy) — sin esto las subidas
+      desde el navegador fallan con un `Failed to fetch` a secas, porque el PUT
+      va cross-origin contra el endpoint S3; mobile no lo sufre, así que el
+      síntoma aparece solo en web y solo al subir un video:
+
+      ```json
+      [
+        {
+          "AllowedOrigins": [
+            "https://www.gymtrack.ar",
+            "https://gymtrack.ar",
+            "https://*.vercel.app",
+            "http://localhost:3000"
+          ],
+          "AllowedMethods": ["PUT"],
+          "AllowedHeaders": ["content-type", "cache-control"],
+          "MaxAgeSeconds": 3600
+        }
+      ]
+      ```
+
+      `AllowedHeaders` tiene que seguir exactamente a los headers que firma
+      `presignPut` en `supabase/functions/_shared/r2.ts`: si divergen, el
+      preflight falla y vuelve el mismo error mudo.
 
 ## 🔲 Pendiente — cuentas y configuración (dueño del proyecto)
 
@@ -49,55 +85,6 @@ proyecto. Ir tachando antes de invitar al primer gimnasio pagando.
 - [ ] **Bajar los rate limits de Auth**: Dashboard → Authentication → Rate
       Limits. Sugerido: OTP por hora ≤ 10 por IP (default es generoso). Evita
       spam de emails de login que consume cuota de Resend.
-
-### Cloudflare R2 — mudanza de los videos
-
-Los ~150 videos (2,6 GB) son el 99% del storage y prácticamente todo el egress.
-En el plan Free de Supabase el tope de storage es 1 GB, así que hoy están por
-encima de la cuota; en R2 entran en el free tier (10 GB) y el egress no se
-cobra. Las imágenes (~15 MB) se quedan en Supabase Storage.
-
-- [ ] **Crear el bucket R2** y un token de API con lectura/escritura sobre él.
-- [ ] **Conectarle un dominio propio** (ej. `media.gymtrack.ar`): es el prefijo
-      que queda guardado en las columnas `video_uri`. Con el dominio de
-      desarrollo `r2.dev` alcanza para probar, pero no para producción — está
-      rate-limitado y no es tuyo.
-- [ ] **Cargar los secrets** en las edge functions: `R2_ACCOUNT_ID`,
-      `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`,
-      `R2_PUBLIC_BASE_URL`.
-
-**El dominio público tiene que ser el definitivo antes del paso 3**: el prefijo
-queda escrito en las 151 filas de `video_uri`. Migrar con `r2.dev` y mudarse
-después a un dominio propio obliga a reescribir todo otra vez.
-
-**Los pasos 1 a 3 van en la misma sesión, el mismo día.** Entre la copia y la
-reescritura los objetos de R2 todavía no los referencia ninguna fila, así que
-si pasan más de 24hs quedan a tiro del barrido de huérfanos de `cleanUp-media`
-y se borran solos. No es pérdida de datos — los originales de Storage siguen
-intactos — pero deshace la copia sin avisar. Si se cortó a mitad de camino,
-volvé a correr el script antes de seguir: es idempotente.
-
-**El orden importa y no es negociable** — cada paso depende del anterior:
-
-1. [ ] `node scripts/migrate-videos-to-r2.mjs` (dry-run) y después con
-       `--execute`. Copia y verifica tamaño + MD5 de cada video. **No borra
-       nada**: al terminar los videos están en los dos lados, y esa duplicación
-       es la red de seguridad de toda la mudanza.
-2. [ ] Desplegar las edge functions (`sign-video-upload`, `sync-media-webhook`,
-       `cleanUp-media`), la web y el update de Expo.
-3. [ ] Recién ahí, aplicar la migración SQL que emite el script: reescribe
-       `video_uri` con el trigger `sync-media-assets-exercises` desactivado.
-       Con el trigger activo, el `UPDATE` dispara `sync-media-webhook`, que
-       borra el asset viejo cuando la columna cambia — o sea que borraría los
-       151 originales justo cuando todavía son la única copia verificada.
-4. [ ] **Mucho después**, cuando ya no queden bundles viejos de Expo con las
-       URLs de Storage en su SQLite: borrar los originales del bucket `media`,
-       en su propia tanda. Hasta entonces no los toca nadie — el barrido de
-       huérfanos de `cleanUp-media` ya no mira el prefijo `videos/` de Storage
-       justamente para eso.
-5. [ ] Después del paso 4, restringir la policy de INSERT del bucket `media` a
-       `images/` otra vez (hoy sigue aceptando `videos/` para no romper los
-       bundles viejos que todavía suben ahí).
 
 ### MercadoPago
 Referencia completa de las variables: `apps/web/.env.example`.
