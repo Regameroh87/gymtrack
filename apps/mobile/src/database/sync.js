@@ -1317,17 +1317,33 @@ async function cleanOrphanedPlanChildren() {
     );
   }
 
-  // plan_assignments sin plan padre
+  // plan_assignments sin plan padre. Ojo: una asignación de plan custom lleva
+  // plan_id NULL y su padre vive en custom_plans, así que se valida contra esa
+  // tabla. Chequearlas todas contra training_plans las borraba a todas —incluida
+  // la recién creada, que muere acá antes de llegar al push de más abajo.
   const allPlanIds = new Set(
     (await database.select({ id: training_plans.id }).from(training_plans)).map(
       (r) => r.id
     )
   );
+  const allCustomPlanIds = new Set(
+    (await database.select({ id: custom_plans.id }).from(custom_plans)).map(
+      (r) => r.id
+    )
+  );
   const allAssignments = await database
-    .select({ id: plan_assignments.id, plan_id: plan_assignments.plan_id })
+    .select({
+      id: plan_assignments.id,
+      plan_id: plan_assignments.plan_id,
+      custom_plan_id: plan_assignments.custom_plan_id,
+    })
     .from(plan_assignments);
   const orphanAssignmentIds = allAssignments
-    .filter((a) => !allPlanIds.has(a.plan_id))
+    .filter((a) =>
+      a.custom_plan_id
+        ? !allCustomPlanIds.has(a.custom_plan_id)
+        : !allPlanIds.has(a.plan_id)
+    )
     .map((a) => a.id);
   if (orphanAssignmentIds.length) {
     await database
