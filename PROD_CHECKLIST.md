@@ -160,16 +160,35 @@ un token delegado por gimnasio.
       módulo nativo. Con `expo-updates` solo, la pantalla de pago crashea en los
       clientes viejos.
 - [ ] **Homologación de la app de marketplace**: MP la exige para operar en
-      producción y la mide sobre un pago **real**, no de prueba. La preferencia
-      ya manda todo lo que el quality checklist evalúa y podemos controlar
-      (`items.description`, `category_id`, `payer` con documento / teléfono /
-      dirección cuando el socio los tiene cargados, `external_reference`,
-      `notification_url`, `statement_descriptor`). Quedan dos ítems fuera de
-      alcance a propósito: el **backend SDK** (las edge functions usan `fetch`,
-      igual que el flujo SaaS — no hay SDK oficial para Deno) y los de
-      **Checkout API** (`device_id`, `issuer_id`, `secure_form`), que no aplican
-      porque el socio paga en el checkout hosteado de MP y los datos de la
-      tarjeta nunca tocan nuestros servidores.
+      producción y la mide **sobre un pago de PRUEBA**, hecho con credenciales de
+      prueba dentro de los últimos 7 días — no hace falta cobrarle a un socio de
+      verdad. (Este ítem decía lo contrario hasta el 2026-08-08; verificado
+      contra la doc de MP y contra la herramienta de evaluación, que dice
+      textual "production credentials are NOT required".)
+
+      Se corre desde Tus integraciones → la app → Datos de integración → Probar
+      la integración → Medir la calidad, pegando el id del pago de prueba. Se
+      puede repetir cuantas veces haga falta, corrigiendo entre medio.
+
+      El puntaje mínimo es **73**, pero no alcanza por sí solo: hay campos de
+      evaluación obligatorios que igual hay que cumplir. MP recomienda llegar a
+      100.
+
+      La preferencia ya manda todo lo que el quality checklist evalúa y podemos
+      controlar (`items.description`, `category_id`, `payer` con documento /
+      teléfono / dirección cuando el socio los tiene cargados,
+      `external_reference`, `notification_url`, `statement_descriptor`), y
+      `mp-gym-webhook` hace el `GET /v1/payments/{id}` que pide el ítem "consulta
+      el pago notificado". Quedan dos ítems fuera de alcance a propósito: el
+      **backend SDK** (las edge functions usan `fetch`, igual que el flujo SaaS —
+      no hay SDK oficial para Deno) y los de **Checkout API** (`device_id`,
+      `issuer_id`, `secure_form`), que no aplican porque el socio paga en el
+      checkout hosteado de MP y los datos de la tarjeta nunca tocan nuestros
+      servidores.
+
+      Sin verificar todavía: la preferencia se crea con el token DEL GYM
+      (OAuth), no con el nuestro, así que queda por confirmar que la medición
+      atribuya ese pago a la app de marketplace. Se sabe en el primer intento.
 - [ ] **Probar el pago con un socio de DOS actividades** de precios distintos:
       el desglose tiene que mostrar las dos, el total ser la suma, y al pagar
       tienen que quedar **dos** filas en `subscription_payments` con los dos
