@@ -281,12 +281,14 @@ Deno.serve(async (req) => {
     // 5. Fila de suscripción SaaS (best-effort: no falla la creación del gym).
     // El gym queda en status 'pending' hasta que el owner complete el checkout MP.
     try {
+      // El plan por defecto, no "el activo más viejo": con varios planes, un
+      // ORDER BY dejaría que el orden de inserción decida con cuál arranca el
+      // gym. El owner elige el suyo en el checkout.
       const { data: activePlan } = await supabaseAdmin
         .from('saas_plans')
         .select('id')
+        .eq('is_default', true)
         .eq('is_active', true)
-        .order('created_at')
-        .limit(1)
         .maybeSingle()
 
       if (activePlan) {

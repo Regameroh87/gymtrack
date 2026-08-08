@@ -93,7 +93,7 @@ const STATUS_MAP: Record<string, string> = {
 // distinguir el eco de nuestra propia cancelación de una baja hecha en MP.
 // mp_preapproval_id se lee para descartar avisos de preapprovals superados.
 const GYM_SUB_COLUMNS =
-  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at, mp_preapproval_id, mp_application_id'
+  'id, gym_id, cancel_at_period_end, access_until, current_period_end, trial_ends_at, mp_preapproval_id, mp_application_id, plan_id, pending_plan_id, pending_preapproval_id'
 
 interface GymSubRow {
   id: string
@@ -104,6 +104,9 @@ interface GymSubRow {
   trial_ends_at: string | null
   mp_preapproval_id: string | null
   mp_application_id: string | null
+  plan_id: string | null
+  pending_plan_id: string | null
+  pending_preapproval_id: string | null
 }
 
 // ── Aislamiento del vendedor de prueba ───────────────────────────────────────
@@ -361,8 +364,13 @@ async function handlePreapprovalEvent(
   const mpStatus: string = preapproval.status ?? ''
   const externalRef: string = preapproval.external_reference ?? ''
 
-  // Buscar la suscripción del gym: primero por mp_preapproval_id, luego por external_reference
+  // Buscar la suscripción del gym: primero por mp_preapproval_id, después por
+  // el preapproval de un cambio de plan pendiente, y por último por
+  // external_reference.
   let gymSub: GymSubRow | null = null
+  // Marca que el aviso es del preapproval de un cambio de plan que todavía no se
+  // confirmó. Cambia qué se hace con él: solo el 'authorized' aplica.
+  let esCambioPendiente = false
 
   const { data: byId } = await supabaseAdmin
     .from('gym_saas_subscriptions')
@@ -370,8 +378,24 @@ async function handlePreapprovalEvent(
     .eq('mp_preapproval_id', preapprovalId)
     .maybeSingle()
 
+  // El preapproval de un cambio de plan NO está en mp_preapproval_id (esa
+  // columna sigue apuntando al que cobra hoy, ver el comentario del checkout).
+  // Sin esta búsqueda, su 'authorized' caía en el fallback por
+  // external_reference y lo descartaba la guarda de "no es el vigente": el
+  // cambio de plan no se confirmaba nunca.
+  const { data: byPending } = byId
+    ? { data: null }
+    : await supabaseAdmin
+        .from('gym_saas_subscriptions')
+        .select(GYM_SUB_COLUMNS)
+        .eq('pending_preapproval_id', preapprovalId)
+        .maybeSingle()
+
   if (byId) {
     gymSub = byId
+  } else if (byPending) {
+    gymSub = byPending
+    esCambioPendiente = true
   } else if (externalRef) {
     const { data: byRef } = await supabaseAdmin
       .from('gym_saas_subscriptions')
@@ -421,6 +445,26 @@ async function handlePreapprovalEvent(
     return
   }
 
+  // El preapproval de un cambio de plan solo puede hacer UNA cosa: confirmarse.
+  // Cualquier otro estado (lo canceló el owner desde MP, o lo dio de baja el
+  // reaper por abandono) mata el cambio y no debe tocar nada de la suscripción
+  // vigente: el plan viejo sigue cobrando con normalidad.
+  //
+  // Sin esta guarda, el 'cancelled' de un cambio abandonado entraba por el
+  // camino de siempre y le marcaba al gym una baja programada que nadie pidió.
+  if (esCambioPendiente && newStatus !== 'trialing') {
+    await supabaseAdmin
+      .from('gym_saas_subscriptions')
+      .update({ pending_plan_id: null, pending_preapproval_id: null })
+      .eq('id', gymSub.id)
+
+    console.log(
+      `[mp-webhook] gym ${gymSub.gym_id}: el cambio de plan quedó en '${mpStatus}'; se descarta y sigue el plan vigente`,
+    )
+    await logEvent(gymSub.id, mpEventId, 'subscription_preapproval', rawBody)
+    return
+  }
+
   const updates: Record<string, unknown> = {
     status: newStatus,
     mp_preapproval_id: preapprovalId,
@@ -435,6 +479,26 @@ async function handlePreapprovalEvent(
     // abajo a propósito — la autorización es un hecho aunque el status no se
     // toque por haber período pagado vigente.
     updates.mp_authorized_at = new Date().toISOString()
+
+    // Cambio de plan confirmado. Hasta este aviso el débito real seguía siendo
+    // el del plan viejo, así que el checkout había dejado todo esperando en las
+    // columnas pending_*. MP acaba de autorizar el preapproval nuevo: recién
+    // ahora el cobro es el del plan destino y se promueven las dos.
+    //
+    // mp_preapproval_id ya lo pisa el `updates` de arriba con preapprovalId, que
+    // en esta rama ES el pendiente; lo que falta es el plan y limpiar las marcas.
+    //
+    // Va acá y no en el else de abajo a propósito: la promoción vale aunque el
+    // status no se toque por haber período pagado vigente, que es justamente el
+    // caso típico de un cambio de plan.
+    if (gymSub.pending_plan_id) {
+      updates.plan_id = gymSub.pending_plan_id
+      console.log(
+        `[mp-webhook] gym ${gymSub.gym_id}: cambio de plan confirmado ${gymSub.plan_id} → ${gymSub.pending_plan_id}`,
+      )
+    }
+    updates.pending_plan_id = null
+    updates.pending_preapproval_id = null
 
     // Un 'authorized' no puede degradar una suscripción con período pagado
     // vigente. Si lo hiciera, la fila quedaría en 'trialing' con trial_ends_at =

@@ -164,17 +164,22 @@ Deno.serve(async (req) => {
       .from('self_service_signup_attempts')
       .insert({ ip, user_id: caller.id })
 
-    // Plan activo: obligatorio, la fila SaaS en trialing es la que da acceso.
+    // Plan por defecto: obligatorio, la fila SaaS en trialing es la que da
+    // acceso. El owner elige el plan que quiere en el checkout; acá solo hace
+    // falta uno con el que arrancar el trial.
+    //
+    // Se pide is_default y no "el activo más viejo": desde que hay varios
+    // planes, un ORDER BY convierte el orden de inserción en decisión comercial.
+    // El índice saas_plans_one_default garantiza que haya como mucho uno.
     const { data: activePlan } = await supabaseAdmin
       .from('saas_plans')
       .select('id, trial_days')
+      .eq('is_default', true)
       .eq('is_active', true)
-      .order('created_at')
-      .limit(1)
       .maybeSingle()
 
     if (!activePlan) {
-      console.error('[crear-gym-self-service] No hay saas_plans activo.')
+      console.error('[crear-gym-self-service] No hay un saas_plans marcado is_default.')
       return jsonResponse({ error: 'El registro no está disponible en este momento. Escribinos.' }, 500)
     }
 

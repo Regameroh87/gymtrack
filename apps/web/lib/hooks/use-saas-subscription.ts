@@ -28,12 +28,34 @@ export type GymSaasSubscription = {
   cancel_requested_at: string | null;
   cancel_reason: string | null;
   access_until: string | null;
+  plan_id: string | null;
+  /**
+   * Plan de un cambio pedido y todavía no autorizado en MercadoPago. Mientras
+   * esté seteado, el que se cobra sigue siendo `plan`: la promoción la hace el
+   * webhook con el 'authorized'.
+   */
+  pending_plan_id: string | null;
   plan: {
     name: string;
     trial_days: number;
     price: number | null;
     currency: string;
+    max_members: number | null;
   } | null;
+  pending_plan: { name: string } | null;
+};
+
+export type SaasPlanOption = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  currency: string;
+  trial_days: number;
+  max_members: number | null;
+  is_featured: boolean;
+  badge_text: string | null;
+  features: string[];
 };
 
 export function useGymSaasSubscription(gymId: string | null | undefined) {
@@ -46,12 +68,70 @@ export function useGymSaasSubscription(gymId: string | null | undefined) {
       const { data, error } = await supabase
         .from("gym_saas_subscriptions")
         .select(
-          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, mp_authorized_at, cancel_at_period_end, cancel_requested_at, cancel_reason, access_until, plan:saas_plans(name, trial_days, price, currency)",
+          "id, gym_id, status, trial_ends_at, current_period_end, canceled_at, mp_preapproval_id, mp_authorized_at, cancel_at_period_end, cancel_requested_at, cancel_reason, access_until, plan_id, pending_plan_id, plan:saas_plans!gym_saas_subscriptions_plan_id_fkey(name, trial_days, price, currency, max_members), pending_plan:saas_plans!gym_saas_subscriptions_pending_plan_id_fkey(name)",
         )
         .eq("gym_id", gymId!)
         .maybeSingle();
       if (error) throw error;
-      return data as GymSaasSubscription | null;
+      return data as unknown as GymSaasSubscription | null;
+    },
+  });
+}
+
+/**
+ * Los planes que el owner puede contratar. RLS deja leer los is_active a
+ * cualquiera, así que no hace falta nada especial.
+ */
+export function useSaasPlans() {
+  return useQuery({
+    queryKey: ["saas_plans_activos"],
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<SaasPlanOption[]> => {
+      const supabase = getBrowserSupabase();
+      const { data, error } = await supabase
+        .from("saas_plans")
+        .select(
+          "id, name, description, price, currency, trial_days, max_members, is_featured, badge_text, features",
+        )
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("created_at");
+      if (error) throw error;
+      return (data ?? []).map((p) => ({
+        ...p,
+        price: p.price != null ? Number(p.price) : null,
+        features: p.features ?? [],
+      })) as SaasPlanOption[];
+    },
+  });
+}
+
+/**
+ * Socios activos del gym contra el tope de su plan. `maxAllowed` en null =
+ * ilimitado (plan sin tope, o gym sin fila de suscripción).
+ *
+ * Sale de la RPC gym_member_usage y no de contar en el cliente: la lista de
+ * usuarios está paginada y filtrada, así que contarla ahí daría un número que
+ * no es el que mira el trigger.
+ */
+export function useGymMemberUsage(gymId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["gym_member_usage", gymId],
+    enabled: !!gymId,
+    staleTime: 30_000,
+    queryFn: async (): Promise<{ used: number; maxAllowed: number | null }> => {
+      const supabase = getBrowserSupabase();
+      const { data, error } = await supabase.rpc("gym_member_usage", {
+        p_gym_id: gymId!,
+      });
+      if (error) throw error;
+      const row = (Array.isArray(data) ? data[0] : data) as
+        | { used: number; max_allowed: number | null }
+        | undefined;
+      return {
+        used: row?.used ?? 0,
+        maxAllowed: row?.max_allowed ?? null,
+      };
     },
   });
 }

@@ -1,6 +1,23 @@
 "use client";
 
-import { useState, useMemo } from "react";
+// ABM de los planes SaaS que la plataforma le cobra a cada gimnasio.
+//
+// Escribe saas_plans directo por RLS (is_super_admin() tiene ALL), igual que el
+// resto del panel de plataforma. Dos operaciones van por RPC porque no se pueden
+// hacer con un UPDATE suelto desde el browser:
+//   · set_default_saas_plan – son dos escrituras y el índice único no tolera el
+//     estado intermedio; a mitad de camino quedaría el sistema SIN default.
+//   · delete_saas_plan      – valida que no sea el default ni tenga gyms
+//     enganchados, y devuelve un mensaje mostrable en vez de un 23503 crudo.
+//
+// Los cambios aplican a NUEVAS suscripciones: los trials en curso conservan su
+// trial_ends_at y los preapprovals ya autorizados en MP siguen con su precio.
+
+// React
+import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+
+// Iconos
 import {
   Layers,
   Plus,
@@ -19,99 +36,53 @@ import {
   TrendingUp,
   Eye,
   CheckCircle2,
+  Star,
 } from "lucide-react";
+
+// Base de datos
+import { getBrowserSupabase } from "@/lib/supabase-browser";
+
+// Acciones de servidor
+import { revalidateLanding } from "@/lib/platform-actions";
 
 export type SaasSubscriptionPlan = {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price: number | null;
   currency: string;
-  billing_period: "monthly" | "annual";
   max_members: number | null; // null = ilimitado
   trial_days: number;
   is_active: boolean;
   is_featured: boolean;
-  badge_text?: string;
+  is_default: boolean;
+  badge_text?: string | null;
   features: string[];
+  sort_order: number;
   created_at: string;
 };
 
-// Datos iniciales de demostración para el panel de plataforma
-const INITIAL_PLANS: SaasSubscriptionPlan[] = [
-  {
-    id: "plan-starter-01",
-    name: "Básico / Starter",
-    description: "Ideal para gimnasios independientes o boutiques que recién comienzan.",
-    price: 18500,
-    currency: "ARS",
-    billing_period: "monthly",
-    max_members: 60,
-    trial_days: 14,
-    is_active: true,
-    is_featured: false,
-    badge_text: "Inicial",
-    features: [
-      "Hasta 60 socios activos por gimnasio",
-      "Gestión de rutinas y ejercicios",
-      "Control de asistencias básico",
-      "Soporte por email",
-    ],
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-  },
-  {
-    id: "plan-pro-02",
-    name: "Pro Performance",
-    description: "Para gimnasios consolidados que buscan automatizar la cobranza y app para socios.",
-    price: 34900,
-    currency: "ARS",
-    billing_period: "monthly",
-    max_members: 250,
-    trial_days: 14,
-    is_active: true,
-    is_featured: true,
-    badge_text: "Más Popular",
-    features: [
-      "Hasta 250 socios activos por gimnasio",
-      "Integración automática con MercadoPago",
-      "App móvil personalizada para alumnos",
-      "Métricas y reportes de facturación",
-      "Soporte prioritario por WhatsApp",
-    ],
-    created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
-  },
-  {
-    id: "plan-enterprise-03",
-    name: "Enterprise / Multi-Sede",
-    description: "Capacidad ilimitada y herramientas avanzadas para cadenas de gimnasios.",
-    price: 69000,
-    currency: "ARS",
-    billing_period: "monthly",
-    max_members: null, // Ilimitado
-    trial_days: 30,
-    is_active: true,
-    is_featured: false,
-    badge_text: "Ilimitado",
-    features: [
-      "Socios ilimitados por gimnasio",
-      "Gestión multi-sede unificada",
-      "API pública y webhooks integrados",
-      "Onboarding dedicado y migración gratuita",
-      "Soporte 24/7 con ejecutivo asignado",
-    ],
-    created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
-  },
-];
+// Columnas que lee el reload. Mismo listado que el server component de
+// /platform/subscriptions: si se agrega una, va en los dos lados.
+const PLAN_COLUMNS =
+  "id, name, description, price, currency, trial_days, max_members, is_active, is_featured, is_default, badge_text, features, sort_order, created_at";
 
+// El cobro sale por MercadoPago, que liquida en la moneda de la cuenta. ARS y
+// USD son las dos que la cuenta MP de la plataforma puede sostener hoy; sumar
+// otras acá sería ofrecer un precio que después no se puede cobrar.
 const CURRENCIES = [
   { value: "ARS", label: "Pesos Argentinos (ARS)", symbol: "$" },
   { value: "USD", label: "Dólares Estadounidenses (USD)", symbol: "US$" },
-  { value: "BRL", label: "Reales Brasileños (BRL)", symbol: "R$" },
-  { value: "EUR", label: "Euros (EUR)", symbol: "€" },
 ];
 
-export function SaasSubscriptionsConfig() {
-  const [plans, setPlans] = useState<SaasSubscriptionPlan[]>(INITIAL_PLANS);
+export function SaasSubscriptionsConfig({
+  initialPlans,
+}: {
+  initialPlans: SaasSubscriptionPlan[];
+}) {
+  const router = useRouter();
+  const [plans, setPlans] = useState<SaasSubscriptionPlan[]>(initialPlans);
+  const [pending, setPending] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -126,7 +97,6 @@ export function SaasSubscriptionsConfig() {
     description: string;
     price: string;
     currency: string;
-    billing_period: "monthly" | "annual";
     isUnlimitedMembers: boolean;
     max_members: string;
     trial_days: string;
@@ -140,7 +110,6 @@ export function SaasSubscriptionsConfig() {
     description: "",
     price: "25000",
     currency: "ARS",
-    billing_period: "monthly",
     isUnlimitedMembers: false,
     max_members: "150",
     trial_days: "14",
@@ -163,6 +132,64 @@ export function SaasSubscriptionsConfig() {
     }, 4000);
   };
 
+  // Tras cada escritura se relee la tabla entera en vez de parchear el estado a
+  // mano. Es una request más, pero deja una sola fuente de verdad: los efectos
+  // laterales que dispara la base (el default anterior que se desmarca, el
+  // updated_at) aparecen solos y no hay forma de que la UI quede describiendo un
+  // estado que la base no tiene.
+  const reload = useCallback(async () => {
+    const supabase = getBrowserSupabase();
+    const { data, error } = await supabase
+      .from("saas_plans")
+      .select(PLAN_COLUMNS)
+      .order("sort_order")
+      .order("created_at");
+
+    if (error) return false;
+
+    setPlans(
+      (data ?? []).map((p) => ({
+        ...p,
+        price: p.price != null ? Number(p.price) : null,
+        description: p.description ?? "",
+        features: p.features ?? [],
+      })) as SaasSubscriptionPlan[]
+    );
+    return true;
+  }, []);
+
+  // Envoltorio común de toda escritura: corta la reentrada, relee, avisa y
+  // revalida la landing (es ISR y publica los días de prueba del plan default).
+  //
+  // Devuelve si salió bien para que el caller decida qué hacer con la UI: el
+  // modal solo se cierra con el guardado confirmado, porque cerrarlo ante un
+  // error le borra al super_admin todo lo que acababa de cargar.
+  const runMutation = useCallback(
+    async (
+      fn: () => Promise<{ error: { message: string } | null }>,
+      okMessage: string,
+      okType: "success" | "info" = "success"
+    ): Promise<boolean> => {
+      if (pending) return false;
+      setPending(true);
+      try {
+        const { error } = await fn();
+        if (error) {
+          showNotification(error.message, "danger");
+          return false;
+        }
+        await reload();
+        router.refresh();
+        await revalidateLanding();
+        showNotification(okMessage, okType);
+        return true;
+      } finally {
+        setPending(false);
+      }
+    },
+    [pending, reload, router]
+  );
+
   // Filtrado de planes
   const filteredPlans = useMemo(() => {
     return plans.filter((plan) => {
@@ -179,12 +206,16 @@ export function SaasSubscriptionsConfig() {
     });
   }, [plans, search, filterStatus]);
 
-  // Métricas rápidas
+  // Métricas rápidas. El promedio ignora los planes sin precio cargado: contarlos
+  // como 0 haría bajar el número por un dato que falta, no por un plan barato.
   const stats = useMemo(() => {
     const activeCount = plans.filter((p) => p.is_active).length;
+    const withPrice = plans.filter((p) => p.price != null);
     const avgPrice =
-      plans.length > 0
-        ? Math.round(plans.reduce((acc, p) => acc + p.price, 0) / plans.length)
+      withPrice.length > 0
+        ? Math.round(
+            withPrice.reduce((acc, p) => acc + (p.price ?? 0), 0) / withPrice.length
+          )
         : 0;
     const unlimitedCount = plans.filter((p) => p.max_members === null).length;
     return {
@@ -203,7 +234,6 @@ export function SaasSubscriptionsConfig() {
       description: "",
       price: "25000",
       currency: "ARS",
-      billing_period: "monthly",
       isUnlimitedMembers: false,
       max_members: "100",
       trial_days: "14",
@@ -226,9 +256,8 @@ export function SaasSubscriptionsConfig() {
     setFormData({
       name: plan.name,
       description: plan.description,
-      price: String(plan.price),
+      price: plan.price != null ? String(plan.price) : "",
       currency: plan.currency,
-      billing_period: plan.billing_period,
       isUnlimitedMembers: plan.max_members === null,
       max_members: plan.max_members !== null ? String(plan.max_members) : "100",
       trial_days: String(plan.trial_days),
@@ -241,42 +270,86 @@ export function SaasSubscriptionsConfig() {
     setModalOpen(true);
   };
 
-  // Handler para duplicar un plan
-  const handleDuplicatePlan = (plan: SaasSubscriptionPlan) => {
-    const newPlan: SaasSubscriptionPlan = {
-      ...plan,
-      id: `plan-${Date.now()}`,
-      name: `${plan.name} (Copia)`,
-      is_featured: false,
-      created_at: new Date().toISOString(),
-    };
-    setPlans((prev) => [newPlan, ...prev]);
-    showNotification(`Plan "${newPlan.name}" duplicado correctamente.`);
-  };
+  // Duplicar: copia todo menos las marcas que son únicas o de posicionamiento.
+  // is_default queda afuera por el índice único, e is_featured porque dos planes
+  // "recomendados" no recomiendan nada.
+  const handleDuplicatePlan = (plan: SaasSubscriptionPlan) =>
+    runMutation(
+      async () =>
+        getBrowserSupabase()
+          .from("saas_plans")
+          .insert({
+            name: `${plan.name} (Copia)`,
+            description: plan.description,
+            price: plan.price,
+            currency: plan.currency,
+            trial_days: plan.trial_days,
+            max_members: plan.max_members,
+            badge_text: plan.badge_text,
+            features: plan.features,
+            sort_order: plan.sort_order,
+            is_active: false,
+            is_featured: false,
+            is_default: false,
+          }),
+      `Plan "${plan.name}" duplicado. La copia queda inactiva hasta que la revises.`
+    );
 
-  // Handler para alternar estado activo/inactivo
   const handleToggleStatus = (id: string) => {
-    setPlans((prev) =>
-      prev.map((p) => {
-        if (p.id === id) {
-          const nextActive = !p.is_active;
-          showNotification(
-            `El plan "${p.name}" ahora está ${nextActive ? "activo" : "inactivo"}.`,
-            nextActive ? "success" : "info"
-          );
-          return { ...p, is_active: nextActive };
-        }
-        return p;
-      })
+    const plan = plans.find((p) => p.id === id);
+    if (!plan) return;
+    const nextActive = !plan.is_active;
+
+    // El default es el plan que se le asigna a un gym recién creado. Sin él,
+    // crear-gym-self-service falla con 500 y el signup queda roto. La base lo
+    // rechaza igual (CHECK saas_plans_default_is_active), pero el error de
+    // Postgres no le explica al super_admin qué hacer.
+    if (!nextActive && plan.is_default) {
+      showNotification(
+        "Es el plan por defecto: marcá otro como default antes de desactivarlo.",
+        "danger"
+      );
+      return;
+    }
+
+    // Quedarse sin ningún plan activo deja al owner sin nada que comprar.
+    if (!nextActive && stats.active === 1) {
+      showNotification("Tiene que quedar al menos un plan activo.", "danger");
+      return;
+    }
+
+    return runMutation(
+      async () =>
+        getBrowserSupabase()
+          .from("saas_plans")
+          .update({ is_active: nextActive, updated_at: new Date().toISOString() })
+          .eq("id", id),
+      `El plan "${plan.name}" ahora está ${nextActive ? "activo" : "inactivo"}.`,
+      nextActive ? "success" : "info"
     );
   };
 
-  // Handler para eliminar un plan
+  // Marcar el plan que se le asigna a los gyms nuevos. Por RPC: son dos
+  // escrituras y el índice único no tolera el estado intermedio.
+  const handleSetDefault = (plan: SaasSubscriptionPlan) => {
+    if (plan.is_default) return;
+    return runMutation(
+      async () =>
+        getBrowserSupabase().rpc("set_default_saas_plan", { p_plan_id: plan.id }),
+      `"${plan.name}" es el plan por defecto de los gimnasios nuevos.`
+    );
+  };
+
+  // Borrar va por RPC: valida que no sea el default ni tenga gyms suscriptos y
+  // devuelve un mensaje mostrable. Un DELETE directo sobre un plan referenciado
+  // explota con un 23503 que no le dice nada a nadie.
   const handleDeletePlan = (id: string, name: string) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar el plan "${name}"?`)) {
-      setPlans((prev) => prev.filter((p) => p.id !== id));
-      showNotification(`El plan "${name}" fue eliminado.`, "danger");
-    }
+    if (!confirm(`¿Borrar el plan "${name}"? No se puede deshacer.`)) return;
+    return runMutation(
+      async () => getBrowserSupabase().rpc("delete_saas_plan", { p_plan_id: id }),
+      `El plan "${name}" fue eliminado.`,
+      "info"
+    );
   };
 
   // Agregar feature al formulario
@@ -298,61 +371,95 @@ export function SaasSubscriptionsConfig() {
   };
 
   // Guardar datos del formulario
-  const handleSaveForm = (e: React.FormEvent) => {
+  const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    if (pending) return;
 
-    const priceNum = parseFloat(formData.price) || 0;
-    const trialNum = parseInt(formData.trial_days, 10) || 0;
+    const name = formData.name.trim();
+    const priceNum = Number(formData.price);
+    const trialNum = Number(formData.trial_days);
     const maxMembersNum = formData.isUnlimitedMembers
       ? null
-      : parseInt(formData.max_members, 10) || 0;
+      : Number(formData.max_members);
 
-    if (editingPlanId) {
-      // Editar plan existente
-      setPlans((prev) =>
-        prev.map((p) =>
-          p.id === editingPlanId
-            ? {
-                ...p,
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                price: priceNum,
-                currency: formData.currency,
-                billing_period: formData.billing_period,
-                max_members: maxMembersNum,
-                trial_days: trialNum,
-                is_active: formData.is_active,
-                is_featured: formData.is_featured,
-                badge_text: formData.badge_text.trim() || undefined,
-                features: formData.features,
-              }
-            : p
-        )
+    // Validación explícita: antes el form hacía `if (!name) return;` y se cerraba
+    // en silencio, así que un campo mal cargado parecía un click que no anduvo.
+    if (!name) {
+      showNotification("El plan necesita un nombre.", "danger");
+      return;
+    }
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      showNotification("El precio tiene que ser mayor a 0.", "danger");
+      return;
+    }
+    if (!Number.isInteger(trialNum) || trialNum < 0 || trialNum > 365) {
+      showNotification("Los días de prueba van de 0 a 365.", "danger");
+      return;
+    }
+    if (
+      maxMembersNum !== null &&
+      (!Number.isInteger(maxMembersNum) || maxMembersNum < 1)
+    ) {
+      showNotification(
+        "El tope de socios tiene que ser un número mayor a 0, o marcá ilimitado.",
+        "danger"
       );
-      showNotification(`Plan "${formData.name}" actualizado con éxito.`);
-    } else {
-      // Crear nuevo plan
-      const newPlan: SaasSubscriptionPlan = {
-        id: `plan-${Date.now()}`,
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        price: priceNum,
-        currency: formData.currency,
-        billing_period: formData.billing_period,
-        max_members: maxMembersNum,
-        trial_days: trialNum,
-        is_active: formData.is_active,
-        is_featured: formData.is_featured,
-        badge_text: formData.badge_text.trim() || undefined,
-        features: formData.features,
-        created_at: new Date().toISOString(),
-      };
-      setPlans((prev) => [newPlan, ...prev]);
-      showNotification(`Nuevo plan "${newPlan.name}" creado con éxito.`);
+      return;
     }
 
-    setModalOpen(false);
+    const editing = editingPlanId
+      ? plans.find((p) => p.id === editingPlanId)
+      : null;
+
+    // Mismo motivo que en handleToggleStatus: desactivar el default rompe el
+    // alta de gyms. Acá se atrapa antes de mandar el UPDATE.
+    if (editing?.is_default && !formData.is_active) {
+      showNotification(
+        "Es el plan por defecto: marcá otro como default antes de desactivarlo.",
+        "danger"
+      );
+      return;
+    }
+
+    const payload = {
+      name,
+      description: formData.description.trim() || null,
+      price: priceNum,
+      currency: formData.currency,
+      max_members: maxMembersNum,
+      trial_days: trialNum,
+      is_active: formData.is_active,
+      is_featured: formData.is_featured,
+      badge_text: formData.badge_text.trim() || null,
+      features: formData.features,
+    };
+
+    const ok = await runMutation(
+      async () => {
+        const supabase = getBrowserSupabase();
+        if (editingPlanId) {
+          return supabase
+            .from("saas_plans")
+            .update({ ...payload, updated_at: new Date().toISOString() })
+            .eq("id", editingPlanId);
+        }
+        // El primer plan del sistema se marca default solo: si no, queda un
+        // catálogo entero sin default y el alta de gyms sigue rota sin que nada
+        // lo diga. Solo aplica cuando no hay ninguno, así que nunca le roba la
+        // marca a un plan existente.
+        const esElPrimero = plans.length === 0;
+        return supabase.from("saas_plans").insert({
+          ...payload,
+          is_default: esElPrimero && formData.is_active,
+          sort_order: plans.length,
+        });
+      },
+      editingPlanId
+        ? `Plan "${name}" actualizado.`
+        : `Nuevo plan "${name}" creado.`
+    );
+
+    if (ok) setModalOpen(false);
   };
 
   const getCurrencySymbol = (code: string) => {
@@ -567,10 +674,14 @@ export function SaasSubscriptionsConfig() {
             <Layers size={22} />
           </div>
           <p className="font-jakarta text-base font-bold text-gray-900">
-            No se encontraron planes
+            {plans.length === 0
+              ? "Todavía no hay ningún plan"
+              : "No se encontraron planes"}
           </p>
           <p className="mt-1 max-w-sm font-manrope text-xs text-gray-400">
-            No hay ningún plan que coincida con los filtros o término de búsqueda ingresado.
+            {plans.length === 0
+              ? "Sin al menos un plan activo, los gimnasios nuevos no se pueden dar de alta y ningún owner puede suscribirse."
+              : "No hay ningún plan que coincida con los filtros o término de búsqueda ingresado."}
           </p>
           <button
             type="button"
@@ -578,7 +689,7 @@ export function SaasSubscriptionsConfig() {
             className="mt-4 flex items-center gap-1.5 rounded-lg bg-brandPrimary-700 px-3.5 py-2 font-manrope text-xs font-bold text-white shadow-sm hover:bg-brandPrimary-600"
           >
             <Plus size={14} />
-            <span>Crear primer plan</span>
+            <span>{plans.length === 0 ? "Crear primer plan" : "Crear plan"}</span>
           </button>
         </div>
       ) : viewMode === "grid" ? (
@@ -601,6 +712,15 @@ export function SaasSubscriptionsConfig() {
                     <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-brandSecondary-500 to-amber-500 px-3 py-0.5 font-manrope text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
                       <Sparkles size={11} />
                       {plan.badge_text || "Recomendado"}
+                    </span>
+                  )}
+                  {plan.is_default && (
+                    <span
+                      className="flex items-center gap-1 rounded-full border border-brandPrimary-700/30 bg-brandPrimary-700 px-2.5 py-0.5 font-manrope text-[10px] font-bold uppercase tracking-wider text-white shadow-sm"
+                      title="Es el plan que se le asigna a un gimnasio recién creado"
+                    >
+                      <Star size={10} />
+                      Por defecto
                     </span>
                   )}
                   {!plan.is_active && (
@@ -632,11 +752,12 @@ export function SaasSubscriptionsConfig() {
                   <div className="mb-5 rounded-2xl bg-gray-50 p-4 border border-gray-100">
                     <div className="flex items-baseline gap-1">
                       <span className="font-jakarta text-3xl font-extrabold tracking-tight text-gray-900">
-                        {symbol}
-                        {plan.price.toLocaleString("es-AR")}
+                        {plan.price != null
+                          ? `${symbol}${plan.price.toLocaleString("es-AR")}`
+                          : "Sin precio"}
                       </span>
                       <span className="font-manrope text-xs font-semibold text-gray-400">
-                        /{plan.billing_period === "monthly" ? "mes" : "año"}
+                        /mes
                       </span>
                     </div>
 
@@ -686,11 +807,12 @@ export function SaasSubscriptionsConfig() {
 
                 {/* Actions Footer */}
                 <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-6 py-3.5 rounded-b-[22px]">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2.5">
                     <button
                       type="button"
+                      disabled={pending}
                       onClick={() => handleToggleStatus(plan.id)}
-                      className={`font-manrope text-xs font-semibold transition ${
+                      className={`font-manrope text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
                         plan.is_active
                           ? "text-amber-600 hover:text-amber-700"
                           : "text-emerald-600 hover:text-emerald-700"
@@ -698,13 +820,25 @@ export function SaasSubscriptionsConfig() {
                     >
                       {plan.is_active ? "Desactivar" : "Activar"}
                     </button>
+                    {!plan.is_default && plan.is_active && (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => handleSetDefault(plan)}
+                        className="font-manrope text-xs font-semibold text-gray-500 transition hover:text-brandPrimary-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        title="Asignárselo a los gimnasios nuevos"
+                      >
+                        Hacer default
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
+                      disabled={pending}
                       onClick={() => handleDuplicatePlan(plan)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-200/60 hover:text-gray-800"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-200/60 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
                       title="Duplicar plan"
                     >
                       <Copy size={14} />
@@ -719,9 +853,14 @@ export function SaasSubscriptionsConfig() {
                     </button>
                     <button
                       type="button"
+                      disabled={pending || plan.is_default}
                       onClick={() => handleDeletePlan(plan.id, plan.name)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 hover:bg-red-50"
-                      title="Eliminar plan"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
+                      title={
+                        plan.is_default
+                          ? "No se puede borrar el plan por defecto"
+                          : "Eliminar plan"
+                      }
                     >
                       <Trash2 size={14} />
                     </button>
@@ -760,6 +899,15 @@ export function SaasSubscriptionsConfig() {
                             Destacado
                           </span>
                         )}
+                        {plan.is_default && (
+                          <span
+                            className="flex items-center gap-0.5 rounded bg-brandPrimary-700 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white"
+                            title="Se le asigna a los gimnasios recién creados"
+                          >
+                            <Star size={9} />
+                            Default
+                          </span>
+                        )}
                       </div>
                       <p className="mt-0.5 line-clamp-1 text-gray-400 max-w-xs">
                         {plan.description}
@@ -768,13 +916,11 @@ export function SaasSubscriptionsConfig() {
 
                     <td className="px-5 py-4 whitespace-nowrap">
                       <span className="font-jakarta font-bold text-gray-900">
-                        {symbol}
-                        {plan.price.toLocaleString("es-AR")}
+                        {plan.price != null
+                          ? `${symbol}${plan.price.toLocaleString("es-AR")}`
+                          : "Sin precio"}
                       </span>
-                      <span className="text-gray-400 text-[11px]">
-                        {" "}
-                        / {plan.billing_period === "monthly" ? "mes" : "año"}
-                      </span>
+                      <span className="text-gray-400 text-[11px]"> / mes</span>
                     </td>
 
                     <td className="px-5 py-4 whitespace-nowrap">
@@ -811,10 +957,22 @@ export function SaasSubscriptionsConfig() {
 
                     <td className="px-5 py-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
+                        {!plan.is_default && plan.is_active && (
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => handleSetDefault(plan)}
+                            className="rounded px-2 py-1 font-manrope text-[11px] font-semibold text-gray-600 hover:bg-gray-200/50 disabled:cursor-not-allowed disabled:opacity-40"
+                            title="Asignárselo a los gimnasios nuevos"
+                          >
+                            Hacer default
+                          </button>
+                        )}
                         <button
                           type="button"
+                          disabled={pending}
                           onClick={() => handleToggleStatus(plan.id)}
-                          className="rounded px-2 py-1 font-manrope text-[11px] font-semibold text-gray-600 hover:bg-gray-200/50"
+                          className="rounded px-2 py-1 font-manrope text-[11px] font-semibold text-gray-600 hover:bg-gray-200/50 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           {plan.is_active ? "Desactivar" : "Activar"}
                         </button>
@@ -827,9 +985,14 @@ export function SaasSubscriptionsConfig() {
                         </button>
                         <button
                           type="button"
+                          disabled={pending || plan.is_default}
                           onClick={() => handleDeletePlan(plan.id, plan.name)}
-                          className="rounded p-1 text-red-500 hover:bg-red-50"
-                          title="Eliminar"
+                          className="rounded p-1 text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30"
+                          title={
+                            plan.is_default
+                              ? "No se puede borrar el plan por defecto"
+                              : "Eliminar"
+                          }
                         >
                           <Trash2 size={13} />
                         </button>
@@ -1199,10 +1362,17 @@ export function SaasSubscriptionsConfig() {
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 rounded-xl bg-brandPrimary-700 px-5 py-2.5 font-manrope text-xs font-bold text-white shadow-md shadow-brandPrimary-700/20 transition hover:bg-brandPrimary-600"
+                  disabled={pending}
+                  className="flex items-center gap-2 rounded-xl bg-brandPrimary-700 px-5 py-2.5 font-manrope text-xs font-bold text-white shadow-md shadow-brandPrimary-700/20 transition hover:bg-brandPrimary-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Check size={15} />
-                  <span>{editingPlanId ? "Guardar Cambios" : "Crear Plan"}</span>
+                  <span>
+                    {pending
+                      ? "Guardando…"
+                      : editingPlanId
+                        ? "Guardar Cambios"
+                        : "Crear Plan"}
+                  </span>
                 </button>
               </div>
             </form>

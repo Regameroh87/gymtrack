@@ -49,6 +49,57 @@ function jsonResponse(body: Record<string, unknown>, status: number) {
   })
 }
 
+// ── Tope de socios del plan SaaS ─────────────────────────────────────────────
+// El enforcement de verdad es el trigger memberships_member_limit, que corre
+// aunque esta función use service role (por eso es un trigger y no una policy:
+// el service role BYPASEA RLS). Este chequeo va antes solo para dar un error que
+// se pueda mostrar y para no crear un usuario de Auth que después haya que
+// revertir — el trigger, al saltar en el insert de memberships, dejaría el
+// rollback a cargo del catch.
+//
+// Devuelve el mensaje de error, o null si hay lugar.
+async function motivoTopeDeSocios(
+  gymId: string,
+  newRole: string,
+): Promise<string | null> {
+  // El tope es de socios: staff (owner/admin/coach) no cuenta ni se frena.
+  if (newRole !== 'member') return null
+
+  const { data: sub } = await supabaseAdmin
+    .from('gym_saas_subscriptions')
+    .select('saas_plans!gym_saas_subscriptions_plan_id_fkey(name, max_members)')
+    .eq('gym_id', gymId)
+    .maybeSingle()
+
+  // El embed viene como objeto o como array de uno según la versión de
+  // PostgREST; se normaliza para no depender de eso.
+  const planRaw = (sub as { saas_plans?: unknown } | null)?.saas_plans
+  const plan = (Array.isArray(planRaw) ? planRaw[0] : planRaw) as
+    | { name: string; max_members: number | null }
+    | undefined
+
+  // Sin fila de suscripción (gym legacy) o plan sin tope: no hay límite. Mismo
+  // criterio que gym_member_limit e is_saas_subscription_active.
+  const tope = plan?.max_members
+  if (tope == null) return null
+
+  const { count, error } = await supabaseAdmin
+    .from('memberships')
+    .select('id', { count: 'exact', head: true })
+    .eq('gym_id', gymId)
+    .eq('role', 'member')
+    .eq('status', 'active')
+
+  // Ante un error de conteo se deja pasar: el trigger sigue estando y es el que
+  // no se puede saltear. Frenar acá por una consulta fallida sería cortarle el
+  // alta a un gym que quizás tiene lugar de sobra.
+  if (error || count == null) return null
+
+  if (count < tope) return null
+
+  return `Tu plan ${plan!.name} permite hasta ${tope} socios activos y ya tenés ${count}. Para sumar más, cambiá de plan desde Suscripción.`
+}
+
 // Best-effort: deja una fila 'failed' en email_log cuando el envío ni siquiera
 // llega a send-email (config faltante o error de red). Los fallos que ocurren
 // dentro de send-email (Resend, RESEND_API_KEY, etc.) los loguea send-email.
@@ -226,6 +277,11 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: 'Esta persona ya es socio de este gimnasio.' }, 400)
       }
 
+      // Va DESPUÉS del "ya es socio": reactivar o vincular suma un socio activo,
+      // pero avisar del tope a quien ya está adentro sería un error inventado.
+      const tope = await motivoTopeDeSocios(targetGymId, newRole)
+      if (tope) return jsonResponse({ error: tope }, 409)
+
       if (existingMembership) {
         // Membresía inactiva: se reactiva con el rol nuevo.
         const { error: reactivateError } = await supabaseAdmin
@@ -248,6 +304,11 @@ Deno.serve(async (req) => {
       // No se pisan los datos personales de la cuenta existente.
       return jsonResponse({ done: true, linked_existing: true }, 200)
     }
+
+    // Antes de crear nada en Auth: si el gym llegó al tope, crear el usuario
+    // para después revertirlo es trabajo y riesgo al pedo.
+    const topeAlcanzado = await motivoTopeDeSocios(targetGymId, newRole)
+    if (topeAlcanzado) return jsonResponse({ error: topeAlcanzado }, 409)
 
     // 1. Crear user en Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -303,6 +364,22 @@ Deno.serve(async (req) => {
 
   } catch (error: any) {
     const message = error?.message || error?.msg || "Error interno del servidor"
+
+    // El trigger memberships_member_limit es la red de seguridad del tope: salta
+    // si el chequeo de arriba no llegó a correr o si dos altas simultáneas
+    // pasaron juntas por el hueco entre el conteo y el insert. Su mensaje de
+    // Postgres no le sirve a nadie, así que se traduce.
+    if (error?.hint === 'gym_member_limit_reached' || message.includes('límite de socios activos')) {
+      console.warn('[crear-socio] alta frenada por el tope del plan')
+      return jsonResponse(
+        {
+          error:
+            'Tu plan llegó al límite de socios activos. Para sumar más, cambiá de plan desde Suscripción.',
+        },
+        409,
+      )
+    }
+
     console.error("Error crítico al crear socio:", message)
     return jsonResponse({ error: message }, 400)
   }

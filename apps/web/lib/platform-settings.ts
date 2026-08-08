@@ -18,15 +18,19 @@ export async function getSelfServiceSignupEnabled(): Promise<boolean> {
   return data?.self_service_signup_enabled === true;
 }
 
-// Días de prueba del plan activo, para textos públicos (landing). Anon puede
-// leer saas_plans is_active=true por RLS. Ante error, cae al default histórico.
+// Días de prueba del plan por defecto, para textos públicos (landing). Anon
+// puede leer saas_plans is_active=true por RLS. Ante error, cae al default
+// histórico.
+//
+// Es el plan default y no "el activo más viejo": es el que efectivamente se le
+// asigna al gym que se registra desde la landing, así que es el único trial que
+// la landing puede prometer sin mentir.
 export async function getPublicTrialDays(): Promise<number> {
   const { data, error } = await supabase
     .from("saas_plans")
     .select("trial_days")
+    .eq("is_default", true)
     .eq("is_active", true)
-    .order("created_at")
-    .limit(1)
     .maybeSingle();
 
   if (error || data?.trial_days == null) return 14;

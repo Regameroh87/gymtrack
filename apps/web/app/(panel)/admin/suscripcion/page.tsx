@@ -18,6 +18,8 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import {
   useGymSaasSubscription,
   useCancelSaasSubscription,
+  useSaasPlans,
+  useGymMemberUsage,
   hasPendingCancellation,
   canCancelSubscription,
   type GymSaasSubscription,
@@ -27,6 +29,7 @@ import { paidAccessUntil } from "@/lib/saas/access-period";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { CancelSubscriptionDialog } from "@/components/admin/cancel-subscription-dialog";
+import { PlanPicker } from "@/components/admin/plan-picker";
 import { isOwnerRole } from "@/lib/auth/roles";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -180,9 +183,15 @@ function FeedbackBanners() {
 export default function SuscripcionPage() {
   const { gymId, role } = useActiveGym();
   const { data: sub, isLoading } = useGymSaasSubscription(gymId);
+  const { data: planes = [] } = useSaasPlans();
+  const { data: usage } = useGymMemberUsage(gymId);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
+  // Plan elegido en el selector. null = todavía no tocó nada, y ahí manda el que
+  // ya tiene asignado.
+  const [planElegido, setPlanElegido] = useState<string | null>(null);
+  const [cambioAbierto, setCambioAbierto] = useState(false);
 
   const cancelMutation = useCancelSaasSubscription(gymId);
 
@@ -206,7 +215,7 @@ export default function SuscripcionPage() {
     );
   }
 
-  async function handleActivate() {
+  async function handleActivate(planId?: string | null) {
     if (!gymId) return;
     setCheckoutLoading(true);
     setCheckoutError(null);
@@ -214,7 +223,7 @@ export default function SuscripcionPage() {
       const res = await fetch("/api/saas/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gym_id: gymId }),
+        body: JSON.stringify({ gym_id: gymId, plan_id: planId ?? undefined }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -269,6 +278,32 @@ export default function SuscripcionPage() {
   const cfg = STATUS_CONFIG[display];
   const StatusIcon = cfg.icon;
 
+  // ── Elección de plan ────────────────────────────────────────────────────────
+  // El selector aparece cuando hay algo que decidir: en el alta/reactivación, o
+  // cuando el owner abre el cambio de plan a mano. Durante el trial ya está
+  // corriendo un plan, así que agregar la tarjeta no es momento de cambiarlo.
+  const mostrarActivacion =
+    cancelPending || canActivate(display) || canAddCardDuringTrial(sub);
+
+  // Un cambio ya pedido y sin autorizar. Hasta que MP no confirme, lo que se
+  // cobra sigue siendo sub.plan: decir otra cosa sería mentir sobre la factura.
+  const cambioPendiente = !!sub?.pending_plan_id;
+
+  // Cambiar de plan solo tiene sentido con un cobro vivo y más de un plan; con
+  // la suscripción caída el camino es reactivar, que ya deja elegir.
+  const puedeCambiarPlan =
+    !cancelPending &&
+    !cambioPendiente &&
+    planes.length > 1 &&
+    (status === "active" || (status === "trialing" && !!sub?.mp_authorized_at));
+
+  const topeAlcanzado =
+    usage?.maxAllowed != null && usage.used >= usage.maxAllowed;
+
+  const planParaCheckout = planElegido ?? sub?.plan_id ?? null;
+  const planDestino = planes.find((p) => p.id === planElegido);
+  const cambioEsOtroPlan = !!planElegido && planElegido !== sub?.plan_id;
+
   return (
     <div className="p-4 pb-14 md:p-9">
       <PageHeader
@@ -310,7 +345,7 @@ export default function SuscripcionPage() {
 
             {/* Plan details */}
             {sub?.plan && (
-              <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-ui-input-border bg-ui-background-light p-4 md:grid-cols-3">
+              <div className="mb-4 grid grid-cols-2 gap-3 rounded-xl border border-ui-input-border bg-ui-background-light p-4 md:grid-cols-4">
                 <div>
                   <p className="mb-0.5 font-manrope text-[10px] text-ui-text-muted">
                     Plan
@@ -331,12 +366,45 @@ export default function SuscripcionPage() {
                 </div>
                 <div>
                   <p className="mb-0.5 font-manrope text-[10px] text-ui-text-muted">
+                    Socios
+                  </p>
+                  {/* El uso real contra el tope: es el dato que hace evidente
+                      si conviene cambiar de plan, y el único que el owner no
+                      puede deducir mirando el precio. */}
+                  <p
+                    className={`font-jakarta text-sm font-bold ${
+                      topeAlcanzado ? "text-amber-600" : "text-ui-text-main"
+                    }`}
+                  >
+                    {sub.plan.max_members == null
+                      ? "Ilimitados"
+                      : `${usage?.used ?? 0} / ${sub.plan.max_members}`}
+                  </p>
+                </div>
+                <div>
+                  <p className="mb-0.5 font-manrope text-[10px] text-ui-text-muted">
                     Prueba gratuita
                   </p>
                   <p className="font-jakarta text-sm font-bold text-ui-text-main">
                     {sub.plan.trial_days} días
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Cambio de plan pedido y sin autorizar todavía. Se dice cuál se
+                sigue cobrando: es la duda que tiene el owner al volver de MP. */}
+            {cambioPendiente && (
+              <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <Clock size={14} color="#d97706" className="mt-0.5 shrink-0" />
+                <p className="font-manrope text-[12px] leading-5 text-amber-800">
+                  Tenés un cambio a{" "}
+                  <strong>{sub?.pending_plan?.name ?? "otro plan"}</strong>{" "}
+                  esperando que lo autorices en MercadoPago. Hasta que lo hagas
+                  seguimos cobrando{" "}
+                  <strong>{sub?.plan?.name ?? "tu plan actual"}</strong> con
+                  normalidad.
+                </p>
               </div>
             )}
 
@@ -350,16 +418,33 @@ export default function SuscripcionPage() {
               </div>
             )}
 
+            {/* Elección de plan. Solo en el alta/reactivación: durante el trial
+                el plan ya está corriendo y el botón sirve para cargar la
+                tarjeta, no para cambiar de plan (para eso está el bloque de
+                abajo, que sabe no cobrar dos veces el mismo período). */}
+            {mostrarActivacion && planes.length > 0 && !canAddCardDuringTrial(sub) && (
+              <div className="mb-4">
+                <p className="mb-2 font-manrope text-[11px] font-semibold uppercase tracking-[1.2px] text-ui-text-muted">
+                  {planes.length > 1 ? "Elegí tu plan" : "Tu plan"}
+                </p>
+                <PlanPicker
+                  plans={planes}
+                  currentPlanId={sub?.plan_id ?? null}
+                  selectedId={planParaCheckout}
+                  onSelect={setPlanElegido}
+                  disabled={checkoutLoading}
+                />
+              </div>
+            )}
+
             {/* Acción principal */}
-            {(cancelPending ||
-              canActivate(display) ||
-              canAddCardDuringTrial(sub)) && (
+            {mostrarActivacion && (
               <Button
                 variant="primary"
                 size="lg"
                 loading={checkoutLoading}
                 icon={<CreditCard size={16} />}
-                onClick={handleActivate}
+                onClick={() => handleActivate(planParaCheckout)}
               >
                 {cancelPending || display === "canceled"
                   ? "Reanudar suscripción"
@@ -376,6 +461,77 @@ export default function SuscripcionPage() {
                 MercadoPago. El cobro arranca el {fmt(sub?.access_until ?? null)}
                 , así que no pagás dos veces el mismo período.
               </p>
+            )}
+
+            {/* Cambio de plan. MP no deja cambiarle el monto a un preapproval
+                autorizado, así que hace falta uno nuevo y el owner tiene que
+                volver a autorizar. Las dos cosas se le dicen antes de mandarlo. */}
+            {puedeCambiarPlan && (
+              <div className="mb-4">
+                {!cambioAbierto ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCambioAbierto(true);
+                      setPlanElegido(null);
+                    }}
+                    className="font-manrope text-[12px] font-bold text-brandSecondary-600 underline-offset-2 hover:underline"
+                  >
+                    Cambiar de plan
+                  </button>
+                ) : (
+                  <div className="rounded-xl border border-ui-input-border bg-ui-background-light p-4">
+                    <p className="mb-2 font-manrope text-[11px] font-semibold uppercase tracking-[1.2px] text-ui-text-muted">
+                      Elegí el plan nuevo
+                    </p>
+
+                    <PlanPicker
+                      plans={planes}
+                      currentPlanId={sub?.plan_id ?? null}
+                      selectedId={planElegido}
+                      onSelect={setPlanElegido}
+                      disabled={checkoutLoading}
+                    />
+
+                    {cambioEsOtroPlan && (
+                      <p className="mt-3 font-manrope text-[12px] leading-5 text-ui-text-muted">
+                        Vas a pasar a <strong>{planDestino?.name}</strong>. Te
+                        vamos a llevar a MercadoPago para que autorices el pago
+                        nuevo — el monto de una suscripción ya autorizada no se
+                        puede cambiar, así que hay que crear otra. El precio
+                        nuevo empieza a cobrarse el{" "}
+                        <strong>{fmt(paidAccessUntil(sub!))}</strong>, cuando
+                        termina el período que ya pagaste; hasta esa fecha no se
+                        te cobra nada extra.
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        loading={checkoutLoading}
+                        disabled={!cambioEsOtroPlan}
+                        icon={<CreditCard size={14} />}
+                        onClick={() => handleActivate(planElegido)}
+                      >
+                        Confirmar cambio
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCambioAbierto(false);
+                          setPlanElegido(null);
+                          setCheckoutError(null);
+                        }}
+                        className="font-manrope text-[12px] font-semibold text-ui-text-muted hover:text-ui-text-main"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Gestión: solo cuando ya hay una suscripción cargada en MP */}

@@ -17,6 +17,7 @@ import {
   Mail,
   ShieldHalf,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 
 // Hook de datos (core), contextos y helpers
@@ -29,6 +30,7 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useUserRole } from "@/components/auth/use-user-role";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
+import { useGymMemberUsage } from "@/lib/hooks/use-saas-subscription";
 import { isStaffRole, isSuperAdminRole, ROLE_LABELS } from "@/lib/auth/roles";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
@@ -67,6 +69,13 @@ export default function UsersListPage() {
   const [page, setPage] = useState(0);
 
   const { data: users, isLoading } = useGymMembers(gymId, authUserId);
+  const { data: usage } = useGymMemberUsage(gymId);
+
+  // Tope del plan SaaS alcanzado: el alta la frena el backend igual (trigger
+  // memberships_member_limit), pero mandar al owner a llenar un formulario que
+  // va a rebotar es hacerle perder el tiempo.
+  const topeAlcanzado =
+    usage?.maxAllowed != null && usage.used >= usage.maxAllowed;
 
   const visibleUsers = useMemo(() => {
     if (!users) return [];
@@ -107,19 +116,58 @@ export default function UsersListPage() {
         title="Usuarios del sistema"
         description="Socios y staff con acceso a la plataforma"
         cta={
-          <Link href="/admin/users/register">
-            <Button icon={<UserPlus size={15} color="#fff" />}>
-              Registrar socio
-            </Button>
-          </Link>
+          topeAlcanzado ? (
+            <Link href="/admin/suscripcion">
+              <Button variant="secondary" icon={<UserPlus size={15} />}>
+                Plan completo · Ampliar
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/admin/users/register">
+              <Button icon={<UserPlus size={15} color="#fff" />}>
+                Registrar socio
+              </Button>
+            </Link>
+          )
         }
       />
+
+      {/* Aviso de tope. Es la única pantalla donde el owner descubre el límite
+          justo cuando le importa: cuando va a dar de alta a alguien. */}
+      {topeAlcanzado && (
+        <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <AlertCircle size={15} color="#d97706" className="mt-0.5 shrink-0" />
+          <p className="font-manrope text-[12px] leading-5 text-amber-800">
+            Llegaste al límite de <strong>{usage!.maxAllowed} socios</strong> de
+            tu plan. Los socios que ya tenés siguen funcionando con normalidad,
+            pero para dar de alta a alguien más necesitás{" "}
+            <Link
+              href="/admin/suscripcion"
+              className="font-bold underline underline-offset-2"
+            >
+              pasar a un plan con más capacidad
+            </Link>
+            .
+          </p>
+        </div>
+      )}
 
       {/* Stat cards */}
       <div className="mb-6 flex flex-col gap-3.5 md:flex-row">
         <StatCard icon={Users} label="Total" value={stats.total} iconColor={brandPrimary[600]} bubble="bg-brandPrimary-50" dot="bg-brandPrimary-600" />
         <StatCard icon={ShieldHalf} label="Staff" value={stats.staff} iconColor="#7c3aed" bubble="bg-violet-50" dot="bg-violet-600" />
-        <StatCard icon={Users} label="Alumnos" value={stats.members} iconColor="#0284c7" bubble="bg-sky-50" dot="bg-sky-600" />
+        <StatCard
+          icon={Users}
+          label={usage?.maxAllowed != null ? "Alumnos / Tope del plan" : "Alumnos"}
+          value={
+            usage?.maxAllowed != null
+              ? `${usage.used} / ${usage.maxAllowed}`
+              : stats.members
+          }
+          iconColor={topeAlcanzado ? "#d97706" : "#0284c7"}
+          bubble={topeAlcanzado ? "bg-amber-50" : "bg-sky-50"}
+          dot={topeAlcanzado ? "bg-amber-600" : "bg-sky-600"}
+        />
       </div>
 
       {/* Toolbar */}

@@ -120,19 +120,26 @@ export async function cancelPreapproval(
 }
 
 /**
- * Cancela los preapprovals 'pending' registrados para un gym, salvo `keepId`.
+ * Cancela los preapprovals 'pending' registrados para un gym, salvo los de
+ * `keep`.
  *
  * Es la limpieza del checkout abandonado: el owner arrancó un pago, no lo
  * terminó, y ese preapproval quedó vivo esperando que alguien reabra el
  * init_point viejo. Si eso pasa MP cobra la tarjeta y el webhook descarta el
  * aviso (la fila ya guarda otro mp_preapproval_id), o sea cobro sin registro.
  *
+ * `keep` es una lista y no un id suelto porque durante un cambio de plan hay dos
+ * preapprovals legítimos a la vez: el vigente (mp_preapproval_id, que sigue
+ * cobrando el plan viejo) y el del cambio todavía sin autorizar
+ * (pending_preapproval_id). Con un solo id, el reaper daba de baja el cambio que
+ * el owner acababa de arrancar.
+ *
  * Nunca tira: quien la llama tiene algo más importante que hacer y un huérfano
  * de más se reintenta en la próxima corrida del reaper.
  *
  * Devuelve además lo que vio sin tocar, porque ya consultó el estado de cada id
  * y tirarlo obligaría a repetir las mismas llamadas a MP:
- *   - `authorized`: preapprovals con débito vivo que NO son `keepId`. Es la
+ *   - `authorized`: preapprovals con débito vivo que NO están en `keep`. Es la
  *     señal de doble cobro (o de que la fila local quedó desincronizada de MP).
  *     No se cancelan acá: darle de baja el cobro a un gym en base a una fila que
  *     puede estar vieja es peor que el problema. Solo el webhook cancela
@@ -142,12 +149,16 @@ export async function cancelPreapproval(
 export async function cancelPendingPreapprovals(
   svcClient: SupabaseClient,
   gymId: string,
-  keepId: string | null,
+  keep: string | null | Array<string | null>,
   token: string,
 ): Promise<{ canceled: string[]; authorized: string[]; unknown: string[] }> {
   const canceled: string[] = [];
   const authorized: string[] = [];
   const unknown: string[] = [];
+
+  const keepIds = new Set(
+    (Array.isArray(keep) ? keep : [keep]).filter((id): id is string => !!id),
+  );
 
   try {
     const { data, error } = await svcClient
@@ -160,7 +171,7 @@ export async function cancelPendingPreapprovals(
 
     const candidates = (data ?? [])
       .map((r) => r.mp_preapproval_id as string)
-      .filter((id) => id !== keepId);
+      .filter((id) => !keepIds.has(id));
 
     for (const id of candidates) {
       // El estado se consulta antes de tocar nada: el registro no sabe si el
