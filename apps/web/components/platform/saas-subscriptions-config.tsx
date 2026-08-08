@@ -67,6 +67,51 @@ export type SaasSubscriptionPlan = {
 const PLAN_COLUMNS =
   "id, name, description, price, currency, trial_days, max_members, is_active, is_featured, is_default, badge_text, features, sort_order, created_at";
 
+// Tarjeta de métrica. Sale a función porque las cuatro eran el mismo bloque
+// copiado, y el copiado arrastraba `p-4.5` — una clase que NO existe en la
+// escala de Tailwind v3 (va 3.5, 4, 5), así que las cuatro quedaban con
+// padding 0 y el texto pegado al borde. Con una sola definición eso no puede
+// volver a pasar en cuatro lugares a la vez.
+//
+// Las medidas son las del dashboard de plataforma (app/(panel)/platform/page.tsx):
+// p-5, burbuja de 38px y número de 30px.
+function StatCard({
+  icon: Icon,
+  tag,
+  tagClass,
+  bubbleClass,
+  value,
+  label,
+}: {
+  icon: typeof Layers;
+  tag: string;
+  tagClass: string;
+  bubbleClass: string;
+  value: string | number;
+  label: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-gray-200 bg-white p-5">
+      <div className="mb-3.5 flex items-center justify-between">
+        <span
+          className={`flex h-[38px] w-[38px] items-center justify-center rounded-[11px] ${bubbleClass}`}
+        >
+          <Icon size={18} />
+        </span>
+        <span
+          className={`rounded-full px-2 py-0.5 font-manrope text-[10px] font-bold ${tagClass}`}
+        >
+          {tag}
+        </span>
+      </div>
+      <p className="font-jakarta text-[30px] font-bold tracking-tight text-gray-900">
+        {value}
+      </p>
+      <p className="mt-1 font-manrope text-xs text-gray-400">{label}</p>
+    </div>
+  );
+}
+
 // El cobro sale por MercadoPago, que liquida en la moneda de la cuenta. ARS y
 // USD son las dos que la cuenta MP de la plataforma puede sostener hoy; sumar
 // otras acá sería ofrecer un precio que después no se puede cobrar.
@@ -208,21 +253,35 @@ export function SaasSubscriptionsConfig({
 
   // Métricas rápidas. El promedio ignora los planes sin precio cargado: contarlos
   // como 0 haría bajar el número por un dato que falta, no por un plan barato.
+  //
+  // Y se calcula sobre UNA moneda (la más usada entre los planes con precio):
+  // promediar 20.000 ARS con 50 USD da un número que no significa nada. Si hay
+  // planes en otra moneda, la tarjeta lo aclara en vez de mentir un promedio.
   const stats = useMemo(() => {
     const activeCount = plans.filter((p) => p.is_active).length;
     const withPrice = plans.filter((p) => p.price != null);
+
+    const porMoneda = new Map<string, number[]>();
+    for (const p of withPrice) {
+      porMoneda.set(p.currency, [...(porMoneda.get(p.currency) ?? []), p.price!]);
+    }
+    const dominante = [...porMoneda.entries()].sort(
+      (a, b) => b[1].length - a[1].length
+    )[0];
+
+    const precios = dominante?.[1] ?? [];
     const avgPrice =
-      withPrice.length > 0
-        ? Math.round(
-            withPrice.reduce((acc, p) => acc + (p.price ?? 0), 0) / withPrice.length
-          )
+      precios.length > 0
+        ? Math.round(precios.reduce((acc, n) => acc + n, 0) / precios.length)
         : 0;
-    const unlimitedCount = plans.filter((p) => p.max_members === null).length;
+
     return {
       total: plans.length,
       active: activeCount,
       avgPrice,
-      unlimitedCount,
+      avgCurrency: dominante?.[0] ?? "ARS",
+      mixedCurrencies: porMoneda.size > 1,
+      unlimitedCount: plans.filter((p) => p.max_members === null).length,
     };
   }, [plans]);
 
@@ -518,63 +577,52 @@ export function SaasSubscriptionsConfig({
 
       {/* Stats Cards */}
       <div className="mb-8 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        <div className="rounded-[18px] border border-gray-200 bg-white p-4.5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brandPrimary-700/10 text-brandPrimary-700">
-              <Layers size={18} />
-            </span>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-manrope text-[10px] font-bold text-emerald-700">
-              Total
-            </span>
-          </div>
-          <p className="font-jakarta text-2xl font-bold text-gray-900">{stats.total}</p>
-          <p className="mt-0.5 font-manrope text-xs text-gray-400">Planes configurados</p>
-        </div>
+        <StatCard
+          icon={Layers}
+          tag="Total"
+          tagClass="bg-brandPrimary-700/10 text-brandPrimary-800"
+          bubbleClass="bg-brandPrimary-700/10 text-brandPrimary-700"
+          value={stats.total}
+          label="Planes configurados"
+        />
 
-        <div className="rounded-[18px] border border-gray-200 bg-white p-4.5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-              <ShieldCheck size={18} />
-            </span>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-manrope text-[10px] font-bold text-emerald-700">
-              Activos
-            </span>
-          </div>
-          <p className="font-jakarta text-2xl font-bold text-gray-900">{stats.active}</p>
-          <p className="mt-0.5 font-manrope text-xs text-gray-400">Disponibles para alta</p>
-        </div>
+        <StatCard
+          icon={ShieldCheck}
+          tag="Activos"
+          tagClass="bg-emerald-100 text-emerald-700"
+          bubbleClass="bg-emerald-500/10 text-emerald-600"
+          value={stats.active}
+          label="Disponibles para alta"
+        />
 
-        <div className="rounded-[18px] border border-gray-200 bg-white p-4.5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600">
-              <Users size={18} />
-            </span>
-            <span className="rounded-full bg-indigo-100 px-2 py-0.5 font-manrope text-[10px] font-bold text-indigo-700">
-              Socios
-            </span>
-          </div>
-          <p className="font-jakarta text-2xl font-bold text-gray-900">
-            {stats.unlimitedCount > 0 ? "Ilimitados" : "Limitados"}
-          </p>
-          <p className="mt-0.5 font-manrope text-xs text-gray-400">
-            {stats.unlimitedCount} plan(es) sin tope
-          </p>
-        </div>
+        {/* Antes el número era "Ilimitados"/"Limitados", que con cero planes
+            afirmaba "Limitados" sobre un catálogo vacío. Va el conteo, que
+            además mantiene el ritmo de las otras tres tarjetas. */}
+        <StatCard
+          icon={Users}
+          tag="Socios"
+          tagClass="bg-indigo-100 text-indigo-700"
+          bubbleClass="bg-indigo-500/10 text-indigo-600"
+          value={stats.unlimitedCount}
+          label={
+            stats.unlimitedCount === 1
+              ? "Plan sin tope de socios"
+              : "Planes sin tope de socios"
+          }
+        />
 
-        <div className="rounded-[18px] border border-gray-200 bg-white p-4.5">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-              <TrendingUp size={18} />
-            </span>
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-manrope text-[10px] font-bold text-amber-700">
-              Promedio
-            </span>
-          </div>
-          <p className="font-jakarta text-2xl font-bold text-gray-900">
-            ${stats.avgPrice.toLocaleString("es-AR")}
-          </p>
-          <p className="mt-0.5 font-manrope text-xs text-gray-400">Valor promedio ARS/mes</p>
-        </div>
+        <StatCard
+          icon={TrendingUp}
+          tag="Promedio"
+          tagClass="bg-amber-100 text-amber-700"
+          bubbleClass="bg-amber-500/10 text-amber-600"
+          value={`${getCurrencySymbol(stats.avgCurrency)}${stats.avgPrice.toLocaleString("es-AR")}`}
+          label={
+            stats.mixedCurrencies
+              ? `Promedio mensual en ${stats.avgCurrency} (hay otras monedas)`
+              : `Valor promedio ${stats.avgCurrency}/mes`
+          }
+        />
       </div>
 
       {/* Toolbar & Filters */}
