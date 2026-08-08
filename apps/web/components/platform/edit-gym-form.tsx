@@ -29,6 +29,8 @@ import {
   ArrowLeftRight,
   RotateCcw,
   X,
+  Gift,
+  AlertTriangle,
 } from "lucide-react";
 
 // Supabase, helpers y campos
@@ -65,14 +67,34 @@ type PreviousAction = "demote" | "remove";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type GymSubscription = {
+  id: string;
+  status: string;
+  plan_id: string;
+  mp_authorized_at: string | null;
+} | null;
+
+const SUB_STATUS_LABEL: Record<string, string> = {
+  pending: "Pendiente",
+  trialing: "En prueba",
+  active: "Activa",
+  past_due: "Pago fallido",
+  canceled: "Cancelada",
+  expired: "Vencida",
+};
+
 export function EditGymForm({
   gym,
   owner,
   owners,
+  subscription,
+  freePlanId,
 }: {
   gym: Gym;
   owner: GymOwner | null;
   owners: OwnerCandidate[];
+  subscription: GymSubscription;
+  freePlanId: string | null;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +132,13 @@ export function EditGymForm({
 
   // Estado del gym (is_active puede cambiar sin recargar la página).
   const [isActive, setIsActive] = useState(gym.is_active !== false);
+
+  // Suscripción SaaS: estado y plan pueden cambiar acá mismo al activar gratis.
+  const [subStatus, setSubStatus] = useState(subscription?.status ?? null);
+  const [subPlanId, setSubPlanId] = useState(subscription?.plan_id ?? null);
+  const [subId, setSubId] = useState(subscription?.id ?? null);
+  const [activatingFree, setActivatingFree] = useState(false);
+  const [freeConfirmOpen, setFreeConfirmOpen] = useState(false);
 
   // Campos del form
   const [name, setName] = useState(gym.name ?? "");
@@ -379,6 +408,66 @@ export function EditGymForm({
       );
     } finally {
       setToggling(false);
+    }
+  };
+
+  // Activa el gimnasio sin pasar por MercadoPago: lo pasa al plan "Gratis"
+  // interno (is_active=false, invisible para el owner) con status 'active'. No
+  // toca mp_preapproval_id/mp_authorized_at: si ya había un cobro autorizado en
+  // MP, sigue vivo ahí hasta que se cancele a mano — ver aviso en el modal.
+  const isFreeActive =
+    subStatus === "active" && !!freePlanId && subPlanId === freePlanId;
+  const hasLiveMpCharge = !!subscription?.mp_authorized_at && !isFreeActive;
+
+  const handleActivateFree = async () => {
+    if (activatingFree || !freePlanId) return;
+    setActivatingFree(true);
+    try {
+      const supabase = getBrowserSupabase();
+      const fields = {
+        plan_id: freePlanId,
+        status: "active",
+        trial_ends_at: null,
+        current_period_end: null,
+        cancel_at_period_end: false,
+        cancel_requested_at: null,
+        cancel_reason: null,
+        cancel_feedback: null,
+        access_until: null,
+        pending_plan_id: null,
+        pending_preapproval_id: null,
+      };
+
+      if (subId) {
+        const { error } = await supabase
+          .from("gym_saas_subscriptions")
+          .update(fields)
+          .eq("id", subId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("gym_saas_subscriptions")
+          .insert({ gym_id: gym.id, ...fields })
+          .select("id")
+          .single();
+        if (error) throw error;
+        setSubId((data as { id: string }).id);
+      }
+
+      setSubStatus("active");
+      setSubPlanId(freePlanId);
+      setFreeConfirmOpen(false);
+      notify("success", "Suscripción activada gratis.");
+      router.refresh();
+    } catch (err) {
+      notify(
+        "error",
+        err instanceof Error
+          ? err.message
+          : "No se pudo activar la suscripción gratis."
+      );
+    } finally {
+      setActivatingFree(false);
     }
   };
 
@@ -742,6 +831,40 @@ export function EditGymForm({
         </div>
       </div>
 
+      {/* ── Suscripción SaaS ── */}
+      <div className="mx-auto mt-6 w-full max-w-[680px] rounded-[20px] border border-sky-200 bg-sky-50/60 p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex-1">
+            <p className="font-jakarta text-[14px] font-bold tracking-tight text-sky-700">
+              Suscripción SaaS
+            </p>
+            <p className="mt-1 font-manrope text-[11px] text-sky-700/80">
+              Estado actual:{" "}
+              <span className="font-bold">
+                {isFreeActive
+                  ? "Gratis (activada desde plataforma)"
+                  : (subStatus && SUB_STATUS_LABEL[subStatus]) ?? "Sin suscripción"}
+              </span>
+              {". "}
+              {isFreeActive
+                ? "El gimnasio tiene acceso completo sin pasar por MercadoPago."
+                : "Activala gratis para darle acceso completo sin que el dueño tenga que pagar."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFreeConfirmOpen(true)}
+            disabled={isFreeActive || !freePlanId}
+            className="flex shrink-0 items-center gap-2 rounded-[11px] bg-sky-600 px-4 py-2.5 shadow-md shadow-sky-600/30 transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Gift size={15} color="#fff" />
+            <span className="font-manrope text-[13px] font-bold text-white">
+              {isFreeActive ? "Ya está activada" : "Activar gratis"}
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* ── Danger zone ── */}
       <div className="mx-auto mt-6 w-full max-w-[680px] rounded-[20px] border border-red-200 bg-red-50/60 p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1026,6 +1149,67 @@ export function EditGymForm({
                 <Lock size={14} color="#fff" />
                 <span className="font-manrope text-[13px] font-bold text-white">
                   {toggling ? "Suspendiendo…" : "Suspender"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de confirmación de activación gratis */}
+      {freeConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-6">
+          <div className="w-full max-w-[460px] rounded-[20px] border border-gray-200 bg-white p-7">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50">
+                <Gift size={18} color="#0284c7" />
+              </div>
+              <p className="font-jakarta text-[17px] font-bold tracking-tight text-gray-900">
+                Activar &ldquo;{gym.name}&rdquo; gratis
+              </p>
+            </div>
+
+            <p className="mb-4 font-manrope text-[12px] leading-5 text-gray-400">
+              El gimnasio pasa a tener acceso completo con el plan interno
+              &ldquo;Gratis&rdquo;, sin que el dueño pase por el checkout de
+              MercadoPago. Podés revertirlo suspendiendo el gimnasio o
+              asignándole otro plan más adelante.
+            </p>
+
+            {hasLiveMpCharge && (
+              <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3">
+                <AlertTriangle
+                  size={14}
+                  color="#b45309"
+                  className="mt-0.5 shrink-0"
+                />
+                <p className="font-manrope text-[12px] leading-5 text-amber-700">
+                  Este gimnasio ya tiene un cobro autorizado en MercadoPago.
+                  Activar gratis NO lo cancela: el owner va a seguir pagando
+                  hasta que canceles la suscripción a mano en MercadoPago.
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFreeConfirmOpen(false)}
+                disabled={activatingFree}
+                className="flex-1 rounded-[11px] border border-gray-200 bg-white py-2.5 font-manrope text-[13px] font-semibold text-gray-900 transition hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleActivateFree}
+                disabled={activatingFree}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-[11px] py-2.5 ${
+                  activatingFree ? "bg-sky-300" : "bg-sky-600 hover:bg-sky-700"
+                }`}
+              >
+                <Gift size={14} color="#fff" />
+                <span className="font-manrope text-[13px] font-bold text-white">
+                  {activatingFree ? "Activando…" : "Activar gratis"}
                 </span>
               </button>
             </div>

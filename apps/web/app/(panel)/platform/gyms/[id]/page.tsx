@@ -71,12 +71,38 @@ export default async function EditGymPage({
     .select("id, user_id, name, last_name, email")
     .order("name", { ascending: true });
 
+  // Suscripción SaaS del gym (si tiene fila) + el plan "Gratis" interno que usa
+  // el botón de activación manual. Ambas queries corren con la sesión de
+  // super_admin: gym_saas_sub_super_admin y saas_plans_super_admin dejan pasar
+  // todo, incluido el plan inactivo.
+  const [{ data: subscription }, { data: freePlan }] = await Promise.all([
+    supabase
+      .from("gym_saas_subscriptions")
+      .select("id, status, plan_id, mp_authorized_at")
+      .eq("gym_id", id)
+      .maybeSingle(),
+    supabase
+      .from("saas_plans")
+      .select("id")
+      .eq("name", "Gratis")
+      .maybeSingle(),
+  ]);
+
   return (
     <PlatformShell>
       <EditGymForm
         gym={gym as Gym}
         owner={owner}
         owners={(candidates as OwnerCandidate[]) ?? []}
+        subscription={
+          (subscription as {
+            id: string;
+            status: string;
+            plan_id: string;
+            mp_authorized_at: string | null;
+          } | null) ?? null
+        }
+        freePlanId={(freePlan as { id: string } | null)?.id ?? null}
       />
     </PlatformShell>
   );
