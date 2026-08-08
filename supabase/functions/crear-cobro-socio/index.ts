@@ -35,13 +35,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 import { hasOAuthApp, needsRefresh, refreshGymToken } from '../_shared/mp-oauth.ts'
+import { createMemberCharge, MemberChargeError, type PendingCharge } from '../_shared/member-charge.ts'
 
 const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
 )
-
-const MP_API = 'https://api.mercadopago.com'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,89 +53,6 @@ function jsonResponse(body: Record<string, unknown>, status: number) {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status,
   })
-}
-
-interface PendingCharge {
-  subscription_id: string
-  activity_id: string
-  activity_name: string
-  plan_label: string | null
-  amount: number
-  period_start: string
-  period_end: string
-}
-
-// ── Datos del pagador ────────────────────────────────────────────────────────
-// Todo lo que sigue existe para el motor antifraude de MercadoPago: cuanto más
-// completo va el objeto `payer`, menos pagos legítimos rechaza (está en su
-// checklist de calidad, como buena práctica).
-//
-// La regla común a los tres helpers: ante la duda, NO mandar el campo. Los tres
-// leen columnas de texto libre que carga el staff a mano, y un dato mal armado
-// es peor que la ausencia del dato — el motor lo cruza contra el titular de la
-// tarjeta y una discrepancia cuenta en contra.
-
-const MONTHS_ES = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-]
-
-/** "julio 2026" a partir de un date ISO (YYYY-MM-DD). */
-function monthLabel(iso: string | null): string {
-  const [y, m] = (iso ?? '').split('-')
-  const name = MONTHS_ES[Number(m) - 1]
-  return name ? `${name} ${y}` : ''
-}
-
-const onlyDigits = (s: string) => s.replace(/\D/g, '')
-
-/**
- * Documento del socio. Se manda solo cuando la longitud es inequívoca: 7-8
- * dígitos es DNI, 11 es CUIL. Cualquier otra cosa queda afuera.
- */
-function buildIdentification(raw: string | null) {
-  const n = onlyDigits(raw ?? '')
-  if (n.length === 7 || n.length === 8) return { type: 'DNI', number: n }
-  if (n.length === 11) return { type: 'CUIL', number: n }
-  return undefined
-}
-
-/**
- * Teléfono normalizado. Se sacan el prefijo de país, el 9 de celular y el 0 de
- * larga distancia (ningún número argentino de 10 dígitos empieza con 9 ni 0,
- * así que sacarlos no puede comerse un dígito válido), y el 15 viejo de los
- * celulares del AMBA, que aparece seguido en datos cargados a mano.
- *
- * Después queda un solo criterio: un número argentino normalizado tiene
- * exactamente 10 dígitos (área + abonado). Si no da 10, es que no entendimos lo
- * que el staff escribió y no se manda nada — un teléfono con un 15 de más no es
- * un teléfono, y mandarlo le resta al perfil en vez de sumarle.
- *
- * El área se separa SOLO en el caso inequívoco: AMBA, 11 + 8 dígitos. Los demás
- * códigos de área argentinos son de 2, 3 o 4 dígitos y no se distinguen mirando
- * el número, así que en vez de partirlo mal van los 10 juntos en `number`. MP
- * acepta el objeto sin `area_code`.
- */
-function buildPhone(raw: string | null) {
-  let n = onlyDigits(raw ?? '')
-  if (n.startsWith('54')) n = n.slice(2)
-  if (n.startsWith('9')) n = n.slice(1)
-  if (n.startsWith('0')) n = n.slice(1)
-  if (n.startsWith('1115') && n.length === 12) n = '11' + n.slice(4)
-  if (n.length !== 10) return undefined
-  if (n.startsWith('11')) return { area_code: '11', number: n.slice(2) }
-  return { number: n }
-}
-
-/**
- * profiles.address es una línea suelta, no está desagregada en calle / número /
- * CP. Va entera como street_name y los otros dos campos quedan sin completar:
- * MP acepta la dirección parcial, e inventar un número o un código postal sería
- * exactamente el tipo de dato falso que conviene no mandar.
- */
-function buildAddress(raw: string | null) {
-  const street = (raw ?? '').trim()
-  return street ? { street_name: street.slice(0, 255) } : undefined
 }
 
 Deno.serve(async (req: Request) => {
@@ -254,52 +170,8 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // ── Intento + desglose congelado ────────────────────────────────────────
-    const { data: intent, error: intentError } = await supabaseAdmin
-      .from('member_payment_intents')
-      .insert({ gym_id: gymId, user_id: profile.id, total_amount: total })
-      .select('id')
-      .single()
-
-    if (intentError) throw intentError
-
-    const { error: itemsError } = await supabaseAdmin
-      .from('member_payment_intent_items')
-      .insert(pending.map((c) => ({
-        intent_id: intent.id,
-        subscription_id: c.subscription_id,
-        activity_id: c.activity_id,
-        amount: c.amount,
-        period_start: c.period_start,
-        period_end: c.period_end,
-      })))
-
-    // Sin items el intento no sirve para nada: el RPC de registro lo rechaza a
-    // propósito (no habría a qué imputar el pago). Se marca expirado y se corta
-    // ANTES de crear la preferencia, para no dejar un link que cobre plata que
-    // después nadie pueda registrar.
-    if (itemsError) {
-      await supabaseAdmin
-        .from('member_payment_intents')
-        .update({ status: 'expired' })
-        .eq('id', intent.id)
-      throw itemsError
-    }
-
-    // ── Preferencia en MercadoPago ──────────────────────────────────────────
     const deepLink = Deno.env.get('APP_DEEP_LINK') ?? 'gymtrack://'
     const webhookUrl = Deno.env.get('MP_GYM_WEBHOOK_URL')
-
-    if (!webhookUrl) {
-      // Sin webhook el pago se cobra y nunca se registra. Es preferible no
-      // dejar pagar a dejar al socio pagando al vacío.
-      await supabaseAdmin
-        .from('member_payment_intents')
-        .update({ status: 'expired' })
-        .eq('id', intent.id)
-      console.error('[crear-cobro-socio] MP_GYM_WEBHOOK_URL no configurada')
-      return jsonResponse({ error: 'No se pudo iniciar el pago.' }, 500)
-    }
 
     // ── Renovar el token si está por vencer ─────────────────────────────────
     // El cron /api/cron/refresh-mp-tokens es la red que evita que un gym se
@@ -309,10 +181,6 @@ Deno.serve(async (req: Request) => {
     // "MercadoPago no pudo generar el pago", que no le dice nada y no se arregla
     // solo hasta la corrida siguiente. Renovar en el momento del uso es lo que
     // hace que ese caso no se note.
-    //
-    // Va acá y no junto a la lectura de credenciales para no gastar una
-    // renovación en los caminos que ni siquiera llegan a cobrar (socio al día,
-    // cuotas en cero, webhook sin configurar).
     //
     // Nada de esto puede impedir un cobro: si la renovación falla se sigue con
     // el token viejo, que dentro del margen de un día probablemente todavía
@@ -355,92 +223,44 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const mpRes = await fetch(`${MP_API}/checkout/preferences`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        // Un item por actividad: así el socio ve el detalle en el checkout de
-        // MP y no un monto suelto que no sabe de dónde sale.
-        items: pending.map((c) => ({
-          id: c.subscription_id,
-          title: c.plan_label ? `${c.activity_name} · ${c.plan_label}` : c.activity_name,
-          description: [
-            `Cuota de ${c.activity_name}`,
-            monthLabel(c.period_start),
-            gym.name,
-          ].filter(Boolean).join(' · '),
-          // El listado de categorías está en
-          // https://api.mercadopago.com/item_categories. Una cuota de gimnasio
-          // es un servicio, no un producto físico.
-          category_id: 'services',
-          quantity: 1,
-          unit_price: Number(c.amount),
-          currency_id: 'ARS',
-        })),
-        // Los campos que devuelven undefined los descarta JSON.stringify, así
-        // que un socio sin teléfono ni documento cargado manda el payer mínimo
-        // y el cobro sale igual.
-        payer: {
-          email: profile.email,
-          name: profile.name ?? undefined,
-          surname: profile.last_name ?? undefined,
-          identification: buildIdentification(profile.document_number),
-          phone: buildPhone(profile.phone),
-          address: buildAddress(profile.address),
-        },
-        // El intent es lo que ata el pago de MP a nuestras filas. El webhook no
-        // tiene otra forma de saber qué cuotas saldar.
-        external_reference: intent.id,
-        // A diferencia de /preapproval —que ignora notification_url y obliga a
-        // configurar el webhook por aplicación— las preferencias sí lo aceptan.
-        notification_url: webhookUrl,
-        // El deep link es lo que hace que se cierre el navegador in-app:
-        // WebBrowser.openAuthSessionAsync corta cuando la navegación llega a
-        // esta URL. Va sin auto_return a propósito — MP valida ese parámetro
-        // contra http/https y un esquema propio le hace rechazar la preferencia
-        // entera. Sin auto_return el socio vuelve con el botón de MP, y de todas
-        // formas quien confirma el pago es el webhook, no este retorno.
-        back_urls: { success: deepLink, pending: deepLink, failure: deepLink },
-        statement_descriptor: (gym.name ?? 'GYM').slice(0, 22),
-      }),
-    })
-
-    if (!mpRes.ok) {
-      const detail = await mpRes.text()
-      console.error(`[crear-cobro-socio] MP ${mpRes.status}: ${detail.slice(0, 300)}`)
-      await supabaseAdmin
-        .from('member_payment_intents')
-        .update({ status: 'expired' })
-        .eq('id', intent.id)
-      return jsonResponse({ error: 'MercadoPago no pudo generar el pago.' }, 502)
+    // ── Intento + preferencia (compartido con cobranza-recordatorios) ───────
+    // Sin expiresInDays: el socio genera el link y lo usa en el momento, no
+    // tiene sentido que caduque.
+    let charge
+    try {
+      charge = await createMemberCharge({
+        admin: supabaseAdmin,
+        gymId,
+        gymName: gym.name,
+        profile,
+        charges: pending as PendingCharge[],
+        accessToken,
+        webhookUrl,
+        backUrl: deepLink,
+      })
+    } catch (err) {
+      if (err instanceof MemberChargeError) {
+        console.error(`[crear-cobro-socio] gym ${gymId}: ${err.reason}: ${err.message}`)
+        if (err.reason === 'webhook_not_configured') {
+          return jsonResponse({ error: 'No se pudo iniciar el pago.' }, 500)
+        }
+        if (err.reason === 'mp_rejected') {
+          return jsonResponse({ error: 'MercadoPago no pudo generar el pago.' }, 502)
+        }
+        return jsonResponse({ error: 'MercadoPago no devolvió el link de pago.' }, 502)
+      }
+      // Items sin insertar u otro error de datos: al catch general, mismo 500
+      // genérico de siempre.
+      throw err
     }
-
-    const pref = await mpRes.json()
-    const initPoint = pref.init_point ?? pref.sandbox_init_point
-
-    if (!initPoint) {
-      await supabaseAdmin
-        .from('member_payment_intents')
-        .update({ status: 'expired' })
-        .eq('id', intent.id)
-      return jsonResponse({ error: 'MercadoPago no devolvió el link de pago.' }, 502)
-    }
-
-    await supabaseAdmin
-      .from('member_payment_intents')
-      .update({ mp_preference_id: pref.id, init_point: initPoint })
-      .eq('id', intent.id)
 
     console.log(
-      `[crear-cobro-socio] gym ${gymId} socio ${profile.id}: intento ${intent.id} por ${total} (${pending.length} cuota/s)`,
+      `[crear-cobro-socio] gym ${gymId} socio ${profile.id}: intento ${charge.intentId} por ${total} (${pending.length} cuota/s)`,
     )
 
     return jsonResponse({
-      intent_id: intent.id,
-      init_point: initPoint,
+      intent_id: charge.intentId,
+      init_point: charge.initPoint,
       total,
       items: pending.map((c) => ({
         activity: c.activity_name,

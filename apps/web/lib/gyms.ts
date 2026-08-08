@@ -1,7 +1,8 @@
 // Helpers compartidos del CRUD de gimnasios (panel de plataforma del super_admin).
 // Portados de apps/mobile platform/gyms/_form.jsx + hooks de @gymtrack/core/hooks/gyms.
 // En web no hay TanStack Query/Form ni react-native: las mutaciones usan el cliente
-// browser de Supabase; todo el media va a Supabase Storage (bucket "media").
+// browser de Supabase. Las imágenes van a Supabase Storage (bucket "media") y los
+// videos a Cloudflare R2, que no cobra egress (ver supabase/functions/_shared/r2.ts).
 
 import { getBrowserSupabase } from "./supabase-browser";
 import { optimizeImageFile } from "./optimize-image";
@@ -87,20 +88,41 @@ export async function uploadImageWeb(file: File): Promise<string> {
 
 // El browser no puede transcodificar video, así que web acepta el archivo tal
 // cual con un tope que fuerza a exportar comprimido (~1-2 min en 720p H.264).
-// El bucket tiene su propio tope server-side de 60 MB, más alto a propósito:
-// también recibe los videos largos ya comprimidos de mobile.
+// sign-video-upload tiene su propio tope de 60 MB, más alto a propósito:
+// también firma los videos largos ya comprimidos de mobile.
 const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
 
-// Sube un video a Supabase Storage (bucket "media", prefijo videos/) y
-// devuelve su URL pública. En web no hay sync, así que se sube en el guardado
-// del form.
+// Sube un video a Cloudflare R2 y devuelve su URL pública. El browser no puede
+// tener las credenciales del bucket: la edge function sign-video-upload valida
+// la sesión y devuelve una URL PUT prefirmada de un solo uso, y el archivo sube
+// directo a Cloudflare. Los headers son los que vienen firmados — mandarlos tal
+// cual no es opcional, si no coinciden R2 responde 403.
+// En web no hay sync, así que se sube en el guardado del form.
 export async function uploadVideoWeb(file: File): Promise<string> {
   if (file.size > MAX_VIDEO_BYTES) {
     throw new Error(
       "El video supera los 25 MB. Exportalo comprimido (720p, H.264) y volvé a subirlo."
     );
   }
-  return uploadToStorage(file, "videos");
+
+  const supabase = getBrowserSupabase();
+  const { data, error } = await supabase.functions.invoke("sign-video-upload", {
+    body: { content_type: file.type || "video/mp4", size_bytes: file.size },
+  });
+  if (error) {
+    throw new Error(error.message || "No se pudo preparar la subida del video");
+  }
+
+  const res = await fetch(data.upload_url, {
+    method: "PUT",
+    headers: data.headers,
+    body: file,
+  });
+  if (!res.ok) {
+    throw new Error(`Error al subir el video (HTTP ${res.status})`);
+  }
+
+  return data.public_url as string;
 }
 
 // Etiqueta legible del dueño de un gym.

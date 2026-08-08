@@ -79,6 +79,10 @@ export const PLATFORM_MODULE_ROLES: Record<string, Role[]> = {
   gyms: PLATFORM_ADMIN_ROLES,
   catalog: PLATFORM_STAFF_ROLES,
   billing: [ROLES.SUPER_ADMIN],
+  // Igual que billing y no PLATFORM_ADMIN_ROLES: la RLS de saas_plans solo deja
+  // escribir a is_super_admin(), así que un superadmin_admin entraba a la
+  // pantalla y cada guardado le fallaba en silencio.
+  subscriptions: [ROLES.SUPER_ADMIN],
   users: PLATFORM_ADMIN_ROLES,
   settings: PLATFORM_ADMIN_ROLES,
 };

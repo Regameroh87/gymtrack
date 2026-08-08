@@ -18,6 +18,7 @@ export const MUSCLE_GROUPS = [
   { label: "Deltoides anterior", value: "deltoides_anterior" },
   { label: "Deltoides lateral", value: "deltoides_lateral" },
   { label: "Deltoides posterior", value: "deltoides_posterior" },
+  { label: "Trapecio", value: "trapecio" },
   { label: "Bíceps", value: "biceps" },
   { label: "Tríceps", value: "triceps" },
   { label: "Cuádriceps", value: "cuadriceps" },
@@ -28,3 +29,9 @@ export const MUSCLE_GROUPS = [
   { label: "Aductores", value: "aductores" },
   { label: "Core", value: "core" },
 ];
+
+// La BD guarda el `value` (deltoides_anterior). Para mostrarlo en pantalla hay
+// que pasarlo por acá; sin el mapa se filtra el enum crudo a la UI.
+export const MUSCLE_LABELS = Object.fromEntries(
+  MUSCLE_GROUPS.map((m) => [m.value, m.label])
+);

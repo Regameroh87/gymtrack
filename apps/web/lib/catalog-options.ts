@@ -19,6 +19,7 @@ export const MUSCLE_GROUPS: Option[] = [
   { label: "Deltoides anterior", value: "deltoides_anterior" },
   { label: "Deltoides lateral", value: "deltoides_lateral" },
   { label: "Deltoides posterior", value: "deltoides_posterior" },
+  { label: "Trapecio", value: "trapecio" },
   { label: "Bíceps", value: "biceps" },
   { label: "Tríceps", value: "triceps" },
   { label: "Cuádriceps", value: "cuadriceps" },

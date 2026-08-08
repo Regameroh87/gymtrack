@@ -37,6 +37,42 @@ proyecto. Ir tachando antes de invitar al primer gimnasio pagando.
       preapprovals `pending` que nadie autorizó (si no, reabrir un `init_point`
       viejo cobra la tarjeta y el webhook descarta el aviso). `eliminar-gym`
       cancela el preapproval antes del borrado en cascada.
+- [x] **Videos en Cloudflare R2** (mudanza completada el 2026-08-06). Los 162
+      videos (2,6 GB) eran el 99% del storage y todo el egress, contra 16 MB de
+      imágenes; en el plan Free de Supabase el tope son 1 GB y estábamos 2,6×
+      por encima. Ahora el bucket `media` de Storage guarda **solo imágenes**
+      (16 MB, el 1,6% de la cuota) y los videos se sirven desde
+      `media.gymtrack.ar`, donde el egress no se cobra ni tiene tope.
+      Migraciones `20260806130000_videos_to_r2.sql` (reescribió `video_uri`) y
+      `20260806180000_media_bucket_solo_imagenes.sql` (cerró el bucket a
+      `images/`, tope de vuelta a 10 MB, mime types de video afuera).
+      **Secrets requeridos** en Edge Functions: `R2_ACCOUNT_ID`,
+      `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`,
+      `R2_PUBLIC_BASE_URL` (sin barra final).
+      **CORS del bucket** (R2 → Settings → CORS Policy) — sin esto las subidas
+      desde el navegador fallan con un `Failed to fetch` a secas, porque el PUT
+      va cross-origin contra el endpoint S3; mobile no lo sufre, así que el
+      síntoma aparece solo en web y solo al subir un video:
+
+      ```json
+      [
+        {
+          "AllowedOrigins": [
+            "https://www.gymtrack.ar",
+            "https://gymtrack.ar",
+            "https://*.vercel.app",
+            "http://localhost:3000"
+          ],
+          "AllowedMethods": ["PUT"],
+          "AllowedHeaders": ["content-type", "cache-control"],
+          "MaxAgeSeconds": 3600
+        }
+      ]
+      ```
+
+      `AllowedHeaders` tiene que seguir exactamente a los headers que firma
+      `presignPut` en `supabase/functions/_shared/r2.ts`: si divergen, el
+      preflight falla y vuelve el mismo error mudo.
 
 ## 🔲 Pendiente — cuentas y configuración (dueño del proyecto)
 

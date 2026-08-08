@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.js",
     "./payment-status": "./src/payment-status.js",
+    "./billing-period": "./src/billing-period.js",
     "./media": "./src/media.js",
     "./format-date": "./src/format-date.js",
     "./search-by-query": "./src/search-by-query.js",

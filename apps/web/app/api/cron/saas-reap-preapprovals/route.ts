@@ -113,13 +113,21 @@ export async function GET(req: Request) {
     // aviso de MP que dispara la limpieza del webhook nunca llegó.
     const subByGym = new Map<
       string,
-      { id: string; status: string; mp_preapproval_id: string | null; updated_at: string | null }
+      {
+        id: string;
+        status: string;
+        mp_preapproval_id: string | null;
+        pending_preapproval_id: string | null;
+        updated_at: string | null;
+      }
     >();
 
     if (gymIds.length) {
       const { data: subs, error: subsError } = await svcClient
         .from("gym_saas_subscriptions")
-        .select("id, gym_id, status, mp_preapproval_id, updated_at")
+        .select(
+          "id, gym_id, status, mp_preapproval_id, pending_preapproval_id, updated_at",
+        )
         .in("gym_id", gymIds);
 
       if (subsError) throw subsError;
@@ -155,12 +163,36 @@ export async function GET(req: Request) {
           ? sub.mp_preapproval_id
           : null;
 
+      // El cambio de plan en vuelo también se preserva mientras la fila sea
+      // reciente: el owner puede estar en el checkout de MP en este momento, y
+      // el reaper corre a las 3:40 sin saberlo. Pasado STALE_MS se considera
+      // abandonado y cae con el resto.
+      const keepPendingChange = fresh ? sub?.pending_preapproval_id : null;
+
       const { canceled, authorized, unknown } = await cancelPendingPreapprovals(
         svcClient,
         gymId,
-        keepId,
+        [keepId, keepPendingChange],
         mpToken,
       );
+
+      // Si se dio de baja el preapproval de un cambio de plan, las marcas del
+      // cambio quedaron describiendo algo que ya no puede pasar. El webhook las
+      // limpia solo al recibir el 'cancelled', pero ese aviso puede no llegar
+      // nunca y el cartel de "cambio pendiente" se quedaría pegado para siempre.
+      if (
+        sub?.pending_preapproval_id &&
+        canceled.includes(sub.pending_preapproval_id)
+      ) {
+        await svcClient
+          .from("gym_saas_subscriptions")
+          .update({ pending_plan_id: null, pending_preapproval_id: null })
+          .eq("id", sub.id);
+
+        console.warn(
+          `[cron/reap-preapprovals] gym ${gymId}: cambio de plan abandonado (${sub.pending_preapproval_id}); marcas limpiadas`,
+        );
+      }
 
       // ── Reconciliación ──────────────────────────────────────────────────────
       // `authorized` son preapprovals que MP está cobrando y que NO son el

@@ -1317,17 +1317,33 @@ async function cleanOrphanedPlanChildren() {
     );
   }
 
-  // plan_assignments sin plan padre
+  // plan_assignments sin plan padre. Ojo: una asignación de plan custom lleva
+  // plan_id NULL y su padre vive en custom_plans, así que se valida contra esa
+  // tabla. Chequearlas todas contra training_plans las borraba a todas —incluida
+  // la recién creada, que muere acá antes de llegar al push de más abajo.
   const allPlanIds = new Set(
     (await database.select({ id: training_plans.id }).from(training_plans)).map(
       (r) => r.id
     )
   );
+  const allCustomPlanIds = new Set(
+    (await database.select({ id: custom_plans.id }).from(custom_plans)).map(
+      (r) => r.id
+    )
+  );
   const allAssignments = await database
-    .select({ id: plan_assignments.id, plan_id: plan_assignments.plan_id })
+    .select({
+      id: plan_assignments.id,
+      plan_id: plan_assignments.plan_id,
+      custom_plan_id: plan_assignments.custom_plan_id,
+    })
     .from(plan_assignments);
   const orphanAssignmentIds = allAssignments
-    .filter((a) => !allPlanIds.has(a.plan_id))
+    .filter((a) =>
+      a.custom_plan_id
+        ? !allCustomPlanIds.has(a.custom_plan_id)
+        : !allPlanIds.has(a.plan_id)
+    )
     .map((a) => a.id);
   if (orphanAssignmentIds.length) {
     await database
@@ -2016,6 +2032,16 @@ async function cascadeDeleteCustomPlanLocally(planId) {
       .delete(custom_plan_week_days)
       .where(inArray(custom_plan_week_days.week_id, weekIds));
   }
+  // Espejo de cascadeDeletePlanLocally: la asignación se va con el plan y el log
+  // sobrevive con la FK liberada (el historial de entrenamientos no se pierde
+  // porque el usuario haya borrado el plan).
+  await database
+    .delete(plan_assignments)
+    .where(eq(plan_assignments.custom_plan_id, planId));
+  await database
+    .update(session_logs)
+    .set({ custom_plan_id: null })
+    .where(eq(session_logs.custom_plan_id, planId));
   await database
     .delete(custom_plan_weeks)
     .where(eq(custom_plan_weeks.plan_id, planId));
@@ -2389,6 +2415,19 @@ export async function pushCustomPlansChanges() {
 
   for (let row of localChanges) {
     if (row.sync_status === "deleted") {
+      // En Supabase NO hay FK de plan_assignments.custom_plan_id ni de
+      // session_logs.custom_plan_id hacia custom_plans (a diferencia del lado
+      // catálogo, que cascadea solo), así que el borrado del plan dejaría ambas
+      // colgadas. Se limpian a mano y antes del plan, igual que en
+      // pushTrainingPlansChanges.
+      await supabase
+        .from("plan_assignments")
+        .delete()
+        .eq("custom_plan_id", row.id);
+      await supabase
+        .from("session_logs")
+        .update({ custom_plan_id: null })
+        .eq("custom_plan_id", row.id);
       const { error } = await supabase
         .from("custom_plans")
         .delete()

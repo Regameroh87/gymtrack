@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Dumbbell,
   Receipt,
+  Layers,
   Users,
   Settings,
   LogOut,
@@ -32,6 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: ShieldHalf, label: "Gimnasios", href: "/platform/gyms", moduleKey: "gyms" },
   { icon: Dumbbell, label: "Catálogo", href: "/platform/catalog", moduleKey: "catalog" },
   { icon: Receipt, label: "Facturación", href: "/platform/billing", moduleKey: "billing" },
+  { icon: Layers, label: "Planes SaaS", href: "/platform/subscriptions", moduleKey: "subscriptions" },
   { icon: Users, label: "Usuarios globales", href: "/platform/users", moduleKey: "users" },
   { icon: Settings, label: "Ajustes", href: "/platform/settings", moduleKey: "settings" },
 ];

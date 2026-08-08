@@ -23,6 +23,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createServerSupabase } from "@/lib/supabase-server";
 import { SUPABASE_URL } from "@/lib/supabase-config";
 import { APP_URL } from "@/lib/site";
+import { paidAccessUntil } from "@/lib/saas/access-period";
 import {
   MP_API,
   cancelPreapproval,
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { gym_id } = await req.json();
+    const { gym_id, plan_id } = await req.json();
     if (!gym_id) {
       return NextResponse.json({ error: "gym_id requerido" }, { status: 400 });
     }
@@ -82,15 +83,34 @@ export async function POST(req: Request) {
       .eq("id", gym_id)
       .single();
 
-    const { data: plan } = await supabase
+    // El plan que eligió el owner. Sin plan_id se cae al default, que es el que
+    // ya tiene asignado el gym recién creado — así el flujo de siempre (un solo
+    // plan, sin selector) sigue funcionando igual.
+    //
+    // Un plan_id inactivo se rechaza en vez de caer al default en silencio: el
+    // owner tendría la pantalla abierta con un plan que se dio de baja mientras
+    // tanto, y cobrarle otro sin avisar es peor que pedirle que recargue.
+    const planQuery = supabase
       .from("saas_plans")
-      .select("id, price, currency, trial_days")
-      .eq("is_active", true)
-      .order("created_at")
-      .limit(1)
-      .maybeSingle();
+      .select("id, name, price, currency, trial_days")
+      .eq("is_active", true);
 
-    if (!plan?.price) {
+    const { data: plan } = plan_id
+      ? await planQuery.eq("id", plan_id).maybeSingle()
+      : await planQuery.eq("is_default", true).maybeSingle();
+
+    if (!plan) {
+      return NextResponse.json(
+        {
+          error: plan_id
+            ? "El plan que elegiste ya no está disponible. Recargá la página y probá de nuevo."
+            : "No hay ningún plan configurado. Escribinos.",
+        },
+        { status: 422 },
+      );
+    }
+
+    if (!plan.price) {
       return NextResponse.json(
         { error: "El precio del plan no está configurado. Actualizá saas_plans.price." },
         { status: 422 },
@@ -102,10 +122,16 @@ export async function POST(req: Request) {
     const { data: existingSub } = await svcClient
       .from("gym_saas_subscriptions")
       .select(
-        "id, status, trial_ends_at, cancel_at_period_end, access_until, mp_preapproval_id, mp_authorized_at",
+        "id, status, plan_id, trial_ends_at, current_period_end, cancel_at_period_end, access_until, mp_preapproval_id, mp_authorized_at",
       )
       .eq("gym_id", gym_id)
       .maybeSingle();
+
+    // ¿Es un cambio de plan sobre una suscripción viva? Se resuelve acá porque
+    // condiciona las dos decisiones que siguen: si la guarda de doble débito
+    // deja pasar, y desde cuándo arranca el cobro nuevo.
+    const esCambioDePlan =
+      !!existingSub && !!plan_id && existingSub.plan_id !== plan.id;
 
     // ── Nada de checkouts sobre una suscripción que ya cobra ─────────────────
     // Es el espejo de canActivate / canAddCardDuringTrial (admin/suscripcion):
@@ -127,8 +153,13 @@ export async function POST(req: Request) {
     // un checkout abandonado lo deja seteado sin que exista ninguna
     // autorización. Usarlo acá dejaba al gym en trial sin poder cargar la
     // tarjeta hasta que venciera la prueba.
+    //
+    // Se declara afuera del if porque el cálculo de startDate también la
+    // necesita: el cambio de plan tiene que saber si hay un cobro vivo para
+    // arrancar al final del período pagado en vez de estrenar un trial.
+    let cobrandoAhora = false;
     if (existingSub && !existingSub.cancel_at_period_end) {
-      let cobrandoAhora =
+      cobrandoAhora =
         ["active", "past_due"].includes(existingSub.status) ||
         (existingSub.status === "trialing" && !!existingSub.mp_authorized_at);
 
@@ -176,7 +207,18 @@ export async function POST(req: Request) {
         // se deja pasar, que es lo que este chequeo viene a habilitar.
       }
 
-      if (cobrandoAhora) {
+      // Un cambio de plan es la excepción legítima a esta guarda: la suscripción
+      // está viva justamente porque el owner quiere pasarse a otro plan, y MP no
+      // deja cambiarle el monto a un preapproval ya autorizado. Hace falta uno
+      // nuevo sí o sí.
+      //
+      // No abre la puerta al doble débito, por el orden en que pasan las cosas:
+      // el preapproval nuevo arranca a cobrar recién cuando termina el período
+      // ya pagado, y el viejo lo cancela cancelarPreapprovalsHuerfanos (en el
+      // webhook) cuando el nuevo queda 'authorized'. Si el owner abandona el
+      // checkout, el viejo sigue cobrando con normalidad: es el modo de fallar
+      // correcto.
+      if (cobrandoAhora && !esCambioDePlan) {
         // Se deja rastro: si esto aparece seguido, hay owners llegando acá con
         // la suscripción viva, o sea que la fila local y MP se desincronizan.
         await svcClient.from("saas_subscription_events").insert({
@@ -215,9 +257,15 @@ export async function POST(req: Request) {
     //    su trial. No abre la puerta al trial infinito: trial_ends_at lo escribe
     //    el webhook al autorizar y nunca vuelve a NULL.
     //  - pending (alta de plataforma, sin trial corrido): trial completo.
+    //  - cambio de plan sobre una suscripción viva: el precio nuevo arranca
+    //    cuando termina el período que YA pagó al precio viejo. Sin esta rama
+    //    caería en el else y estrenaría un trial de regalo por cambiar de plan.
     const trialDays = plan.trial_days ?? 14;
     let startDate: string;
-    if (
+    if (esCambioDePlan && cobrandoAhora) {
+      startDate =
+        paidAccessUntil(existingSub) ?? new Date(Date.now() + 10 * 60_000).toISOString();
+    } else if (
       existingSub?.cancel_at_period_end &&
       existingSub.access_until &&
       new Date(existingSub.access_until) > new Date()
@@ -275,7 +323,10 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        reason: `GymTrack Pro${gym?.name ? ` - ${gym.name}` : ""}`,
+        // Es el texto que MP le muestra al pagador en el resumen y en el
+        // débito. Lleva el nombre del plan: desde que hay varios, "GymTrack" a
+        // secas no le dice al owner cuál de todos está autorizando.
+        reason: `GymTrack ${plan.name}${gym?.name ? ` - ${gym.name}` : ""}`,
         external_reference: gym_id,
         payer_email: payerEmail,
         auto_recurring: {
@@ -394,16 +445,65 @@ export async function POST(req: Request) {
     // 'pending'. Arrastrar la del anterior diría "ya tiene tarjeta" sobre un
     // preapproval que nunca fue autorizado.
     if (existingSub) {
+      // Un cambio de plan sobre un cobro vivo se anota SIN tocar nada de lo que
+      // describe la suscripción vigente. Las tres columnas que se dejan quietas
+      // no son un detalle:
+      //
+      //  · mp_preapproval_id sigue siendo el del plan viejo, que es el que
+      //    realmente cobra hasta que el owner autorice el nuevo. Pisarlo rompía
+      //    el cobro: handleAuthorizedPaymentEvent (mp-webhook) resuelve la fila
+      //    SOLO por esta columna y sin fallback por external_reference, así que
+      //    el débito mensual del viejo no encontraba la suscripción y
+      //    current_period_end se quedaba clavado — el owner pagando y el sistema
+      //    sin registrarlo.
+      //  · plan_id, porque el débito real todavía es el del plan viejo. Si el
+      //    owner abandona el checkout, el panel seguiría mostrando un plan que
+      //    nadie le está cobrando.
+      //  · mp_authorized_at, al revés que en el flujo de reanudar: acá la
+      //    tarjeta sigue autorizada sobre el preapproval viejo. Limpiarla diría
+      //    "este gym no tiene tarjeta" y le ofrecería cargar una que ya tiene.
+      //
+      // El preapproval y el plan destino esperan en las columnas pending_*, y
+      // las promueve el webhook al recibir el 'authorized'.
+      const cambioVivo = esCambioDePlan && cobrandoAhora;
+
       await svcClient
         .from("gym_saas_subscriptions")
-        .update({
-          plan_id: plan.id,
-          mp_preapproval_id: mpPreapprovalId,
-          mp_application_id: mpApplicationId,
-          payer_email: payerEmail,
-          mp_authorized_at: null,
-        })
+        .update(
+          cambioVivo
+            ? {
+                pending_plan_id: plan.id,
+                pending_preapproval_id: mpPreapprovalId,
+              }
+            : {
+                plan_id: plan.id,
+                pending_plan_id: null,
+                pending_preapproval_id: null,
+                mp_preapproval_id: mpPreapprovalId,
+                mp_application_id: mpApplicationId,
+                payer_email: payerEmail,
+                mp_authorized_at: null,
+              },
+        )
         .eq("id", existingSub.id);
+
+      if (cambioVivo) {
+        // Auditoría: es el único rastro de que el cobro que viene es de otro
+        // plan y desde cuándo. mp_event_id es unique, se prefija para no chocar
+        // con los ids de eventos de MP.
+        await svcClient.from("saas_subscription_events").insert({
+          gym_subscription_id: existingSub.id,
+          mp_event_id: `plan_change_${existingSub.id}_${Date.now()}`,
+          event_type: "plan_change_requested",
+          payload: {
+            requested_by: user.id,
+            from_plan_id: existingSub.plan_id,
+            to_plan_id: plan.id,
+            starts_at: startDate,
+            mp_preapproval_id: mpPreapprovalId,
+          },
+        });
+      }
     } else {
       await svcClient.from("gym_saas_subscriptions").insert({
         gym_id,

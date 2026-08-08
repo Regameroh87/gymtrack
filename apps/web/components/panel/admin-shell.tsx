@@ -29,6 +29,7 @@ import {
   UserCog,
   CreditCard,
   Wallet,
+  UserCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -68,7 +69,7 @@ const NAV_SECTIONS: NavSection[] = [
       { icon: UserCog, label: "Equipo", path: "team" },
       { icon: Flame, label: "Actividades", path: "activities" },
       { icon: QrCode, label: "Asistencias", path: "attendance" },
-      { icon: Receipt, label: "Contabilidad", path: "billing" },
+      { icon: UserCheck, label: "Membresías", path: "billing" },
     ],
   },
   {
@@ -86,6 +87,7 @@ const NAV_SECTIONS: NavSection[] = [
       { icon: Database, label: "Datos", path: "data" },
       { icon: CreditCard, label: "Suscripción", path: "suscripcion", ownerOnly: true },
       { icon: Wallet, label: "Cobros online", path: "cobros", ownerOnly: true },
+      { icon: Receipt, label: "Contabilidad", path: "cobranza" },
       { icon: BarChart3, label: "Reportes", path: "reports", comingSoon: true },
       { icon: Settings, label: "Ajustes", path: "settings", comingSoon: true },
     ],

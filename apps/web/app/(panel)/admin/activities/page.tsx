@@ -37,6 +37,7 @@ import { useActiveGym } from "@/components/auth/active-gym-provider";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { Toggle } from "@/components/ui/toggle";
 
 const PAGE_SIZE = 18;
 
@@ -188,38 +189,6 @@ export default function ActivitiesListPage() {
 }
 
 // ── Subcomponents ──
-
-function Toggle({
-  on,
-  disabled,
-  onClick,
-  label,
-}: {
-  on: boolean;
-  disabled: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={`flex h-6 w-11 shrink-0 items-center rounded-full px-0.5 transition disabled:opacity-50 ${
-        on ? "bg-brandPrimary-600" : "bg-ui-input-border"
-      }`}
-    >
-      <span
-        className={`h-5 w-5 rounded-full bg-white transition-transform ${
-          on ? "translate-x-5" : "translate-x-0"
-        }`}
-      />
-    </button>
-  );
-}
 
 // Gate del módulo de entrenamiento del socio (planes, registros, progreso).
 // Vive acá y no en una pantalla de ajustes porque lo que decide quién entra son

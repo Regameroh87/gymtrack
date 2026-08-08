@@ -2,8 +2,13 @@
 
 // Membresías y cobranza (admin). Clon de apps/mobile admin/billing/index.web.jsx:
 // lista de inscripciones activas del gym (useGymSubscriptions), stats, búsqueda +
-// filtro por estado de pago, registrar pago / dar de baja, y modal de alta en 3 pasos
-// (socio → actividad → pase).
+// filtro por estado de pago, registrar pago / dar de baja, y modal de alta en 4 pasos
+// (socio → actividad → pase → primer ciclo).
+//
+// Los ciclos de cuota van de aniversario a aniversario desde la fecha de alta, no
+// por mes calendario. El cálculo NO vive acá: sale de @gymtrack/core/billing-period,
+// que replica el de subscription_period en SQL. Si la pantalla calculara por su
+// cuenta, ofrecería un período y el RPC cobraría otro.
 
 // React / Next
 import { useMemo, useState } from "react";
@@ -35,7 +40,19 @@ import {
 import { useGymMembers, type GymMember } from "@gymtrack/core/hooks/users/use-gym-members";
 import { useActivities, type Activity, type ActivityPlan } from "@gymtrack/core/hooks/activities/use-activities";
 import { useSubscriptionPayments } from "@gymtrack/core/hooks/activities/use-subscription-payments";
-import { paymentBadge, isOverdue } from "@gymtrack/core";
+import {
+  useBillingSettings,
+  useSetBillingSettings,
+} from "@gymtrack/core/hooks/activities/use-billing-settings";
+import {
+  paymentBadge,
+  isOverdue,
+  owedPeriods,
+  periodAt,
+  cycleIndexAt,
+  periodLabel,
+  type BillingPeriod,
+} from "@gymtrack/core";
 import { ui } from "@gymtrack/core/colors";
 import { PERMISSIONS } from "@gymtrack/core/permissions";
 import { useActivitySubscriptionMutations } from "@/lib/hooks/use-activity-subscription-mutations";
@@ -47,6 +64,7 @@ import { useGymPermissions } from "@/components/auth/use-gym-permissions";
 import { useGymTheme } from "@/components/auth/use-gym-theme";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
+import { Toggle } from "@/components/ui/toggle";
 import { ConfirmDialog } from "@/components/platform/catalog/catalog-ui";
 
 const money = (n: number | string | null | undefined) =>
@@ -67,22 +85,14 @@ const formatDate = (iso: string | null) => {
   }
 };
 
-// "YYYY-MM" para el <input type="month"> (default = mes del vencimiento actual).
-const monthValue = (iso: string | null) =>
-  (iso ?? new Date().toISOString().slice(0, 10)).slice(0, 7);
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
-// Etiqueta legible del mes cubierto por un cobro, tipo "ago 2026".
-const monthLabel = (iso: string | null) => {
-  if (!iso) return "—";
-  try {
-    return new Date(`${iso}T00:00:00`).toLocaleDateString("es-AR", {
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return "—";
-  }
-};
+// Los ciclos que un socio debe. Es solo para pintar la lista y el contador — la
+// plata la calcula el RPC — pero tiene que dar exactamente lo mismo que él, o la
+// pantalla ofrece un período que después no se cobra. Por eso sale de core y no
+// se recalcula acá.
+const owed = (sub: GymSubscription, dueDayIsCovered: boolean) =>
+  owedPeriods(sub.start_date, sub.due_date, todayISO(), dueDayIsCovered);
 
 const FILTERS = [
   { key: "all", label: "Todas" },
@@ -106,23 +116,31 @@ export default function BillingPage() {
   const [cancelSub, setCancelSub] = useState<GymSubscription | null>(null);
 
   const { data: subs, isLoading } = useGymSubscriptions(gymId);
+  const { data: billing } = useBillingSettings(gymId);
   const { cancel } = useActivitySubscriptionMutations();
+
+  // Qué pasa el día exacto del vencimiento lo decide el gym. Se baja una sola vez
+  // acá y se pasa hacia abajo: si cada fila lo resolviera por su cuenta, alcanza
+  // con que una se olvide para que la tabla se contradiga a sí misma.
+  const dueDayIsCovered = billing?.dueDayIsCovered === true;
 
   const stats = useMemo(() => {
     const rows = subs ?? [];
     const revenue = rows.reduce((s, r) => s + (Number(r.price) || 0), 0);
-    const overdue = rows.filter((r) => isOverdue(r.due_date)).length;
+    const overdue = rows.filter((r) => isOverdue(r.due_date, dueDayIsCovered)).length;
     return { revenue, total: rows.length, overdue, ok: rows.length - overdue };
-  }, [subs]);
+  }, [subs, dueDayIsCovered]);
 
   const filtered = useMemo(() => {
     let rows = subs ?? [];
-    if (filter === "overdue") rows = rows.filter((r) => isOverdue(r.due_date));
-    else if (filter === "ok") rows = rows.filter((r) => !isOverdue(r.due_date));
+    if (filter === "overdue")
+      rows = rows.filter((r) => isOverdue(r.due_date, dueDayIsCovered));
+    else if (filter === "ok")
+      rows = rows.filter((r) => !isOverdue(r.due_date, dueDayIsCovered));
     const q = search.trim().toLowerCase();
     if (q) rows = rows.filter((r) => fullName(r.member).toLowerCase().includes(q));
     return rows;
-  }, [subs, filter, search]);
+  }, [subs, filter, search, dueDayIsCovered]);
 
   const confirmCancel = () => {
     if (!cancelSub) return;
@@ -142,9 +160,9 @@ export default function BillingPage() {
   return (
     <>
       <PageHeader
-        section="Contabilidad"
-        title="Membresías y cobranza"
-        description="Inscripciones activas, cuotas y estado de pago de tus socios"
+        section="Socios"
+        title="Membresías"
+        description="Inscripciones activas de tus socios — altas, bajas y estado de pago"
         cta={
           canManage ? (
             <Button
@@ -163,6 +181,10 @@ export default function BillingPage() {
         <StatCard icon={CheckCircle} label="Al día" value={stats.ok} iconColor="#16a34a" bubble="bg-emerald-50" />
         <StatCard icon={Clock} label="Vencidas" value={stats.overdue} iconColor="#ef4444" bubble="bg-red-50" />
       </div>
+
+      {/* Políticas de cobranza del gym. Solo owner/admin: es política comercial,
+          y el RPC igual corta a cualquier otro. */}
+      {canManage && <CobranzaSettingsCard gymId={gymId} />}
 
       {/* Toolbar */}
       <div className="mb-5 flex flex-col items-stretch gap-3 md:flex-row md:items-center">
@@ -228,6 +250,7 @@ export default function BillingPage() {
               onDetail={() => setDetailSub(sub)}
               onCancel={() => setCancelSub(sub)}
               busy={cancel.isPending}
+              dueDayIsCovered={dueDayIsCovered}
             />
           ))}
         </div>
@@ -240,7 +263,11 @@ export default function BillingPage() {
 
       {/* Registrar pago (elegir mes) */}
       {payingSub && (
-        <RegistrarPagoModal sub={payingSub} onClose={() => setPayingSub(null)} />
+        <RegistrarPagoModal
+          sub={payingSub}
+          onClose={() => setPayingSub(null)}
+          dueDayIsCovered={dueDayIsCovered}
+        />
       )}
 
       {/* Detalle / historial de pagos del socio */}
@@ -313,6 +340,7 @@ function SubRow({
   onDetail,
   onCancel,
   busy,
+  dueDayIsCovered,
 }: {
   sub: GymSubscription;
   last: boolean;
@@ -323,8 +351,10 @@ function SubRow({
   onDetail: () => void;
   onCancel: () => void;
   busy: boolean;
+  dueDayIsCovered: boolean;
 }) {
-  const badge = paymentBadge(sub.due_date);
+  const badge = paymentBadge(sub.due_date, dueDayIsCovered);
+  const debe = owed(sub, dueDayIsCovered).length;
   const color = sub.activities?.color ?? brandPrimary[600];
   return (
     <div className={`flex flex-wrap items-center gap-y-2 px-4 py-3.5 ${last ? "" : "border-b border-ui-input-border"}`}>
@@ -352,6 +382,11 @@ function SubRow({
                 {badge.label}
               </span>
             </div>
+            {debe > 1 && (
+              <span className="font-manrope text-[10px] font-bold text-amber-600">
+                debe {debe} cuotas
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -372,6 +407,13 @@ function SubRow({
         <span className="mt-0.5 font-manrope text-[10px] text-ui-text-muted">
           vence {formatDate(sub.due_date)}
         </span>
+        {/* La deuda acumulada no se ve en el vencimiento solo: "vence 10 jun" no
+            dice si debe una o cuatro cuotas. */}
+        {debe > 1 && (
+          <span className="font-manrope text-[10px] font-bold text-amber-600">
+            debe {debe} cuotas
+          </span>
+        )}
       </div>
 
       {/* Acciones */}
@@ -412,7 +454,89 @@ function SubRow({
   );
 }
 
-// Modal de alta: socio → actividad → pase.
+// La política de cobranza que decide el gym, no nosotros: qué pasa el día EXACTO
+// del vencimiento.
+//
+// No tiene respuesta universal — el que cobra por adelantado quiere que ese día ya
+// sea deuda, y el que le da el día entero al socio para pasar por el gimnasio no.
+// Lo que sí es obligatorio es que los tres lugares digan lo mismo, y de eso se
+// encarga el setting.
+//
+// Acá vivía también el prorrateo del primer mes. Se fue con el pase a cobranza por
+// aniversario: el primer ciclo va del día del alta al mismo día del mes siguiente,
+// así que siempre es un mes completo y no hay nada que prorratear.
+//
+// Muestra el efecto en texto porque hay días en los que el toggle no cambia nada
+// visible (ningún socio vence hoy) y sin eso parece roto.
+function CobranzaSettingsCard({ gymId }: { gymId: string | null }) {
+  const { data: settings, isLoading } = useBillingSettings(gymId);
+  const { mutate: save, isPending, error } = useSetBillingSettings(gymId);
+
+  if (isLoading || !settings) return null;
+
+  const covered = settings.dueDayIsCovered;
+
+  return (
+    <div className="mb-6 rounded-card border border-ui-input-border bg-white p-5 shadow-card-brand">
+      {/* Qué pasa el día exacto del vencimiento */}
+      <div className="flex items-start gap-3.5">
+        <div
+          className={`flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl ${
+            covered ? "bg-brandPrimary-50" : "bg-ui-background-light"
+          }`}
+        >
+          <Clock size={18} color={covered ? "#4A44E4" : ui.text.muted} />
+        </div>
+
+        <div className="flex-1">
+          <p className="font-jakarta text-[14px] font-bold text-ui-text-main">
+            Dar por cubierto el día del vencimiento
+          </p>
+          <p className="mt-0.5 font-manrope text-[12px] leading-[18px] text-ui-text-muted">
+            {covered
+              ? "La cuota que vence hoy todavía figura al día: recién cuenta como deuda mañana."
+              : "La cuota que vence hoy ya cuenta como deuda desde hoy."}{" "}
+            Vale para las tres cosas a la vez — el estado que ve el staff, la deuda
+            que se le cobra al socio y el día en que arranca la escalera de
+            recordatorios.
+          </p>
+
+          {/* Los recordatorios son lo que más sorprende de este toggle: el gym
+              lo prende pensando en el badge y le corre la escalera un día. */}
+          <p className="mt-2 font-manrope text-[11px] text-ui-text-muted">
+            {covered
+              ? "El recordatorio configurado para el día 0 sale el día después del vencimiento."
+              : "El recordatorio configurado para el día 0 sale el mismo día del vencimiento."}
+          </p>
+        </div>
+
+        <Toggle
+          on={covered}
+          disabled={isPending}
+          onClick={() => save({ dueDayIsCovered: !covered })}
+          label="Dar por cubierto el día del vencimiento"
+        />
+      </div>
+
+      {error && (
+        <p className="mt-3 font-manrope text-[11px] text-red-600">
+          {(error as Error).message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Modal de alta: socio → actividad → pase → primer ciclo.
+//
+// El cuarto paso existe porque el alta ya no puede dar por cobrado el primer
+// ciclo. La membresía se crea SIEMPRE debiendo; cobrarlo es una decisión explícita
+// del staff, con su método de pago, y va por el mismo RPC que el resto de los
+// cobros. "Dejar pendiente" es una salida de primera clase: sirve para el socio
+// que se anota hoy y paga mañana, que antes no se podía representar.
+//
+// El día del alta fija el ancla de cobro del socio para siempre, así que el paso
+// muestra el ciclo completo y no solo el precio.
 function AltaMembresiaModal({
   onClose,
   brandPrimary,
@@ -426,16 +550,27 @@ function AltaMembresiaModal({
     onlyRole: "member",
   });
   const { data: activities, isLoading: activitiesLoading } = useActivities(gymId);
-  const { assign } = useActivitySubscriptionMutations();
+  const { assign, registerPayment } = useActivitySubscriptionMutations();
 
   const [memberSearch, setMemberSearch] = useState("");
   const [pickedMember, setPickedMember] = useState<GymMember | null>(null);
   const [pickedActivity, setPickedActivity] = useState<Activity | null>(null);
+  const [pickedPass, setPickedPass] = useState<ActivityPlan | null>(null);
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+
+  // El ciclo que la membresía va a deber al crearse: arranca hoy y dura un mes.
+  // Es el mismo que calcula assign y el que va a cobrar el RPC.
+  const today = todayISO();
+  const primerCiclo = periodAt(today, 0);
 
   const close = () => {
     setMemberSearch("");
     setPickedMember(null);
     setPickedActivity(null);
+    setPickedPass(null);
+    setAmount("");
+    setPaymentMethod("");
     onClose();
   };
 
@@ -447,30 +582,76 @@ function AltaMembresiaModal({
     fullName(m).toLowerCase().includes(memberSearch.trim().toLowerCase())
   );
 
-  const onPickPass = (pass: ActivityPlan) => {
-    if (!pickedMember || !pickedActivity) return;
+  const busy = assign.isPending || registerPayment.isPending;
+
+  // Alta + (opcional) cobro del primer ciclo. Son dos escrituras, no una
+  // transacción, y el orden importa: si el alta entra y el cobro falla, queda una
+  // membresía real marcada como impaga, visible en la tabla y con su botón de
+  // cobro al lado. El caso feo —cobro sin alta— no puede pasar, porque el cobro
+  // necesita el id que devuelve el alta.
+  const darDeAlta = (charge: boolean) => {
+    if (!pickedMember || !pickedActivity || !pickedPass) return;
+    if (charge && !paymentMethod) {
+      toast.error("Elegí un método de pago");
+      return;
+    }
     assign.mutate(
       {
         memberId: pickedMember.id,
         activityId: pickedActivity.id,
-        activityPlanId: pass.id,
-        price: pass.price,
+        activityPlanId: pickedPass.id,
+        price: pickedPass.price,
       },
       {
-        onSuccess: close,
+        onSuccess: ({ id, period: debe }) => {
+          const cicloTxt = periodLabel(debe.start, debe.end);
+          if (!charge) {
+            toast.success("Membresía creada", {
+              description: `Queda debiendo el ciclo ${cicloTxt}.`,
+            });
+            close();
+            return;
+          }
+          registerPayment.mutate(
+            {
+              id,
+              months: 1,
+              price: amount === "" ? null : amount,
+              memberId: pickedMember.id,
+              paymentMethod,
+            },
+            {
+              onSuccess: () => {
+                toast.success("Membresía creada y primer ciclo cobrado");
+                close();
+              },
+              // El alta ya entró: cerrar igual. Dejar el modal abierto invitaría a
+              // darla de alta dos veces, y el cobro se puede reintentar desde la
+              // tabla con el botón que ya existe.
+              onError: (error) => {
+                toast.error("Membresía creada, pero no se pudo cobrar el primer ciclo", {
+                  description: `${error.message} · Queda debiendo ${cicloTxt}.`,
+                });
+                close();
+              },
+            }
+          );
+        },
         onError: (error) =>
           toast.error("No se pudo agregar la membresía", { description: error.message }),
       }
     );
   };
 
-  const step = !pickedMember ? 1 : !pickedActivity ? 2 : 3;
+  const step = !pickedMember ? 1 : !pickedActivity ? 2 : !pickedPass ? 3 : 4;
   const title =
     step === 1
       ? "Elegí el socio"
       : step === 2
         ? `Actividad · ${fullName(pickedMember)}`
-        : `Pase · ${pickedActivity?.name}`;
+        : step === 3
+          ? `Pase · ${pickedActivity?.name}`
+          : "Primer ciclo";
 
   return (
     <div
@@ -487,7 +668,12 @@ function AltaMembresiaModal({
             {step > 1 && (
               <button
                 type="button"
-                onClick={() => (step === 3 ? setPickedActivity(null) : setPickedMember(null))}
+                disabled={busy}
+                onClick={() => {
+                  if (step === 4) setPickedPass(null);
+                  else if (step === 3) setPickedActivity(null);
+                  else setPickedMember(null);
+                }}
               >
                 <ChevronLeft size={20} color={ui.text.muted} />
               </button>
@@ -560,10 +746,100 @@ function AltaMembresiaModal({
                   color={pickedActivity?.color ?? brandPrimary[600]}
                   title={(pass.label as string) ?? "Pase"}
                   subtitle={`${freqText(pass.frequency_per_week as number | null)} · ${money(pass.price)}/mes`}
-                  disabled={assign.isPending}
-                  onClick={() => onPickPass(pass)}
+                  onClick={() => {
+                    setPickedPass(pass);
+                    // El primer ciclo es un mes completo (del día del alta al
+                    // mismo día del mes que viene), así que el sugerido es el
+                    // precio del pase. Editable igual.
+                    setAmount(pass.price == null ? "" : String(pass.price));
+                  }}
                 />
               ))}
+
+          {/* Paso 4: primer ciclo — cobrarlo o dejarlo pendiente */}
+          {step === 4 && (
+            <div className="px-1.5 pb-1">
+              <p className="mb-1 font-jakarta text-[15px] font-bold capitalize text-ui-text-main">
+                {fullName(pickedMember)}
+              </p>
+              <p className="mb-4 font-manrope text-[12px] text-ui-text-muted">
+                {pickedActivity?.name ?? "Actividad"} ·{" "}
+                {(pickedPass?.label as string) ?? "Pase"}
+              </p>
+
+              {/* El día del alta fija el día de cobro del socio para siempre, así
+                  que conviene que el staff lo vea antes de confirmar y no lo
+                  descubra el mes que viene. */}
+              <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-ui-input-border bg-ui-background-light px-3.5 py-3">
+                <Calendar size={15} color={ui.text.muted} className="mt-px shrink-0" />
+                <p className="font-manrope text-[12px] leading-relaxed text-ui-text-main">
+                  La membresía arranca debiendo el ciclo{" "}
+                  <span className="font-bold">
+                    {periodLabel(primerCiclo.start, primerCiclo.end)}
+                  </span>
+                  , y de ahí en más vence todos los {Number(today.slice(8, 10))} de cada
+                  mes. Si ya pagó, cobralo acá; si no, queda pendiente y lo cobrás
+                  después con el botón de cobro.
+                </p>
+              </div>
+
+              {/* Monto */}
+              <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+                Monto
+              </label>
+              <div className="flex items-center gap-2 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+                <span className="font-jakarta text-[14px] font-bold text-ui-text-muted">$</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0"
+                  className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none placeholder:text-ui-text-muted"
+                />
+              </div>
+              <p className="mb-4 mt-1.5 font-manrope text-[11px] text-ui-text-muted">
+                Precio del pase. El ciclo es un mes completo.
+              </p>
+
+              {/* Método de pago */}
+              <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
+                Método de pago
+              </label>
+              <div className="mb-5 flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="flex-1 cursor-pointer bg-transparent font-manrope text-[13px] text-ui-text-main outline-none"
+                >
+                  <option value="" disabled>
+                    Elegí un método
+                  </option>
+                  {PAYMENT_METHOD_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Button
+                onClick={() => darDeAlta(true)}
+                loading={busy}
+                className="w-full justify-center"
+              >
+                {`Dar de alta y cobrar ${money(amount === "" ? 0 : amount)}`}
+              </Button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => darDeAlta(false)}
+                className="mt-2.5 w-full rounded-xl py-2.5 font-manrope text-[13px] text-ui-text-muted hover:text-ui-text-main disabled:opacity-60"
+              >
+                Dar de alta sin cobrar
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -575,20 +851,17 @@ function PickRow({
   subtitle,
   color,
   onClick,
-  disabled,
 }: {
   title: string;
   subtitle?: string;
   color?: string;
   onClick: () => void;
-  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
-      disabled={disabled}
       onClick={onClick}
-      className="mb-2 flex w-full items-center gap-3 rounded-xl border border-ui-input-border bg-white p-3 text-left hover:border-brandPrimary-600/30 disabled:opacity-60"
+      className="mb-2 flex w-full items-center gap-3 rounded-xl border border-ui-input-border bg-white p-3 text-left hover:border-brandPrimary-600/30"
     >
       <div className="flex h-9 w-9 items-center justify-center rounded-[10px]" style={{ backgroundColor: color ? `${color}1A` : "#eef" }}>
         <Flame size={16} color={color ?? "#4A44E4"} />
@@ -622,20 +895,55 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-// Modal de cobro: el admin elige el mes que se paga (default = mes del
-// vencimiento actual) y confirma el monto. Permite cobrar meses atrasados o
-// adelantar.
+// Modal de cobro: el staff elige cuántos ciclos abona. Arranca en el vencimiento
+// actual y avanza sin huecos — se pueden saldar varios ciclos atrasados de una, o
+// adelantar si el socio está al día.
+//
+// Antes acá había un <input type="month"> libre, y era un agujero: la deuda se
+// deriva de due_date, así que cobrar un ciclo salteado empujaba el vencimiento
+// hacia adelante y hacía desaparecer los del medio. No quedaban impagos, dejaban
+// de existir. Por eso la selección es un prefijo: tocar un ciclo marca ese y todos
+// los anteriores.
 function RegistrarPagoModal({
   sub,
   onClose,
+  dueDayIsCovered,
 }: {
   sub: GymSubscription;
   onClose: () => void;
+  dueDayIsCovered: boolean;
 }) {
   const { registerPayment } = useActivitySubscriptionMutations();
-  const [month, setMonth] = useState(monthValue(sub.due_date));
+
+  // Los ciclos adeudados más tres por adelantado: el socio al día que quiere
+  // pagar el mes que viene tenía esa opción con el input libre y no se pierde.
+  //
+  // Los dos tramos salen de periodAt sobre el mismo ancla, así que el ciclo que
+  // muestra la lista es exactamente el que va a cobrar el RPC.
+  const { options, debe } = useMemo(() => {
+    const vencidos = owed(sub, dueDayIsCovered);
+    const anchor = sub.start_date ?? todayISO();
+    const primeroK = vencidos.length
+      ? cycleIndexAt(anchor, vencidos[vencidos.length - 1].start) + 1
+      : cycleIndexAt(anchor, sub.due_date ?? todayISO());
+    const adelantados: BillingPeriod[] = [];
+    for (let i = 0; i < 3; i += 1) adelantados.push(periodAt(anchor, primeroK + i));
+    return {
+      debe: vencidos.length,
+      options: [...vencidos, ...adelantados].map((p, k) => ({
+        ...p,
+        overdue: k < vencidos.length,
+      })),
+    };
+  }, [sub, dueDayIsCovered]);
+
+  // Por defecto viene toda la deuda marcada: es lo que se cobra casi siempre.
+  const [count, setCount] = useState(Math.max(debe, 1));
   const [amount, setAmount] = useState(sub.price == null ? "" : String(sub.price));
   const [paymentMethod, setPaymentMethod] = useState("");
+
+  const perMonth = amount === "" ? 0 : Number(amount);
+  const total = perMonth * count;
 
   const onConfirm = () => {
     if (!paymentMethod) {
@@ -645,14 +953,16 @@ function RegistrarPagoModal({
     registerPayment.mutate(
       {
         id: sub.id,
+        months: count,
         price: amount === "" ? null : amount,
-        periodStart: `${month}-01`,
         memberId: sub.user_id,
         paymentMethod,
       },
       {
-        onSuccess: () => {
-          toast.success("Pago registrado");
+        onSuccess: (ids) => {
+          toast.success(
+            ids.length === 1 ? "Pago registrado" : `${ids.length} cuotas registradas`
+          );
           onClose();
         },
         onError: (error) =>
@@ -690,23 +1000,62 @@ function RegistrarPagoModal({
             {sub.activities?.name ?? "Actividad"} · {sub.activity_plans?.label ?? "Pase"}
           </p>
 
-          {/* Mes que se paga */}
+          {/* Estado de deuda, para que el staff sepa qué está cobrando */}
+          {debe > 1 && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3">
+              <Clock size={15} color="#d97706" className="mt-px shrink-0" />
+              <p className="font-manrope text-[12px] leading-relaxed text-amber-900">
+                Debe <span className="font-bold">{debe} cuotas</span>. Se cobran desde la
+                más vieja: tocá un ciclo para incluirlo junto con los anteriores.
+              </p>
+            </div>
+          )}
+
+          {/* Ciclos que se pagan: selección por prefijo, nunca con huecos */}
           <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
-            Mes que paga
+            {debe > 1 ? "Cuotas que paga" : "Cuota que paga"}
           </label>
-          <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
-            <Calendar size={15} color={ui.text.muted} />
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="flex-1 bg-transparent font-manrope text-[13px] text-ui-text-main outline-none"
-            />
+          <div className="mb-4 flex flex-col gap-1.5">
+            {options.map((opt, k) => {
+              const selected = k < count;
+              return (
+                <button
+                  key={opt.start}
+                  type="button"
+                  onClick={() => setCount(k + 1)}
+                  className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-colors ${
+                    selected
+                      ? "border-green-300 bg-green-50"
+                      : "border-ui-input-border bg-[#eae8f4] hover:bg-[#e2dff0]"
+                  }`}
+                >
+                  {selected ? (
+                    <CheckCircle size={15} color="#16a34a" className="shrink-0" />
+                  ) : (
+                    <Calendar size={15} color={ui.text.muted} className="shrink-0" />
+                  )}
+                  <span
+                    className={`flex-1 font-manrope text-[13px] ${
+                      selected ? "font-semibold text-green-900" : "text-ui-text-main"
+                    }`}
+                  >
+                    {periodLabel(opt.start, opt.end)}
+                  </span>
+                  <span
+                    className={`font-manrope text-[10px] font-bold uppercase tracking-wider ${
+                      opt.overdue ? "text-amber-600" : "text-ui-text-muted"
+                    }`}
+                  >
+                    {opt.overdue ? "vencida" : "adelanta"}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Monto */}
           <label className="mb-1.5 block font-manrope text-[11px] font-semibold uppercase tracking-wider text-ui-text-muted">
-            Monto
+            Monto por cuota
           </label>
           <div className="mb-5 flex items-center gap-2 rounded-xl border border-ui-input-border bg-[#eae8f4] px-3.5 py-2.5">
             <span className="font-jakarta text-[14px] font-bold text-ui-text-muted">$</span>
@@ -746,7 +1095,12 @@ function RegistrarPagoModal({
             loading={registerPayment.isPending}
             className="w-full justify-center"
           >
-            {`Cobrar ${money(amount)} · ${monthLabel(`${month}-01`)}`}
+            {count === 1
+              ? `Cobrar ${money(total)} · ${periodLabel(
+                  options[0]?.start ?? null,
+                  options[0]?.end ?? null
+                )}`
+              : `Cobrar ${money(total)} · ${count} cuotas`}
           </Button>
         </div>
       </div>
@@ -754,7 +1108,7 @@ function RegistrarPagoModal({
   );
 }
 
-// Modal de detalle: historial de cobros de la suscripción, con el mes que cubre
+// Modal de detalle: historial de cobros de la suscripción, con el ciclo que cubre
 // cada uno, cuándo se cobró y el monto.
 function DetallePagosModal({
   sub,
@@ -810,8 +1164,10 @@ function DetallePagosModal({
                   <Calendar size={15} color="#16a34a" />
                 </div>
                 <div className="ml-3 min-w-0 flex-1">
-                  <p className="font-jakarta text-[13px] font-bold capitalize text-ui-text-main">
-                    {monthLabel(p.period_start)}
+                  {/* Con año: el historial cruza años y "12 ago – 11 sep" solo no
+                      alcanza para saber de cuál. */}
+                  <p className="font-jakarta text-[13px] font-bold text-ui-text-main">
+                    {periodLabel(p.period_start, p.period_end, { year: true })}
                   </p>
                   <p className="font-manrope text-[11px] text-ui-text-muted">
                     Cobrado el {formatDate(p.paid_at)}

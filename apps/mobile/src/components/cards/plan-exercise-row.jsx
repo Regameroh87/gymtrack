@@ -16,6 +16,9 @@ import {
   equipment as equipmentTable,
 } from "../../database/schemas";
 
+// Constantes
+import { MUSCLE_LABELS } from "../../constants/exerciseOptions";
+
 // Utils
 import { getMediaUrl } from "@gymtrack/core/media";
 
@@ -151,20 +154,25 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress, onEq
         {/* Nombre + músculo + resumen */}
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text
-            numberOfLines={1}
+            numberOfLines={2}
             className="text-ui-text-main dark:text-ui-text-mainDark font-jakarta-bold"
             style={{ fontSize: 14, marginBottom: 3 }}
           >
             {exercise.exercise_name}
           </Text>
+          {/* En Yoga flexShrink es 0 por default (al revés que en la web): sin
+              marcarlo a mano ningún hijo cede, la fila desborda la columna y el
+              texto se dibuja encima del botón de video. Cede el músculo; la
+              prescripción se muestra siempre entera. */}
           <View className="flex-row items-center" style={{ gap: 6 }}>
             {exercise.exercise_muscle ? (
               <Text
                 numberOfLines={1}
                 className="text-ui-text-muted dark:text-ui-text-mutedDark font-manrope-semi"
-                style={{ fontSize: 12 }}
+                style={{ fontSize: 12, flexShrink: 1 }}
               >
-                {exercise.exercise_muscle}
+                {MUSCLE_LABELS[exercise.exercise_muscle] ??
+                  exercise.exercise_muscle}
               </Text>
             ) : null}
             <View
@@ -173,12 +181,17 @@ export default function PlanExerciseRow({ exercise, position, onVideoPress, onEq
                 height: 3,
                 borderRadius: 2,
                 backgroundColor: isDark ? MINT : brandSecondary[700],
+                flexShrink: 0,
               }}
             />
             <Text
               numberOfLines={1}
               className="font-manrope-bold"
-              style={{ fontSize: 12, color: isDark ? MINT : brandSecondary[700] }}
+              style={{
+                fontSize: 12,
+                color: isDark ? MINT : brandSecondary[700],
+                flexShrink: 0,
+              }}
             >
               {summary}
             </Text>

@@ -23,6 +23,7 @@ import {
 } from "../../../../../src/hooks/users/use-assign-plan-to-member";
 import { useMemberSubscriptions } from "@gymtrack/core/hooks/activities/use-member-subscriptions";
 import { paymentBadge } from "@gymtrack/core";
+import { useBillingSettings } from "@gymtrack/core/hooks/activities/use-billing-settings";
 import { PLAN_GENDER_BADGES } from "../../../../../src/constants/gender-options";
 import {
   useToggleMemberActive,
@@ -88,6 +89,12 @@ export default function MemberDetail() {
   // Actividades del socio: solo lectura. La gestión (alta/baja/pagos) vive
   // centralizada en la sección Contabilidad.
   const { data: subs, isLoading: subsLoading } = useMemberSubscriptions(id, gymId);
+
+  // El badge de cada inscripción depende de qué considere el gym el día exacto
+  // del vencimiento. Sin esto, esta ficha diría "Al día" el mismo día en que la
+  // pantalla de membresías dice "Vencido".
+  const { data: billing } = useBillingSettings(gymId);
+  const dueDayIsCovered = billing?.dueDayIsCovered === true;
 
   const onDeleteMember = () => {
     if (!data?.profile?.user_id) return;
@@ -347,7 +354,7 @@ export default function MemberDetail() {
               ) : (
                 <View className="gap-2.5">
                   {subs.active.map((sub) => {
-                    const badge = paymentBadge(sub.due_date);
+                    const badge = paymentBadge(sub.due_date, dueDayIsCovered);
                     const color = sub.activities?.color ?? brandPrimary[600];
                     return (
                       <View
