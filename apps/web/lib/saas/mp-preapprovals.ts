@@ -120,6 +120,40 @@ export async function cancelPreapproval(
 }
 
 /**
+ * ¿Puede el token de ESTE entorno operar sobre un preapproval de esta app?
+ *
+ * Cada entorno barre con su propio token y un token solo sirve para su propia
+ * app de MP. Preguntarle a MP por un preapproval de la otra app devuelve 4xx,
+ * así que preguntarlo no aporta nada: el id queda en `unknown` y se vuelve a
+ * consultar en cada corrida, para siempre. Descartarlo antes de preguntar
+ * ahorra esa llamada sin cambiar quién limpia qué.
+ *
+ * Descartar NO es sellar: la fila queda con canceled_at en null a propósito,
+ * porque el único que puede darle de baja es el reaper del otro entorno y
+ * sellarla acá se la escondería.
+ *
+ * Cuál es "la app de este entorno" se deduce del despliegue (ver PROD_CHECKLIST):
+ * el token de prueba va en Preview/Development y el productivo en Production. Es
+ * el mismo criterio con el que el checkout decide si ignorar MP_TEST_PAYER_EMAIL.
+ * El token no se puede interrogar: los dos empiezan con APP_USR-.
+ *
+ * mp_application_id null = fila anterior a la columna. Ahí no se puede decidir,
+ * así que se consulta igual y decide MP, como antes de este filtro.
+ */
+function isFromThisEnvsApp(mpApplicationId: string | null): boolean {
+  const testAppId = process.env.MP_TEST_APPLICATION_ID;
+  if (!testAppId || !mpApplicationId) return true;
+
+  const vercelEnv = process.env.VERCEL_ENV;
+  const isProd =
+    process.env.NODE_ENV === "production" &&
+    (!vercelEnv || vercelEnv === "production");
+
+  const esDeLaAppDePrueba = mpApplicationId === testAppId;
+  return isProd ? !esDeLaAppDePrueba : esDeLaAppDePrueba;
+}
+
+/**
  * Cancela los preapprovals 'pending' registrados para un gym, salvo los de
  * `keep`.
  *
@@ -144,7 +178,11 @@ export async function cancelPreapproval(
  *     No se cancelan acá: darle de baja el cobro a un gym en base a una fila que
  *     puede estar vieja es peor que el problema. Solo el webhook cancela
  *     'authorized', y recién cuando confirmó que hay un reemplazo autorizado.
- *   - `unknown`: MP no contestó o el id no es de esta app. Se reintenta después.
+ *   - `unknown`: MP no contestó, o el id es de otra app y la fila no lo declara
+ *     (mp_application_id null). Se reintenta después.
+ *
+ * Los preapprovals que la fila declara de otra app ni se consultan: los filtra
+ * isFromThisEnvsApp, porque este token no puede hacer nada con ellos.
  */
 export async function cancelPendingPreapprovals(
   svcClient: SupabaseClient,
@@ -163,13 +201,14 @@ export async function cancelPendingPreapprovals(
   try {
     const { data, error } = await svcClient
       .from("saas_preapprovals")
-      .select("mp_preapproval_id")
+      .select("mp_preapproval_id, mp_application_id")
       .eq("gym_id", gymId)
       .is("canceled_at", null);
 
     if (error) throw error;
 
     const candidates = (data ?? [])
+      .filter((r) => isFromThisEnvsApp(r.mp_application_id as string | null))
       .map((r) => r.mp_preapproval_id as string)
       .filter((id) => !keepIds.has(id));
 
