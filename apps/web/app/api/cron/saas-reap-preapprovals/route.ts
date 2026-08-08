@@ -24,7 +24,11 @@
 // Va como Vercel Cron (apps/web/vercel.json). Cada entorno barre con SU token, y
 // un token solo puede tocar preapprovals de su propia app de MP: el deploy
 // productivo nunca cancela los del vendedor de prueba, y el local/preview nunca
-// toca los reales (los deja en `unknown`).
+// toca los reales. Los de la otra app se descartan antes de consultarlos (ver
+// isFromThisEnvsApp): preguntar por ellos devuelve 4xx, y como el 4xx no
+// distingue "no existe" de "no es tuyo", quedaban en `unknown` reconsultándose
+// en cada corrida sin que nada pudiera avanzar. Se descartan, no se sellan: el
+// que sí puede limpiarlos es el reaper del otro entorno.
 //
 // Variables de entorno requeridas (server-side):
 //   MP_ACCESS_TOKEN           – token de la app cobradora de este entorno
