@@ -55,6 +55,46 @@ jobs:
             supabase/functions/sync-media-webhook/index.ts \
             supabase/functions/cleanUp-media/index.ts
 
+  deploy-edge-functions:
+    name: Deploy de edge functions (solo main)
+    # Vercel deploya la web sola en cada merge a main. Las edge functions no
+    # tenían equivalente, así que un cambio que entraba por PR salía a medias: la
+    # web nueva contra funciones viejas, y nada avisaba. Pasó con el multi-plan —
+    # el checkout ya escribía pending_preapproval_id y mp-webhook, deployado 8
+    # días antes, todavía no sabía leerlo.
+    #
+    # Va después del type-check a propósito: publicar una función que no compila
+    # es peor que no publicarla.
+    #
+    # Requiere estos secrets del repo (Settings → Secrets and variables → Actions):
+    #   SUPABASE_ACCESS_TOKEN – Personal Access Token de la cuenta que administra
+    #                           el proyecto (Dashboard → Account → Access Tokens)
+    #   SUPABASE_PROJECT_REF  – ref del proyecto de Supabase
+    needs: edge-functions
+    # push solo ocurre en main (ver el `on` de arriba); esto deja afuera los PR.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Se deployan TODAS, no solo las que cambiaron. Redeployar una idéntica no
+      # hace nada más que subirle el número de versión, mientras que detectar
+      # "cuáles cambiaron" por git diff se rompe en el primer push de una rama y
+      # en los force-push. Entre gastar un minuto de más y dejar una función sin
+      # actualizar en silencio, preferimos lo primero.
+      #
+      # verify_jwt NO se pasa por acá: sale de supabase/config.toml, que el CLI
+      # lee al correr desde la raíz del repo. Las cuatro que reciben webhooks
+      # (mp-webhook, mp-gym-webhook, send-email, resend-webhook) van en false
+      # allá y validan la firma o el secreto interno adentro.
+      - name: Deploy a Supabase
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+
   mobile:
     name: Mobile (sintaxis + tests)
     runs-on: ubuntu-latest
